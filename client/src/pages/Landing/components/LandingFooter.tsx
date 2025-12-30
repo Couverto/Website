@@ -1,29 +1,31 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const LandingFooter = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     product: {
-      title: "Produit",
+      title: t("pages.landing.footer.product"),
       links: [
-        { label: "Fonctionnalités", href: "#features" },
-        { label: "Tarifs", href: "#pricing" },
+        { label: t("pages.landing.footer.features"), href: "#features" },
+        { label: t("pages.landing.footer.pricing"), href: "#pricing" },
       ],
     },
     company: {
-      title: "Entreprise",
+      title: t("pages.landing.footer.company"),
       links: [
-        { label: "À propos", href: "#" },
-        { label: "Contact", href: "#" },
+        { label: t("pages.landing.footer.about"), href: "#" },
+        { label: t("pages.landing.footer.contact"), href: "#" },
       ],
     },
     legal: {
-      title: "Légal",
+      title: t("pages.landing.footer.legal"),
       links: [
-        { label: "Mentions légales", href: "#" },
-        { label: "Politique de confidentialité", href: "#" },
-        { label: "CGU", href: "#" },
+        { label: t("pages.landing.footer.legal_notice"), href: "#" },
+        { label: t("pages.landing.footer.privacy"), href: "#" },
+        { label: t("pages.landing.footer.terms"), href: "#" },
       ],
     },
   };
@@ -38,9 +40,7 @@ export const LandingFooter = () => {
             <Link to="/" className="inline-block mb-4">
               <span className="text-2xl font-bold text-primary">Couverto</span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-              La gestion du service, simplement. Un outil conçu pour les restaurateurs indépendants.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">{t("pages.landing.footer.slogan")}</p>
           </div>
 
           {/* Links Columns */}
@@ -62,8 +62,10 @@ export const LandingFooter = () => {
 
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>© {currentYear} Couverto. Tous droits réservés.</p>
-          <p>Fait avec soin pour les restaurateurs indépendants 🇫🇷</p>
+          <p>
+            © {currentYear} {t("pages.landing.footer.copyright")}
+          </p>
+          <p>{t("pages.landing.footer.made_with_love")}</p>
         </div>
       </div>
     </footer>

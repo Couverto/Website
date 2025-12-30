@@ -4,13 +4,16 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { LanguageChanger } from "@/components/Navbar/languageChanger";
+import { useTranslation } from "react-i18next";
 
 export const LandingNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const navLinks = [
-    { label: "Fonctionnalités", href: "#features" },
-    { label: "Tarifs", href: "#pricing" },
+    { label: t("pages.landing.navbar.features"), href: "#features" },
+    { label: t("pages.landing.navbar.pricing"), href: "#pricing" },
   ];
 
   return (
@@ -36,15 +39,16 @@ export const LandingNavbar = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
+          <LanguageChanger />
           <ThemeChanger />
           <Link to="/login">
-            <Button variant="ghost" size="sm">
-              Se connecter
+            <Button variant="outline" size="sm" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+              {t("pages.landing.navbar.login")}
             </Button>
           </Link>
           <Link to="/register">
             <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-              Essayer gratuitement
+              {t("pages.landing.navbar.try_free")}
             </Button>
           </Link>
         </div>
@@ -70,17 +74,22 @@ export const LandingNavbar = () => {
           ))}
           <div className="flex flex-col gap-2 pt-2">
             <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full">
-                Se connecter
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                {t("pages.landing.navbar.login")}
               </Button>
             </Link>
             <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
               <Button size="sm" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                Essayer gratuitement
+                {t("pages.landing.navbar.try_free")}
               </Button>
             </Link>
           </div>
-          <div className="flex items-center justify-center pt-2">
+          <div className="flex items-center justify-center gap-4 pt-2">
+            <LanguageChanger />
             <ThemeChanger />
           </div>
         </nav>

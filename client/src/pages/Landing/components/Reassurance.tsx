@@ -1,38 +1,39 @@
 import { Shield, Users, Lock, Store } from "lucide-react";
-
-const reassurances = [
-  {
-    icon: Users,
-    title: "Conçu avec des restaurateurs",
-    description: "Développé en collaboration avec des professionnels du terrain pour répondre à leurs vrais besoins.",
-  },
-  {
-    icon: Shield,
-    title: "Conforme RGPD",
-    description: "Vos données et celles de vos clients sont traitées dans le respect total de la réglementation européenne.",
-  },
-  {
-    icon: Lock,
-    title: "Données sécurisées",
-    description: "Hébergement en France, sauvegardes quotidiennes, et chiffrement de bout en bout.",
-  },
-  {
-    icon: Store,
-    title: "Pour restaurateurs indépendants",
-    description: "Un outil adapté à votre réalité, sans fonctionnalités inutiles ni complexité superflue.",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export const Reassurance = () => {
+  const { t } = useTranslation();
+
+  const reassurances = [
+    {
+      icon: Users,
+      title: t("pages.landing.reassurance.item_1_title"),
+      description: t("pages.landing.reassurance.item_1_desc"),
+    },
+    {
+      icon: Shield,
+      title: t("pages.landing.reassurance.item_2_title"),
+      description: t("pages.landing.reassurance.item_2_desc"),
+    },
+    {
+      icon: Lock,
+      title: t("pages.landing.reassurance.item_3_title"),
+      description: t("pages.landing.reassurance.item_3_desc"),
+    },
+    {
+      icon: Store,
+      title: t("pages.landing.reassurance.item_4_title"),
+      description: t("pages.landing.reassurance.item_4_desc"),
+    },
+  ];
+
   return (
     <section className="py-20 md:py-28 bg-background">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">Un partenaire de confiance</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Nous nous engageons à protéger vos données et à vous fournir un outil fiable au quotidien.
-          </p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">{t("pages.landing.reassurance.title")}</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t("pages.landing.reassurance.subtitle")}</p>
         </div>
 
         {/* Reassurance Grid */}

@@ -1,17 +1,20 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const Pricing = () => {
+  const { t } = useTranslation();
+
   const features = [
-    "Réservations illimitées",
-    "Plan de salle interactif",
-    "Fichier clients complet",
-    "Rappels automatiques par email",
-    "Accès multi-appareils",
-    "Support par email inclus",
-    "Mises à jour gratuites",
-    "Données sécurisées (RGPD)",
+    t("pages.landing.pricing.feature_1"),
+    t("pages.landing.pricing.feature_2"),
+    t("pages.landing.pricing.feature_3"),
+    t("pages.landing.pricing.feature_4"),
+    t("pages.landing.pricing.feature_5"),
+    t("pages.landing.pricing.feature_6"),
+    t("pages.landing.pricing.feature_7"),
+    t("pages.landing.pricing.feature_8"),
   ];
 
   return (
@@ -21,32 +24,25 @@ export const Pricing = () => {
           {/* Left Column - Message */}
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent mb-6">
-              Tarification simple
+              {t("pages.landing.pricing.badge")}
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-6">
-              Beaucoup plus abordable que les alternatives
-            </h2>
-            <p className="text-lg text-muted-foreground mb-6">
-              Pas de plans complexes, pas de frais cachés. Un prix unique qui inclut toutes les fonctionnalités dont vous avez besoin.
-            </p>
-            <p className="text-muted-foreground mb-8">
-              Couverto est conçu pour les restaurateurs indépendants, pas pour les grandes chaînes. Notre tarification reflète cette réalité
-              : un outil professionnel à un prix accessible.
-            </p>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-6">{t("pages.landing.pricing.title")}</h2>
+            <p className="text-lg text-muted-foreground mb-6">{t("pages.landing.pricing.subtitle")}</p>
+            <p className="text-muted-foreground mb-8">{t("pages.landing.pricing.description")}</p>
 
             {/* Trust badges */}
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-accent" />
-                <span>Sans engagement</span>
+                <span>{t("pages.landing.pricing.no_commitment")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-accent" />
-                <span>Annulation à tout moment</span>
+                <span>{t("pages.landing.pricing.cancel_anytime")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-accent" />
-                <span>Essai gratuit 14 jours</span>
+                <span>{t("pages.landing.pricing.free_trial")}</span>
               </div>
             </div>
           </div>
@@ -57,17 +53,17 @@ export const Pricing = () => {
               {/* Badge */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="inline-flex items-center rounded-full bg-primary px-4 py-1 text-sm font-medium text-primary-foreground">
-                  Formule unique
+                  {t("pages.landing.pricing.plan_badge")}
                 </span>
               </div>
 
               {/* Price */}
               <div className="text-center mb-8 pt-4">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-5xl font-bold text-foreground">29€</span>
-                  <span className="text-muted-foreground">/mois</span>
+                  <span className="text-5xl font-bold text-foreground">{t("pages.landing.pricing.price")}</span>
+                  <span className="text-muted-foreground">{t("pages.landing.pricing.per_month")}</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">HT • Facturation mensuelle</p>
+                <p className="text-sm text-muted-foreground mt-2">{t("pages.landing.pricing.price_note")}</p>
               </div>
 
               {/* Features List */}
@@ -85,10 +81,10 @@ export const Pricing = () => {
               {/* CTA */}
               <Link to="/register" className="block">
                 <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  Commencer l'essai gratuit
+                  {t("pages.landing.pricing.cta")}
                 </Button>
               </Link>
-              <p className="text-xs text-center text-muted-foreground mt-4">Aucune carte bancaire requise pour l'essai</p>
+              <p className="text-xs text-center text-muted-foreground mt-4">{t("pages.landing.pricing.cta_note")}</p>
             </div>
 
             {/* Decorative */}

@@ -1,40 +1,41 @@
 import { Calendar, ClipboardList, LayoutGrid, Zap } from "lucide-react";
-
-const benefits = [
-  {
-    icon: Calendar,
-    title: "Gestion des réservations en temps réel",
-    description: "Recevez et gérez vos réservations instantanément, depuis n'importe quel appareil.",
-  },
-  {
-    icon: LayoutGrid,
-    title: "Organisation simple des tables et services",
-    description: "Visualisez votre salle en un coup d'œil et gérez les affectations facilement.",
-  },
-  {
-    icon: ClipboardList,
-    title: "Données clients centralisées",
-    description: "Retrouvez l'historique et les préférences de vos clients en quelques clics.",
-  },
-  {
-    icon: Zap,
-    title: "Prise en main immédiate",
-    description: "Aucune formation nécessaire. Interface intuitive pensée pour le terrain.",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export const ValueProposition = () => {
+  const { t } = useTranslation();
+
+  const benefits = [
+    {
+      icon: Calendar,
+      title: t("pages.landing.value_proposition.benefit_1_title"),
+      description: t("pages.landing.value_proposition.benefit_1_desc"),
+    },
+    {
+      icon: LayoutGrid,
+      title: t("pages.landing.value_proposition.benefit_2_title"),
+      description: t("pages.landing.value_proposition.benefit_2_desc"),
+    },
+    {
+      icon: ClipboardList,
+      title: t("pages.landing.value_proposition.benefit_3_title"),
+      description: t("pages.landing.value_proposition.benefit_3_desc"),
+    },
+    {
+      icon: Zap,
+      title: t("pages.landing.value_proposition.benefit_4_title"),
+      description: t("pages.landing.value_proposition.benefit_4_desc"),
+    },
+  ];
+
   return (
     <section id="features" className="py-20 md:py-28 bg-card">
       <div className="container mx-auto max-w-6xl px-4 md:px-6">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">
-            Tout ce dont vous avez besoin, rien de superflu
+            {t("pages.landing.value_proposition.title")}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Des fonctionnalités essentielles pensées pour le quotidien des restaurateurs indépendants.
-          </p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t("pages.landing.value_proposition.subtitle")}</p>
         </div>
 
         {/* Benefits Grid */}

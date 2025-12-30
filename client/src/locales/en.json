@@ -14,6 +14,115 @@
     "home": {
       "welcome_message": "Welcome to this boilerplate!"
     },
+    "landing": {
+      "navbar": {
+        "features": "Features",
+        "pricing": "Pricing",
+        "login": "Sign in",
+        "try_free": "Try for free"
+      },
+      "hero": {
+        "badge": "For independent restaurant owners",
+        "headline": "Manage your reservations and dining room",
+        "headline_highlight": "without complexity.",
+        "slogan": "Couverto — Service management, simplified.",
+        "description": "Software designed for independent restaurant owners who want to focus on their craft, not on complex tools.",
+        "cta_primary": "Try for free",
+        "cta_secondary": "See features",
+        "trust_no_commitment": "No commitment",
+        "trust_quick_setup": "5-minute setup",
+        "trust_support": "Support included"
+      },
+      "dashboard_preview": {
+        "title": "Dashboard",
+        "reservations": "Reservations",
+        "tables": "Tables",
+        "covers": "Covers",
+        "tonight": "Tonight",
+        "occupied": "Occupied",
+        "estimated": "Estimated",
+        "upcoming": "Upcoming reservations",
+        "covers_count": "covers"
+      },
+      "value_proposition": {
+        "title": "Everything you need, nothing you don't",
+        "subtitle": "Essential features designed for independent restaurant owners' daily operations.",
+        "benefit_1_title": "Real-time reservation management",
+        "benefit_1_desc": "Receive and manage your reservations instantly, from any device.",
+        "benefit_2_title": "Simple table and service organization",
+        "benefit_2_desc": "Visualize your dining room at a glance and manage seating easily.",
+        "benefit_3_title": "Centralized customer data",
+        "benefit_3_desc": "Find your customers' history and preferences in just a few clicks.",
+        "benefit_4_title": "Immediate onboarding",
+        "benefit_4_desc": "No training required. Intuitive interface designed for the field."
+      },
+      "product_overview": {
+        "title": "A tool built for service",
+        "subtitle": "Clear screens and quick actions to manage your restaurant efficiently.",
+        "reservations_title": "Reservations",
+        "reservations_desc": "Manage all your reservations from a single interface. Automatic confirmations, customer reminders, and calendar view to anticipate your services.",
+        "reservations_today": "Today",
+        "reservations_count": "reservations",
+        "floor_plan_title": "Floor plan",
+        "floor_plan_desc": "View your table occupancy in real-time. Drag and drop to reorganize, see available tables at a glance.",
+        "clients_title": "Customer file",
+        "clients_desc": "Centralize your regular customers' information. Notes, preferences, allergies - everything is accessible in one click when taking a reservation.",
+        "clients_regular": "Regular customer",
+        "clients_visits": "visits",
+        "clients_preference": "Preference:",
+        "clients_note": "Note:"
+      },
+      "pricing": {
+        "badge": "Simple pricing",
+        "title": "Much more affordable than alternatives",
+        "subtitle": "No complex plans, no hidden fees. One price that includes all the features you need.",
+        "description": "Couverto is designed for independent restaurant owners, not for large chains. Our pricing reflects this reality: a professional tool at an accessible price.",
+        "no_commitment": "No commitment",
+        "cancel_anytime": "Cancel anytime",
+        "free_trial": "14-day free trial",
+        "plan_badge": "Single plan",
+        "price": "€29",
+        "per_month": "/month",
+        "price_note": "Excl. VAT • Monthly billing",
+        "feature_1": "Unlimited reservations",
+        "feature_2": "Interactive floor plan",
+        "feature_3": "Complete customer file",
+        "feature_4": "Automatic email reminders",
+        "feature_5": "Multi-device access",
+        "feature_6": "Email support included",
+        "feature_7": "Free updates",
+        "feature_8": "Secure data (GDPR)",
+        "cta": "Start free trial",
+        "cta_note": "No credit card required for trial"
+      },
+      "reassurance": {
+        "title": "A trusted partner",
+        "subtitle": "We are committed to protecting your data and providing you with a reliable daily tool.",
+        "item_1_title": "Designed with restaurateurs",
+        "item_1_desc": "Developed in collaboration with field professionals to meet their real needs.",
+        "item_2_title": "GDPR compliant",
+        "item_2_desc": "Your data and your customers' data are processed in full compliance with European regulations.",
+        "item_3_title": "Secure data",
+        "item_3_desc": "Hosted in France, daily backups, and end-to-end encryption.",
+        "item_4_title": "For independent restaurateurs",
+        "item_4_desc": "A tool adapted to your reality, without unnecessary features or superfluous complexity."
+      },
+      "footer": {
+        "slogan": "Service management, simplified. A tool designed for independent restaurant owners.",
+        "product": "Product",
+        "features": "Features",
+        "pricing": "Pricing",
+        "company": "Company",
+        "about": "About",
+        "contact": "Contact",
+        "legal": "Legal",
+        "legal_notice": "Legal notice",
+        "privacy": "Privacy policy",
+        "terms": "Terms of use",
+        "copyright": "Couverto. All rights reserved.",
+        "made_with_love": "Made with care for independent restaurateurs 🇫🇷"
+      }
+    },
     "account": {
       "errors": {
         "check_approval": "Please check the box to confirm the deletion of your account.",
