@@ -32,7 +32,7 @@ export const LandingFooter = () => {
 
   return (
     <footer className="border-t border-border bg-card">
-      <div className="container mx-auto max-w-6xl px-4 md:px-6">
+      <div className="container mx-auto max-w-6xl px-3 md:px-4">
         {/* Main Footer */}
         <div className="py-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand Column */}

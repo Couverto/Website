@@ -70,7 +70,7 @@ export const Pricing = () => {
 
   return (
     <section id="pricing" className="py-20 md:py-28 bg-card">
-      <div className="container mx-auto max-w-6xl px-4 md:px-6">
+      <div className="container mx-auto max-w-6xl px-3 md:px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent mb-6">
@@ -85,7 +85,7 @@ export const Pricing = () => {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative rounded-2xl bg-background p-6 ${
+              className={`relative rounded-2xl bg-background p-5 ${
                 plan.popular ? "border-2 border-primary shadow-xl scale-105" : "border border-border"
               }`}
             >

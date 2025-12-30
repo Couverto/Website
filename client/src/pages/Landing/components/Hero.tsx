@@ -46,7 +46,7 @@ export const Hero = () => {
         />
       </div>
 
-      <div className="container mx-auto max-w-6xl px-4 md:px-6 py-20">
+      <div className="container mx-auto max-w-6xl px-3 md:px-4 py-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           {/* Left Column - Text Content */}
           <div className="flex flex-col gap-6">
