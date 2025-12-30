@@ -147,7 +147,7 @@ export const Hero = () => {
                         <Calendar className="h-3 w-3" />
                         <span>{t("pages.landing.dashboard_preview.reservations")}</span>
                       </div>
-                      <div className="text-xl font-bold text-foreground">24</div>
+                      <div className="text-xl font-bold text-foreground">12</div>
                       <div className="text-xs text-accent">{t("pages.landing.dashboard_preview.tonight")}</div>
                     </div>
                     <div className="rounded-lg bg-card border border-border p-3">
@@ -155,7 +155,7 @@ export const Hero = () => {
                         <LayoutGrid className="h-3 w-3" />
                         <span>{t("pages.landing.dashboard_preview.tables")}</span>
                       </div>
-                      <div className="text-xl font-bold text-foreground">18/22</div>
+                      <div className="text-xl font-bold text-foreground">14/18</div>
                       <div className="text-xs text-muted-foreground">{t("pages.landing.dashboard_preview.occupied")}</div>
                     </div>
                     <div className="rounded-lg bg-card border border-border p-3">
@@ -163,7 +163,7 @@ export const Hero = () => {
                         <Users className="h-3 w-3" />
                         <span>{t("pages.landing.dashboard_preview.covers")}</span>
                       </div>
-                      <div className="text-xl font-bold text-foreground">68</div>
+                      <div className="text-xl font-bold text-foreground">38</div>
                       <div className="text-xs text-muted-foreground">{t("pages.landing.dashboard_preview.estimated")}</div>
                     </div>
                   </div>
