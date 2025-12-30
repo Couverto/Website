@@ -85,7 +85,7 @@ export function NavUser({ user }: { user: UserInterface | null }) {
                   <House className="w-4 h-4" />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/account")}>
+              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/admin/account")}>
                 {t("navbar.account")}
                 <DropdownMenuShortcut>
                   <User className="w-4 h-4" />
