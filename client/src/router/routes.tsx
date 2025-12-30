@@ -3,7 +3,6 @@ import { LayoutWrapper } from "./layoutWrapper";
 
 import { Account } from "@/pages/Account";
 import { ProtectedRoute } from "@/router/protectedRoute";
-import { Home } from "@/pages/Home";
 import { Landing } from "@/pages/Landing";
 import { Index } from "@/pages/Admin";
 import { Logs } from "@/pages/Admin/components/logs";
@@ -17,7 +16,16 @@ import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
 export const Router = () => {
   return (
     <Routes>
+      {/* Public Landing Page */}
       <Route element={<LayoutWrapper withLayout={false} />}>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute authRequired={false}>
+              <Landing />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/login"
           element={
@@ -34,7 +42,6 @@ export const Router = () => {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/register/google"
           element={
@@ -43,11 +50,14 @@ export const Router = () => {
             </ProtectedRoute>
           }
         />
+      </Route>
 
+      {/* Authenticated Admin/Dashboard Routes */}
+      <Route element={<LayoutWrapper withLayout={false} />}>
         <Route
           path="/admin"
           element={
-            <ProtectedRoute authRequired={true} role="admin">
+            <ProtectedRoute authRequired={true}>
               <Index />
             </ProtectedRoute>
           }
@@ -57,40 +67,12 @@ export const Router = () => {
           <Route path="users" element={<Users />} />
           <Route path="logs" element={<Logs />} />
           <Route path="settings" element={<Config />} />
+          <Route path="account" element={<Account />} />
         </Route>
       </Route>
 
-      {/* Public Landing Page */}
-      <Route element={<LayoutWrapper withLayout={false} />}>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute authRequired={false}>
-              <Landing />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
-
-      {/* Authenticated App Routes */}
-      <Route element={<LayoutWrapper />}>
-        <Route
-          path="/app"
-          element={
-            <ProtectedRoute authRequired={true}>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute authRequired={true}>
-              <Account />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
+      {/* Catch-all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

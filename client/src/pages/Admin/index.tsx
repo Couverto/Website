@@ -21,18 +21,17 @@ export const Index = () => {
             <Separator orientation="vertical" className="h-4 mr-2" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem>
-                  <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-                    {t("pages.admin.home")}
-                  </Link>
-                </BreadcrumbItem>
                 {pathSegments.map((segment, index) => {
                   const href = "/" + pathSegments.slice(0, index + 1).join("/");
                   const isLast = index === pathSegments.length - 1;
+                  // Skip 'admin' in breadcrumb display, show it as root
+                  if (segment === "admin" && index === 0) {
+                    return null;
+                  }
 
                   return (
                     <React.Fragment key={href}>
-                      <BreadcrumbSeparator />
+                      {index > 1 && <BreadcrumbSeparator />}
                       <BreadcrumbItem>
                         {isLast ? (
                           <BreadcrumbPage> {t(`pages.admin.${segment}`)}</BreadcrumbPage>

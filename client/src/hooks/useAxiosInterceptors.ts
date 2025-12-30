@@ -19,7 +19,7 @@ export const useAxiosInterceptor = () => {
           const path = location.pathname;
 
           // Don't redirect on public pages
-          if (path !== "/" && path !== "/login" && path !== "/register" && path !== "/register/google") {
+          if (path !== "/" && path !== "/login" && path !== "/register" && path !== "/register/google" && !path.startsWith("/admin")) {
             setAuthUser(null);
 
             navigate("/login");

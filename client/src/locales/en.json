@@ -235,6 +235,7 @@
       "settings": "Settings",
       "admin": "Admin",
       "logs": "Logs",
+      "account": "My Account",
       "back_to_app": "Back to home",
       "dashboard_page": {
         "active_users": "Active Users",

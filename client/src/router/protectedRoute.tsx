@@ -6,7 +6,7 @@ export const ProtectedRoute = ({ authRequired, role, children }: { authRequired:
   const { authUser } = useAuthContext();
 
   if (authUser && role && authUser.role !== role) {
-    return <Navigate to="/app" />;
+    return <Navigate to="/admin" />;
   }
 
   if (authRequired && !authUser) {
@@ -14,7 +14,7 @@ export const ProtectedRoute = ({ authRequired, role, children }: { authRequired:
   }
 
   if (!authRequired && authUser) {
-    return <Navigate to="/app" />;
+    return <Navigate to="/admin" />;
   }
 
   return children;

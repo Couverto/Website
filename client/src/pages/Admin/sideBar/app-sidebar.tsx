@@ -44,11 +44,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader onClick={() => navigate("/")}>
-        <Button variant="outline" className="p-4">
-          <Home className="w-6 h-6" />
-          {state === "expanded" ? <span>{t("pages.admin.back_to_app")}</span> : null}
-        </Button>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 py-2">
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">C</span>
+          </div>
+          {state === "expanded" && <span className="font-bold text-lg">Couverto</span>}
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={adminMenus.navMain} />

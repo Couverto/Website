@@ -59,13 +59,13 @@ export const Navbar = () => {
   const navLinks = [
     {
       label: t("navbar.home"),
-      path: "/app",
+      path: "/admin",
       icon: Home,
       auth: true,
     },
     {
       label: t("navbar.account"),
-      path: "/account",
+      path: "/admin/account",
       icon: User,
       auth: true,
     },
@@ -80,12 +80,12 @@ export const Navbar = () => {
   const mobileLinks = [
     {
       label: t("navbar.home"),
-      path: "/app",
+      path: "/admin",
       icon: House,
     },
     {
       label: t("navbar.account"),
-      path: "/account",
+      path: "/admin/account",
       icon: User,
       auth: !!authUser,
     },
