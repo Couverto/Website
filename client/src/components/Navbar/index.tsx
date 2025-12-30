@@ -59,7 +59,7 @@ export const Navbar = () => {
   const navLinks = [
     {
       label: t("navbar.home"),
-      path: "/",
+      path: "/app",
       icon: Home,
       auth: true,
     },
@@ -80,7 +80,7 @@ export const Navbar = () => {
   const mobileLinks = [
     {
       label: t("navbar.home"),
-      path: "/",
+      path: "/app",
       icon: House,
     },
     {
