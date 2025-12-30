@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { getLoginSchema } from "@/lib/zod/schemas/auth/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,10 @@ import { z } from "zod";
 import { useAuthContext } from "@/contexts/authContext";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
-import { useConfigContext } from "@/contexts/configContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { OAuth } from "@/components/customs/oauth";
+import { Calendar, Users, UtensilsCrossed, Check } from "lucide-react";
 
 export const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -44,7 +44,7 @@ export const Login = () => {
       toast.success(t(response.data.message));
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
-      navigate("/");
+      navigate("/admin");
     } catch (error: any) {
       toast.error(t(error.response.data.error));
     } finally {
@@ -52,28 +52,81 @@ export const Login = () => {
     }
   }
 
-  const { getConfigValue } = useConfigContext();
-  const [configValues, setConfigValues] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const fetchConfigValues = async () => {
-      const values = await getConfigValue(["APP_NAME"]);
-      setConfigValues(values);
-    };
-
-    fetchConfigValues();
-  }, [getConfigValue]);
+  const benefits = [
+    { icon: Calendar, text: t("pages.login.benefit_reservations") },
+    { icon: UtensilsCrossed, text: t("pages.login.benefit_tables") },
+    { icon: Users, text: t("pages.login.benefit_clients") },
+  ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh gap-6 px-2 py-4 md:px-10 md:py-10">
-      <div className="flex items-center self-center gap-2 text-3xl font-medium sm:text-4xl text-accent">{configValues["APP_NAME"]}</div>
-      <div className="flex flex-col w-full max-w-md gap-6 bg-background p-4 md:p-8 lg:rounded-2xl lg:shadow">
-        <div className="text-center">
-          <h1 className="text-xl md:text-2xl font-semibold">{t("pages.login.welcome_back")}</h1>
+    <div className="min-h-screen flex">
+      {/* Left Side - Brand Section */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-10 h-40 w-40 rounded-full bg-white/5 blur-2xl" />
+        <div className="absolute bottom-20 right-10 h-60 w-60 rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute top-1/2 left-1/4 h-32 w-32 rounded-full bg-accent/20 blur-2xl" />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-center p-12 text-white">
+          <div className="max-w-md">
+            <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                <span className="text-2xl font-bold">C</span>
+              </div>
+              <span className="text-3xl font-bold">Couverto</span>
+            </Link>
+
+            <h2 className="text-3xl font-bold mb-4">{t("pages.login.hero_title")}</h2>
+
+            <p className="text-white/80 text-lg mb-8">{t("pages.login.hero_subtitle")}</p>
+
+            <div className="space-y-4">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                    <benefit.icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-white/90">{benefit.text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Testimonial */}
+            <div className="mt-12 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+              <p className="text-white/90 italic mb-4">"{t("pages.login.testimonial_text")}"</p>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-accent/30 flex items-center justify-center">
+                  <span className="font-bold">MR</span>
+                </div>
+                <div>
+                  <div className="font-medium">{t("pages.login.testimonial_author")}</div>
+                  <div className="text-sm text-white/70">{t("pages.login.testimonial_role")}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col items-center gap-6">
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-background">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <Link to="/" className="lg:hidden flex items-center justify-center gap-2 mb-8 hover:opacity-80 transition-opacity">
+            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold">C</span>
+            </div>
+            <span className="text-2xl font-bold text-primary">Couverto</span>
+          </Link>
+
+          <div className="text-center mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{t("pages.login.welcome_back")}</h1>
+            <p className="text-muted-foreground">{t("pages.login.welcome_subtitle")}</p>
+          </div>
+
           <Form {...loginForm}>
-            <form onSubmit={loginForm.handleSubmit(login)} className="w-full space-y-4">
+            <form onSubmit={loginForm.handleSubmit(login)} className="space-y-5">
               <FormField
                 control={loginForm.control}
                 name="loginName"
@@ -81,9 +134,8 @@ export const Login = () => {
                   <FormItem>
                     <FormLabel>{t("pages.login.field")}</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} placeholder={t("pages.login.field_placeholder")} className="h-12" />
                     </FormControl>
-                    <FormDescription>{t("pages.login.field_description")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -94,24 +146,28 @@ export const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.login.password")}</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>{t("pages.login.password")}</FormLabel>
+                      <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                        {t("pages.login.forgot_password")}
+                      </Link>
+                    </div>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" {...field} placeholder="••••••••" className="h-12" />
                     </FormControl>
-                    <FormDescription>{t("pages.login.password_description")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {t("pages.login.login_button")}
+              <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90" disabled={loading}>
+                {loading ? t("pages.login.logging_in") : t("pages.login.login_button")}
               </Button>
 
               {import.meta.env.VITE_FIREBASE_API_KEY && (
                 <>
                   <div className="relative text-sm text-center after:border-border after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="relative z-10 px-2 bg-background text-muted-foreground">{t("pages.login.or_continue_with")}</span>
+                    <span className="relative z-10 px-3 bg-background text-muted-foreground">{t("pages.login.or_continue_with")}</span>
                   </div>
                   <OAuth message="pages.login.login_button" />
                 </>
@@ -119,11 +175,23 @@ export const Login = () => {
             </form>
           </Form>
 
-          <div className="text-sm text-center md:text-base">
+          <div className="mt-8 text-center text-sm text-muted-foreground">
             {t("pages.login.no_account")}{" "}
-            <Link to="/register" className="underline underline-offset-4 text-accent">
+            <Link to="/register" className="font-medium text-primary hover:underline">
               {t("pages.login.sign_up")}
             </Link>
+          </div>
+
+          {/* Trust indicators */}
+          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Check className="h-3 w-3 text-primary" />
+              <span>{t("pages.login.trust_secure")}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Check className="h-3 w-3 text-primary" />
+              <span>{t("pages.login.trust_gdpr")}</span>
+            </div>
           </div>
         </div>
       </div>
