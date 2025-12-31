@@ -24,8 +24,8 @@ export const Index = () => {
                 {pathSegments.map((segment, index) => {
                   const href = "/" + pathSegments.slice(0, index + 1).join("/");
                   const isLast = index === pathSegments.length - 1;
-                  // Skip 'admin' in breadcrumb display, show it as root
-                  if (segment === "admin" && index === 0) {
+                  // Skip 'app' in breadcrumb display, show it as root
+                  if (segment === "app" && index === 0) {
                     return null;
                   }
 

@@ -1,46 +1,45 @@
 import * as React from "react";
-import { Home, NotebookText, Presentation, Settings, UsersIcon } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Settings } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/contexts/authContext";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { LanguageChanger } from "@/components/Navbar/languageChanger";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
-import { useTranslation } from "react-i18next";
-
-const adminMenus = {
-  navMain: [
-    {
-      title: "dashboard",
-      icon: Presentation,
-      url: "/admin/dashboard",
-      isActive: true,
-    },
-    {
-      title: "users",
-      icon: UsersIcon,
-      url: "/admin/users",
-    },
-    {
-      title: "logs",
-      icon: NotebookText,
-      url: "/admin/logs",
-    },
-    {
-      title: "settings",
-      icon: Settings,
-      url: "/admin/settings",
-    },
-  ],
-};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { authUser } = useAuthContext();
-  const navigate = useNavigate();
   const { state } = useSidebar();
-  const { t } = useTranslation();
+
+  const adminMenus = {
+    navMain: [
+      {
+        title: "dashboard",
+        url: "/app/dashboard",
+        icon: LayoutDashboard,
+        isActive: true,
+        roles: ["admin", "user"],
+      },
+      {
+        title: "users",
+        url: "/app/users",
+        icon: Users,
+        roles: ["admin"],
+      },
+      {
+        title: "logs",
+        url: "/app/logs",
+        icon: FileText,
+        roles: ["admin"],
+      },
+      {
+        title: "settings",
+        url: "/app/settings",
+        icon: Settings,
+        roles: ["admin"],
+      },
+    ].filter((item) => !item.roles || (authUser?.role && item.roles.includes(authUser.role))),
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>

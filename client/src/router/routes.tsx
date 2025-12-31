@@ -52,10 +52,10 @@ export const Router = () => {
         />
       </Route>
 
-      {/* Authenticated Admin/Dashboard Routes */}
+      {/* Authenticated Application/Dashboard Routes */}
       <Route element={<LayoutWrapper withLayout={false} />}>
         <Route
-          path="/admin"
+          path="/app"
           element={
             <ProtectedRoute authRequired={true}>
               <Index />
@@ -64,9 +64,30 @@ export const Router = () => {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="logs" element={<Logs />} />
-          <Route path="settings" element={<Config />} />
+          <Route
+            path="users"
+            element={
+              <ProtectedRoute authRequired={true} role="admin">
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="logs"
+            element={
+              <ProtectedRoute authRequired={true} role="admin">
+                <Logs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute authRequired={true} role="admin">
+                <Config />
+              </ProtectedRoute>
+            }
+          />
           <Route path="account" element={<Account />} />
         </Route>
       </Route>

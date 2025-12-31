@@ -15,15 +15,9 @@ export const useAxiosInterceptor = () => {
     const interceptor = axiosConfig.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response && error.response.status === 401) {
-          const path = location.pathname;
-
-          // Don't redirect on public pages
-          if (path !== "/" && path !== "/login" && path !== "/register" && path !== "/register/google" && !path.startsWith("/admin")) {
-            setAuthUser(null);
-
-            navigate("/login");
-          }
+        const path = window.location.pathname;
+        if (error.response?.status === 401 && path !== "/" && path !== "/login" && path !== "/register" && !path.startsWith("/app")) {
+          window.location.href = "/login";
         }
         return Promise.reject(error);
       },

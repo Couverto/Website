@@ -59,41 +59,41 @@ export const Navbar = () => {
   const navLinks = [
     {
       label: t("navbar.home"),
-      path: "/admin",
+      path: "/app",
       icon: Home,
       auth: true,
     },
     {
       label: t("navbar.account"),
-      path: "/admin/account",
+      path: "/app/account",
       icon: User,
       auth: true,
     },
     {
       label: t("navbar.dashboard"),
-      path: "/admin/dashboard",
+      path: "/app/dashboard",
       icon: Wrench,
-      auth: authUser?.role === "admin",
+      auth: !!authUser,
     },
   ];
 
   const mobileLinks = [
     {
       label: t("navbar.home"),
-      path: "/admin",
+      path: "/app",
       icon: House,
     },
     {
       label: t("navbar.account"),
-      path: "/admin/account",
+      path: "/app/account",
       icon: User,
       auth: !!authUser,
     },
     {
       label: t("navbar.dashboard"),
-      path: "/admin/dashboard",
+      path: "/app/dashboard",
       icon: Wrench,
-      auth: authUser?.role === "admin",
+      auth: !!authUser,
     },
   ];
 
