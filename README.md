@@ -1,253 +1,97 @@
-# MERN-APP BOILERPLATE README
+# 🍽️ Couverto - Service management, simplified.
 
-Welcome to the MERN-APP boilerplate, a complete solution to quickly start a modern and secure full-stack application. This project is designed to help you create robust applications with secure authentication, role management, and much more.
+**Couverto** is a modern service management software designed specifically for independent restaurant owners. It focuses on essential features to help restaurateurs focus on their craft, not on complex tools.
 
-## Table of Contents
+---
 
-<details>
-  <summary>📑 Table of Contents</summary>
-  
-  - [Author](#author)
-  - [Technologies Used](#technologies-used)
-  - [Requirements](#requirements)
-  - [Backend](#backend)
-  - [Frontend](#frontend)
-  - [Firebase OAuth Setup](#firebase-oauth-setup)
-  - [Run the Application](#run-the-application)
-  - [Application Configuration](#application-configuration)
-  - [Unit Tests](#unit-tests)
-  - [Husky](#husky)
-  - [Features](#features)
-  - [Contribution](#contribution)
-  
-</details>
+## 🚀 Key Features
 
-## Author
+- **📅 Real-time Reservation Management**: Receive and manage your reservations instantly from any device. Automatic confirmations and reminders included.
+- **🏗️ Interactive Floor Plan**: Visualize your dining room at a glance. Manage table occupancy and seating with a simple drag-and-drop interface.
+- **👥 Centralized Customer File**: Keep track of your regulars, their preferences, and allergies in one click.
+- **📊 Admin Dashboard**: Monitor your restaurant's performance with key statistics and logs.
+- **🌍 Multi-language Support**: Fully localized in English and French (i18n).
+- **🌙 Dark/Light Mode**: Aesthetic and comfortable interface for any lighting condition.
 
-👨‍💻 **[Téo Villet](https://github.com/teovlt)** - Web Developer
+---
 
-## Technologies Used
+## 🛠️ Tech Stack
 
-![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
-![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+Built with the **MERN** stack for reliability and performance:
 
-## Requirements
+- **Frontend**: React (Vite), TailwindCSS, ShadCN UI, Axios, i18next.
+- **Backend**: Node.js, Express, MongoDB (Mongoose).
+- **Real-time**: WebSockets for live status updates.
+- **Auth**: JWT-based authentication + Google OAuth via Firebase.
+- **Dev Tools**: Husky, Prettier, Unit Testing (Vitest).
 
-📦 Before starting, make sure you have the following installed:
+---
 
-- [**Node.js**](https://nodejs.org/en): v22.x or higher
-- [**pnpm**](https://pnpm.io/fr/): v10.x or higher
-- [**Git**](https://git-scm.com/): v2.47.x or higher (for Husky hooks)
-- [**MongoDB**](https://www.mongodb.com/): v8.0.9 or higher
-- **A modern browser** (Chrome, Firefox, etc.)
+## 🚦 Quick Start
 
-You can check your installed versions using:
+### 📋 Requirements
 
-```bash
-node -v
-pnpm -v
-git --version
-```
+- **Node.js**: v22.x+
+- **pnpm**: v10.x+
+- **MongoDB**: v8.0+
 
-## Backend
+### 🔧 Installation
 
-🔙 Navigate to the `server` directory.  
-You need to create a **.env** file containing the backend environment variables.
+1. **Clone the repository**
 
-Example:
+   ```bash
+   git clone https://github.com/teovlt/Couverto.git
+   cd Couverto
+   ```
 
-```env
-PORT=
-MONG_URI=
-MONG_URI_TEST=
-SECRET_ACCESS_TOKEN=
-CORS_ORIGIN=
-```
+2. **Setup Backend**
 
-- **PORT** → The port your server will use.
-- **MONG_URI** → MongoDB connection string (don’t forget to allow your IP in MongoDB Atlas if applicable).
-- **MONG_URI_TEST** → Test DB URI (data gets wiped during tests — use a separate DB).
-- **SECRET_ACCESS_TOKEN** → JWT token secret (use this command : _openssl rand -base64 64_).
-- **CORS_ORIGIN** → Frontend URL for CORS setup.
+   - Navigate to `server/`
+   - Create `.env` (see `.env.example`)
 
-Refer to the `.env.example` file in the `server` directory for guidance.
+   ```bash
+   pnpm install
+   pnpm dev
+   ```
 
-## Frontend
+3. **Setup Frontend**
 
-🎨 Navigate to the `client` directory and create a **.env** file:
+   - Navigate to `client/`
+   - Create `.env` (see `.env.example`)
 
-```env
-VITE_API_URL=
-```
+   ```bash
+   pnpm install
+   pnpm dev
+   ```
 
-- **VITE_API_URL** → URL of your backend server (e.g. `http://localhost:5000`)
+4. **Access the App**
+   Open [http://localhost:5173](http://localhost:5173).
 
-See `.env.example` in `client` for reference.
+---
 
-## Firebase OAuth Setup
+## 🛡️ Administrative Setup
 
-**Non mandatory**
-🔑 If you want to enable Google OAuth for user authentication, follow these steps to set up Firebase:
+1. **Register** a new user. The first user created is automatically assigned the **Administrator** role.
+2. Access the **Dashboard** to manage users, logs, and global application configuration (Name, accent color, etc.).
 
-🔐 This app uses **Firebase Authentication with Google OAuth** to let users sign in effortlessly.
+---
 
-Here’s how to set it up quickly:
-
-1. Go to [console.firebase.google.com](https://console.firebase.google.com) and **create a new project**.
-2. Once inside your project, click on **“Authentication”** in the sidebar.
-3. Click on **“Get started”**, then select **Google** as the sign-in method.
-4. Enable the provider:
-   - (Optional) Change the **app name**
-   - Add a **support email**
-   - Save ✅
-
-Next up:
-
-5. Go back to your **Firebase dashboard**, and click the **web icon `</>`** to register a new web app.
-6. Enter your app name and move to the next step.  
-   You’ll get a config object like this:
-
-```js
-const firebaseConfig = {
-  apiKey: "XXXX",
-  authDomain: "XXXX.firebaseapp.com",
-  projectId: "XXXX",
-  storageBucket: "XXXX.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX",
-  measurementId: "XXXX", // 👉 not needed
-};
-```
-
-7. Copy every line **except `measurementId`** into your `.env` file inside the `client` folder:
-
-```env
-VITE_API_URL=...
-
-VITE_FIREBASE_API_KEY=XXXX
-VITE_FIREBASE_AUTH_DOMAIN=XXXX.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=XXXX
-VITE_FIREBASE_STORAGE_BUCKET=XXXX.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=XXXX
-VITE_FIREBASE_APP_ID=XXXX
-```
-
-8. Finally, click **“Go to Console”** to complete the setup.  
-   Your app is now connected to Firebase and ready to support Google OAuth login 🚀
-
-## Run the Application
-
-⚡ Install and run the frontend and backend separately in two terminals:
-
-**Terminal 1: Start the Frontend**
+## 🧪 Testing & Quality
 
 ```bash
-cd client
-pnpm i
-pnpm dev
+# In server directory
+pnpm run test        # Run unit tests
+pnpm run coverage    # Generate coverage report
 ```
 
-**Terminal 2: Start the Backend**
+Husky ensures code quality with pre-commit hooks for linting and formatting.
 
-```bash
-cd server
-pnpm i
-pnpm dev
-```
+---
 
-You should see the following messages in the terminal:
+## 🤝 Contributing
 
-```bash
-Server listenning on port ... 🚀
-Connected to the database 🧰
-```
+Contributions are welcome! Please follow the standard fork/PR workflow and ensure your code is commented and matches the style conventions.
 
-Once both are running, go to [http://localhost:5173](http://localhost:5173) to see the application.
+---
 
-## Application Configuration
-
-This boilerplate includes a `config` table in the database which stores dynamic configuration values, including the **application name**.
-
-🧩 After cloning and launching the app:
-
-1. **Register a new user** via the **Register** page (first user is an administrator by default).
-2. Access the **Admin Dashboard**.
-3. Go to the **Settings** section.
-4. Set the configuration you want for your application.
-
-Once configured, your application is fully ready to be extended for your use case.
-
-## Unit Tests
-
-🧪 First, turn off the server if it's running, then run:
-
-```bash
-pnpm run test
-```
-
-To check full test coverage:
-
-```bash
-pnpm run coverage
-```
-
-The coverage report will be generated in the `server/coverage` folder.  
-Don’t forget to restart the server afterward.
-
-## Husky
-
-🐶 **Husky Integration**:
-
-This project uses **Husky** to automatically run code formatting and lint checks before each commit, ensuring a consistent codebase.
-If the pre-commit hook doesn’t work, verify that husky have the correct permissions:
-
-```bash
-chmod +x .husky/pre-commit
-```
-
-### Benefits
-
-- **Consistent Style**
-- **Less Manual Work**
-- **Reliable Codebase**
-
-## Features
-
-🚀 **Features:**
-
-- 📜 Log Management
-- 👥 User CRUD (Create, Read, Update, Delete)
-- 🔒 JWT-based Authentication
-- 🏢 Role-based Access Control (Admin, User)
-- ✅ Unit Testing with Coverage
-- 📝 Fully Commented Backend Code
-- 🔗 API Requests with Axios
-- 📊 Admin Dashboard
-- 🔐 Protected & Conditional Routing
-- 🌙 Light/Dark Theme Toggle
-- 🌍 i18n Multi-language Support
-- 🎨 TailwindCSS + ShadCN UI
-- 📋 Ready-to-use Auth Forms
-- 🔄 Prettier Formatting
-- 🖼 Avatar Upload with GIF support
-- 📡 Real-time Online Status via WebSocket
-- 🧩 Application Configuration via Database
-- 🔑 OAuth with Google via Firebase
-
-## Contribution
-
-🤝 We welcome contributions! To contribute:
-
-1. **Fork** the repository.
-2. Create a new branch: `git checkout -b feature/my-feature`.
-3. Commit your changes: `git commit -m 'Add my feature'`.
-4. Push to GitHub: `git push origin feature/my-feature`.
-5. Open a Pull Request.
-
-### Contribution Guidelines
-
-- Comment your code when necessary.
-- Follow naming and style conventions.
-- Add unit tests when applicable.
+👨‍💻 **Author**: [Téo Villet](https://github.com/teovlt)
