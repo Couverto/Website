@@ -9,6 +9,13 @@ export interface IRestaurant extends Document {
   city: string;
   phone: string;
   website?: string;
+  coverImage?: string;
+  images: string[];
+  menu: string[];
+  openingHours: Map<string, string>;
+  cuisineType: string[];
+  priceRange: string;
+  rating: number;
   collaborators: Array<mongoose.Types.ObjectId>;
   createdAt: Date;
   updatedAt: Date;

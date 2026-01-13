@@ -286,6 +286,7 @@
       "settings": "Paramètres",
       "admin": "Admin",
       "logs": "Journaux",
+      "restaurants": "Restaurants",
       "account": "Mon compte",
       "back_to_app": "Retour à l'accueil",
       "dashboard_page": {
@@ -376,6 +377,50 @@
           "delete": "Supprimer",
           "confirm_text_invalid": "Le texte de confirmation est incorrect"
         }
+      },
+      "restaurants_page": {
+        "restaurant": "Restaurant",
+        "a_restaurant": "un restaurant",
+        "table": {
+          "name": "Nom",
+          "address": "Adresse",
+          "city": "Ville",
+          "rating": "Note",
+          "collaborators": "Collaborateurs",
+          "actions": "Actions",
+          "copy_id": "Copier l'ID",
+          "edit": "Modifier",
+          "delete": "Supprimer"
+        },
+        "form": {
+          "name": "Nom",
+          "slug": "Slug",
+          "description": "Description",
+          "address": "Adresse",
+          "city": "Ville",
+          "phone": "Téléphone",
+          "website": "Site Web",
+          "cover_image": "Image de couverture",
+          "images": "Images (URLs séparées par des virgules)",
+          "menu": "Menu (URLs séparées par des virgules)",
+          "opening_hours": "Horaires d'ouverture (JSON)",
+          "price_range": "Fourchette de prix",
+          "cuisine_type": "Type de cuisine",
+          "rating": "Note",
+          "update": "Mettre à jour",
+          "errors": {
+            "name_required": "Le nom est requis",
+            "slug_required": "Le slug est requis",
+            "address_required": "L'adresse est requise",
+            "city_required": "La ville est requise",
+            "phone_required": "Le téléphone est requis"
+          }
+        },
+        "actions_type": {
+          "create": "Créer",
+          "update": "Modifier",
+          "delete": "Supprimer"
+        }
       }
     }
   },
@@ -408,7 +453,8 @@
       "delete_entity": "Supprimer toutes les entités",
       "filters": {
         "username": "Filtrer par nom d'utilisateur",
-        "message": "Filtrer par message"
+        "message": "Filtrer par message",
+        "nom": "Filtrer par nom"
       },
       "delete_title": "Supprimer toutes les entités",
       "delete_description": "Êtes-vous sûr de vouloir supprimer toutes les entités ? Cette action est irréversible.",
@@ -439,7 +485,18 @@
     "global": {
       "errors": {
         "missing_fields": "Veuillez remplir tous les champs obligatoires.",
-        "no_such_user": "Aucun utilisateur trouvé."
+        "no_such_user": "Aucun utilisateur trouvé.",
+        "not_found": "Ressource non trouvée"
+      }
+    },
+    "restaurants": {
+      "errors": {
+        "slug_taken": "Ce slug est déjà pris"
+      },
+      "messages": {
+        "created": "Restaurant créé avec succès",
+        "updated": "Restaurant mis à jour avec succès",
+        "deleted": "Restaurant supprimé avec succès"
       }
     },
     "auth": {

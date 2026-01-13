@@ -10,6 +10,17 @@ const RestaurantSchema = new Schema<IRestaurant>(
     city: { type: String, required: true, trim: true },
     phone: { type: String, required: true },
     website: { type: String, required: false },
+    coverImage: { type: String, default: "" },
+    images: { type: [String], default: [] },
+    menu: { type: [String], default: [] },
+    openingHours: {
+      type: Map,
+      of: String,
+      default: {},
+    },
+    cuisineType: { type: [String], default: [] },
+    priceRange: { type: String, enum: ["$", "$$", "$$$"], default: "$$" },
+    rating: { type: Number, default: 0 },
     collaborators: {
       type: [Schema.Types.ObjectId],
       default: [],

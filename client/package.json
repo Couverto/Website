@@ -6,6 +6,7 @@
   "author": "villett",
   "scripts": {
     "dev": "vite",
+    "build": "vite build",
     "format": "pnpm exec prettier --write './**/*.{js,ts,json,css,md,tsx}'"
   },
   "keywords": [],

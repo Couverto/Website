@@ -285,6 +285,7 @@
       "users": "Users",
       "settings": "Settings",
       "admin": "Admin",
+      "restaurants": "Restaurants",
       "logs": "Logs",
       "account": "My Account",
       "back_to_app": "Back to home",
@@ -376,6 +377,50 @@
           "delete": "Delete",
           "confirm_text_invalid": "Confirmation text is incorrect"
         }
+      },
+      "restaurants_page": {
+        "restaurant": "Restaurant",
+        "a_restaurant": "a restaurant",
+        "table": {
+          "name": "Name",
+          "address": "Address",
+          "city": "City",
+          "rating": "Rating",
+          "collaborators": "Collaborators",
+          "actions": "Actions",
+          "copy_id": "Copy ID",
+          "edit": "Edit",
+          "delete": "Delete"
+        },
+        "form": {
+          "name": "Name",
+          "slug": "Slug",
+          "description": "Description",
+          "address": "Address",
+          "city": "City",
+          "phone": "Phone",
+          "website": "Website",
+          "cover_image": "Cover Image",
+          "images": "Images (Comma separated URLs)",
+          "menu": "Menu (Comma separated URLs)",
+          "opening_hours": "Opening Hours (JSON)",
+          "price_range": "Price Range",
+          "cuisine_type": "Cuisine Type",
+          "rating": "Rating",
+          "update": "Update",
+          "errors": {
+            "name_required": "Name is required",
+            "slug_required": "Slug is required",
+            "address_required": "Address is required",
+            "city_required": "City is required",
+            "phone_required": "Phone is required"
+          }
+        },
+        "actions_type": {
+          "create": "Create",
+          "update": "Update",
+          "delete": "Delete"
+        }
       }
     }
   },
@@ -408,7 +453,8 @@
       "delete_entity": "Delete all entities",
       "filters": {
         "username": "Filter by username",
-        "message": "Filter by message"
+        "message": "Filter by message",
+        "name": "Filter by name"
       },
       "delete_title": "Delete all entities",
       "delete_description": "Are you sure you want to delete all entities? This action cannot be undone.",
@@ -439,7 +485,18 @@
     "global": {
       "errors": {
         "missing_fields": "Please fill in all required fields.",
-        "no_such_user": "No such user found."
+        "no_such_user": "No such user found.",
+        "not_found": "Resource not found"
+      }
+    },
+    "restaurants": {
+      "errors": {
+        "slug_taken": "This slug is already taken"
+      },
+      "messages": {
+        "created": "Restaurant created successfully",
+        "updated": "Restaurant updated successfully",
+        "deleted": "Restaurant deleted successfully"
       }
     },
     "auth": {

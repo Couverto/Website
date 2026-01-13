@@ -8,6 +8,7 @@ import { Index } from "@/pages/Admin";
 import { Logs } from "@/pages/Admin/components/logs";
 import { Users } from "@/pages/Admin/components/users";
 import { Dashboard } from "@/pages/Admin/components/dashboard";
+import { Restaurants } from "@/pages/Admin/components/restaurants";
 import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
@@ -69,6 +70,14 @@ export const Router = () => {
             element={
               <ProtectedRoute authRequired={true} role="admin">
                 <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="restaurants"
+            element={
+              <ProtectedRoute authRequired={true} role="admin">
+                <Restaurants />
               </ProtectedRoute>
             }
           />
