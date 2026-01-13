@@ -11,6 +11,7 @@ const UserSchema = new Schema<IUser>(
     username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     role: { type: String, default: userRoles.USER },
+    restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant", default: null },
     avatar: { type: String, default: "" },
     auth_type: { type: String, default: authTypes.LOCAL },
   },
