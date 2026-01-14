@@ -44,6 +44,27 @@ export const Router = () => {
             </>
           }
         />
+
+        {/* User Account Route */}
+        {/* User Account Route */}
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute authRequired={true}>
+              <AccountLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="profile" replace />} />
+          <Route path="profile" element={<AccountProfile />} />
+          <Route path="restaurants" element={<AccountRestaurants />} />
+          <Route path="bookings" element={<AccountBooking />} />
+        </Route>
+      </Route>
+
+      {/* Authenticated Application/Dashboard Routes */}
+      <Route element={<LayoutWrapper withLayout={false} />}>
+        {/* Auth Routes */}
         <Route
           path="/login"
           element={
@@ -69,25 +90,6 @@ export const Router = () => {
           }
         />
 
-        {/* User Account Route */}
-        {/* User Account Route */}
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute authRequired={true}>
-              <AccountLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="profile" replace />} />
-          <Route path="profile" element={<AccountProfile />} />
-          <Route path="restaurants" element={<AccountRestaurants />} />
-          <Route path="bookings" element={<AccountBooking />} />
-        </Route>
-      </Route>
-
-      {/* Authenticated Application/Dashboard Routes */}
-      <Route element={<LayoutWrapper withLayout={false} />}>
         {/* Admin Routes */}
         <Route
           path="/admin"

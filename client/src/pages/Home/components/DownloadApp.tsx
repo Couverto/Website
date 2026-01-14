@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { Smartphone } from "lucide-react";
+import { useConfigContext } from "@/contexts/configContext";
 
 export const DownloadApp = () => {
   const { t } = useTranslation();
+  const { configValues } = useConfigContext();
+  const appName = configValues["APP_NAME"] || "Couverto";
 
   return (
     <section className="py-24 bg-primary text-primary-foreground overflow-hidden">
@@ -11,9 +14,11 @@ export const DownloadApp = () => {
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
           <div className="flex-1 space-y-8 text-center lg:text-left">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl text-white">
-              {t("pages.home.download_app.title")}
+              {t("pages.home.download_app.title", { appName })}
             </h2>
-            <p className="max-w-[600px] mx-auto lg:mx-0 text-white/80 text-xl leading-relaxed">{t("pages.home.download_app.subtitle")}</p>
+            <p className="max-w-[600px] mx-auto lg:mx-0 text-white/80 text-xl leading-relaxed">
+              {t("pages.home.download_app.subtitle", { appName })}
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button

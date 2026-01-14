@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { OAuth } from "@/components/customs/oauth";
+import { useConfigContext } from "@/contexts/configContext";
 import { Check, Star, Shield, Zap } from "lucide-react";
 
 export const Register = () => {
   const [loading, setLoading] = useState(false);
+  const { configValues } = useConfigContext();
 
   const navigate = useNavigate();
   const { setAuthUser } = useAuthContext();
@@ -72,10 +74,12 @@ export const Register = () => {
               <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                 <span className="text-2xl font-bold">C</span>
               </div>
-              <span className="text-3xl font-bold">Couverto</span>
+              <span className="text-3xl font-bold">{configValues["APP_NAME"] || "Couverto"}</span>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4">{t("pages.register.hero_title")}</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              {t("pages.register.hero_title", { appName: configValues["APP_NAME"] || "Couverto" })}
+            </h2>
 
             <p className="text-white/80 text-lg mb-8">{t("pages.register.hero_subtitle")}</p>
 
@@ -113,7 +117,7 @@ export const Register = () => {
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold">C</span>
             </div>
-            <span className="text-2xl font-bold text-primary">Couverto</span>
+            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"] || "Couverto"}</span>
           </Link>
 
           <div className="text-center mb-6">

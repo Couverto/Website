@@ -15,6 +15,9 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
       const accent = values["ACCENT_COLOR"];
       if (accent && accent !== "__NOT_FOUND__") {
         document.documentElement.style.setProperty("--accent", accent);
+        // Also update primary and ring as they are the main brand colors
+        document.documentElement.style.setProperty("--primary", accent);
+        document.documentElement.style.setProperty("--ring", accent);
       }
 
       if (values["APP_NAME"]) {

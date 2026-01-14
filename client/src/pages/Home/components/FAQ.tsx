@@ -1,8 +1,11 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useTranslation } from "react-i18next";
+import { useConfigContext } from "@/contexts/configContext";
 
 export const FAQ = () => {
   const { t } = useTranslation();
+  const { configValues } = useConfigContext();
+  const appName = configValues["APP_NAME"] || "Couverto";
 
   const faqs = [
     {
@@ -29,7 +32,7 @@ export const FAQ = () => {
         <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pages.home.faq.title")}</h2>
           <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-            {t("pages.home.faq.subtitle")}
+            {t("pages.home.faq.subtitle", { appName })}
           </p>
         </div>
         <div className="mx-auto max-w-4xl bg-background rounded-xl shadow-sm border p-6 md:p-8">

@@ -24,22 +24,13 @@ import { useConfigContext } from "../../contexts/configContext";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [configValues, setConfigValues] = useState<Record<string, string>>({});
   const menuRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { logout, loading } = useLogout();
   const { authUser } = useAuthContext();
-  const { getConfigValue } = useConfigContext();
-
-  useEffect(() => {
-    const fetchConfigValues = async () => {
-      const values = await getConfigValue(["APP_NAME"]);
-      setConfigValues(values);
-    };
-    fetchConfigValues();
-  }, [getConfigValue]);
+  const { configValues } = useConfigContext();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

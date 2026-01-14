@@ -7,6 +7,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } fro
 import { useAuthContext } from "@/contexts/authContext";
 import { LanguageChanger } from "@/components/Navbar/languageChanger";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { useConfigContext } from "@/contexts/configContext";
 import { useNavigate } from "react-router-dom";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -14,6 +15,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state } = useSidebar();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { configValues } = useConfigContext();
 
   const adminMenus = {
     navMain: [
@@ -64,9 +66,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader onClick={() => navigate("/")} className="hover:cursor-pointer">
         <div className="flex items-center gap-2 px-2 py-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">C</span>
+            {/* Display first letter of App Name */}
+            <span className="text-primary-foreground font-bold text-sm">{(configValues["APP_NAME"] || "Couverto").charAt(0)}</span>
           </div>
-          {state === "expanded" && <span className="font-bold text-lg">Couverto</span>}
+          {state === "expanded" && <span className="font-bold text-lg">{configValues["APP_NAME"] || "Couverto"}</span>}
         </div>
       </SidebarHeader>
       <SidebarContent>

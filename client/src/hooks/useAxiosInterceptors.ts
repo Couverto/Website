@@ -16,7 +16,22 @@ export const useAxiosInterceptor = () => {
       (response) => response,
       (error) => {
         const path = window.location.pathname;
-        if (error.response?.status === 401 && path !== "/" && path !== "/login" && path !== "/register" && !path.startsWith("/app")) {
+        const requestUrl = error.config?.url;
+
+        // Don't redirect if the 401 comes from the auth check itself
+        if (requestUrl?.includes("/auth/me")) {
+          return Promise.reject(error);
+        }
+
+        if (
+          error.response?.status === 401 &&
+          path !== "/" &&
+          path !== "/login" &&
+          path !== "/register" &&
+          path !== "/register/google" &&
+          path !== "/pro" &&
+          !path.startsWith("/app")
+        ) {
           window.location.href = "/login";
         }
         return Promise.reject(error);

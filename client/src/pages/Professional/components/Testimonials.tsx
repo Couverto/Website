@@ -2,34 +2,37 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useConfigContext } from "@/contexts/configContext";
 
 export const Testimonials = () => {
   const { t } = useTranslation();
+  const { configValues } = useConfigContext();
+  const appName = configValues["APP_NAME"] || "Couverto";
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const testimonials = [
     {
       name: t("pages.landing.testimonials.testimonial_1_name"),
       role: t("pages.landing.testimonials.testimonial_1_role"),
-      text: t("pages.landing.testimonials.testimonial_1_text"),
+      text: t("pages.landing.testimonials.testimonial_1_text", { appName }),
       rating: 5,
     },
     {
       name: t("pages.landing.testimonials.testimonial_2_name"),
       role: t("pages.landing.testimonials.testimonial_2_role"),
-      text: t("pages.landing.testimonials.testimonial_2_text"),
+      text: t("pages.landing.testimonials.testimonial_2_text", { appName }),
       rating: 5,
     },
     {
       name: t("pages.landing.testimonials.testimonial_3_name"),
       role: t("pages.landing.testimonials.testimonial_3_role"),
-      text: t("pages.landing.testimonials.testimonial_3_text"),
+      text: t("pages.landing.testimonials.testimonial_3_text", { appName }),
       rating: 5,
     },
     {
       name: t("pages.landing.testimonials.testimonial_4_name"),
       role: t("pages.landing.testimonials.testimonial_4_role"),
-      text: t("pages.landing.testimonials.testimonial_4_text"),
+      text: t("pages.landing.testimonials.testimonial_4_text", { appName }),
       rating: 4,
     },
   ];

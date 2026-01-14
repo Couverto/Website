@@ -31,7 +31,7 @@
       "button": "Back to Home"
     },
     "home": {
-      "welcome_message": "Welcome to Couverto",
+      "welcome_message": "Welcome to {{appName}}",
       "navbar": {
         "are_you_pro": "Are you a restaurateur?",
         "my_account": "My Account"
@@ -82,7 +82,7 @@
         }
       },
       "value_props": {
-        "title": "Why book on Couverto?",
+        "title": "Why book on {{appName}}?",
         "subtitle": "The booking platform designed to simplify your life."
       },
       "pro_section": {
@@ -92,7 +92,7 @@
       },
       "faq": {
         "title": "Frequently Asked Questions",
-        "subtitle": "Everything you need to know about Couverto.",
+        "subtitle": "Everything you need to know about {{appName}}.",
         "q1": "Is it really free?",
         "a1": "Yes, for users, booking is 100% free. You simply pay for your meal at the restaurant.",
         "q2": "How do I cancel my booking?",
@@ -128,8 +128,8 @@
         "button": "Find a table now"
       },
       "download_app": {
-        "title": "Couverto is better in the app",
-        "subtitle": "Download the Couverto app for free and book your table in seconds.",
+        "title": "{{appName}} is better in the app",
+        "subtitle": "Download the {{appName}} app for free and book your table in seconds.",
         "ios": "App Store",
         "android": "Play Store",
         "download_on": "Download on the",
@@ -159,7 +159,7 @@
         "badge": "For independent restaurant owners",
         "headline": "Manage your reservations and dining room",
         "headline_highlight": "without complexity.",
-        "slogan": "Couverto — Service management, simplified.",
+        "slogan": "{{appName}} — Service management, simplified.",
         "description": "Software designed for independent restaurant owners who want to focus on their craft, not on complex tools.",
         "cta_primary": "See our plans",
         "cta_secondary": "See features",
@@ -255,10 +255,10 @@
         "subtitle": "Hundreds of restaurateurs trust us every day",
         "testimonial_1_name": "Marie Rousseau",
         "testimonial_1_role": "Le Petit Bistrot, Paris",
-        "testimonial_1_text": "Since I started using Couverto, I've saved precious time every day. The interface is intuitive and my customers appreciate the automatic reminders.",
+        "testimonial_1_text": "Since I started using {{appName}}, I've saved precious time every day. The interface is intuitive and my customers appreciate the automatic reminders.",
         "testimonial_2_name": "Jean-Pierre Martin",
         "testimonial_2_role": "La Table du Chef, Lyon",
-        "testimonial_2_text": "Finally a tool designed for small restaurants! No more reservation notebooks and mistakes. Couverto has transformed our organization.",
+        "testimonial_2_text": "Finally a tool designed for small restaurants! No more reservation notebooks and mistakes. {{appName}} has transformed our organization.",
         "testimonial_3_name": "Sophie Bernard",
         "testimonial_3_role": "Chez Sophie, Bordeaux",
         "testimonial_3_text": "The interactive floor plan is amazing. I can see at a glance which tables are free and reorganize easily.",
@@ -278,7 +278,7 @@
         "legal_notice": "Legal notice",
         "privacy": "Privacy policy",
         "terms": "Terms of use",
-        "copyright": "Couverto. All rights reserved.",
+        "copyright": "{{appName}}. All rights reserved.",
         "made_with_love": "Made with care for independent restaurateurs 🇫🇷"
       }
     },
@@ -343,11 +343,11 @@
       "sign_up": "Create an account",
       "agree_terms": "By clicking login, you agree to our Terms of Service and Conditions.",
       "hero_title": "Manage your restaurant with ease",
-      "hero_subtitle": "Join hundreds of restaurateurs who use Couverto to optimize their service every day.",
+      "hero_subtitle": "Join hundreds of restaurateurs who use {{appName}} to optimize their service every day.",
       "benefit_reservations": "Real-time reservation management",
       "benefit_tables": "Interactive floor plan",
       "benefit_clients": "Centralized customer file",
-      "testimonial_text": "Since I started using Couverto, I've saved precious time every day. The interface is intuitive and my customers appreciate the automatic reminders.",
+      "testimonial_text": "Since I started using {{appName}}, I've saved precious time every day. The interface is intuitive and my customers appreciate the automatic reminders.",
       "testimonial_author": "Marie Rousseau",
       "testimonial_role": "Restaurant Le Petit Bistrot, Paris",
       "trust_secure": "Secure login",
@@ -380,7 +380,7 @@
       "already_have_account": "Already have an account?",
       "login": "Sign in",
       "terms_and_conditions": "By creating an account, you agree to our Terms of Service and Privacy Policy.",
-      "hero_title": "Join the Couverto community",
+      "hero_title": "Join the {{appName}} community",
       "hero_subtitle": "Thousands of restaurateurs trust us to manage their reservations every day.",
       "feature_1": "Intuitive and easy-to-use interface",
       "feature_2": "Secure and GDPR-compliant data",
@@ -406,7 +406,7 @@
     "register_google": {
       "title": "Complete your registration",
       "subtitle": "One more step to access your space",
-      "hero_title": "Welcome to Couverto!",
+      "hero_title": "Welcome to {{appName}}!",
       "hero_subtitle": "Your Google account is connected. Create a password to secure your access.",
       "step_1": "Google login successful",
       "step_2": "Complete your information",

@@ -2,9 +2,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, LayoutGrid, Users, Utensils, Clock, Star, ChefHat } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useConfigContext } from "@/contexts/configContext";
 
 export const Hero = () => {
   const { t } = useTranslation();
+  const { configValues } = useConfigContext();
+  const appName = configValues["APP_NAME"] || "Couverto";
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
@@ -41,7 +44,7 @@ export const Hero = () => {
             </h1>
 
             {/* Slogan */}
-            <p className="text-lg text-muted-foreground md:text-xl max-w-xl">{t("pages.landing.hero.slogan")}</p>
+            <p className="text-lg text-muted-foreground md:text-xl max-w-xl">{t("pages.landing.hero.slogan", { appName })}</p>
 
             {/* Description */}
             <p className="text-muted-foreground max-w-xl">{t("pages.landing.hero.description")}</p>

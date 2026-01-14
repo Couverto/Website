@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useConfigContext } from "@/contexts/configContext";
 
 export const Footer = () => {
   const { t } = useTranslation();
+  const { configValues } = useConfigContext();
+  const appName = configValues["APP_NAME"] || "Couverto";
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -38,9 +41,9 @@ export const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link to="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold text-primary">Couverto</span>
+              <span className="text-2xl font-bold text-primary">{appName}</span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-4 max-w-xs">{t("pages.landing.footer.slogan")}</p>
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">{t("pages.landing.footer.slogan", { appName })}</p>
           </div>
 
           {/* Links Columns */}
@@ -63,7 +66,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>
-            © {currentYear} {t("pages.landing.footer.copyright")}
+            © {currentYear} {t("pages.landing.footer.copyright", { appName })}
           </p>
           <p>{t("pages.landing.footer.made_with_love")}</p>
         </div>
