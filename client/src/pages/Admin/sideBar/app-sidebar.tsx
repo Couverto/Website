@@ -51,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ].filter((item) => !item.roles || (authUser?.role && item.roles.includes(authUser.role))),
     navSecondary: [
       {
-        title: t("admin.menu.back_to_website"),
+        title: "menu.back_to_website",
         url: "/",
         icon: House,
         isActive: false,
