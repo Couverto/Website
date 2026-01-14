@@ -594,6 +594,41 @@
       "choose_file": "Choisir un fichier",
       "choose_image": "Choisir une image"
     },
+    "booking": {
+      "form": {
+        "date": "Date",
+        "pick_date": "Choisir une date",
+        "time": "Heure",
+        "guests": "Couverts",
+        "contact_details": "Coordonnées",
+        "name": "Nom",
+        "email": "Email",
+        "phone": "Téléphone",
+        "notes": "Notes",
+        "notes_placeholder": "Demandes spéciales ? (Allergies, occasion, etc.)",
+        "submit": "Confirmer la réservation",
+        "success": "Réservation créée avec succès !",
+        "error": "Erreur lors de la création de la réservation. Veuillez réessayer.",
+        "errors": {
+          "date_required": "Veuillez sélectionner une date.",
+          "date_invalid": "Date invalide.",
+          "time_required": "Veuillez sélectionner une heure.",
+          "guests_min": "Au moins 1 couvert requis.",
+          "guests_max": "Maximum 20 couverts.",
+          "name_required": "Le nom est requis.",
+          "email_invalid": "Adresse email invalide.",
+          "phone_required": "Le numéro de téléphone est requis."
+        }
+      },
+      "dialog": {
+        "title": "Réserver une table chez {{restaurantName}}",
+        "description": "Remplissez les détails ci-dessous pour confirmer votre réservation.",
+        "success_title": "Réservation Confirmée !",
+        "success_description": "Au plaisir de vous recevoir.",
+        "success_message": "Votre réservation a été créée avec succès. Vous recevrez une confirmation sous peu.",
+        "close": "Fermer"
+      }
+    },
     "colorPicker": {
       "preset_colors": "Couleurs prédéfinies",
       "hex_color": "Couleur Hex",

@@ -6,6 +6,7 @@ export interface UserInterface {
   fullname: string;
   email: string;
   password?: string;
+  phone?: string;
   role: string;
   createdAt: Date;
   updatedAt?: Date;

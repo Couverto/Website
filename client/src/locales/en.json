@@ -603,6 +603,41 @@
       "choose_file": "Choose a file",
       "choose_image": "Choose an image"
     },
+    "booking": {
+      "form": {
+        "date": "Date",
+        "pick_date": "Pick a date",
+        "time": "Time",
+        "guests": "Guests",
+        "contact_details": "Contact Details",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "notes": "Notes",
+        "notes_placeholder": "Any special requests? (Allergies, occasion, etc.)",
+        "submit": "Confirm Booking",
+        "success": "Booking created successfully!",
+        "error": "Failed to create booking. Please try again.",
+        "errors": {
+          "date_required": "Please select a date.",
+          "date_invalid": "Invalid date.",
+          "time_required": "Please select a time.",
+          "guests_min": "At least 1 guest required.",
+          "guests_max": "Maximum 20 guests.",
+          "name_required": "Name is required.",
+          "email_invalid": "Invalid email address.",
+          "phone_required": "Phone number is required."
+        }
+      },
+      "dialog": {
+        "title": "Book a table at {{restaurantName}}",
+        "description": "Fill in the details below to secure your reservation.",
+        "success_title": "Booking Confirmed!",
+        "success_description": "We look forward to seeing you.",
+        "success_message": "Your booking has been successfully created. You will receive a confirmation shortly.",
+        "close": "Close"
+      }
+    },
     "colorPicker": {
       "preset_colors": "Preset colors",
       "hex_color": "Hex color",
