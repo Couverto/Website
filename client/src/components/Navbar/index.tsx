@@ -149,8 +149,8 @@ export const Navbar = () => {
         <div
           ref={menuRef}
           className={cn(
-            "fixed top-0 right-0 w-3/4 sm:w-1/2 h-screen overflow-y-auto bg-background border-l shadow-2xl transition-transform duration-300 ease-in-out z-50 p-6",
-            isOpen ? "translate-x-0" : "translate-x-full",
+            "fixed top-0 right-0 w-3/4 sm:w-1/2 h-screen overflow-y-auto bg-background border-l shadow-2xl transition-transform duration-300 ease-in-out z-50 p-6 md:hidden",
+            isOpen ? "translate-x-0" : "translate-x-full invisible",
           )}
         >
           <div className="flex justify-end mb-8">
