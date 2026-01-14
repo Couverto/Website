@@ -8,10 +8,12 @@ interface LayoutWrapperProps {
 
 export const LayoutWrapper = ({ withLayout = true }: LayoutWrapperProps) => {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       {withLayout && <Navbar />}
-      <Outlet />
+      <main className="flex-1">
+        <Outlet />
+      </main>
       {withLayout && <Footer />}
-    </>
+    </div>
   );
 };

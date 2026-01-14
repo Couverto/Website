@@ -311,7 +311,36 @@
       "change_password": "Changer le mot de passe",
       "delete_account": "Supprimer le compte",
       "deleting_account": "Suppression du compte...",
-      "actions": "Actions"
+      "actions": "Actions",
+      "bookings_page": {
+        "title": "Mes Réservations",
+        "description": "Retrouvez et gérez toutes vos réservations",
+        "search_placeholder": "Rechercher par restaurant...",
+        "filter_all": "Toutes",
+        "filter_pending": "En attente",
+        "filter_confirmed": "Confirmées",
+        "filter_cancelled": "Annulées",
+        "no_bookings": "Aucune réservation trouvée",
+        "load_more": "Charger plus",
+        "remaining": "restantes",
+        "guests": "{{count}} couvert(s)",
+        "cancel_booking": "Annuler",
+        "cancel_confirm_title": "Annuler cette réservation ?",
+        "cancel_confirm_description": "Cette action ne peut pas être annulée. La réservation sera définitivement annulée.",
+        "update_booking": "Modifier",
+        "hide_booking": "Masquer",
+        "hide_confirm_title": "Masquer cette réservation ?",
+        "hide_confirm_description": "Cette action masquera la réservation de votre historique.",
+        "hide_confirm_warning": "⚠️ La réservation existera toujours dans notre système, mais vous ne pourrez plus jamais la voir depuis votre compte.",
+        "cannot_modify_past": "Impossible de modifier une réservation passée",
+        "status": {
+          "DRAFT": "Brouillon",
+          "PENDING": "En attente",
+          "CONFIRMED": "Confirmée",
+          "CANCELLED": "Annulée",
+          "HIDDEN": "Masquée"
+        }
+      }
     },
     "login": {
       "welcome_back": "Bon retour !",
@@ -738,6 +767,18 @@
         "user_updated": "Utilisateur mis à jour avec succès",
         "password_updated": "Mot de passe mis à jour avec succès",
         "user_deleted": "Utilisateur supprimé avec succès"
+      }
+    },
+    "bookings": {
+      "errors": {
+        "cannot_update_cancelled": "Impossible de modifier une réservation annulée",
+        "cannot_update_past": "Impossible de modifier une réservation passée"
+      },
+      "messages": {
+        "created": "Réservation créée avec succès",
+        "updated": "Réservation mise à jour avec succès",
+        "cancelled": "Réservation annulée avec succès",
+        "hidden": "Réservation masquée avec succès"
       }
     },
     "admin": {

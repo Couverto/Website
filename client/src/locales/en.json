@@ -325,7 +325,36 @@
       "change_password": "Change Password",
       "delete_account": "Delete account",
       "deleting_account": "Deleting account...",
-      "actions": "Actions"
+      "actions": "Actions",
+      "bookings_page": {
+        "title": "My Bookings",
+        "description": "View and manage all your reservations",
+        "search_placeholder": "Search by restaurant...",
+        "filter_all": "All",
+        "filter_pending": "Pending",
+        "filter_confirmed": "Confirmed",
+        "filter_cancelled": "Cancelled",
+        "no_bookings": "No bookings found",
+        "load_more": "Load more",
+        "remaining": "remaining",
+        "guests": "{{count}} guest(s)",
+        "cancel_booking": "Cancel",
+        "cancel_confirm_title": "Cancel this booking?",
+        "cancel_confirm_description": "This action cannot be undone. The booking will be permanently cancelled.",
+        "update_booking": "Edit",
+        "hide_booking": "Hide",
+        "hide_confirm_title": "Hide this booking?",
+        "hide_confirm_description": "This action will hide the booking from your history.",
+        "hide_confirm_warning": "⚠️ The booking will still exist in our system, but you will never be able to see it again from your account.",
+        "cannot_modify_past": "Cannot modify a past booking",
+        "status": {
+          "DRAFT": "Draft",
+          "PENDING": "Pending",
+          "CONFIRMED": "Confirmed",
+          "CANCELLED": "Cancelled",
+          "HIDDEN": "Hidden"
+        }
+      }
     },
     "login": {
       "welcome_back": "Welcome back!",
@@ -747,6 +776,18 @@
         "user_updated": "User updated successfully",
         "password_updated": "Password updated successfully",
         "user_deleted": "User deleted successfully"
+      }
+    },
+    "bookings": {
+      "errors": {
+        "cannot_update_cancelled": "Cannot update a cancelled booking",
+        "cannot_update_past": "Cannot update a past booking"
+      },
+      "messages": {
+        "created": "Booking created successfully",
+        "updated": "Booking updated successfully",
+        "cancelled": "Booking cancelled successfully",
+        "hidden": "Booking hidden successfully"
       }
     },
     "admin": {

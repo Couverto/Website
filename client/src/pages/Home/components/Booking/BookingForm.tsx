@@ -66,7 +66,9 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
         notes: values.notes,
       };
 
-      await axiosConfig.post("/bookings", payload);
+      // Use /guest endpoint when user is not authenticated
+      const endpoint = user ? "/bookings" : "/bookings/guest";
+      await axiosConfig.post(endpoint, payload);
       toast.success(t("components.booking.form.success"));
       onSuccess();
     } catch (error: any) {

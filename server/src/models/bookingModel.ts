@@ -47,11 +47,6 @@ const bookingSchema = new Schema<IBooking>(
     notes: {
       type: String,
     },
-
-    hiddenForUser: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true },
 );

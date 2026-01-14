@@ -14,7 +14,6 @@ export interface IBooking {
     phone: string;
   };
   notes?: string;
-  hiddenForUser?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

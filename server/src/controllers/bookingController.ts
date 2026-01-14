@@ -54,8 +54,11 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
 /**
  * @function getMyBookings
- * @description Retrieves bookings for the authenticated user.
- * Excludes bookings marked as hiddenForUser.
+ * @description Retrieves bookings for the authenticated user with pagination and filters.
+ * @query page - Page number (0-indexed)
+ * @query size - Page size (default 10)
+ * @query status - Filter by booking status (PENDING, CONFIRMED, CANCELLED)
+ * @query search - Search by restaurant name
  */
 export const getMyBookings = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -65,11 +68,44 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const bookings = await Booking.find({ user: userId, status: { $ne: bookingStatus.HIDDEN } })
-      .populate("restaurant", "name slug address city coverImage")
-      .sort({ bookingDate: -1 });
+    const page = parseInt(req.query.page as string) || 0;
+    const size = parseInt(req.query.size as string) || 10;
+    const status = req.query.status as string;
+    const search = req.query.search as string;
 
-    res.status(200).json({ bookings });
+    // Build query
+    const query: any = { user: userId, status: { $ne: bookingStatus.HIDDEN } };
+
+    // Filter by status if provided
+    if (status && Object.values(bookingStatus).includes(status as bookingStatus)) {
+      query.status = status;
+    }
+
+    // Get bookings with population
+    let bookingsQuery = Booking.find(query).populate("restaurant", "name slug address city coverImage").sort({ bookingDate: -1 });
+
+    // If search is provided, we need to filter after population
+    let bookings = await bookingsQuery;
+    let totalCount = bookings.length;
+
+    // Filter by restaurant name if search is provided
+    if (search && search.trim()) {
+      const searchLower = search.toLowerCase().trim();
+      bookings = bookings.filter((booking: any) => booking.restaurant?.name?.toLowerCase().includes(searchLower));
+      totalCount = bookings.length;
+    }
+
+    // Apply pagination
+    const skip = page * size;
+    const paginatedBookings = bookings.slice(skip, skip + size);
+
+    res.status(200).json({
+      bookings: paginatedBookings,
+      count: totalCount,
+      page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -122,6 +158,12 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
 
     if (!booking) {
       res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    // Check if booking date is in the past
+    if (new Date(booking.bookingDate) < new Date()) {
+      res.status(400).json({ error: "server.bookings.errors.cannot_update_past" });
       return;
     }
 
@@ -187,7 +229,7 @@ export const hideBooking = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    booking.hiddenForUser = true;
+    booking.status = bookingStatus.HIDDEN;
     await booking.save();
 
     res.status(200).json({ message: "server.bookings.messages.hidden" });
