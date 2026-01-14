@@ -5,6 +5,7 @@ import {
   getRestaurants,
   updateRestaurant,
   getPublicRestaurants,
+  getMyRestaurants,
 } from "../controllers/restaurantController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { userRoles } from "../utils/enums/userRoles.js";
@@ -12,6 +13,7 @@ import { userRoles } from "../utils/enums/userRoles.js";
 export const restaurantRouter = express.Router();
 
 restaurantRouter.get("/public", getPublicRestaurants);
+restaurantRouter.get("/my", verifyToken({}), getMyRestaurants);
 
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);
 restaurantRouter.post("/", verifyToken({ role: userRoles.ADMIN }), createRestaurant);

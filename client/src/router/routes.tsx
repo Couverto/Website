@@ -20,6 +20,9 @@ import { Config } from "@/pages/Admin/components/config";
 import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
 import { Footer } from "@/components/Footer";
 import { NotFound } from "@/pages/NotFound";
+import { AddRestaurantWizard } from "@/pages/Account/AddRestaurant";
+import { RestaurantLayout } from "@/pages/Restaurant/layout";
+import { RestaurantDashboard } from "@/pages/Restaurant/Dashboard";
 
 export const Router = () => {
   return (
@@ -58,12 +61,25 @@ export const Router = () => {
           <Route index element={<Navigate to="profile" replace />} />
           <Route path="profile" element={<AccountProfile />} />
           <Route path="restaurants" element={<AccountRestaurants />} />
+          <Route path="restaurants/new" element={<AddRestaurantWizard />} />
           <Route path="bookings" element={<AccountBooking />} />
         </Route>
       </Route>
 
       {/* Authenticated Application/Dashboard Routes */}
       <Route element={<LayoutWrapper withLayout={false} />}>
+        {/* Restaurant Routes */}
+        <Route
+          path="/restaurant/:id"
+          element={
+            <ProtectedRoute authRequired={true}>
+              <RestaurantLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<RestaurantDashboard />} />
+        </Route>
         {/* Auth Routes */}
         <Route
           path="/login"

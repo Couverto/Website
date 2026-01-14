@@ -37,7 +37,16 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
  */
 export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, slug, address, city, phone, website, collaborators, ...otherFields } = req.body;
+    const { name, slug, address, city, phone, website, ...otherFields } = req.body;
+    const collaborators = [];
+
+    const creator = await User.findById(req.userId);
+    if (!creator) {
+      res.status(400).json({ error: "server.global.errors.no_such_user" });
+      return;
+    }
+
+    collaborators.push(creator._id);
 
     const existingRestaurant = await Restaurant.findOne({ slug });
     if (existingRestaurant) {
@@ -164,6 +173,22 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
     const count = await Restaurant.countDocuments(query);
 
     res.status(200).json({ restaurants, count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function getMyRestaurants
+ * @description Retrieves restaurants where the user is a collaborator.
+ */
+export const getMyRestaurants = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const restaurants = await Restaurant.find({ collaborators: req.userId })
+      .select("-collaborators -createdAt -updatedAt")
+      .sort({ name: 1 });
+
+    res.status(200).json({ restaurants });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

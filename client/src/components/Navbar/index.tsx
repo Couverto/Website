@@ -57,6 +57,20 @@ export const Navbar = () => {
       role: "admin",
     },
     {
+      label: "My Restaurants",
+      translationKey: "pages.account_menu.restaurants",
+      path: "/account/restaurants",
+      icon: Utensils,
+      auth: true,
+    },
+    {
+      label: "My Bookings", // Using bookings key
+      translationKey: "pages.account_menu.bookings",
+      path: "/account/bookings",
+      icon: Menu,
+      auth: true,
+    },
+    {
       label: "My Account",
       translationKey: "navbar.account",
       path: "/account",
