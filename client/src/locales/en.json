@@ -28,7 +28,11 @@
       },
       "hero": {
         "title": "Book a table simply.",
-        "subtitle": "Discover the best restaurants around you in just a few clicks."
+        "subtitle": "Discover the best restaurants around you in just a few clicks.",
+        "badges": {
+          "instant": "Instant Confirmation",
+          "fees": "No Booking Fees"
+        }
       },
       "search": {
         "location_placeholder": "Where? (City, Zip Code)",
@@ -87,6 +91,39 @@
         "a3": "No, you can book as a guest. However, creating an account allows you to manage your bookings more easily.",
         "q4": "How do I know if my booking is confirmed?",
         "a4": "You receive an immediate confirmation by email and SMS as soon as you validate your booking."
+      },
+      "how_it_works": {
+        "title": "How it works",
+        "subtitle": "Book your table in 3 simple steps",
+        "step_1_title": "Find",
+        "step_1_desc": "Search by location, date, or cuisine to find the perfect restaurant.",
+        "step_2_title": "Book",
+        "step_2_desc": "Choose your time and confirm your booking instantly.",
+        "step_3_title": "Enjoy",
+        "step_3_desc": "Receive your confirmation and enjoy your meal!"
+      },
+      "testimonials": {
+        "title": "What our users say",
+        "subtitle": "Join thousands of satisfied foodies",
+        "review_1": "The best app to find restaurants in Paris! Super easy to use.",
+        "author_1": "Sarah M.",
+        "review_2": "I love the instant confirmation. No more calling restaurants!",
+        "author_2": "Thomas D.",
+        "review_3": "Great selection of restaurants and the interface is beautiful.",
+        "author_3": "Julie P."
+      },
+      "cta": {
+        "title": "Ready to book?",
+        "subtitle": "Find the perfect table for your next occasion.",
+        "button": "Find a table now"
+      },
+      "download_app": {
+        "title": "Couverto is better in the app",
+        "subtitle": "Download the Couverto app for free and book your table in seconds.",
+        "ios": "App Store",
+        "android": "Play Store",
+        "download_on": "Download on the",
+        "get_on": "Get it on"
       },
       "footer": {
         "description": "The best way to discover and book restaurants.",
@@ -372,6 +409,14 @@
       "users": "Users",
       "settings": "Settings",
       "restaurants": "Restaurants",
+      "menu": {
+        "dashboard": "Dashboard",
+        "users": "Users",
+        "restaurants": "Restaurants",
+        "logs": "Logs",
+        "settings": "Settings",
+        "back_to_website": "Back to website"
+      },
 
       "dashboard_page": {
         "active_users": "Active Users",

@@ -88,6 +88,29 @@
         "q4": "Comment savoir si ma réservation est confirmée ?",
         "a4": "Vous recevez une confirmation immédiate par email et SMS dès que vous validez votre réservation."
       },
+      "how_it_works": {
+        "title": "Comment ça marche",
+        "subtitle": "Réservez votre table en 3 étapes simples",
+        "step_1_title": "Trouver",
+        "step_1_desc": "Cherchez par lieu, date ou cuisine pour trouver le restaurant parfait.",
+        "step_2_title": "Réserver",
+        "step_2_desc": "Choisissez votre heure et confirmez votre réservation instantanément.",
+        "step_3_title": "Profiter",
+        "step_3_desc": "Recevez votre confirmation et profitez de votre repas !"
+      },
+      "cta": {
+        "title": "Prêt à réserver ?",
+        "subtitle": "Trouvez la table parfaite pour votre prochaine occasion.",
+        "button": "Trouver une table maintenant"
+      },
+      "download_app": {
+        "title": "Couverto est mieux dans l'app",
+        "subtitle": "Téléchargez l'application Couverto gratuitement et réservez votre table en quelques secondes.",
+        "ios": "App Store",
+        "android": "Play Store",
+        "download_on": "Télécharger sur",
+        "get_on": "DISPONIBLE SUR"
+      },
       "footer": {
         "description": "La meilleure façon de découvrir et réserver des restaurants.",
         "links": "Liens utiles",

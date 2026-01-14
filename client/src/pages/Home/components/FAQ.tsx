@@ -24,22 +24,24 @@ export const FAQ = () => {
   ];
 
   return (
-    <section className="container py-24 px-4 md:px-6">
-      <div className="flex flex-col items-center justify-center space-y-4 text-center">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pages.home.faq.title")}</h2>
-        <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-          {t("pages.home.faq.subtitle")}
-        </p>
-      </div>
-      <div className="mx-auto max-w-3xl mt-8">
-        <Accordion type="single" collapsible className="w-full">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
-              <AccordionContent>{faq.answer}</AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+    <section className="bg-muted/10 py-24">
+      <div className="container px-4 md:px-6 mx-auto">
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pages.home.faq.title")}</h2>
+          <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            {t("pages.home.faq.subtitle")}
+          </p>
+        </div>
+        <div className="mx-auto max-w-4xl bg-background rounded-xl shadow-sm border p-6 md:p-8">
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`} className="border-b-secondary/20">
+                <AccordionTrigger className="text-left text-lg font-medium">{faq.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-base leading-relaxed">{faq.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </section>
   );

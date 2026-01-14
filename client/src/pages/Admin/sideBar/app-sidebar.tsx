@@ -1,15 +1,19 @@
 import * as React from "react";
 import { LayoutDashboard, Users, FileText, Settings, Utensils, House } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/contexts/authContext";
 import { LanguageChanger } from "@/components/Navbar/languageChanger";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { useNavigate } from "react-router-dom";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { authUser } = useAuthContext();
   const { state } = useSidebar();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const adminMenus = {
     navMain: [
@@ -47,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ].filter((item) => !item.roles || (authUser?.role && item.roles.includes(authUser.role))),
     navSecondary: [
       {
-        title: "Back to website",
+        title: t("admin.menu.back_to_website"),
         url: "/",
         icon: House,
         isActive: false,
@@ -57,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader onClick={() => navigate("/")} className="hover:cursor-pointer">
         <div className="flex items-center gap-2 px-2 py-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">C</span>

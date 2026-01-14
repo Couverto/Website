@@ -8,32 +8,51 @@ export const Hero = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="relative h-[500px] flex items-center justify-center bg-muted/20 overflow-hidden">
-      {/* Background Image Placeholder - would normally use a real image */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40" />
+    <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+      {/* Background with overlay */}
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center">
+        <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px] dark:bg-background/50" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+      </div>
 
-      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-8">
-        <div className="space-y-4 max-w-3xl">
-          <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl text-foreground">{t("pages.home.hero.title")}</h1>
-          <p className="mx-auto max-w-[700px] text-lg text-muted-foreground md:text-xl">{t("pages.home.hero.subtitle")}</p>
+      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-10 animate-in fade-in zoom-in duration-700">
+        <div className="space-y-4 max-w-4xl">
+          <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-foreground drop-shadow-md">
+            {t("pages.home.hero.title")}
+          </h1>
+          <p className="mx-auto max-w-[700px] text-lg sm:text-xl md:text-2xl text-foreground/80 font-medium drop-shadow-sm">
+            {t("pages.home.hero.subtitle")}
+          </p>
         </div>
 
-        <div className="w-full max-w-4xl bg-background rounded-lg shadow-xl p-2 md:p-4 flex flex-col md:flex-row gap-2">
-          <div className="flex-1 relative">
-            <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <Input className="pl-10" placeholder={t("pages.home.search.location_placeholder")} />
+        <div className="w-full max-w-5xl bg-background/95 backdrop-blur-md rounded-2xl shadow-2xl border p-4 flex flex-col lg:flex-row gap-4 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+          <div className="flex-1 relative group">
+            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <Input
+              className="pl-12 h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent"
+              placeholder={t("pages.home.search.location_placeholder")}
+            />
           </div>
 
-          <div className="flex-1 relative">
-            <Calendar className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <Input type="date" className="pl-10" />
+          <div className="w-[1px] bg-border hidden lg:block" />
+
+          <div className="flex-1 relative group">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            <Input
+              type="date"
+              className="pl-12 h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent"
+            />
           </div>
 
-          <div className="w-full md:w-[180px]">
+          <div className="w-[1px] bg-border hidden lg:block" />
+
+          <div className="w-full lg:w-[220px]">
             <Select defaultValue="2">
-              <SelectTrigger className="w-full">
-                <Users className="mr-2 h-4 w-4" />
-                <SelectValue placeholder={t("pages.home.search.guests")} />
+              <SelectTrigger className="w-full h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus:ring-0">
+                <div className="flex items-center">
+                  <Users className="mr-3 h-5 w-5 text-muted-foreground" />
+                  <SelectValue placeholder={t("pages.home.search.guests")} />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">1 {t("pages.home.search.person")}</SelectItem>
@@ -46,9 +65,24 @@ export const Hero = () => {
             </Select>
           </div>
 
-          <Button size="lg" className="w-full md:w-auto font-semibold">
+          <Button
+            size="lg"
+            className="w-full lg:w-auto h-14 px-8 text-lg font-bold rounded-xl shadow-lg hover:shadow-primary/25 transition-all"
+          >
+            <Search className="mr-2 h-5 w-5" />
             {t("pages.home.search.button")}
           </Button>
+        </div>
+
+        <div className="flex gap-4 pt-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full">
+            <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
+            Instant Confirmation
+          </div>
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full">
+            <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
+            No Booking Fees
+          </div>
         </div>
       </div>
     </section>

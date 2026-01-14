@@ -63,6 +63,16 @@ export const Router = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* User Account Route */}
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute authRequired={true}>
+              <Account />
+            </ProtectedRoute>
+          }
+        ></Route>
       </Route>
 
       {/* Authenticated Application/Dashboard Routes */}
@@ -82,18 +92,6 @@ export const Router = () => {
           <Route path="restaurants" element={<Restaurants />} />
           <Route path="logs" element={<Logs />} />
           <Route path="settings" element={<Config />} />
-        </Route>
-
-        {/* User Account Route */}
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute authRequired={true}>
-              <Index />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Account />} />
         </Route>
       </Route>
 
