@@ -14,7 +14,7 @@ export interface IBooking {
     phone: string;
   };
   notes?: string;
-  canceledAt?: Date | null;
+  hiddenForUser?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

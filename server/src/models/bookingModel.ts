@@ -1,4 +1,4 @@
-import mongoose, { model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 import { bookingStatus } from "../utils/enums/bookingStatus";
 import { IBooking } from "../interfaces/IBooking";
 
@@ -48,9 +48,9 @@ const bookingSchema = new Schema<IBooking>(
       type: String,
     },
 
-    canceledAt: {
-      type: Date,
-      default: null,
+    hiddenForUser: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true },
