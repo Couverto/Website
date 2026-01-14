@@ -1,7 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { LayoutWrapper } from "./layoutWrapper";
 
-import { Account } from "@/pages/Account";
+import { AccountProfile } from "@/pages/Account/profile";
+import { AccountLayout } from "@/pages/Account/layout";
+import { AccountRestaurants } from "@/pages/Account/restaurants";
+import { AccountBooking } from "@/pages/Account/booking";
+
 import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Landing";
 import { Home } from "@/pages/Home";
@@ -15,6 +19,7 @@ import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
 import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
 import { Footer } from "@/components/Footer";
+import { NotFound } from "@/pages/NotFound";
 
 export const Router = () => {
   return (
@@ -65,14 +70,20 @@ export const Router = () => {
         />
 
         {/* User Account Route */}
+        {/* User Account Route */}
         <Route
           path="/account"
           element={
             <ProtectedRoute authRequired={true}>
-              <Account />
+              <AccountLayout />
             </ProtectedRoute>
           }
-        ></Route>
+        >
+          <Route index element={<Navigate to="profile" replace />} />
+          <Route path="profile" element={<AccountProfile />} />
+          <Route path="restaurants" element={<AccountRestaurants />} />
+          <Route path="bookings" element={<AccountBooking />} />
+        </Route>
       </Route>
 
       {/* Authenticated Application/Dashboard Routes */}
@@ -95,8 +106,8 @@ export const Router = () => {
         </Route>
       </Route>
 
-      {/* Catch-all redirect */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

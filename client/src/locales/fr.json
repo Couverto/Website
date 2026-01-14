@@ -20,6 +20,16 @@
     "profile": "Profil"
   },
   "pages": {
+    "account_menu": {
+      "profile": "Profil",
+      "restaurants": "Mes Restaurants",
+      "bookings": "Mes Réservations"
+    },
+    "not_found": {
+      "title": "Page non trouvée",
+      "description": "La page que vous recherchez n'existe pas.",
+      "button": "Retour à l'accueil"
+    },
     "home": {
       "welcome_message": "Bienvenue sur Couverto",
       "navbar": {
@@ -393,7 +403,16 @@
       "home": "Accueil",
       "dashboard": "Tableau de bord",
       "users": "Utilisateurs",
+      "settings": "Paramètres",
       "restaurants": "Restaurants",
+      "menu": {
+        "dashboard": "Tableau de bord",
+        "users": "Utilisateurs",
+        "restaurants": "Restaurants",
+        "logs": "Logs",
+        "settings": "Paramètres",
+        "back_to_website": "Retour au site"
+      },
 
       "dashboard_page": {
         "active_users": "Utilisateurs actifs",

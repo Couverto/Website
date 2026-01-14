@@ -20,6 +20,16 @@
     "profile": "Profile"
   },
   "pages": {
+    "account_menu": {
+      "profile": "Profile",
+      "restaurants": "My Restaurants",
+      "bookings": "My Bookings"
+    },
+    "not_found": {
+      "title": "Page not found",
+      "description": "The page you are looking for does not exist.",
+      "button": "Back to Home"
+    },
     "home": {
       "welcome_message": "Welcome to Couverto",
       "navbar": {

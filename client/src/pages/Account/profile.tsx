@@ -27,7 +27,7 @@ import {
 import { DeleteAccountForm } from "./components/deleteAccountForm";
 import { useTranslation } from "react-i18next";
 
-export const Account = () => {
+export const AccountProfile = () => {
   const { authUser, setAuthUser, loading } = useAuthContext();
   const { t } = useTranslation();
 
