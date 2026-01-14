@@ -1,5 +1,5 @@
 import * as React from "react";
-import { LayoutDashboard, Users, FileText, Settings, Utensils } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Settings, Utensils, House } from "lucide-react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
@@ -15,36 +15,44 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: [
       {
         title: "dashboard",
-        url: "/app/dashboard",
+        url: "/admin/dashboard",
         icon: LayoutDashboard,
         isActive: true,
         roles: ["admin", "user"],
       },
       {
         title: "users",
-        url: "/app/users",
+        url: "/admin/users",
         icon: Users,
         roles: ["admin"],
       },
       {
         title: "restaurants",
-        url: "/app/restaurants",
+        url: "/admin/restaurants",
         icon: Utensils,
         roles: ["admin"],
       },
       {
         title: "logs",
-        url: "/app/logs",
+        url: "/admin/logs",
         icon: FileText,
         roles: ["admin"],
       },
       {
         title: "settings",
-        url: "/app/settings",
+        url: "/admin/settings",
         icon: Settings,
         roles: ["admin"],
       },
     ].filter((item) => !item.roles || (authUser?.role && item.roles.includes(authUser.role))),
+    navSecondary: [
+      {
+        title: "Back to website",
+        url: "/",
+        icon: House,
+        isActive: false,
+      },
+    ],
   };
 
   return (
@@ -59,6 +67,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={adminMenus.navMain} />
+        <div className="mt-auto">
+          <NavMain items={adminMenus.navSecondary} />
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <ThemeChanger />

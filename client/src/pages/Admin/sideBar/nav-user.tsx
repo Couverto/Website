@@ -85,13 +85,13 @@ export function NavUser({ user }: { user: UserInterface | null }) {
                   <House className="w-4 h-4" />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/app/account")}>
+              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/account")}>
                 {t("navbar.account")}
                 <DropdownMenuShortcut>
                   <User className="w-4 h-4" />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/app/dashboard")}>
+              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
                 {t("navbar.dashboard")}
                 <DropdownMenuShortcut>
                   <Wrench className="w-4 h-4" />

@@ -25,7 +25,7 @@ export const Index = () => {
                   const href = "/" + pathSegments.slice(0, index + 1).join("/");
                   const isLast = index === pathSegments.length - 1;
                   // Skip 'app' in breadcrumb display, show it as root
-                  if (segment === "app" && index === 0) {
+                  if ((segment === "admin" || segment === "account") && index === 0) {
                     return null;
                   }
 

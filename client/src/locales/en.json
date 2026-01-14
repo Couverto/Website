@@ -1,6 +1,15 @@
 {
+  "auth": {
+    "login": {
+      "title": "Login"
+    },
+    "register": {
+      "title": "Register"
+    }
+  },
   "navbar": {
     "home": "Home",
+    "restaurants": "Restaurants",
     "dashboard": "Dashboard",
     "account": "My account",
     "login": "Login",
@@ -12,7 +21,85 @@
   },
   "pages": {
     "home": {
-      "welcome_message": "Welcome to this boilerplate!"
+      "welcome_message": "Welcome to Couverto",
+      "navbar": {
+        "are_you_pro": "Are you a restaurateur?",
+        "my_account": "My Account"
+      },
+      "hero": {
+        "title": "Book a table simply.",
+        "subtitle": "Discover the best restaurants around you in just a few clicks."
+      },
+      "search": {
+        "location_placeholder": "Where? (City, Zip Code)",
+        "guests": "Guests",
+        "person": "Person",
+        "people": "People",
+        "button": "Find a restaurant"
+      },
+      "list": {
+        "title": "Our Restaurants",
+        "subtitle": "A selection of the best tables available for you.",
+        "loading": "Loading...",
+        "load_more": "See more restaurants",
+        "no_results": "No restaurants found at the moment."
+      },
+      "card": {
+        "book_button": "Book",
+        "availability_today": "Avail. today"
+      },
+
+      "features": {
+        "realtime": {
+          "title": "Instant Confirmation",
+          "desc": "No more waiting on the phone, your table is blocked instantly."
+        },
+        "booking": {
+          "title": "Simplified Management",
+          "desc": "Modify or cancel your bookings in a few clicks."
+        },
+        "mobile": {
+          "title": "Accessible Everywhere",
+          "desc": "Book from your mobile, wherever you are."
+        },
+        "secure": {
+          "title": "100% Free",
+          "desc": "No booking fees, pay directly at the restaurant."
+        }
+      },
+      "value_props": {
+        "title": "Why book on Couverto?",
+        "subtitle": "The booking platform designed to simplify your life."
+      },
+      "pro_section": {
+        "title": "Are you a restaurateur?",
+        "subtitle": "Discover our complete solution to manage your bookings and attract more customers.",
+        "cta": "Discover Pro Solution"
+      },
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Everything you need to know about Couverto.",
+        "q1": "Is it really free?",
+        "a1": "Yes, for users, booking is 100% free. You simply pay for your meal at the restaurant.",
+        "q2": "How do I cancel my booking?",
+        "a2": "You can cancel or modify your booking at any time from your account or via the link received by SMS/Email.",
+        "q3": "Do I need to create an account?",
+        "a3": "No, you can book as a guest. However, creating an account allows you to manage your bookings more easily.",
+        "q4": "How do I know if my booking is confirmed?",
+        "a4": "You receive an immediate confirmation by email and SMS as soon as you validate your booking."
+      },
+      "footer": {
+        "description": "The best way to discover and book restaurants.",
+        "links": "Useful Links",
+        "about": "About",
+        "contact": "Contact",
+        "terms": "Terms of Service",
+        "pro": "Pro Area",
+        "pro_solution": "Restaurateur Solution",
+        "pricing": "Pricing",
+        "social": "Follow us",
+        "rights": "All rights reserved"
+      }
     },
     "landing": {
       "navbar": {
@@ -284,11 +371,8 @@
       "dashboard": "Dashboard",
       "users": "Users",
       "settings": "Settings",
-      "admin": "Admin",
       "restaurants": "Restaurants",
-      "logs": "Logs",
-      "account": "My Account",
-      "back_to_app": "Back to home",
+
       "dashboard_page": {
         "active_users": "Active Users",
         "total_users": "Total Users",

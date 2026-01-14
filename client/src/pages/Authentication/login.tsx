@@ -44,7 +44,8 @@ export const Login = () => {
       toast.success(t(response.data.message));
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
-      navigate("/app");
+
+      navigate("/");
     } catch (error: any) {
       toast.error(t(error.response.data.error));
     } finally {

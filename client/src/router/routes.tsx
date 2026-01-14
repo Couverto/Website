@@ -4,6 +4,7 @@ import { LayoutWrapper } from "./layoutWrapper";
 import { Account } from "@/pages/Account";
 import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Landing";
+import { Home } from "@/pages/Home";
 import { Index } from "@/pages/Admin";
 import { Logs } from "@/pages/Admin/components/logs";
 import { Users } from "@/pages/Admin/components/users";
@@ -13,18 +14,29 @@ import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
 import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
+import { Footer } from "@/components/Footer";
 
 export const Router = () => {
   return (
     <Routes>
       {/* Public Landing Page */}
-      <Route element={<LayoutWrapper withLayout={false} />}>
+      <Route element={<LayoutWrapper withLayout={true} />}>
+        {/* Consumer Home */}
         <Route
           path="/"
           element={
-            <ProtectedRoute authRequired={false}>
+            <>
+              <Home />
+            </>
+          }
+        />
+        {/* Pro Landing */}
+        <Route
+          path="/pro"
+          element={
+            <>
               <Landing />
-            </ProtectedRoute>
+            </>
           }
         />
         <Route
@@ -55,49 +67,33 @@ export const Router = () => {
 
       {/* Authenticated Application/Dashboard Routes */}
       <Route element={<LayoutWrapper withLayout={false} />}>
+        {/* Admin Routes */}
         <Route
-          path="/app"
+          path="/admin"
           element={
-            <ProtectedRoute authRequired={true}>
+            <ProtectedRoute authRequired={true} role="admin">
               <Index />
             </ProtectedRoute>
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route
-            path="users"
-            element={
-              <ProtectedRoute authRequired={true} role="admin">
-                <Users />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="restaurants"
-            element={
-              <ProtectedRoute authRequired={true} role="admin">
-                <Restaurants />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="logs"
-            element={
-              <ProtectedRoute authRequired={true} role="admin">
-                <Logs />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="settings"
-            element={
-              <ProtectedRoute authRequired={true} role="admin">
-                <Config />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="account" element={<Account />} />
+          <Route path="users" element={<Users />} />
+          <Route path="restaurants" element={<Restaurants />} />
+          <Route path="logs" element={<Logs />} />
+          <Route path="settings" element={<Config />} />
+        </Route>
+
+        {/* User Account Route */}
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute authRequired={true}>
+              <Index />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Account />} />
         </Route>
       </Route>
 

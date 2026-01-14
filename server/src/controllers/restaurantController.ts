@@ -126,3 +126,45 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function getPublicRestaurants
+ * @description Retrieves public restaurants with search and filters.
+ */
+export const getPublicRestaurants = async (req: Request, res: Response): Promise<void> => {
+  const size = parseInt(req.query.size as string) || 12; // Larger page size for grid
+  const page = parseInt(req.query.page as string) || 0;
+  const search = (req.query.search as string) || "";
+  const city = (req.query.city as string) || "";
+  const priceRange = (req.query.priceRange as string) || "";
+  const cuisineType = (req.query.cuisineType as string) || "";
+
+  try {
+    const query: any = {};
+
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+    if (city) {
+      query.city = { $regex: city, $options: "i" };
+    }
+    if (priceRange) {
+      query.priceRange = priceRange;
+    }
+    if (cuisineType) {
+      query.cuisineType = { $regex: cuisineType, $options: "i" };
+    }
+
+    const restaurants = await Restaurant.find(query)
+      .select("-collaborators -createdAt -updatedAt") // Exclude internal/private fields
+      .sort({ rating: -1, name: 1 }) // Sort by rating desc
+      .skip(page * size)
+      .limit(size);
+
+    const count = await Restaurant.countDocuments(query);
+
+    res.status(200).json({ restaurants, count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

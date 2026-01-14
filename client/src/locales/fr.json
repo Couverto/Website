@@ -1,6 +1,15 @@
 {
+  "auth": {
+    "login": {
+      "title": "Se connecter"
+    },
+    "register": {
+      "title": "Créer un compte"
+    }
+  },
   "navbar": {
     "home": "Accueil",
+    "restaurants": "Restaurants",
     "dashboard": "Tableau de bord",
     "account": "Mon compte",
     "login": "Se connecter",
@@ -12,7 +21,85 @@
   },
   "pages": {
     "home": {
-      "welcome_message": "Bienvenue sur ce boilerplate !"
+      "welcome_message": "Bienvenue sur Couverto",
+      "navbar": {
+        "are_you_pro": "Vous êtes restaurateur ?",
+        "my_account": "Mon compte"
+      },
+      "hero": {
+        "title": "Réservez une table simplement.",
+        "subtitle": "Découvrez les meilleurs restaurants autour de vous en quelques clics."
+      },
+      "search": {
+        "location_placeholder": "Où ? (Ville, code postal)",
+        "guests": "Personnes",
+        "person": "Personne",
+        "people": "Personnes",
+        "button": "Trouver un restaurant"
+      },
+      "list": {
+        "title": "Nos restaurants",
+        "subtitle": "Une sélection des meilleures tables disponibles pour vous.",
+        "loading": "Chargement...",
+        "load_more": "Voir plus de restaurants",
+        "no_results": "Aucun restaurant trouvé pour le moment."
+      },
+      "card": {
+        "book_button": "Réserver",
+        "availability_today": "Dispo. aujourd'hui"
+      },
+
+      "features": {
+        "realtime": {
+          "title": "Confirmation immédiate",
+          "desc": "Fini l'attente au téléphone, votre table est bloquée instantanément."
+        },
+        "booking": {
+          "title": "Gestion simplifiée",
+          "desc": "Modifiez ou annulez vos réservations en quelques clics."
+        },
+        "mobile": {
+          "title": "Accessible partout",
+          "desc": "Réservez depuis votre mobile, où que vous soyez."
+        },
+        "secure": {
+          "title": "100% Gratuit",
+          "desc": "Pas de frais de réservation, payez directement au restaurant."
+        }
+      },
+      "value_props": {
+        "title": "Pourquoi réserver sur Couverto ?",
+        "subtitle": "La plateforme de réservation pensée pour vous simplifier la vie."
+      },
+      "pro_section": {
+        "title": "Vous êtes restaurateur ?",
+        "subtitle": "Découvrez notre solution complète pour gérer vos réservations et attirer plus de clients.",
+        "cta": "Découvrir la solution Pro"
+      },
+      "faq": {
+        "title": "Questions Fréquentes",
+        "subtitle": "Tout ce que vous devez savoir sur Couverto.",
+        "q1": "Est-ce vraiment gratuit ?",
+        "a1": "Oui, pour les utilisateurs, la réservation est 100% gratuite. Vous payez simplement votre repas au restaurant.",
+        "q2": "Comment annuler ma réservation ?",
+        "a2": "Vous pouvez annuler ou modifier votre réservation à tout moment depuis votre compte ou via le lien reçu par SMS/Email.",
+        "q3": "Dois-je créer un compte ?",
+        "a3": "Non, vous pouvez réserver en tant qu'invité. Cependant, créer un compte vous permet de gérer vos réservations plus facilement.",
+        "q4": "Comment savoir si ma réservation est confirmée ?",
+        "a4": "Vous recevez une confirmation immédiate par email et SMS dès que vous validez votre réservation."
+      },
+      "footer": {
+        "description": "La meilleure façon de découvrir et réserver des restaurants.",
+        "links": "Liens utiles",
+        "about": "À propos",
+        "contact": "Contact",
+        "terms": "Conditions d'utilisation",
+        "pro": "Espace Pro",
+        "pro_solution": "Solution Restaurateur",
+        "pricing": "Tarifs",
+        "social": "Suivez-nous",
+        "rights": "Tous droits réservés"
+      }
     },
     "landing": {
       "navbar": {
@@ -283,12 +370,8 @@
       "home": "Accueil",
       "dashboard": "Tableau de bord",
       "users": "Utilisateurs",
-      "settings": "Paramètres",
-      "admin": "Admin",
-      "logs": "Journaux",
       "restaurants": "Restaurants",
-      "account": "Mon compte",
-      "back_to_app": "Retour à l'accueil",
+
       "dashboard_page": {
         "active_users": "Utilisateurs actifs",
         "total_users": "Utilisateurs totaux",

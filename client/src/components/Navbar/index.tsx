@@ -3,7 +3,7 @@ import { ThemeChanger } from "./themeChanger";
 import { LanguageChanger } from "./languageChanger";
 import { useTranslation } from "react-i18next";
 import { Separator } from "../ui/separator";
-import { Home, House, LogOut, Menu, User, Wrench, X } from "lucide-react";
+import { House, LogOut, Menu, User, Wrench, X, Utensils } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -58,167 +58,178 @@ export const Navbar = () => {
 
   const navLinks = [
     {
-      label: t("navbar.home"),
-      path: "/app",
-      icon: Home,
+      label: "Dashboard", // Key for translation if needed, or static
+      translationKey: "navbar.dashboard",
+      path: "/admin/dashboard",
+      icon: Wrench,
       auth: true,
+      role: "admin",
     },
     {
-      label: t("navbar.account"),
-      path: "/app/account",
+      label: "My Account",
+      translationKey: "navbar.account",
+      path: "/account",
       icon: User,
       auth: true,
-    },
-    {
-      label: t("navbar.dashboard"),
-      path: "/app/dashboard",
-      icon: Wrench,
-      auth: !!authUser,
-    },
-  ];
-
-  const mobileLinks = [
-    {
-      label: t("navbar.home"),
-      path: "/app",
-      icon: House,
-    },
-    {
-      label: t("navbar.account"),
-      path: "/app/account",
-      icon: User,
-      auth: !!authUser,
-    },
-    {
-      label: t("navbar.dashboard"),
-      path: "/app/dashboard",
-      icon: Wrench,
-      auth: !!authUser,
     },
   ];
 
   return (
     <>
-      <div className="sticky top-0 left-0 right-0 z-50 border-b bg-background">
-        {/* Desktop */}
-        <div className="hidden select-none md:flex items-center justify-between p-4 px-8 text-accent">
-          <div className="text-3xl font-extrabold">
-            <Link to="/">{configValues["APP_NAME"]}</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              {authUser ? (
-                <>
-                  {navLinks
-                    .filter((link) => link.auth)
-                    .map((link) => (
-                      <Button key={link.path} onClick={() => navigate(link.path)} variant="link">
-                        {link.label}
-                      </Button>
-                    ))}
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild className="hover:cursor-pointer">
-                      <span>
-                        <AvatarWithStatusCell user={authUser} />
-                      </span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-40">
-                      <DropdownMenuLabel>
-                        {authUser.name} {authUser.forename}
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuGroup>
-                        {navLinks
-                          .filter((link) => link.auth)
-                          .map((link) => (
-                            <DropdownMenuItem
-                              key={link.path}
-                              className="flex items-center gap-2 hover:cursor-pointer"
-                              onClick={() => navigate(link.path)}
-                            >
-                              {link.label}
-                              <DropdownMenuShortcut>
-                                <link.icon className="w-4 h-4" />
-                              </DropdownMenuShortcut>
-                            </DropdownMenuItem>
-                          ))}
-                      </DropdownMenuGroup>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem className="hover:cursor-pointer" onClick={() => logout()} disabled={loading}>
-                          {t("navbar.logout")}
-                          <DropdownMenuShortcut>
-                            <LogOut className="w-4 h-4" />
-                          </DropdownMenuShortcut>
-                        </DropdownMenuItem>
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              ) : (
-                <Button onClick={() => navigate("/login")} variant="link">
-                  {t("navbar.login")}
-                </Button>
-              )}
+      <nav className="sticky top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center px-4 md:px-6">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 font-semibold mr-6">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+              <Utensils className="h-5 w-5" />
             </div>
-            <Separator orientation="vertical" className="h-8" />
-            <div className="flex items-center justify-between gap-4">
+            <span className="text-xl font-bold tracking-tight">{configValues["APP_NAME"] || "Couverto"}</span>
+          </Link>
+          <div className="ml-auto flex items-center gap-4">
+            {/* Pro Link (Desktop) */}
+
+            <Link to="/pro" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden md:block">
+              {t("pages.home.navbar.are_you_pro")}
+            </Link>
+
+            <Separator orientation="vertical" className="h-6 hidden md:block" />
+
+            <div className="hidden md:flex items-center gap-2">
               <LanguageChanger />
               <ThemeChanger />
             </div>
+
+            <Separator orientation="vertical" className="h-6 hidden md:block" />
+
+            {/* Auth Buttons / User Menu */}
+            <div className="flex items-center gap-2">
+              {authUser ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild className="hover:cursor-pointer">
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <AvatarWithStatusCell user={authUser} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{authUser.username}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{authUser.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      {navLinks
+                        .filter((link) => !link.role || link.role === authUser.role)
+                        .map((link) => (
+                          <DropdownMenuItem key={link.path} className="cursor-pointer" onClick={() => navigate(link.path)}>
+                            <link.icon className="mr-2 h-4 w-4" />
+                            <span>{t(link.translationKey)}</span>
+                          </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="cursor-pointer" onClick={() => logout()}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>{t("navbar.logout")}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="hidden md:flex items-center gap-2">
+                  <Button variant="ghost" asChild className="hover:bg-primary/10 hover:text-primary">
+                    <Link to="/login">{t("auth.login.title")}</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/register">{t("auth.register.title")}</Link>
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Trigger */}
+            <div className="md:hidden flex items-center">
+              <Menu onClick={() => setIsOpen(!isOpen)} className="cursor-pointer h-6 w-6" />
+            </div>
           </div>
         </div>
 
-        {/* Mobile */}
-        <div className="flex items-center justify-between p-4 md:hidden">
-          <div className="text-3xl font-extrabold text-accent">
-            <Link to="/">{configValues["APP_NAME"]}</Link>
-          </div>
-          <Menu onClick={() => setIsOpen(!isOpen)} className="cursor-pointer" />
-        </div>
-
+        {/* Mobile Sidebar */}
         <div
           ref={menuRef}
           className={cn(
-            "fixed top-0 right-0 w-4/5 h-screen overflow-hidden bg-background transition-transform duration-300 ease-in-out z-20",
+            "fixed top-0 right-0 w-3/4 sm:w-1/2 h-screen overflow-y-auto bg-background border-l shadow-2xl transition-transform duration-300 ease-in-out z-50 p-6",
             isOpen ? "translate-x-0" : "translate-x-full",
           )}
         >
-          <div className="flex justify-end">
-            <X onClick={() => setIsOpen(!isOpen)} className="m-4 cursor-pointer" />
+          <div className="flex justify-end mb-8">
+            <X onClick={() => setIsOpen(false)} className="cursor-pointer h-6 w-6" />
           </div>
-          <div className="flex flex-col gap-4 p-8 pt-2">
-            {mobileLinks
-              .filter((link) => link.auth === undefined || link.auth)
-              .map((link) => (
+
+          <div className="flex flex-col gap-6">
+            <Link to="/" onClick={() => setIsOpen(false)} className="text-lg font-medium">
+              {t("navbar.restaurants")}
+            </Link>
+            <Link to="/pro" onClick={() => setIsOpen(false)} className="text-lg font-medium">
+              {t("pages.home.navbar.are_you_pro")}
+            </Link>
+
+            <Separator />
+
+            {authUser ? (
+              <div className="flex flex-col gap-4">
+                <div className="text-sm font-medium text-muted-foreground mb-2">{authUser.username}</div>
+                {navLinks
+                  .filter((link) => !link.role || link.role === authUser.role)
+                  .map((link) => (
+                    <Link key={link.path} to={link.path} onClick={() => setIsOpen(false)} className="flex items-center gap-2 text-lg">
+                      <link.icon className="h-5 w-5" />
+                      {t(link.translationKey)}
+                    </Link>
+                  ))}
                 <Button
-                  key={link.path}
-                  onClick={() => closeDialogAndNavigate(link.path)}
-                  variant="link"
-                  className="flex items-center justify-start gap-4"
+                  variant="ghost"
+                  onClick={() => {
+                    logout();
+                    setIsOpen(false);
+                  }}
+                  className="justify-start px-0 text-lg text-destructive hover:text-destructive"
                 >
-                  <link.icon className="w-4 h-4" />
-                  {link.label}
-                </Button>
-              ))}
-            {authUser && (
-              <>
-                <Separator />
-                <Button onClick={() => logout()} variant="link" disabled={loading} className="flex items-center justify-start gap-4">
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="mr-2 h-5 w-5" />
                   {t("navbar.logout")}
                 </Button>
-              </>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <Button asChild className="w-full">
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    {t("auth.login.title")}
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full">
+                  <Link to="/register" onClick={() => setIsOpen(false)}>
+                    {t("auth.register.title")}
+                  </Link>
+                </Button>
+              </div>
             )}
+
             <Separator />
-            <div className="flex items-center justify-center gap-4">
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t("navbar.language")}</span>
               <LanguageChanger />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Theme</span>
               <ThemeChanger />
             </div>
           </div>
         </div>
-      </div>
+      </nav>
+
+      {/* Overlay */}
+      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsOpen(false)} />}
     </>
   );
 };
