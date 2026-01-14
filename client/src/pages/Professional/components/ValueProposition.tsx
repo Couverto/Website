@@ -29,7 +29,7 @@ export const ValueProposition = () => {
 
   return (
     <section id="features" className="py-20 md:py-28 bg-card">
-      <div className="container mx-auto max-w-6xl px-3 md:px-4">
+      <div className="container mx-auto max-w-8xl px-3 md:px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">

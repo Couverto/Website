@@ -4,7 +4,6 @@ import { ProductOverview } from "./components/ProductOverview";
 import { Pricing } from "./components/Pricing";
 import { Testimonials } from "./components/Testimonials";
 import { Reassurance } from "./components/Reassurance";
-import { LandingFooter } from "./components";
 
 export const Landing = () => {
   return (

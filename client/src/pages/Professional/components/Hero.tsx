@@ -9,44 +9,20 @@ export const Hero = () => {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
       {/* Enhanced Background */}
+      {/* Enhanced Background with Image */}
       <div className="absolute inset-0 -z-10">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-[2px]" />
 
-        {/* Decorative shapes */}
-        <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute top-40 right-20 h-96 w-96 rounded-full bg-accent/5 blur-3xl" />
-        <div className="absolute bottom-20 left-1/4 h-64 w-64 rounded-full bg-primary/8 blur-3xl" />
-        <div className="absolute bottom-40 right-1/3 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+        {/* Base gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background/95 to-primary/5" />
 
-        {/* Floating icons - decorative */}
-        <div className="absolute top-32 left-[15%] text-primary/10 animate-pulse">
-          <Utensils className="h-12 w-12" />
-        </div>
-        <div className="absolute top-48 right-[20%] text-primary/10 animate-pulse" style={{ animationDelay: "0.5s" }}>
-          <Calendar className="h-10 w-10" />
-        </div>
-        <div className="absolute bottom-32 left-[10%] text-accent/10 animate-pulse" style={{ animationDelay: "1s" }}>
-          <Clock className="h-14 w-14" />
-        </div>
-        <div className="absolute bottom-48 right-[15%] text-primary/10 animate-pulse" style={{ animationDelay: "1.5s" }}>
-          <Star className="h-8 w-8" />
-        </div>
-        <div className="absolute top-1/2 left-[5%] text-accent/10 animate-pulse" style={{ animationDelay: "0.75s" }}>
-          <ChefHat className="h-10 w-10" />
-        </div>
-
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
+        {/* Decorative shapes - made more subtle */}
+        <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-primary/5 blur-3xl opacity-50" />
+        <div className="absolute top-40 right-20 h-96 w-96 rounded-full bg-accent/5 blur-3xl opacity-50" />
       </div>
 
-      <div className="container mx-auto max-w-6xl px-3 md:px-4 py-20">
+      <div className="container mx-auto max-w-8xl px-3 md:px-4 py-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           {/* Left Column - Text Content */}
           <div className="flex flex-col gap-6">

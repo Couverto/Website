@@ -7,7 +7,7 @@ import { AccountRestaurants } from "@/pages/Account/restaurants";
 import { AccountBooking } from "@/pages/Account/booking";
 
 import { ProtectedRoute } from "@/router/protectedRoute";
-import { Landing } from "@/pages/Landing";
+import { Landing } from "@/pages/Professional";
 import { Home } from "@/pages/Home";
 import { Index } from "@/pages/Admin";
 import { Logs } from "@/pages/Admin/components/logs";

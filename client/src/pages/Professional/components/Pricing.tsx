@@ -70,7 +70,7 @@ export const Pricing = () => {
 
   return (
     <section id="pricing" className="py-20 md:py-28 bg-card">
-      <div className="container mx-auto max-w-6xl px-3 md:px-4">
+      <div className="container mx-auto max-w-8xl px-3 md:px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent mb-6">
