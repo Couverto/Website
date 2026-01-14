@@ -10,10 +10,11 @@ import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Professional";
 import { Home } from "@/pages/Home";
 import { Index } from "@/pages/Admin";
-import { Logs } from "@/pages/Admin/components/logs";
-import { Users } from "@/pages/Admin/components/users";
-import { Dashboard } from "@/pages/Admin/components/dashboard";
-import { Restaurants } from "@/pages/Admin/components/restaurants";
+import { Logs as AdminLogs } from "../pages/Admin/components/logs";
+import { Users as AdminUsers } from "../pages/Admin/components/users";
+import { AdminPlans } from "../pages/Admin/components/plans";
+import { Dashboard } from "../pages/Admin/components/dashboard";
+import { Restaurants } from "../pages/Admin/components/restaurants";
 import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
@@ -48,7 +49,6 @@ export const Router = () => {
           }
         />
 
-        {/* User Account Route */}
         {/* User Account Route */}
         <Route
           path="/account"
@@ -117,9 +117,10 @@ export const Router = () => {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="restaurants" element={<Restaurants />} />
-          <Route path="logs" element={<Logs />} />
+          <Route path="plans" element={<AdminPlans />} />
+          <Route path="logs" element={<AdminLogs />} />
           <Route path="settings" element={<Config />} />
         </Route>
       </Route>

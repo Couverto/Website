@@ -93,3 +93,34 @@ export const getDeleteRestaurantSchema = (t: (key: string) => string) => {
     }),
   });
 };
+export const getCreatePlanSchema = (t: (key: string) => string) => {
+  return z.object({
+    name: z.string().min(1, { message: t("pages.admin.plans_page.form.errors.name_required") }),
+    description: z.string().optional(),
+    price: z.coerce.number().min(0, { message: t("pages.admin.plans_page.form.errors.price_required") }),
+    features: z.string().optional(),
+    stripePriceId: z.string().optional(),
+    active: z.boolean(),
+    position: z.coerce.number(),
+  });
+};
+
+export const getUpdatePlanSchema = (t: (key: string) => string) => {
+  return z.object({
+    name: z.string().min(1, { message: t("pages.admin.plans_page.form.errors.name_required") }),
+    description: z.string().optional(),
+    price: z.coerce.number().min(0, { message: t("pages.admin.plans_page.form.errors.price_required") }),
+    features: z.string().optional(),
+    stripePriceId: z.string().optional(),
+    active: z.boolean(),
+    position: z.coerce.number(),
+  });
+};
+
+export const getDeletePlanSchema = (t: (key: string) => string) => {
+  return z.object({
+    confirmDelete: z.string().min(1, {
+      message: t("pages.admin.plans_page.form.errors.confirm_delete_required"),
+    }),
+  });
+};

@@ -405,11 +405,13 @@
       "users": "Utilisateurs",
       "settings": "Paramètres",
       "restaurants": "Restaurants",
+      "plans": "Formules",
       "logs": "Logs",
       "menu": {
         "dashboard": "Tableau de bord",
         "users": "Utilisateurs",
         "restaurants": "Restaurants",
+        "plans": "Formules",
         "logs": "Logs",
         "settings": "Paramètres",
         "back_to_website": "Retour au site"
@@ -547,6 +549,43 @@
           "update": "Modifier",
           "delete": "Supprimer"
         }
+      },
+      "plans_page": {
+        "plans": "Formules",
+        "plan": "Formule",
+        "a_plan": "une formule",
+        "name": "Nom",
+        "description": "Description",
+        "price": "Prix",
+        "features": "Fonctionnalités",
+        "active": "Actif",
+        "position": "Position",
+        "actions": "Actions",
+        "form": {
+          "name": "Nom",
+          "description": "Description",
+          "price": "Prix",
+          "features": "Fonctionnalités (séparées par des virgules)",
+          "stripePriceId": "ID Stripe",
+          "active": "Actif",
+          "position": "Position",
+          "save": "Enregistrer",
+          "update": "Mettre à jour",
+          "errors": {
+            "name_required": "Le nom est requis",
+            "price_required": "Le prix est requis",
+            "confirm_delete_required": "Confirmez la suppression en tapant \"DELETE\".",
+            "confirm_text_invalid": "Le texte de confirmation est incorrect"
+          },
+          "delete": "Supprimer",
+          "confirm_delete_label": "Tapez \"DELETE\" pour confirmer",
+          "confirm_delete_placeholder": "DELETE"
+        },
+        "actions_type": {
+          "create": "Créer",
+          "update": "Modifier",
+          "delete": "Supprimer"
+        }
       }
     }
   },
@@ -580,7 +619,7 @@
       "filters": {
         "username": "Filtrer par nom d'utilisateur",
         "message": "Filtrer par message",
-        "nom": "Filtrer par nom"
+        "name": "Filtrer par nom"
       },
       "delete_title": "Supprimer toutes les entités",
       "delete_description": "Êtes-vous sûr de vouloir supprimer toutes les entités ? Cette action est irréversible.",

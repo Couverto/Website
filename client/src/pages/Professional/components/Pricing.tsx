@@ -1,72 +1,44 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { axiosConfig } from "@/config/axiosConfig";
+import { Plan } from "@/interfaces/Plan";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Pricing = () => {
   const { t } = useTranslation();
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const plans = [
-    {
-      name: t("pages.landing.pricing.plan_starter_name"),
-      price: t("pages.landing.pricing.plan_starter_price"),
-      description: t("pages.landing.pricing.plan_starter_desc"),
-      popular: false,
-      features: [
-        // Included first
-        { name: t("pages.landing.pricing.feature_reservations"), included: true, limit: "30/mois" },
-        { name: t("pages.landing.pricing.feature_floor_plan"), included: true, note: "1 salle" },
-        { name: t("pages.landing.pricing.feature_clients"), included: true, limit: "50" },
-        { name: t("pages.landing.pricing.feature_multi_device"), included: true },
-        { name: t("pages.landing.pricing.feature_support"), included: true, note: "email" },
-        // Not included
-        { name: t("pages.landing.pricing.feature_reminders_email"), included: false },
-        { name: t("pages.landing.pricing.feature_reminders_sms"), included: false },
-        { name: t("pages.landing.pricing.feature_stats"), included: false },
-        { name: t("pages.landing.pricing.feature_export"), included: false },
-        { name: t("pages.landing.pricing.feature_api"), included: false },
-      ],
-    },
-    {
-      name: t("pages.landing.pricing.plan_pro_name"),
-      price: t("pages.landing.pricing.plan_pro_price"),
-      description: t("pages.landing.pricing.plan_pro_desc"),
-      popular: true,
-      features: [
-        // Included first
-        { name: t("pages.landing.pricing.feature_reservations"), included: true, limit: t("pages.landing.pricing.unlimited") },
-        { name: t("pages.landing.pricing.feature_floor_plan"), included: true, note: "1 salle" },
-        { name: t("pages.landing.pricing.feature_clients"), included: true, limit: t("pages.landing.pricing.unlimited") },
-        { name: t("pages.landing.pricing.feature_multi_device"), included: true },
-        { name: t("pages.landing.pricing.feature_support"), included: true, note: "prioritaire" },
-        { name: t("pages.landing.pricing.feature_reminders_email"), included: true },
-        { name: t("pages.landing.pricing.feature_stats"), included: true, note: "basiques" },
-        { name: t("pages.landing.pricing.feature_export"), included: true },
-        // Not included
-        { name: t("pages.landing.pricing.feature_reminders_sms"), included: false },
-        { name: t("pages.landing.pricing.feature_api"), included: false },
-      ],
-    },
-    {
-      name: t("pages.landing.pricing.plan_enterprise_name"),
-      price: t("pages.landing.pricing.plan_enterprise_price"),
-      description: t("pages.landing.pricing.plan_enterprise_desc"),
-      popular: false,
-      features: [
-        // All included
-        { name: t("pages.landing.pricing.feature_reservations"), included: true, limit: t("pages.landing.pricing.unlimited") },
-        { name: t("pages.landing.pricing.feature_floor_plan"), included: true, note: "multi-salles" },
-        { name: t("pages.landing.pricing.feature_clients"), included: true, limit: t("pages.landing.pricing.unlimited") },
-        { name: t("pages.landing.pricing.feature_multi_device"), included: true },
-        { name: t("pages.landing.pricing.feature_support"), included: true, note: "dédié 24/7" },
-        { name: t("pages.landing.pricing.feature_reminders_email"), included: true },
-        { name: t("pages.landing.pricing.feature_reminders_sms"), included: true },
-        { name: t("pages.landing.pricing.feature_stats"), included: true, note: "avancées" },
-        { name: t("pages.landing.pricing.feature_export"), included: true },
-        { name: t("pages.landing.pricing.feature_api"), included: true },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await axiosConfig.get("/plans/public");
+        setPlans(response.data.plans);
+      } catch (error) {
+        console.error("Error fetching plans", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="pricing" className="py-20 md:py-28 bg-card">
+        <div className="container mx-auto max-w-8xl px-3 md:px-4">
+          <div className="grid gap-8 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[500px] w-full rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="pricing" className="py-20 md:py-28 bg-card">
@@ -82,63 +54,33 @@ export const Pricing = () => {
 
         {/* Pricing Cards */}
         <div className="grid gap-8 lg:grid-cols-3">
-          {plans.map((plan, index) => (
-            <div
-              key={index}
-              className={`relative rounded-2xl bg-background p-5 ${
-                plan.popular ? "border-2 border-primary shadow-xl scale-105" : "border border-border"
-              }`}
-            >
-              {/* Popular Badge */}
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center rounded-full bg-primary px-4 py-1 text-sm font-medium text-primary-foreground">
-                    {t("pages.landing.pricing.popular")}
-                  </span>
-                </div>
-              )}
-
+          {plans.map((plan) => (
+            <div key={plan._id} className={`relative rounded-2xl bg-background p-5 border border-border flex flex-col`}>
               {/* Plan Header */}
               <div className="text-center mb-6 pt-2">
                 <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center gap-1">
                   <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                  <span className="text-muted-foreground">{t("pages.landing.pricing.per_month")}</span>
+                  <span className="text-muted-foreground">€ / {t("pages.landing.pricing.per_month")}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{t("pages.landing.pricing.price_note")}</p>
               </div>
 
               {/* Features List */}
-              <ul className="space-y-2.5 mb-6">
+              <ul className="space-y-2.5 mb-6 flex-1">
                 {plan.features.map((feature, featureIndex) => (
                   <li key={featureIndex} className="flex items-start gap-3">
-                    <div
-                      className={`flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center mt-0.5 ${
-                        feature.included ? "bg-accent/10" : "bg-muted"
-                      }`}
-                    >
-                      {feature.included ? <Check className="h-3 w-3 text-accent" /> : <X className="h-3 w-3 text-muted-foreground" />}
+                    <div className="flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center mt-0.5 bg-accent/10">
+                      <Check className="h-3 w-3 text-accent" />
                     </div>
-                    <span className={`text-sm ${feature.included ? "text-foreground" : "text-muted-foreground line-through"}`}>
-                      {feature.name}
-                      {feature.limit && feature.included && <span className="text-muted-foreground text-xs ml-1">({feature.limit})</span>}
-                      {feature.note && feature.included && <span className="text-muted-foreground text-xs ml-1">• {feature.note}</span>}
-                    </span>
+                    <span className="text-sm text-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               {/* CTA */}
-              <Link to="/register" className="block">
-                <Button
-                  size="lg"
-                  className={`w-full ${
-                    plan.popular
-                      ? "bg-accent hover:bg-accent/90 text-accent-foreground"
-                      : "bg-primary hover:bg-primary/90 text-primary-foreground"
-                  }`}
-                >
+              <Link to="/register" className="block mt-auto">
+                <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                   {t("pages.landing.pricing.cta")}
                 </Button>
               </Link>

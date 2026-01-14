@@ -419,11 +419,13 @@
       "users": "Users",
       "settings": "Settings",
       "restaurants": "Restaurants",
+      "plans": "Plans",
       "logs": "Logs",
       "menu": {
         "dashboard": "Dashboard",
         "users": "Users",
         "restaurants": "Restaurants",
+        "plans": "Plans",
         "logs": "Logs",
         "settings": "Settings",
         "back_to_website": "Back to website"
@@ -554,6 +556,38 @@
             "address_required": "Address is required",
             "city_required": "City is required",
             "phone_required": "Phone is required"
+          }
+        },
+        "actions_type": {
+          "create": "Create",
+          "update": "Update",
+          "delete": "Delete"
+        }
+      },
+      "plans_page": {
+        "plans": "Plans",
+        "plan": "Plan",
+        "a_plan": "a plan",
+        "name": "Name",
+        "description": "Description",
+        "price": "Price",
+        "features": "Features",
+        "active": "Active",
+        "position": "Position",
+        "actions": "Actions",
+        "form": {
+          "name": "Name",
+          "description": "Description",
+          "price": "Price",
+          "features": "Features (comma separated)",
+          "stripePriceId": "Stripe ID",
+          "active": "Active",
+          "position": "Position",
+          "save": "Save",
+          "update": "Update",
+          "errors": {
+            "name_required": "Name is required",
+            "price_required": "Price is required"
           }
         },
         "actions_type": {

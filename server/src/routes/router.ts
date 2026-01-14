@@ -6,6 +6,7 @@ import { configRouter } from "./configRoutes.js";
 import { logRouter } from "./logsRoutes.js";
 import { uploadRouter } from "./uploadRoutes.js";
 import { restaurantRouter } from "./restaurantRoutes.js";
+import { planRouter } from "./planRoutes.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -20,6 +21,7 @@ router.use("/api/auth", authRouter); // Authentication routes
 router.use("/api/logs", logRouter); // Logging routes
 router.use("/api/config", configRouter); // Config routes
 router.use("/api/restaurants", restaurantRouter); // Restaurant routes
+router.use("/api/plans", planRouter); // Plan routes
 
 // // UPLOADS routes
 router.use("/api/uploads", uploadRouter); // File upload routes
