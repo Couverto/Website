@@ -179,6 +179,28 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
 };
 
 /**
+ * @function getPublicRestaurantById
+ * @description Retrieves a single public restaurant by ID.
+ */
+export const getPublicRestaurantById = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const restaurant = await Restaurant.findById(id).select("-collaborators -createdAt -updatedAt"); // Exclude internal/private fields
+
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    res.status(200).json({ restaurant });
+  } catch (err: any) {
+    console.error(`[getPublicRestaurantById] Error:`, err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
  * @function getMyRestaurants
  * @description Retrieves restaurants where the user is a collaborator.
  */

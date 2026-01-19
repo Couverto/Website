@@ -1,4 +1,4 @@
-import { NavLink, useParams, useNavigate } from "react-router-dom";
+import { NavLink, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft } from "lucide-react";
 import {
@@ -36,7 +36,7 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
     },
     {
       title: t("pages.restaurant.nav.bookings"),
-      url: `/restaurant/${id}/reservations`,
+      url: `/restaurant/${id}/bookings`,
       icon: CalendarDays,
     },
     {
@@ -46,15 +46,20 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
     },
     {
       title: t("pages.restaurant.nav.collaborators"),
-      url: `/restaurant/${id}/collaborateurs`,
+      url: `/restaurant/${id}/collaborators`,
       icon: UserPlus,
     },
     {
       title: t("pages.restaurant.nav.settings"),
-      url: `/restaurant/${id}/parametres`,
+      url: `/restaurant/${id}/settings`,
       icon: Settings,
     },
   ];
+
+  const { pathname } = useLocation();
+  const isActive = (path: string) => pathname.startsWith(path);
+  const styleDefault = "px-4 py-3 font-light flex items-center justify-center gap-3";
+  const styleActive = ` mx-4 my-3 flex items-center justify-center gap-3 text-primary border-b border-accent`;
 
   return (
     <Sidebar>
@@ -80,19 +85,10 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                          isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                        }`
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
+                <SidebarMenuItem key={item.url} onClick={() => navigate(item.url)}>
+                  <SidebarMenuButton tooltip={item.title} className="cursor-pointer">
+                    <item.icon className="h-4 w-4" />
+                    <span className={`${isActive(item.url) ? styleActive : styleDefault} `}>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

@@ -12,6 +12,7 @@ import {
   addCollaborator,
   removeCollaborator,
   updateRestaurantSettings,
+  getPublicRestaurantById,
 } from "../controllers/restaurantController.js";
 import {
   createInvitation,
@@ -28,6 +29,7 @@ export const restaurantRouter = express.Router();
 
 // Public routes
 restaurantRouter.get("/public", getPublicRestaurants);
+restaurantRouter.get("/public/:id", getPublicRestaurantById);
 
 // User routes (authenticated)
 restaurantRouter.get("/my", verifyToken(), getMyRestaurants);

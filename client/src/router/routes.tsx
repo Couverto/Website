@@ -29,6 +29,7 @@ import { RestaurantClients } from "@/pages/Restaurant/Clients";
 import { RestaurantSettings } from "@/pages/Restaurant/Settings";
 import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
 import { JoinRestaurant } from "@/pages/Join";
+import { PublicRestaurant } from "@/pages/PublicRestaurant";
 
 export const Router = () => {
   return (
@@ -69,6 +70,9 @@ export const Router = () => {
           <Route path="restaurants/new" element={<AddRestaurantWizard />} />
           <Route path="bookings" element={<AccountBooking />} />
         </Route>
+
+        {/* Public Restaurant Page - Moved inside LayoutWrapper for Navbar/Footer */}
+        <Route path="/restaurants/infos/:id" element={<PublicRestaurant />} />
       </Route>
 
       {/* Authenticated Application/Dashboard Routes */}
@@ -84,10 +88,10 @@ export const Router = () => {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<RestaurantDashboard />} />
-          <Route path="reservations" element={<RestaurantBookings />} />
+          <Route path="bookings" element={<RestaurantBookings />} />
           <Route path="clients" element={<RestaurantClients />} />
-          <Route path="collaborateurs" element={<RestaurantCollaborators />} />
-          <Route path="parametres" element={<RestaurantSettings />} />
+          <Route path="collaborators" element={<RestaurantCollaborators />} />
+          <Route path="settings" element={<RestaurantSettings />} />
         </Route>
         {/* Auth Routes */}
         <Route

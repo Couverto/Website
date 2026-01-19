@@ -7,6 +7,11 @@
       "title": "Créer un compte"
     }
   },
+  "common": {
+    "back_home": "Retour à l'accueil",
+    "not_specified": "Non spécifié",
+    "learn_more": "En savoir plus"
+  },
   "navbar": {
     "home": "Accueil",
     "restaurants": "Restaurants",
@@ -776,6 +781,22 @@
         "unknown_title": "Erreur",
         "unknown_description": "Une erreur inattendue s'est produite."
       }
+    },
+    "public_restaurant": {
+      "book_table": "Réserver une table",
+      "tabs": {
+        "overview": "Aperçu",
+        "menu": "Menu",
+        "reviews": "Avis"
+      },
+      "about": "À propos",
+      "no_description": "Aucune description disponible.",
+      "photos": "Photos",
+      "no_menu_available": "Aucun menu disponible pour le moment.",
+      "no_reviews_yet": "Aucun avis pour le moment.",
+      "info": "Informations",
+      "address": "Adresse",
+      "hours": "Horaires d'ouverture"
     }
   },
   "components": {
