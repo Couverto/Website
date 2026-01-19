@@ -7,8 +7,12 @@ import {
   cancelBooking,
   hideBooking,
   createManualBooking,
+  getRestaurantBookings,
+  getRestaurantClients,
+  updateBookingStatus,
 } from "../controllers/bookingController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 
 export const bookingRouter = express.Router();
 
@@ -60,4 +64,29 @@ bookingRouter.patch("/:id/hide", verifyToken(), hideBooking);
  * @desc Create a manual booking (admin/staff)
  * @access Private (Admin/Pro)
  */
-bookingRouter.post("/manual", verifyToken(), createManualBooking); // Middleware for role check should be added if needed
+bookingRouter.post("/manual", verifyToken(), createManualBooking);
+
+// =====================
+// Restaurant Collaborator Routes
+// =====================
+
+/**
+ * @route GET /api/bookings/restaurant/:id
+ * @desc Get all bookings for a restaurant
+ * @access Private (Collaborator)
+ */
+bookingRouter.get("/restaurant/:id", verifyToken(), verifyCollaborator(), getRestaurantBookings);
+
+/**
+ * @route GET /api/bookings/restaurant/:id/clients
+ * @desc Get all unique clients for a restaurant
+ * @access Private (Collaborator)
+ */
+bookingRouter.get("/restaurant/:id/clients", verifyToken(), verifyCollaborator(), getRestaurantClients);
+
+/**
+ * @route PATCH /api/bookings/restaurant/:id/:bookingId/status
+ * @desc Update a booking status
+ * @access Private (Collaborator)
+ */
+bookingRouter.patch("/restaurant/:id/:bookingId/status", verifyToken(), verifyCollaborator(), updateBookingStatus);

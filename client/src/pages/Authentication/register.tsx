@@ -1,12 +1,11 @@
 import { getRegisterSchema } from "@/lib/zod/schemas/auth/zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/authContext";
 import { axiosConfig } from "@/config/axiosConfig";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ export const Register = () => {
   const { configValues } = useConfigContext();
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAuthUser } = useAuthContext();
   const { t } = useTranslation();
 
@@ -45,7 +45,9 @@ export const Register = () => {
       toast.success(t(response.data.message));
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
-      navigate("/");
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      navigate(redirect || "/");
     } catch (error: any) {
       toast.error(t(error.response.data.error));
     } finally {
@@ -232,7 +234,7 @@ export const Register = () => {
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             {t("pages.register.already_have_account")}{" "}
-            <Link to="/login" className="font-medium text-primary hover:underline">
+            <Link to={`/login${location.search}`} className="font-medium text-primary hover:underline">
               {t("pages.register.login")}
             </Link>
           </div>

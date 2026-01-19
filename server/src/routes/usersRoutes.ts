@@ -8,10 +8,18 @@ import {
   updatePassword,
   deleteAccount,
   getAuthTypesStat,
+  searchUsers,
 } from "../controllers/userController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 
 export const userRouter: Router = express.Router();
+
+/**
+ * @route GET /search
+ * @description Search users by name, email or username
+ * @middleware verifyToken() - Ensures the user is authenticated
+ */
+userRouter.get("/search", verifyToken(), searchUsers);
 
 /**
  * @route GET /

@@ -24,6 +24,11 @@ import { NotFound } from "@/pages/NotFound";
 import { AddRestaurantWizard } from "@/pages/Account/AddRestaurant";
 import { RestaurantLayout } from "@/pages/Restaurant/layout";
 import { RestaurantDashboard } from "@/pages/Restaurant/Dashboard";
+import { RestaurantBookings } from "@/pages/Restaurant/Bookings";
+import { RestaurantClients } from "@/pages/Restaurant/Clients";
+import { RestaurantSettings } from "@/pages/Restaurant/Settings";
+import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
+import { JoinRestaurant } from "@/pages/Join";
 
 export const Router = () => {
   return (
@@ -79,6 +84,10 @@ export const Router = () => {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<RestaurantDashboard />} />
+          <Route path="reservations" element={<RestaurantBookings />} />
+          <Route path="clients" element={<RestaurantClients />} />
+          <Route path="collaborateurs" element={<RestaurantCollaborators />} />
+          <Route path="parametres" element={<RestaurantSettings />} />
         </Route>
         {/* Auth Routes */}
         <Route
@@ -105,6 +114,9 @@ export const Router = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Join Invitation Route */}
+        <Route path="/join/:token" element={<JoinRestaurant />} />
 
         {/* Admin Routes */}
         <Route

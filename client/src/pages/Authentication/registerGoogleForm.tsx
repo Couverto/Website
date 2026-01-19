@@ -63,7 +63,10 @@ export const RegisterGoogleForm = () => {
       toast.success(t(response.data.message));
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
-      navigate("/app");
+
+      const params = new URLSearchParams(location.search);
+      const redirect = location.state?.redirect || params.get("redirect");
+      navigate(redirect || "/");
     } catch (error: any) {
       toast.error(t(error.response.data.error));
     } finally {

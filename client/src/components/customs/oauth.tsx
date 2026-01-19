@@ -36,11 +36,18 @@ export function OAuth({ message }: OauthProps) {
         localStorage.setItem("accessToken", res.data.accessToken);
         toast.success(t(res.data.message));
         setAuthUser(res.data.user);
-        navigate("/");
+
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get("redirect");
+        navigate(redirect || "/");
       } catch (err: any) {
         const errorMessage = err?.response?.data?.error;
         if (errorMessage === "User not found, lets register !") {
-          navigate("/register/google", { state: userData });
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get("redirect");
+          const targetUrl = redirect ? `/register/google?redirect=${encodeURIComponent(redirect)}` : "/register/google";
+
+          navigate(targetUrl, { state: { ...userData, redirect } });
         } else {
           toast.error(t(errorMessage || "auth.error"));
         }

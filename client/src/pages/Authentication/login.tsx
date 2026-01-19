@@ -4,7 +4,7 @@ import { getLoginSchema } from "@/lib/zod/schemas/auth/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { useAuthContext } from "@/contexts/authContext";
 import { axiosConfig } from "@/config/axiosConfig";
@@ -19,6 +19,7 @@ export const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const { setAuthUser } = useAuthContext();
   const { configValues } = useConfigContext();
@@ -47,7 +48,9 @@ export const Login = () => {
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
 
-      navigate("/");
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      navigate(redirect || "/");
     } catch (error: any) {
       toast.error(t(error.response.data.error));
     } finally {
@@ -155,7 +158,7 @@ export const Login = () => {
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>{t("pages.login.password")}</FormLabel>
-                      <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                      <Link to={`/forgot-password${location.search}`} className="text-sm text-primary hover:underline">
                         {t("pages.login.forgot_password")}
                       </Link>
                     </div>
@@ -184,7 +187,7 @@ export const Login = () => {
 
           <div className="mt-8 text-center text-sm text-muted-foreground">
             {t("pages.login.no_account")}{" "}
-            <Link to="/register" className="font-medium text-primary hover:underline">
+            <Link to={`/register${location.search}`} className="font-medium text-primary hover:underline">
               {t("pages.login.sign_up")}
             </Link>
           </div>

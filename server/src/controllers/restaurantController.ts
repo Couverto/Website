@@ -193,3 +193,250 @@ export const getMyRestaurants = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function getRestaurantById
+ * @description Retrieves a restaurant by ID for collaborators.
+ */
+export const getRestaurantById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Restaurant is already attached by verifyCollaborator middleware
+    const restaurant = await Restaurant.findById(req.params.id).populate("collaborators", "name forename email avatar");
+
+    res.status(200).json({ restaurant });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function getRestaurantStats
+ * @description Retrieves statistics for a restaurant dashboard.
+ */
+export const getRestaurantStats = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { Booking } = await import("../models/bookingModel.js");
+  const { bookingStatus } = await import("../utils/enums/bookingStatus.js");
+
+  try {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Today's bookings
+    const todayBookings = await Booking.countDocuments({
+      restaurant: id,
+      bookingDate: { $gte: startOfToday },
+      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+    });
+
+    // Today's guests
+    const todayGuests = await Booking.aggregate([
+      {
+        $match: {
+          restaurant: new (await import("mongoose")).Types.ObjectId(id),
+          bookingDate: { $gte: startOfToday },
+          status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$guests" } } },
+    ]);
+
+    // This week's bookings
+    const weekBookings = await Booking.countDocuments({
+      restaurant: id,
+      bookingDate: { $gte: startOfWeek },
+      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+    });
+
+    // This month's bookings
+    const monthBookings = await Booking.countDocuments({
+      restaurant: id,
+      bookingDate: { $gte: startOfMonth },
+      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+    });
+
+    // Upcoming bookings (next 7 days)
+    const upcomingBookings = await Booking.find({
+      restaurant: id,
+      bookingDate: { $gte: now },
+      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+    })
+      .sort({ bookingDate: 1 })
+      .limit(10)
+      .populate("user", "name forename avatar");
+
+    // Total unique clients
+    const uniqueClients = await Booking.distinct("customer.phone", { restaurant: id });
+
+    res.status(200).json({
+      stats: {
+        today: {
+          bookings: todayBookings,
+          guests: todayGuests[0]?.total || 0,
+        },
+        week: {
+          bookings: weekBookings,
+        },
+        month: {
+          bookings: monthBookings,
+        },
+        totalClients: uniqueClients.length,
+      },
+      upcomingBookings,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function getCollaborators
+ * @description Retrieves all collaborators of a restaurant.
+ */
+export const getCollaborators = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  try {
+    const restaurant = await Restaurant.findById(id).populate("collaborators", "name forename email avatar username createdAt");
+
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    res.status(200).json({ collaborators: restaurant.collaborators });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function addCollaborator
+ * @description Adds a user as collaborator to a restaurant.
+ */
+export const addCollaborator = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { userId } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: "server.global.errors.no_such_user" });
+      return;
+    }
+
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    const isAlreadyCollaborator = restaurant.collaborators.some((collab) => collab.toString() === userId);
+
+    if (isAlreadyCollaborator) {
+      res.status(400).json({ error: "server.restaurants.errors.already_collaborator" });
+      return;
+    }
+
+    restaurant.collaborators.push(userId);
+    await restaurant.save();
+
+    createLog({
+      message: `User ${user.username} added as collaborator to ${restaurant.name}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ message: "server.restaurants.messages.collaborator_added" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function removeCollaborator
+ * @description Removes a collaborator from a restaurant.
+ */
+export const removeCollaborator = async (req: Request, res: Response): Promise<void> => {
+  const { id, collaboratorId } = req.params;
+
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    // Cannot remove the last collaborator
+    if (restaurant.collaborators.length <= 1) {
+      res.status(400).json({ error: "server.restaurants.errors.cannot_remove_last" });
+      return;
+    }
+
+    const collaboratorIndex = restaurant.collaborators.findIndex((collab) => collab.toString() === collaboratorId);
+
+    if (collaboratorIndex === -1) {
+      res.status(404).json({ error: "server.restaurants.errors.not_collaborator" });
+      return;
+    }
+
+    restaurant.collaborators.splice(collaboratorIndex, 1);
+    await restaurant.save();
+
+    createLog({
+      message: `Collaborator removed from ${restaurant.name}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ message: "server.restaurants.messages.collaborator_removed" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function updateRestaurantSettings
+ * @description Updates restaurant settings (for collaborators).
+ */
+export const updateRestaurantSettings = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { name, description, phone, website, coverImage, images, menu, openingHours, cuisineType, priceRange } = req.body;
+
+  try {
+    const restaurant = await Restaurant.findByIdAndUpdate(
+      id,
+      {
+        ...(name && { name }),
+        ...(description !== undefined && { description }),
+        ...(phone && { phone }),
+        ...(website !== undefined && { website }),
+        ...(coverImage !== undefined && { coverImage }),
+        ...(images && { images }),
+        ...(menu && { menu }),
+        ...(openingHours && { openingHours }),
+        ...(cuisineType && { cuisineType }),
+        ...(priceRange && { priceRange }),
+      },
+      { new: true },
+    );
+
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    createLog({
+      message: `Restaurant '${restaurant.name}' settings updated`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ restaurant, message: "server.restaurants.messages.settings_updated" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

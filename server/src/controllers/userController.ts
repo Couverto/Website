@@ -343,3 +343,39 @@ export const getAuthTypesStat = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function searchUsers
+ * @description Searches users by name, forename, email or username.
+ * @query q - Search query string
+ * @query exclude - Comma-separated user IDs to exclude
+ * @returns {Object} JSON response with matching users.
+ */
+export const searchUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = (req.query.q as string) || "";
+    const excludeIds = (req.query.exclude as string)?.split(",").filter(Boolean) || [];
+
+    if (query.length < 2) {
+      res.status(200).json({ users: [] });
+      return;
+    }
+
+    const searchRegex = new RegExp(query, "i");
+
+    const users = await User.find({
+      $and: [
+        { _id: { $nin: excludeIds } },
+        {
+          $or: [{ name: searchRegex }, { forename: searchRegex }, { email: searchRegex }, { username: searchRegex }],
+        },
+      ],
+    })
+      .select("_id name forename email username avatar")
+      .limit(10);
+
+    res.status(200).json({ users });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

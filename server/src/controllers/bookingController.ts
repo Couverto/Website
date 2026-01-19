@@ -272,3 +272,147 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function getRestaurantBookings
+ * @description Retrieves all bookings for a restaurant (for collaborators).
+ */
+export const getRestaurantBookings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 0;
+    const size = parseInt(req.query.size as string) || 20;
+    const status = req.query.status as string;
+    const search = req.query.search as string;
+    const dateFrom = req.query.dateFrom as string;
+    const dateTo = req.query.dateTo as string;
+
+    const query: any = { restaurant: id };
+
+    // Filter by status
+    if (status && Object.values(bookingStatus).includes(status as bookingStatus)) {
+      query.status = status;
+    } else {
+      // Exclude hidden bookings by default
+      query.status = { $ne: bookingStatus.HIDDEN };
+    }
+
+    // Filter by date range
+    if (dateFrom || dateTo) {
+      query.bookingDate = {};
+      if (dateFrom) query.bookingDate.$gte = new Date(dateFrom);
+      if (dateTo) query.bookingDate.$lte = new Date(dateTo);
+    }
+
+    // Search by customer name or phone
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      query.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
+    }
+
+    const bookings = await Booking.find(query)
+      .populate("user", "name forename email avatar")
+      .sort({ bookingDate: -1 })
+      .skip(page * size)
+      .limit(size);
+
+    const count = await Booking.countDocuments(query);
+
+    res.status(200).json({
+      bookings,
+      count,
+      page,
+      size,
+      totalPages: Math.ceil(count / size),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function getRestaurantClients
+ * @description Retrieves unique clients for a restaurant with visit stats.
+ */
+export const getRestaurantClients = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 0;
+    const size = parseInt(req.query.size as string) || 20;
+    const search = req.query.search as string;
+
+    const matchStage: any = { restaurant: (await import("mongoose")).Types.ObjectId.createFromHexString(id) };
+
+    // Search filter
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      matchStage.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
+    }
+
+    const clients = await Booking.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: "$customer.phone",
+          name: { $first: "$customer.name" },
+          email: { $first: "$customer.email" },
+          phone: { $first: "$customer.phone" },
+          totalBookings: { $sum: 1 },
+          totalGuests: { $sum: "$guests" },
+          lastVisit: { $max: "$bookingDate" },
+          firstVisit: { $min: "$bookingDate" },
+        },
+      },
+      { $sort: { lastVisit: -1 } },
+      { $skip: page * size },
+      { $limit: size },
+    ]);
+
+    const totalCount = await Booking.aggregate([{ $match: matchStage }, { $group: { _id: "$customer.phone" } }, { $count: "total" }]);
+
+    res.status(200).json({
+      clients,
+      count: totalCount[0]?.total || 0,
+      page,
+      size,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function updateBookingStatus
+ * @description Updates a booking status (for restaurant collaborators).
+ */
+export const updateBookingStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, bookingId } = req.params;
+    const { status } = req.body;
+
+    if (!Object.values(bookingStatus).includes(status)) {
+      res.status(400).json({ error: "server.bookings.errors.invalid_status" });
+      return;
+    }
+
+    const booking = await Booking.findOne({ _id: bookingId, restaurant: id });
+
+    if (!booking) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    booking.status = status;
+    await booking.save();
+
+    createLog({
+      message: `Booking status updated to ${status}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ booking, message: "server.bookings.messages.updated" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
