@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
-import { User } from "../models/userModel";
-import { Constants } from "../constants/constants";
+import { User } from "../models/userModel.js";
+import { Constants } from "../constants/constants.js";
 
 /**
  * @function updateUserAvatar

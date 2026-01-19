@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
-import { bookingStatus } from "../utils/enums/bookingStatus";
-import { IBooking } from "../interfaces/IBooking";
+import { bookingStatus } from "../utils/enums/bookingStatus.js";
+import { IBooking } from "../interfaces/IBooking.js";
 
 const allowedBookingStatus = Object.values(bookingStatus);
 
