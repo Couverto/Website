@@ -25,6 +25,10 @@ export function initSockets(httpServer: http.Server): SocketIOServer {
       io?.emit("getOnlineUsers", Object.keys(userSocketMap)); // Broadcast updated online users
     }
 
+    socket.on("joinRestaurant", (restaurantId: string) => {
+      socket.join(`restaurant_${restaurantId}`);
+    });
+
     socket.on("disconnect", () => {
       if (typeof userId === "string") {
         delete userSocketMap[userId];
@@ -35,3 +39,10 @@ export function initSockets(httpServer: http.Server): SocketIOServer {
 
   return io;
 }
+
+export const getIO = () => {
+  if (!io) {
+    throw new Error("Socket.io not initialized!");
+  }
+  return io;
+};

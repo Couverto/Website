@@ -722,7 +722,8 @@
         "status_error": "Error updating status",
         "showing": "{{count}} booking(s)",
         "previous": "Previous",
-        "next": "Next"
+        "next": "Next",
+        "new_booking_notification": "New booking received!"
       },
       "clients": {
         "title": "Clients",

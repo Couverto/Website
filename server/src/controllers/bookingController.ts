@@ -4,6 +4,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { getIO } from "../sockets/socket.js";
 
 /**
  * @function createBooking
@@ -36,6 +37,17 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     // but the frontend usually sends the form data. We'll trust the body.
 
     const newBooking = await Booking.create(bookingData);
+
+    // Emit real-time event to restaurant room
+    try {
+      // Need to populate customer name if it's from user profile, but created booking has it in customer object
+      // If we used userId, we might want to populate. But here we have customer object in body.
+      // But let's check what socket needs. The frontend usage will need consistent data.
+      // The booking object created has customer data.
+      getIO().to(`restaurant_${restaurant}`).emit("newBooking", newBooking);
+    } catch (error) {
+      console.error("Socket emit failed", error);
+    }
 
     // TODO: Send confirmation email/SMS (out of scope for now, but good placeholder)
 

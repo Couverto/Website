@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Search, MoreHorizontal, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useSocketContext } from "@/contexts/socketContext";
 
 interface Booking {
   _id: string;
@@ -31,6 +32,7 @@ interface Booking {
 export const RestaurantBookings = () => {
   const { t } = useTranslation();
   const { id } = useParams();
+  const { socket } = useSocketContext(); // access socket
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -61,10 +63,76 @@ export const RestaurantBookings = () => {
     }
   };
 
+  /* Socket & Audio */
+  const [newBookingIds, setNewBookingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (socket && id) {
+      socket.emit("joinRestaurant", id);
+
+      const handleNewBooking = (newBooking: Booking) => {
+        // Play sound
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+        const playPromise = audio.play();
+
+        playPromise.catch((e) => {
+          console.error("Audio play failed", e);
+        });
+
+        // Add to list and mark as new
+        setBookings((prev) => [newBooking, ...prev]);
+        setTotalPages((prev) => Math.ceil((count + 1) / 20)); // Approximate update
+        setCount((prev) => prev + 1);
+
+        // Add visual indicator
+        setNewBookingIds((prev) => new Set(prev).add(newBooking._id));
+
+        toast.info(t("pages.restaurant.bookings.new_booking_notification"), {
+          action: {
+            label: "🔊",
+            onClick: () => audio.play(),
+          },
+        });
+      };
+
+      socket.on("newBooking", handleNewBooking);
+
+      return () => {
+        socket.off("newBooking", handleNewBooking);
+        // We probably don't want to leave the room if we just unmount this component?
+        // Or maybe we do. Socket.io rooms are server side.
+        // There is no "leaveRoom" exposed on client usually without custom event.
+        // Server cleans up on disconnect.
+        // If the user navigates away, they probably don't need updates for this restaurant specifically?
+        // But they are still logged in.
+        // It's fine to stay in the room or we can add a leave event if needed. For now, keep it simple.
+      };
+    }
+  }, [socket, id, count]); // Count dependency still iffy for handlers but let's keep it consistent with previous logic or fix it.
+  // Actually, 'count' is used inside handleNewBooking, so we need it in dependency or use functional update.
+  // I used functional update for setBookings and setNewBookingIds.
+  // But setCount(prev => prev + 1) is fine.
+  // setTotalPages uses count. I should use functional update or reference.
+  // Better to just depend on socket/id and use functional updates correctly.
+
+  // FIX: Refactor handleNewBooking to not depend on stale closures if possible, or just depend on 'count'.
+  // Since we reconstruct the listener when 'count' changes, it works but it's slight overhead (re-binding listener).
+  // It's acceptable for this scale.
+
   const updateStatus = async (bookingId: string, newStatus: string) => {
     try {
       await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus });
       setBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus } : b)));
+
+      // Remove "new" indicator if action taken
+      if (newBookingIds.has(bookingId)) {
+        setNewBookingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(bookingId);
+          return next;
+        });
+      }
+
       toast.success(t("pages.restaurant.bookings.status_updated"));
     } catch (error) {
       toast.error(t("pages.restaurant.bookings.status_error"));
@@ -151,7 +219,15 @@ export const RestaurantBookings = () => {
                     <TableRow key={booking._id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{format(new Date(booking.bookingDate), "dd MMM yyyy", { locale: fr })}</p>
+                          <p className="font-medium flex items-center gap-2">
+                            {format(new Date(booking.bookingDate), "dd MMM yyyy", { locale: fr })}
+                            {newBookingIds.has(booking._id) && (
+                              <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                              </span>
+                            )}
+                          </p>
                           <p className="text-sm text-muted-foreground">{format(new Date(booking.bookingDate), "HH:mm", { locale: fr })}</p>
                         </div>
                       </TableCell>
