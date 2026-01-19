@@ -66,7 +66,7 @@ export const PublicRestaurant = () => {
     return (
       <div className="container mx-auto py-20 text-center">
         <h2 className="text-2xl font-bold mb-4">{error || t("server.global.errors.not_found")}</h2>
-        <Button onClick={() => navigate("/")}>{t("common.back_home")}</Button>
+        <Button onClick={() => navigate(-1)}>{t("common.back_home")}</Button>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export const PublicRestaurant = () => {
         variant="outline"
         size="icon"
         className="fixed top-20 left-4 z-50 bg-background/80 backdrop-blur-sm border-none shadow-md hover:bg-background"
-        onClick={() => navigate("/")}
+        onClick={() => navigate(-1)}
       >
         <ChevronLeft className="h-6 w-6" />
       </Button>

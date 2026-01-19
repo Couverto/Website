@@ -3,9 +3,28 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, Calendar, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Hero = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [location, setLocation] = useState("");
+
+  const handleSearch = () => {
+    // Navigate to restaurants page with the city filter
+    const params = new URLSearchParams();
+    if (location) {
+      params.append("city", location);
+    }
+    navigate(`/restaurants?${params.toString()}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   return (
     <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
@@ -31,6 +50,9 @@ export const Hero = () => {
             <Input
               className="pl-12 h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent"
               placeholder={t("pages.home.search.location_placeholder")}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              onKeyDown={handleKeyDown}
             />
           </div>
 
@@ -68,6 +90,7 @@ export const Hero = () => {
           <Button
             size="lg"
             className="w-full lg:w-auto h-14 px-8 text-lg font-bold rounded-xl shadow-lg hover:shadow-primary/25 transition-all"
+            onClick={handleSearch}
           >
             <Search className="mr-2 h-5 w-5" />
             {t("pages.home.search.button")}

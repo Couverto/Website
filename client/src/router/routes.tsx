@@ -30,6 +30,7 @@ import { RestaurantSettings } from "@/pages/Restaurant/Settings";
 import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
+import { PublicRestaurants } from "@/pages/PublicRestaurants";
 
 export const Router = () => {
   return (
@@ -70,6 +71,9 @@ export const Router = () => {
           <Route path="restaurants/new" element={<AddRestaurantWizard />} />
           <Route path="bookings" element={<AccountBooking />} />
         </Route>
+
+        {/* Public Restaurant List */}
+        <Route path="/restaurants" element={<PublicRestaurants />} />
 
         {/* Public Restaurant Page - Moved inside LayoutWrapper for Navbar/Footer */}
         <Route path="/restaurants/infos/:id" element={<PublicRestaurant />} />

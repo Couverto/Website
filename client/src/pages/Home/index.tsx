@@ -13,7 +13,7 @@ export const Home = () => {
         <Hero />
         <ValueProps />
         <HowItWorks />
-        <RestaurantList />
+        <RestaurantList isPreview={true} />
         <DownloadApp />
         <FAQ />
         <CallToAction />

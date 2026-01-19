@@ -93,6 +93,12 @@ export const Navbar = () => {
           <div className="ml-auto flex items-center gap-4">
             {/* Pro Link (Desktop) */}
 
+            {/* Restaurants Link */}
+            <Link to="/restaurants" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden md:block">
+              {t("navbar.restaurants")}
+            </Link>
+
+            {/* Pro Link (Desktop) */}
             <Link to="/pro" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden md:block">
               {t("pages.home.navbar.are_you_pro")}
             </Link>

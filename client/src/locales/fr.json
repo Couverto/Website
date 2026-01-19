@@ -10,7 +10,8 @@
   "common": {
     "back_home": "Retour à l'accueil",
     "not_specified": "Non spécifié",
-    "learn_more": "En savoir plus"
+    "learn_more": "En savoir plus",
+    "see_all": "Voir tous les restaurants"
   },
   "navbar": {
     "home": "Accueil",
@@ -25,6 +26,12 @@
     "profile": "Profil"
   },
   "pages": {
+    "restaurants": {
+      "list": {
+        "title": "Tous les restaurants",
+        "subtitle": "Découvrez notre sélection des meilleurs restaurants"
+      }
+    },
     "account_menu": {
       "profile": "Profil",
       "restaurants": "Mes Restaurants",
@@ -47,6 +54,7 @@
       },
       "search": {
         "location_placeholder": "Où ? (Ville, code postal)",
+        "name_placeholder": "Quel restaurant, cuisine... ?",
         "guests": "Personnes",
         "person": "Personne",
         "people": "Personnes",
