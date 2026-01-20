@@ -37,7 +37,7 @@ restaurantRouter.get("/my", verifyToken(), getMyRestaurants);
 
 // Admin routes
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);
-restaurantRouter.post("/", verifyToken({ role: userRoles.ADMIN }), createRestaurant);
+restaurantRouter.post("/", verifyToken(), createRestaurant);
 restaurantRouter.put("/:id", verifyToken({ role: userRoles.ADMIN }), updateRestaurant);
 restaurantRouter.delete("/:id", verifyToken(), verifyCollaborator(), deleteRestaurant);
 
