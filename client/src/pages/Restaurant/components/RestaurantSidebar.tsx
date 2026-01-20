@@ -98,10 +98,18 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t">
-        <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/account/restaurants")}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
-          {t("pages.restaurant.back_to_account")}
-        </Button>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              className="hover:cursor-pointer"
+              onClick={() => navigate("/account/restaurants")}
+              tooltip={t("pages.restaurant.back_to_account")}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>{t("pages.restaurant.back_to_account")}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
