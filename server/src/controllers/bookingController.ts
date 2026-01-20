@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Booking } from "../models/bookingModel.js";
 import { Restaurant } from "../models/restaurantModel.js";
+import { User } from "../models/userModel.js";
 import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
@@ -35,6 +36,13 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     // If authenticated, we can optionally override customer info with user profile if not provided,
     // but the frontend usually sends the form data. We'll trust the body.
+    if (userId) {
+      try {
+        await User.findByIdAndUpdate(userId, { phone: customer.phone });
+      } catch (userUpdateErr) {
+        console.error("Failed to update user phone during booking", userUpdateErr);
+      }
+    }
 
     const newBooking = await Booking.create(bookingData);
 
@@ -342,10 +350,6 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
   }
 };
 
-/**
- * @function getRestaurantClients
- * @description Retrieves unique clients for a restaurant with visit stats.
- */
 export const getRestaurantClients = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -353,19 +357,18 @@ export const getRestaurantClients = async (req: Request, res: Response): Promise
     const size = parseInt(req.query.size as string) || 20;
     const search = req.query.search as string;
 
-    const matchStage: any = { restaurant: (await import("mongoose")).Types.ObjectId.createFromHexString(id) };
+    const mongoose = await import("mongoose");
+    const restaurantId = mongoose.Types.ObjectId.createFromHexString(id);
 
-    // Search filter
-    if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
-      matchStage.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
-    }
+    const matchStage: any = { restaurant: restaurantId };
 
-    const clients = await Booking.aggregate([
+    // Grouping by user if available, otherwise by phone
+    const clientsAggregation = await Booking.aggregate([
       { $match: matchStage },
       {
         $group: {
-          _id: "$customer.phone",
+          _id: { $ifNull: ["$user", "$customer.phone"] },
+          userId: { $first: "$user" },
           name: { $first: "$customer.name" },
           email: { $first: "$customer.email" },
           phone: { $first: "$customer.phone" },
@@ -375,20 +378,73 @@ export const getRestaurantClients = async (req: Request, res: Response): Promise
           firstVisit: { $min: "$bookingDate" },
         },
       },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          userId: 1,
+          phone: 1,
+          totalBookings: 1,
+          totalGuests: 1,
+          lastVisit: 1,
+          firstVisit: 1,
+          name: { $ifNull: ["$userDetails.fullname", "$name"] },
+          email: { $ifNull: ["$userDetails.email", "$email"] },
+          avatar: "$userDetails.avatar",
+          isRegistered: { $cond: [{ $ifNull: ["$userId", false] }, true, false] },
+        },
+      },
+      // Search filter after projection/join
+      ...(search && search.trim()
+        ? [
+            {
+              $match: {
+                $or: [
+                  { name: new RegExp(search.trim(), "i") },
+                  { phone: new RegExp(search.trim(), "i") },
+                  { email: new RegExp(search.trim(), "i") },
+                ],
+              },
+            },
+          ]
+        : []),
       { $sort: { lastVisit: -1 } },
       { $skip: page * size },
       { $limit: size },
     ]);
 
-    const totalCount = await Booking.aggregate([{ $match: matchStage }, { $group: { _id: "$customer.phone" } }, { $count: "total" }]);
+    // Count unique clients
+    const countAggregation = await Booking.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: { $ifNull: ["$user", "$customer.phone"] },
+        },
+      },
+      { $count: "total" },
+    ]);
 
     res.status(200).json({
-      clients,
-      count: totalCount[0]?.total || 0,
+      clients: clientsAggregation,
+      count: countAggregation[0]?.total || 0,
       page,
       size,
     });
   } catch (err: any) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };

@@ -8,13 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Search, Loader2, Users } from "lucide-react";
+import { Search, Loader2, Users, User as UserIcon } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface Client {
   _id: string;
+  userId?: string;
   name: string;
   email?: string;
   phone: string;
+  avatar?: string;
+  isRegistered: boolean;
   totalBookings: number;
   totalGuests: number;
   lastVisit: string;
@@ -101,6 +106,7 @@ export const RestaurantClients = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[80px]"></TableHead>
                     <TableHead>{t("pages.restaurant.clients.name")}</TableHead>
                     <TableHead>{t("pages.restaurant.clients.contact")}</TableHead>
                     <TableHead className="text-center">{t("pages.restaurant.clients.visits")}</TableHead>
@@ -112,21 +118,51 @@ export const RestaurantClients = () => {
                 <TableBody>
                   {clients.map((client) => (
                     <TableRow key={client._id}>
-                      <TableCell className="font-medium">{client.name}</TableCell>
                       <TableCell>
-                        <div>
-                          <p>{client.phone}</p>
-                          {client.email && <p className="text-sm text-muted-foreground">{client.email}</p>}
+                        <Avatar className="h-10 w-10 border shadow-sm">
+                          {client.avatar && <AvatarImage src={client.avatar} alt={client.name} />}
+                          <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                            {client.name
+                              ?.split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase() || <UserIcon className="h-4 w-4" />}
+                          </AvatarFallback>
+                        </Avatar>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{client.name}</span>
+                          {client.isRegistered && (
+                            <div className="mt-1">
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px] py-0 px-1.5 font-bold uppercase tracking-wider bg-primary/10 text-primary border-primary/5 hover:bg-primary/20"
+                              >
+                                {t("pages.restaurant.clients.registered", "App User")}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-medium">{client.phone}</p>
+                          {client.email && <p className="text-xs text-muted-foreground">{client.email}</p>}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-semibold">{client.totalBookings}</span>
+                        <Badge variant="outline" className="font-bold">
+                          {client.totalBookings}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <span className="font-semibold">{client.totalGuests}</span>
+                      <TableCell className="text-center text-muted-foreground font-medium">{client.totalGuests}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(client.lastVisit), "dd MMM yyyy", { locale: fr })}
                       </TableCell>
-                      <TableCell>{format(new Date(client.lastVisit), "dd MMM yyyy", { locale: fr })}</TableCell>
-                      <TableCell>{format(new Date(client.firstVisit), "dd MMM yyyy", { locale: fr })}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(client.firstVisit), "dd MMM yyyy", { locale: fr })}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -10,6 +10,7 @@ export interface IUser extends Document {
   role: string;
   restaurant: mongoose.Types.ObjectId;
   avatar: string;
+  phone: string;
   auth_type: string;
   fullname?: string; // virtual
 }

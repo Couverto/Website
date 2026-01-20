@@ -13,6 +13,7 @@ const UserSchema = new Schema<IUser>(
     role: { type: String, default: userRoles.USER },
     restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant", default: null },
     avatar: { type: String, default: "" },
+    phone: { type: String, default: "" },
     auth_type: { type: String, default: authTypes.LOCAL },
   },
   { timestamps: true },
