@@ -34,6 +34,7 @@ interface PublicRestaurant {
     instagram?: string;
     tiktok?: string;
   };
+  isOpenNow?: boolean;
 }
 
 export const PublicRestaurant = () => {
@@ -147,6 +148,14 @@ export const PublicRestaurant = () => {
                   <span className="font-medium text-foreground">{restaurant.rating || "NEW"}</span>
                 </div>
               </div>
+              {restaurant.isOpenNow !== undefined && (
+                <Badge
+                  variant={restaurant.isOpenNow ? "default" : "destructive"}
+                  className={`mt-4 text-sm py-1 px-3 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                >
+                  {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
+                </Badge>
+              )}
             </div>
             <Button size="lg" className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all" onClick={() => setIsBookingOpen(true)}>
               {t("pages.public_restaurant.book_table")}
@@ -318,10 +327,14 @@ export const PublicRestaurant = () => {
                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">
                         {restaurant.openingHours && Object.keys(restaurant.openingHours).length > 0 ? (
                           <div className="space-y-1 mt-1">
-                            {Object.entries(restaurant.openingHours).map(([day, hours]) => (
+                            {Object.entries(restaurant.openingHours).map(([day, schedule]: [string, any]) => (
                               <div key={day} className="flex justify-between gap-4">
-                                <span className="capitalize w-24">{t(`server.restaurant.settings.days.${day.toLowerCase()}`, day)}</span>
-                                <span>{hours as string}</span>
+                                <span className="capitalize w-24">{t(`pages.public_restaurant.days.${day.toLowerCase()}`, day)}</span>
+                                <span className={`${schedule?.isClosed ? "text-destructive font-medium" : ""}`}>
+                                  {schedule?.isClosed
+                                    ? t("create.steps.details.closed")
+                                    : schedule?.periods?.map((p: any) => `${p.open} - ${p.close}`).join(", ") || "-"}
+                                </span>
                               </div>
                             ))}
                           </div>

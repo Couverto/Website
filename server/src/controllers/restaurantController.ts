@@ -137,6 +137,44 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
 };
 
 /**
+ * @function isRestaurantOpen
+ * @description Helper to determine if a restaurant is currently open.
+ */
+const isRestaurantOpen = (openingHours: any) => {
+  if (!openingHours) return false;
+
+  const now = new Date();
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const currentDay = dayNames[now.getDay()];
+  const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+  // Handle Mongoose Map or plain object
+  const daySchedule = openingHours.get ? openingHours.get(currentDay) : openingHours[currentDay];
+
+  if (!daySchedule || daySchedule.isClosed || !daySchedule.periods || daySchedule.periods.length === 0) return false;
+
+  return daySchedule.periods.some((period: { open: string; close: string }) => {
+    return currentTime >= period.open && currentTime <= period.close;
+  });
+};
+
+/**
+ * @function convertMapToObject
+ * @description Helper to convert Mongoose Map to plain object for JSON serialization.
+ */
+const convertOpeningHoursToObject = (openingHours: any) => {
+  if (!openingHours) return {};
+  if (openingHours instanceof Map || typeof openingHours.entries === "function") {
+    const result: Record<string, any> = {};
+    openingHours.forEach((value: any, key: string) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  return openingHours;
+};
+
+/**
  * @function getPublicRestaurants
  * @description Retrieves public restaurants with search and filters.
  */
@@ -172,7 +210,17 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
 
     const count = await Restaurant.countDocuments(query);
 
-    res.status(200).json({ restaurants, count });
+    // Calculate isOpenNow for each restaurant
+    const restaurantsWithStatus = restaurants.map((r) => {
+      const restaurantObj = r.toObject();
+      return {
+        ...restaurantObj,
+        openingHours: convertOpeningHoursToObject(r.openingHours),
+        isOpenNow: isRestaurantOpen(r.openingHours),
+      };
+    });
+
+    res.status(200).json({ restaurants: restaurantsWithStatus, count });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -193,7 +241,13 @@ export const getPublicRestaurantById = async (req: Request, res: Response): Prom
       return;
     }
 
-    res.status(200).json({ restaurant });
+    const restaurantWithStatus = {
+      ...restaurant.toObject(),
+      openingHours: convertOpeningHoursToObject(restaurant.openingHours),
+      isOpenNow: isRestaurantOpen(restaurant.openingHours),
+    };
+
+    res.status(200).json({ restaurant: restaurantWithStatus });
   } catch (err: any) {
     console.error(`[getPublicRestaurantById] Error:`, err);
     res.status(500).json({ error: err.message });

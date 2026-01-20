@@ -57,6 +57,19 @@ export const getPaymentSchema = (t: TFunction) =>
     cvc: z.string().regex(/^\d{3,4}$/, t("components.booking.form.errors.missing_fields") || "Invalid CVC"),
   });
 
+export const getOpeningHoursSchema = (t: TFunction) =>
+  z.record(
+    z.object({
+      isClosed: z.boolean().default(false),
+      periods: z.array(
+        z.object({
+          open: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "HH:mm"),
+          close: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "HH:mm"),
+        }),
+      ),
+    }),
+  );
+
 export const getRestaurantWizardSchema = (t: TFunction) =>
   z.object({
     ...getEssentialsSchema(t).shape,
@@ -65,6 +78,7 @@ export const getRestaurantWizardSchema = (t: TFunction) =>
     ...getMenuSchema(t).shape,
     ...getMediaSchema(t).shape,
     ...getPaymentSchema(t).shape,
+    openingHours: getOpeningHoursSchema(t),
   });
 
 export type WizardData = z.infer<ReturnType<typeof getRestaurantWizardSchema>>;

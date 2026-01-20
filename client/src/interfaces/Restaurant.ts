@@ -20,7 +20,14 @@ export interface RestaurantInterface {
     tiktok?: string;
   };
   capacity: number;
-  openingHours: Record<string, string>;
+  openingHours: Record<
+    string,
+    {
+      isClosed: boolean;
+      periods: { open: string; close: string }[];
+    }
+  >;
+  isOpenNow?: boolean;
   cuisineType: string[];
   priceRange: string;
   rating: number;

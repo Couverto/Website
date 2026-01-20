@@ -48,6 +48,10 @@
         "payment_methods": "Payment Methods",
         "capacity": "Capacity (seats)",
         "social_networks": "Social Networks",
+        "opening_hours": "Opening Hours",
+        "closed": "Closed",
+        "open": "Open",
+        "add_slot": "Add Slot",
         "options": {
           "terrace": "Terrace",
           "wifi": "Wifi",
@@ -949,7 +953,18 @@
       "address": "Address",
       "hours": "Opening Hours",
       "payment_methods": "Payment Methods",
-      "view_menu": "View Menu #{{count}}"
+      "view_menu": "View Menu #{{count}}",
+      "open_now": "Open Now",
+      "closed_now": "Closed Now",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      }
     }
   },
   "components": {

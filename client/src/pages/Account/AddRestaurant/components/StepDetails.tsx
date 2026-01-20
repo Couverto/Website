@@ -24,10 +24,12 @@ import {
   Smartphone,
   Ticket,
   StickyNote,
+  Clock,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 
 interface StepProps {
   data: WizardData;
@@ -203,7 +205,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
             <Input
               id="capacity"
               type="number"
-              value={data.capacity || ""}
+              value={data.capacity}
               onChange={(e) => updateData({ capacity: parseInt(e.target.value) || 0 })}
               placeholder="50"
               className={`pl-10 h-12 text-base transition-all ${errors?.capacity ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
@@ -211,6 +213,16 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
           </div>
           {errors?.capacity && <p className="text-xs font-medium text-red-500 px-1">{errors.capacity}</p>}
         </div>
+      </div>
+
+      <div className="space-y-6 pt-8 border-t">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-primary" />
+          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            {t("create.steps.details.opening_hours", "Opening Hours")}
+          </Label>
+        </div>
+        <OpeningHoursEditor value={data.openingHours as any} onChange={(val) => updateData({ openingHours: val as any })} />
       </div>
 
       <div className="space-y-4 pt-8 border-t">

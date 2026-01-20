@@ -22,7 +22,13 @@ export interface IRestaurant extends Document {
     tiktok?: string;
   };
   capacity: number;
-  openingHours: Map<string, string>;
+  openingHours: Record<
+    string,
+    {
+      isClosed: boolean;
+      periods: { open: string; close: string }[];
+    }
+  >;
   cuisineType: string[];
   priceRange: string;
   rating: number;

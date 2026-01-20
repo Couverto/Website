@@ -48,6 +48,10 @@
         "payment_methods": "Moyens de paiement",
         "capacity": "Capacité (couverts)",
         "social_networks": "Réseaux sociaux",
+        "opening_hours": "Horaires d'ouverture",
+        "closed": "Fermé",
+        "open": "Ouvert",
+        "add_slot": "Ajouter un créneau",
         "options": {
           "terrace": "Terrasse",
           "wifi": "Wifi",
@@ -940,7 +944,18 @@
       "address": "Adresse",
       "hours": "Horaires d'ouverture",
       "payment_methods": "Moyens de paiement",
-      "view_menu": "Voir le menu #{{count}}"
+      "view_menu": "Voir le menu #{{count}}",
+      "open_now": "Ouvert maintenant",
+      "closed_now": "Fermé actuellement",
+      "days": {
+        "monday": "lundi",
+        "tuesday": "mardi",
+        "wednesday": "mercredi",
+        "thursday": "jeudi",
+        "friday": "vendredi",
+        "saturday": "samedi",
+        "sunday": "dimanche"
+      }
     }
   },
   "components": {

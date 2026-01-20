@@ -25,7 +25,15 @@ const RestaurantSchema = new Schema<IRestaurant>(
     capacity: { type: Number, default: 0 },
     openingHours: {
       type: Map,
-      of: String,
+      of: {
+        isClosed: { type: Boolean, default: false },
+        periods: [
+          {
+            open: { type: String, required: true },
+            close: { type: String, required: true },
+          },
+        ],
+      },
       default: {},
     },
     cuisineType: { type: [String], default: [] },

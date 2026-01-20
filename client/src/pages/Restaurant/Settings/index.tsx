@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
+import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 import {
   Loader2,
   Save,
@@ -581,14 +582,11 @@ export const RestaurantSettings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {DAYS.map((day) => (
-                <div key={day} className="flex items-center gap-4">
-                  <Label className="w-24 capitalize">{t(`pages.restaurant.settings.days.${day}`)}</Label>
-                  <Input placeholder="09:00 - 22:00" {...register(`openingHours.${day}`)} />
-                </div>
-              ))}
-            </div>
+            <Controller
+              control={control}
+              name="openingHours"
+              render={({ field }) => <OpeningHoursEditor value={field.value} onChange={field.onChange} />}
+            />
           </CardContent>
         </Card>
 
