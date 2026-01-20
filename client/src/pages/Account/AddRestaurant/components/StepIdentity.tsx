@@ -99,35 +99,27 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
 
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className={`w-full h-12 justify-between text-base font-normal px-4 transition-all ${
-                errors?.cuisineType
-                  ? "border-red-500 ring-red-500 bg-red-50/30"
-                  : "border-muted-foreground/20 focus:border-primary shadow-sm hover:border-primary/50"
-              }`}
-            >
-              <div className="flex items-center gap-2 text-muted-foreground italic">
-                <Search className="h-4 w-4" />
-                <span>{t("create.steps.identity.placeholders.search_cuisine", "Select cuisines...")}</span>
-              </div>
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
+            <div className="relative group cursor-text">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                className={`pl-11 pr-10 h-12 text-base transition-all ${
+                  errors?.cuisineType ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"
+                }`}
+                placeholder={t("create.steps.identity.placeholders.search_cuisine", "Select cuisines...")}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (!open) setOpen(true);
+                }}
+                onFocus={() => setOpen(true)}
+              />
+              <ChevronDown
+                className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+              />
+            </div>
           </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-0 shadow-2xl rounded-2xl border-primary/10" align="start">
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 shadow-2xl rounded-2xl border-primary/10" align="start">
             <div className="flex flex-col">
-              <div className="p-3 border-b flex items-center gap-2 sticky top-0 bg-background z-10">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <input
-                  className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
-                  placeholder={t("create.steps.identity.placeholders.search_input", "Search...")}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  autoFocus
-                />
-              </div>
               <div className="max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
                 {filteredCuisines.length === 0 ? (
                   <div className="py-8 text-center text-sm text-muted-foreground italic">No results found.</div>

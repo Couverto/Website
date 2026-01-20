@@ -63,7 +63,8 @@
           "apple_pay": "Apple Pay",
           "google_pay": "Google Pay",
           "tickets_restaurant": "Tickets Restaurant",
-          "cheque": "Chèque"
+          "cheque": "Chèque",
+          "ancv": "Chèque-Vacances (ANCV)"
         }
       },
       "menu": {

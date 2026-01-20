@@ -1,6 +1,6 @@
 import { useParams, useOutletContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,18 @@ import {
   Users,
   Share2,
   Wallet,
+  Wifi,
+  Umbrella,
+  Accessibility,
+  Beer,
+  Wind,
+  Car,
+  Dog,
+  CreditCard,
+  Banknote,
+  Smartphone,
+  Ticket,
+  StickyNote,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -86,22 +98,23 @@ const PRICES = [
 ];
 
 const FEATURES_LIST = [
-  { id: "terrace", value: "terrace" },
-  { id: "wifi", value: "wifi" },
-  { id: "accessible", value: "accessible" },
-  { id: "bar", value: "bar" },
-  { id: "air_conditioning", value: "air_conditioning" },
-  { id: "parking", value: "parking" },
-  { id: "pets_allowed", value: "pets_allowed" },
+  { id: "terrace", value: "terrace", icon: Umbrella },
+  { id: "wifi", value: "wifi", icon: Wifi },
+  { id: "accessible", value: "accessible", icon: Accessibility },
+  { id: "bar", value: "bar", icon: Beer },
+  { id: "air_conditioning", value: "air_conditioning", icon: Wind },
+  { id: "parking", value: "parking", icon: Car },
+  { id: "pets_allowed", value: "pets_allowed", icon: Dog },
 ];
 
 const PAYMENT_METHODS = [
-  { id: "card", value: "card" },
-  { id: "cash", value: "cash" },
-  { id: "apple_pay", value: "apple_pay" },
-  { id: "google_pay", value: "google_pay" },
-  { id: "tickets_restaurant", value: "tickets_restaurant" },
-  { id: "cheque", value: "cheque" },
+  { id: "card", value: "card", icon: CreditCard },
+  { id: "cash", value: "cash", icon: Banknote },
+  { id: "apple_pay", value: "apple_pay", icon: Smartphone },
+  { id: "google_pay", value: "google_pay", icon: Smartphone },
+  { id: "tickets_restaurant", value: "tickets_restaurant", icon: Ticket },
+  { id: "cheque", value: "cheque", icon: StickyNote },
+  { id: "ancv", value: "ancv", icon: Ticket },
 ];
 
 export const RestaurantSettings = () => {
@@ -109,8 +122,10 @@ export const RestaurantSettings = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
+  const [cuisineSearch, setCuisineSearch] = useState("");
+  const [cuisineOpen, setCuisineOpen] = useState(false);
+
+  const isFetched = useRef(false);
 
   const { register, handleSubmit, control, setValue, watch, reset } = useForm<RestaurantSettingsForm>({
     defaultValues: {
@@ -127,9 +142,11 @@ export const RestaurantSettings = () => {
 
   useEffect(() => {
     const fetchRestaurant = async () => {
+      if (isFetched.current) return;
       try {
         const response = await api.get(`/restaurants/${id}/details`);
         reset(response.data.restaurant);
+        isFetched.current = true;
       } catch (error) {
         console.error("Failed to fetch restaurant", error);
       } finally {
@@ -266,33 +283,32 @@ export const RestaurantSettings = () => {
                         )}
                       </div>
 
-                      <Popover open={open} onOpenChange={setOpen}>
+                      <Popover open={cuisineOpen} onOpenChange={setCuisineOpen}>
                         <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className="w-full h-12 justify-between text-base font-normal px-4 border-muted-foreground/20 focus:border-primary shadow-sm hover:border-primary/50 transition-all"
-                          >
-                            <div className="flex items-center gap-2 text-muted-foreground italic">
-                              <Search className="h-4 w-4" />
-                              <span>Search cuisines...</span>
-                            </div>
-                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
+                          <div className="relative group cursor-text">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Input
+                              className="pl-11 pr-10 h-12 text-base border-muted-foreground/20 focus:border-primary shadow-sm transition-all"
+                              placeholder="Search cuisines..."
+                              value={cuisineSearch}
+                              onChange={(e) => {
+                                setCuisineSearch(e.target.value);
+                                if (!cuisineOpen) setCuisineOpen(true);
+                              }}
+                              onFocus={() => setCuisineOpen(true)}
+                            />
+                            <ChevronDown
+                              className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-300 ${cuisineOpen ? "rotate-180" : ""}`}
+                            />
+                          </div>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0 shadow-2xl rounded-2xl border-primary/10" align="start">
+                        <PopoverContent
+                          className="w-[var(--radix-popover-trigger-width)] p-0 shadow-2xl rounded-2xl border-primary/10"
+                          align="start"
+                        >
                           <div className="flex flex-col">
-                            <div className="p-3 border-b flex items-center gap-2 sticky top-0 bg-background z-10">
-                              <Search className="h-4 w-4 text-muted-foreground" />
-                              <input
-                                className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
-                                placeholder="Search..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                              />
-                            </div>
                             <div className="max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
-                              {CUISINES.filter((c) => c.toLowerCase().includes(search.toLowerCase())).map((cuisine) => (
+                              {CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).map((cuisine) => (
                                 <button
                                   key={cuisine}
                                   type="button"
@@ -372,86 +388,114 @@ export const RestaurantSettings = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t">
-              <div className="space-y-5">
-                <div className="flex items-center gap-2">
-                  <Share2 className="h-4 w-4 text-primary" />
-                  <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Features</Label>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Controller
-                    control={control}
-                    name="features"
-                    render={({ field }: { field: any }) => (
-                      <>
-                        {FEATURES_LIST.map((feature) => (
-                          <div
-                            key={feature.id}
-                            className={`flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer select-none hover:bg-primary/[0.04] hover:border-primary/20 ${field.value?.includes(feature.value) ? "border-primary/30 bg-primary/[0.02]" : "border-transparent"}`}
-                            onClick={() => {
-                              const current = field.value || [];
-                              if (current.includes(feature.value)) {
-                                field.onChange(current.filter((f: string) => f !== feature.value));
-                              } else {
-                                field.onChange([...current, feature.value]);
-                              }
-                            }}
-                          >
-                            <Checkbox
-                              id={`feat-${feature.id}`}
-                              checked={field.value?.includes(feature.value)}
-                              className="rounded-md h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
-                            />
-                            <label htmlFor={`feat-${feature.id}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
-                              {t(`create.steps.details.options.${feature.id}`)}
-                            </label>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  />
-                </div>
+            <div className="space-y-4 pt-8 border-t">
+              <div className="flex justify-between items-end">
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Features</Label>
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+                  Multiple possible
+                </span>
               </div>
+              <Controller
+                control={control}
+                name="features"
+                render={({ field }: { field: any }) => (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {FEATURES_LIST.map((feature) => {
+                      const Icon = feature.icon;
+                      const isSelected = field.value?.includes(feature.value);
+                      return (
+                        <div
+                          key={feature.id}
+                          onClick={() => {
+                            const current = field.value || [];
+                            const updated = isSelected ? current.filter((f: string) => f !== feature.value) : [...current, feature.value];
+                            field.onChange(updated);
+                          }}
+                          className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-2xl cursor-pointer select-none transition-all duration-300 group ${
+                            isSelected
+                              ? "border-primary bg-primary/[0.03] shadow-md ring-1 ring-primary/20"
+                              : "border-muted-foreground/10 hover:border-primary/40 hover:bg-primary/[0.02] shadow-sm"
+                          }`}
+                        >
+                          <div
+                            className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                                : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <span
+                            className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}
+                          >
+                            {t(`create.steps.details.options.${feature.id}`)}
+                          </span>
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              />
 
-              <div className="space-y-5">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-primary" />
-                  <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Payment Methods</Label>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <Controller
-                    control={control}
-                    name="paymentMethods"
-                    render={({ field }: { field: any }) => (
-                      <>
-                        {PAYMENT_METHODS.map((method) => (
-                          <div
-                            key={method.id}
-                            className={`flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer select-none hover:bg-primary/[0.04] hover:border-primary/20 ${field.value?.includes(method.value) ? "border-primary/30 bg-primary/[0.02]" : "border-transparent"}`}
-                            onClick={() => {
-                              const current = field.value || [];
-                              if (current.includes(method.value)) {
-                                field.onChange(current.filter((m: string) => m !== method.value));
-                              } else {
-                                field.onChange([...current, method.value]);
-                              }
-                            }}
-                          >
-                            <Checkbox
-                              id={`pay-${method.id}`}
-                              checked={field.value?.includes(method.value)}
-                              className="rounded-md h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
-                            />
-                            <label htmlFor={`pay-${method.id}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
-                              {t(`create.steps.details.payment_options.${method.id}`)}
-                            </label>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  />
-                </div>
+              <div className="flex justify-between items-end pt-4">
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Payment Methods</Label>
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+                  Multiple possible
+                </span>
               </div>
+              <Controller
+                control={control}
+                name="paymentMethods"
+                render={({ field }: { field: any }) => (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {PAYMENT_METHODS.map((method) => {
+                      const Icon = method.icon;
+                      const isSelected = field.value?.includes(method.value);
+                      return (
+                        <div
+                          key={method.id}
+                          onClick={() => {
+                            const current = field.value || [];
+                            const updated = isSelected ? current.filter((m: string) => m !== method.value) : [...current, method.value];
+                            field.onChange(updated);
+                          }}
+                          className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-2xl cursor-pointer select-none transition-all duration-300 group ${
+                            isSelected
+                              ? "border-primary bg-primary/[0.03] shadow-md ring-1 ring-primary/20"
+                              : "border-muted-foreground/10 hover:border-primary/40 hover:bg-primary/[0.02] shadow-sm"
+                          }`}
+                        >
+                          <div
+                            className={`h-10 w-10 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                                : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <span
+                            className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}
+                          >
+                            {t(`create.steps.details.payment_options.${method.id}`)}
+                          </span>
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              />
             </div>
 
             <div className="space-y-4 pt-8 border-t">

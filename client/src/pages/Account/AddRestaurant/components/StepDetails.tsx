@@ -3,7 +3,31 @@ import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Facebook, Instagram, Twitter, Users, Wallet, Share2 } from "lucide-react";
+import {
+  Facebook,
+  Instagram,
+  Twitter,
+  Users,
+  Wallet,
+  Share2,
+  X,
+  Check,
+  Wifi,
+  Umbrella,
+  Accessibility,
+  Beer,
+  Wind,
+  Car,
+  Dog,
+  CreditCard,
+  Banknote,
+  Smartphone,
+  Ticket,
+  StickyNote,
+} from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface StepProps {
   data: WizardData;
@@ -12,22 +36,23 @@ interface StepProps {
 }
 
 const FEATURES_LIST = [
-  { id: "terrace", value: "terrace" },
-  { id: "wifi", value: "wifi" },
-  { id: "accessible", value: "accessible" },
-  { id: "bar", value: "bar" },
-  { id: "air_conditioning", value: "air_conditioning" },
-  { id: "parking", value: "parking" },
-  { id: "pets_allowed", value: "pets_allowed" },
+  { id: "terrace", value: "terrace", icon: Umbrella },
+  { id: "wifi", value: "wifi", icon: Wifi },
+  { id: "accessible", value: "accessible", icon: Accessibility },
+  { id: "bar", value: "bar", icon: Beer },
+  { id: "air_conditioning", value: "air_conditioning", icon: Wind },
+  { id: "parking", value: "parking", icon: Car },
+  { id: "pets_allowed", value: "pets_allowed", icon: Dog },
 ];
 
 const PAYMENT_METHODS = [
-  { id: "card", value: "card" },
-  { id: "cash", value: "cash" },
-  { id: "apple_pay", value: "apple_pay" },
-  { id: "google_pay", value: "google_pay" },
-  { id: "tickets_restaurant", value: "tickets_restaurant" },
-  { id: "cheque", value: "cheque" },
+  { id: "card", value: "card", icon: CreditCard },
+  { id: "cash", value: "cash", icon: Banknote },
+  { id: "apple_pay", value: "apple_pay", icon: Smartphone },
+  { id: "google_pay", value: "google_pay", icon: Smartphone },
+  { id: "tickets_restaurant", value: "tickets_restaurant", icon: Ticket },
+  { id: "cheque", value: "cheque", icon: StickyNote },
+  { id: "ancv", value: "ancv", icon: Ticket },
 ];
 
 export const StepDetails = ({ data, updateData, errors }: StepProps) => {
@@ -55,63 +80,113 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="space-y-12">
+      <div className="grid grid-cols-1 gap-12">
         <div className="space-y-5">
-          <div className="flex items-center gap-2">
-            <Share2 className="h-4 w-4 text-primary" />
-            <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              {t("create.steps.details.features")}
-            </Label>
+          <div className="flex justify-between items-end">
+            <div className="flex items-center gap-2">
+              <Share2 className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                {t("create.steps.details.features")}
+              </Label>
+            </div>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+              Multiple possible
+            </span>
           </div>
-          <div className="grid grid-cols-1 gap-3">
-            {FEATURES_LIST.map((feature) => (
-              <div
-                key={feature.id}
-                className={`flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer select-none hover:bg-primary/[0.04] hover:border-primary/20 ${data.features?.includes(feature.value) ? "border-primary/30 bg-primary/[0.02]" : "border-transparent"}`}
-                onClick={() => handleFeatureToggle(feature.value)}
-              >
-                <Checkbox
-                  id={`feat-${feature.id}`}
-                  checked={data.features?.includes(feature.value)}
-                  className="rounded-md h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none"
-                />
-                <label htmlFor={`feat-${feature.id}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
-                  {t(`create.steps.details.options.${feature.id}`)}
-                </label>
-              </div>
-            ))}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {FEATURES_LIST.map((feature) => {
+              const Icon = feature.icon;
+              const isSelected = data.features?.includes(feature.value);
+              return (
+                <div
+                  key={feature.id}
+                  onClick={() => handleFeatureToggle(feature.value)}
+                  className={`relative flex flex-col items-center justify-center p-5 border-2 rounded-2xl cursor-pointer select-none transition-all duration-300 group ${
+                    isSelected
+                      ? "border-primary bg-primary/[0.03] shadow-md ring-1 ring-primary/20"
+                      : "border-muted-foreground/10 hover:border-primary/40 hover:bg-primary/[0.02] shadow-sm"
+                  }`}
+                >
+                  <div
+                    className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                        : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                    }`}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <span className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                    {t(`create.steps.details.options.${feature.id}`)}
+                  </span>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-sm animate-in zoom-in duration-300">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="space-y-5">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-primary" />
-            <Label
-              className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.paymentMethods ? "text-red-500" : ""}`}
-            >
-              {t("create.steps.details.payment_methods")}
-            </Label>
-          </div>
-          <div className="grid grid-cols-1 gap-3">
-            {PAYMENT_METHODS.map((method) => (
-              <div
-                key={method.id}
-                className={`flex items-center space-x-3 p-3 rounded-xl border transition-all cursor-pointer select-none hover:bg-primary/[0.04] hover:border-primary/20 ${data.paymentMethods?.includes(method.value) ? "border-primary/30 bg-primary/[0.02]" : "border-transparent"}`}
-                onClick={() => handlePaymentToggle(method.value)}
+          <div className="flex justify-between items-end">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" />
+              <Label
+                className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.paymentMethods ? "text-red-500" : ""}`}
               >
-                <Checkbox
-                  id={`pay-${method.id}`}
-                  checked={data.paymentMethods?.includes(method.value)}
-                  className={`rounded-md h-5 w-5 data-[state=checked]:bg-primary data-[state=checked]:border-primary pointer-events-none ${errors?.paymentMethods ? "border-red-400" : ""}`}
-                />
-                <label htmlFor={`pay-${method.id}`} className="text-sm font-medium leading-none cursor-pointer flex-1">
-                  {t(`create.steps.details.payment_options.${method.id}`)}
-                </label>
-              </div>
-            ))}
+                {t("create.steps.details.payment_methods")}
+              </Label>
+            </div>
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+              Multiple possible
+            </span>
           </div>
-          {errors?.paymentMethods && <p className="text-xs font-medium text-red-500 px-1">{errors.paymentMethods}</p>}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {PAYMENT_METHODS.map((method) => {
+              const Icon = method.icon;
+              const isSelected = data.paymentMethods?.includes(method.value);
+              return (
+                <div
+                  key={method.id}
+                  onClick={() => handlePaymentToggle(method.value)}
+                  className={`relative flex flex-col items-center justify-center p-5 border-2 rounded-2xl cursor-pointer select-none transition-all duration-300 group ${
+                    isSelected
+                      ? "border-primary bg-primary/[0.03] shadow-md ring-1 ring-primary/20"
+                      : errors?.paymentMethods
+                        ? "border-red-200 bg-red-50/20"
+                        : "border-muted-foreground/10 hover:border-primary/40 hover:bg-primary/[0.02] shadow-sm"
+                  }`}
+                >
+                  <div
+                    className={`h-12 w-12 rounded-2xl flex items-center justify-center mb-4 transition-all duration-300 ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                        : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                    }`}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <span className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                    {t(`create.steps.details.payment_options.${method.id}`)}
+                  </span>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-sm animate-in zoom-in duration-300">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {errors?.paymentMethods && (
+            <p className="text-xs font-medium text-red-500 px-1 animate-in slide-in-from-top-1">{errors.paymentMethods}</p>
+          )}
         </div>
       </div>
 
