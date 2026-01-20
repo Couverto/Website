@@ -868,6 +868,8 @@
         "phone": "Téléphone",
         "description": "Description",
         "website": "Site web",
+        "capacity": "Capacité",
+        "short_description": "Slogan / Phrase d'accroche",
         "price_range": "Gamme de prix",
         "budget": "Économique",
         "moderate": "Modéré",

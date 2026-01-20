@@ -877,6 +877,8 @@
         "phone": "Phone",
         "description": "Description",
         "website": "Website",
+        "capacity": "Capacity",
+        "short_description": "Catchphrase / Slogan",
         "price_range": "Price range",
         "budget": "Budget",
         "moderate": "Moderate",
