@@ -442,6 +442,11 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(openingHours && { openingHours }),
         ...(cuisineType && { cuisineType }),
         ...(priceRange && { priceRange }),
+        ...(req.body.shortDescription !== undefined && { shortDescription: req.body.shortDescription }),
+        ...(req.body.features && { features: req.body.features }),
+        ...(req.body.paymentMethods && { paymentMethods: req.body.paymentMethods }),
+        ...(req.body.socials && { socials: req.body.socials }),
+        ...(req.body.capacity !== undefined && { capacity: req.body.capacity }),
       },
       { new: true },
     );

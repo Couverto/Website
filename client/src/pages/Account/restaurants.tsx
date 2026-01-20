@@ -36,7 +36,7 @@ export const AccountRestaurants = () => {
             <CardTitle>{t("pages.account_menu.restaurants")}</CardTitle>
             <CardDescription>Manage your restaurants here.</CardDescription>
           </div>
-          <Button onClick={() => navigate("/account/restaurants/new")}>
+          <Button onClick={() => navigate("/pro/create-restaurant")}>
             <Plus className="mr-2 h-4 w-4" />
             Add Restaurant
           </Button>
@@ -51,7 +51,7 @@ export const AccountRestaurants = () => {
           ) : restaurants.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground mb-4">You don't have any restaurants yet.</p>
-              <Link to="/account/restaurants/new">
+              <Link to="/pro/create-restaurant">
                 <Button variant="outline">Create your first restaurant</Button>
               </Link>
             </div>

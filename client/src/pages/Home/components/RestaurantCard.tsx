@@ -71,7 +71,19 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
           <div className="absolute bottom-3 left-3 right-3 text-white">
             {restaurant.priceRange && (
               <Badge variant="outline" className="text-white border-white/40 bg-black/20 backdrop-blur-sm mb-2 hover:bg-black/40">
-                {restaurant.priceRange}
+                {t(
+                  `create.steps.identity.price_options.${
+                    restaurant.priceRange === "$"
+                      ? "vlow"
+                      : restaurant.priceRange === "$$"
+                        ? "low"
+                        : restaurant.priceRange === "$$$"
+                          ? "medium"
+                          : restaurant.priceRange === "$$$$"
+                            ? "high"
+                            : "vhigh"
+                  }`,
+                )}
               </Badge>
             )}
             <h3 className="font-bold text-xl leading-tight text-white shadow-sm truncate">{restaurant.name}</h3>
@@ -83,23 +95,36 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
         </div>
 
         <CardContent className="p-4 flex-1">
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-2">
             {Array.isArray(restaurant.cuisineType) &&
               restaurant.cuisineType.slice(0, 3).map((type, i) => (
                 <Badge key={i} variant="secondary" className="font-normal text-xs bg-muted/50 hover:bg-muted">
                   {type}
                 </Badge>
               ))}
-            {(!restaurant.cuisineType || restaurant.cuisineType.length === 0) && (
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Utensils className="w-4 h-4 mr-2" />
-                <span>Cuisine</span>
-              </div>
-            )}
           </div>
 
-          {/* Availability Mock */}
-          <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50/50 p-2 rounded border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/50">
+          {restaurant.shortDescription && <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{restaurant.shortDescription}</p>}
+
+          {restaurant.features && restaurant.features.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-4">
+              {restaurant.features.slice(0, 3).map((f) => {
+                const key = f.toLowerCase().replace(/ /g, "_");
+                // Manual mapping for known discrepancies or strict matching if needed
+                const translationKey = `create.steps.details.options.${key}`;
+                return (
+                  <Badge key={f} variant="outline" className="text-[10px] px-1 h-5">
+                    {t(translationKey, { defaultValue: f })}
+                  </Badge>
+                );
+              })}
+              {restaurant.features.length > 3 && (
+                <span className="text-[10px] text-muted-foreground">+{restaurant.features.length - 3}</span>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50/50 p-2 rounded border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/50 mt-auto">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             {t("pages.home.card.availability_today")}
           </div>

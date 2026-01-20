@@ -12,6 +12,16 @@ export interface IRestaurant extends Document {
   coverImage?: string;
   images: string[];
   menu: string[];
+  reviews: string[];
+  shortDescription?: string;
+  features: string[];
+  paymentMethods: string[];
+  socials: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+  };
+  capacity: number;
   openingHours: Map<string, string>;
   cuisineType: string[];
   priceRange: string;

@@ -1,63 +1,128 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { StepInfo } from "./steps/StepInfo";
-import { StepAddress } from "./steps/StepAddress";
-import { StepPlan } from "./steps/StepPlan";
-import { StepPayment } from "./steps/StepPayment";
+import { StepEssentials } from "./components/StepEssentials";
+import { StepIdentity } from "./components/StepIdentity";
+import { StepDetails } from "./components/StepDetails";
+import { StepMedia } from "./components/StepMedia";
+import { StepMenu } from "./components/StepMenu";
+import { StepPayment } from "./components/StepPayment";
+import { WizardPreview } from "./components/WizardPreview";
 import { useNavigate } from "react-router-dom";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { WizardData } from "./types";
+import { getEssentialsSchema, getIdentitySchema, getDetailsSchema, getMenuSchema, getMediaSchema, getPaymentSchema } from "./schemas";
+
+const INITIAL_DATA: WizardData = {
+  name: "",
+  address: "",
+  city: "",
+  phone: "",
+  email: "",
+  cuisineType: [],
+  priceRange: "$" as const, // Default valid value
+  description: "",
+  shortDescription: "",
+  features: [],
+  paymentMethods: [],
+  capacity: 0,
+  images: [],
+  coverImage: "",
+  menu: [],
+  socials: {
+    facebook: "",
+    instagram: "",
+    tiktok: "",
+  },
+  cardHolder: "",
+  cardNumber: "",
+  expiry: "",
+  cvc: "",
+};
 
 export const AddRestaurantWizard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    phone: "",
-    website: "",
-    address: "",
-    city: "",
-    plan: "free",
-    payment: {
-      cardNumber: "",
-      expiryDate: "",
-      cvc: "",
-      cardHolder: "",
-    },
-  });
+  const [formData, setFormData] = useState<WizardData>(INITIAL_DATA);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const updateFormData = (data: any) => {
-    setFormData((prev) => ({ ...prev, ...data }));
+  const updateFormData = (data: Partial<WizardData>) => {
+    setFormData((prev: WizardData) => ({ ...prev, ...data }));
+    // Clear errors for fields being updated
+    const newErrors = { ...errors };
+    Object.keys(data).forEach((key) => {
+      delete newErrors[key];
+    });
+    setErrors(newErrors);
   };
 
-  const nextStep = () => setStep((prev) => prev + 1);
-  const prevStep = () => setStep((prev) => prev - 1);
+  const validateStep = (currentStep: number) => {
+    let schema;
+    switch (currentStep) {
+      case 1:
+        schema = getEssentialsSchema(t);
+        break;
+      case 2:
+        schema = getIdentitySchema(t);
+        break;
+      case 3:
+        schema = getDetailsSchema(t);
+        break;
+      case 4:
+        schema = getMenuSchema(t);
+        break;
+      case 5:
+        schema = getMediaSchema(t);
+        break;
+      case 6:
+        schema = getPaymentSchema(t);
+        break;
+      default:
+        return true;
+    }
+
+    const result = schema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        fieldErrors[issue.path[0] as string] = issue.message;
+      });
+      setErrors(fieldErrors);
+      toast.error(t("create.errors.fix_errors") || "Please fix the errors before proceeding");
+      return false;
+    }
+    return true;
+  };
+
+  const nextStep = () => {
+    if (validateStep(step)) {
+      setStep((prev) => Math.min(prev + 1, 6));
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const prevStep = () => {
+    setStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo(0, 0);
+  };
 
   const handleSubmit = async () => {
+    if (!validateStep(step)) return;
+
     setLoading(true);
     try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       const payload = {
-        name: formData.name,
+        ...formData,
         slug: formData.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now(),
-        address: formData.address,
-        city: formData.city,
-        phone: formData.phone,
-        website: formData.website,
-        description: formData.description,
-        // Plan information would normally be handled here
       };
 
       await axiosConfig.post("/restaurants", payload);
-      toast.success(t("Restaurant created successfully"));
+      toast.success(t("create.success"));
       navigate("/account/restaurants");
     } catch (error: any) {
       console.error("Failed to create restaurant", error);
@@ -67,46 +132,139 @@ export const AddRestaurantWizard = () => {
     }
   };
 
-  return (
-    <div className="max-w-3xl mx-auto py-10">
-      {/* Progress Steps */}
-      <div className="flex items-center justify-between mb-8 relative">
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-muted -z-10" />
-        <div
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary transition-all duration-300 -z-10"
-          style={{ width: `${((step - 1) / 3) * 100}%` }}
-        />
-        {[1, 2, 3, 4].map((s) => (
-          <div
-            key={s}
-            className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-background transition-colors ${
-              s <= step ? "border-primary text-primary" : "border-muted text-muted-foreground"
-            } ${s < step ? "bg-primary text-primary-foreground" : ""}`}
-          >
-            {s < step ? <Check className="w-5 h-5" /> : s}
-          </div>
-        ))}
-      </div>
+  const steps = [
+    { id: 1, key: "essentials", label: t("create.steps.essentials.title") },
+    { id: 2, key: "identity", label: t("create.steps.identity.title") },
+    { id: 3, key: "details", label: t("create.steps.details.title") },
+    { id: 4, key: "menu", label: t("create.steps.menu.title") },
+    { id: 5, key: "visuals", label: t("create.steps.visuals.title") },
+    { id: 6, key: "payment", label: t("create.steps.payment.title") },
+  ];
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {step === 1 && "General Information"}
-            {step === 2 && "Location"}
-            {step === 3 && "Choose a Plan"}
-            {step === 4 && "Payment Method"}
-          </CardTitle>
-          <CardDescription>Step {step} of 4</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {step === 1 && <StepInfo data={formData} updateData={updateFormData} onNext={nextStep} />}
-          {step === 2 && <StepAddress data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />}
-          {step === 3 && <StepPlan data={formData} updateData={updateFormData} onNext={nextStep} onBack={prevStep} />}
-          {step === 4 && (
-            <StepPayment data={formData} updateData={updateFormData} onSubmit={handleSubmit} onBack={prevStep} loading={loading} />
-          )}
-        </CardContent>
-      </Card>
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Immersive Header */}
+      <header className="h-16 border-b bg-background/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto h-full flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/account/restaurants")}
+              className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="h-6 w-px bg-border hidden sm:block" />
+            <h1 className="text-lg font-semibold tracking-tight hidden sm:block">{t("create.title")}</h1>
+          </div>
+
+          <div className="flex-1 max-w-xl px-4 md:px-12">
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                <span>{steps[step - 1].label}</span>
+                <span>
+                  {step} / {steps.length}
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-700 ease-in-out"
+                  style={{ width: `${(step / steps.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/account/restaurants")}
+              className="text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors font-medium"
+            >
+              {t("create.navigation.cancel")}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 flex overflow-hidden">
+        {/* Left Column: Form Section */}
+        <div className="flex-1 overflow-y-auto bg-muted/20 pb-20 pt-8 px-4 md:px-8 lg:px-12">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-12">
+              <h2 className="text-3xl font-bold tracking-tight mb-2">{steps[step - 1].label}</h2>
+              <p className="text-muted-foreground text-lg">{t(`create.steps.${steps[step - 1].key}.subtitle`)}</p>
+            </div>
+
+            <div className="bg-card rounded-2xl shadow-xl shadow-black/5 border p-8 md:p-12 min-h-[500px]">
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {step === 1 && <StepEssentials data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 2 && <StepIdentity data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 3 && <StepDetails data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 4 && <StepMenu data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 5 && <StepMedia data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 6 && <StepPayment data={formData} updateData={updateFormData} errors={errors} />}
+              </div>
+
+              <div className="flex justify-between items-center mt-12 pt-8 border-t">
+                <Button
+                  variant="ghost"
+                  onClick={prevStep}
+                  disabled={step === 1}
+                  className="gap-2 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all font-medium"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  {t("create.navigation.previous")}
+                </Button>
+
+                {step < 6 ? (
+                  <Button
+                    onClick={nextStep}
+                    className="gap-2 px-8 h-11 text-base font-medium shadow-lg hover:shadow-primary/20 transition-all"
+                  >
+                    {t("create.navigation.next")}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-8 h-11 text-base font-medium shadow-lg transition-all min-w-[160px]"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    {t("create.steps.payment.pay_button")}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Progress Bubbles (Minimal) */}
+            <div className="mt-8 flex justify-center gap-3">
+              {steps.map((s) => (
+                <div
+                  key={s.id}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${s.id === step ? "w-8 bg-primary" : "w-1.5 bg-muted"}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Dynamic Deep Preview */}
+        <aside className="hidden lg:flex w-[400px] xl:w-[500px] border-l bg-background overflow-y-auto p-12 shrink-0">
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">{t("create.steps.preview.title")}</h3>
+              <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">
+                {t("create.steps.preview.live_badge")}
+              </Badge>
+            </div>
+            <WizardPreview data={formData} />
+          </div>
+        </aside>
+      </main>
     </div>
   );
 };

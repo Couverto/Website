@@ -13,13 +13,23 @@ const RestaurantSchema = new Schema<IRestaurant>(
     coverImage: { type: String, default: "" },
     images: { type: [String], default: [] },
     menu: { type: [String], default: [] },
+    reviews: { type: [String], default: [] },
+    shortDescription: { type: String, required: false }, // One-liner
+    features: { type: [String], default: [] }, // e.g. ["Terrace", "Wifi"]
+    paymentMethods: { type: [String], default: [] }, // e.g. ["Card", "Cash"]
+    socials: {
+      facebook: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      tiktok: { type: String, default: "" },
+    },
+    capacity: { type: Number, default: 0 },
     openingHours: {
       type: Map,
       of: String,
       default: {},
     },
     cuisineType: { type: [String], default: [] },
-    priceRange: { type: String, enum: ["$", "$$", "$$$"], default: "$$" },
+    priceRange: { type: String, enum: ["$", "$$", "$$$", "$$$$", "$$$$$"], default: "$$" },
     rating: { type: Number, default: 0 },
     collaborators: {
       type: [Schema.Types.ObjectId],

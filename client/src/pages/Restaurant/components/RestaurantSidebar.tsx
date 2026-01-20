@@ -58,8 +58,6 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
 
   const { pathname } = useLocation();
   const isActive = (path: string) => pathname.startsWith(path);
-  const styleDefault = "px-4 py-3 font-light flex items-center justify-center gap-3";
-  const styleActive = ` mx-4 my-3 flex items-center justify-center gap-3 text-primary border-b border-accent`;
 
   return (
     <Sidebar>
@@ -84,14 +82,29 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
           <SidebarGroupLabel>{t("pages.restaurant.nav.title")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.url} onClick={() => navigate(item.url)}>
-                  <SidebarMenuButton tooltip={item.title} className="cursor-pointer">
-                    <item.icon className="h-4 w-4" />
-                    <span className={`${isActive(item.url) ? styleActive : styleDefault} `}>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navItems.map((item) => {
+                const active = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      isActive={active}
+                      onClick={() => navigate(item.url)}
+                      className={`h-11 px-4 transition-all duration-200 ${
+                        active
+                          ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary font-semibold"
+                          : "hover:bg-primary/[0.04] hover:text-primary"
+                      }`}
+                    >
+                      <item.icon
+                        className={`h-4 w-4 transition-colors ${active ? "text-primary" : "text-muted-foreground group-hover:text-primary"}`}
+                      />
+                      <span className="flex-1">{item.title}</span>
+                      {active && <div className="w-1 h-5 bg-primary rounded-full" />}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -25,6 +25,14 @@ interface PublicRestaurant {
   openingHours?: Record<string, string>;
   menu?: string;
   rating?: number;
+  features?: string[];
+  averagePrice?: number;
+  capacity?: number;
+  socials?: {
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+  };
 }
 
 export const PublicRestaurant = () => {
@@ -109,7 +117,21 @@ export const PublicRestaurant = () => {
                 {restaurant.priceRange && (
                   <div className="flex items-center gap-1">
                     <Wallet className="h-4 w-4" />
-                    <span>{restaurant.priceRange}</span>
+                    <span>
+                      {t(
+                        `create.steps.identity.price_options.${
+                          restaurant.priceRange === "$"
+                            ? "vlow"
+                            : restaurant.priceRange === "$$"
+                              ? "low"
+                              : restaurant.priceRange === "$$$"
+                                ? "medium"
+                                : restaurant.priceRange === "$$$$"
+                                  ? "high"
+                                  : "vhigh"
+                        }`,
+                      )}
+                    </span>
                   </div>
                 )}
                 <div className="flex items-center gap-1 text-yellow-500">
@@ -159,6 +181,23 @@ export const PublicRestaurant = () => {
                     </div>
                   </section>
                 )}
+
+                {restaurant.features && restaurant.features.length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-semibold mb-4">{t("pages.public_restaurant.features")}</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {restaurant.features.map((f) => {
+                        const key = f.toLowerCase().replace(/ /g, "_");
+                        const translationKey = `create.steps.details.options.${key}`;
+                        return (
+                          <Badge key={f} variant="secondary" className="px-3 py-1 text-sm">
+                            {t(translationKey, { defaultValue: f })}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
               </TabsContent>
 
               <TabsContent value="menu">
@@ -201,6 +240,23 @@ export const PublicRestaurant = () => {
                       <div className="text-sm text-muted-foreground">{restaurant.city}</div>
                     </div>
                   </div>
+
+                  {/* Average price removed as redundant with priceRange */}
+
+                  {(restaurant.capacity ?? 0) > 0 && (
+                    <>
+                      <Separator />
+                      <div className="flex items-start gap-3">
+                        <ChefHat className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <div className="font-medium">{t("pages.public_restaurant.capacity")}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {t("pages.public_restaurant.seats", { count: restaurant.capacity })}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <Separator />
 
@@ -246,6 +302,46 @@ export const PublicRestaurant = () => {
                         {restaurant.website.replace(/^https?:\/\//, "")}
                       </a>
                     </div>
+                  )}
+
+                  {restaurant.socials && Object.values(restaurant.socials).some(Boolean) && (
+                    <>
+                      <Separator />
+                      <div className="flex gap-4 pt-2">
+                        {restaurant.socials.facebook && (
+                          <a
+                            href={restaurant.socials.facebook}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path
+                                fillRule="evenodd"
+                                d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </a>
+                        )}
+                        {restaurant.socials.instagram && (
+                          <a
+                            href={restaurant.socials.instagram}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path
+                                fillRule="evenodd"
+                                d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.047-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.067-.06-1.407-.06-4.123v-.08c0-2.643.012-2.987.06-4.043.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772 4.902 4.902 0 011.772-1.153c.636-.247 1.363-.416 2.427-.465 1.067-.047 1.407-.06 4.123-.06h.08zm-1.87 9.176a3 3 0 101.87 0 1.5 1.5 0 01-1.87 0zm6.576-5.826a1.05 1.05 0 11-2.1 0 1.05 1.05 0 012.1 0zM12 7a5 5 0 100 10 5 5 0 000-10z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               </CardContent>

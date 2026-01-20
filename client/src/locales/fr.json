@@ -1,4 +1,128 @@
 {
+  "create": {
+    "title": "Créer votre restaurant",
+    "success": "Restaurant créé avec succès !",
+    "steps": {
+      "essentials": {
+        "title": "L'essentiel",
+        "subtitle": "Nom, adresse et contact",
+        "name": "Nom du restaurant",
+        "address": "Adresse",
+        "city": "Ville",
+        "phone": "Téléphone",
+        "email": "Email de contact",
+        "placeholders": {
+          "name": "Le Gourmet",
+          "address": "123 Avenue des Champs-Elysées",
+          "city": "Paris",
+          "phone": "+33 1 23 45 67 89",
+          "email": "contact@restaurant.com"
+        }
+      },
+      "identity": {
+        "title": "Identité",
+        "subtitle": "Cuisine, concept et gamme de prix",
+        "cuisine_type": "Type de cuisine",
+        "price_range": "Gamme de prix",
+        "short_description": "Phrase d'accroche",
+        "description": "Description complète",
+        "price_options": {
+          "vlow": "10€ - 20€",
+          "low": "20€ - 30€",
+          "medium": "30€ - 40€",
+          "high": "40€ - 50€",
+          "vhigh": "50€+"
+        },
+        "placeholders": {
+          "cuisine": "Sélectionner...",
+          "search_cuisine": "Sélectionner les cuisines...",
+          "search_input": "Rechercher...",
+          "short_desc": "Une cuisine authentique au coeur de Paris...",
+          "desc": "Racontez l'histoire de votre restaurant..."
+        }
+      },
+      "details": {
+        "title": "Détails",
+        "subtitle": "Équipements, capacité et réseaux",
+        "features": "Équipements",
+        "payment_methods": "Moyens de paiement",
+        "capacity": "Capacité (couverts)",
+        "social_networks": "Réseaux sociaux",
+        "options": {
+          "terrace": "Terrasse",
+          "wifi": "Wifi",
+          "accessible": "Accès PMR",
+          "bar": "Bar",
+          "air_conditioning": "Climatisation",
+          "parking": "Parking",
+          "pets_allowed": "Animaux acceptés"
+        },
+        "payment_options": {
+          "card": "Carte Bancaire",
+          "cash": "Espèces",
+          "apple_pay": "Apple Pay",
+          "google_pay": "Google Pay",
+          "tickets_restaurant": "Tickets Restaurant",
+          "cheque": "Chèque"
+        }
+      },
+      "menu": {
+        "title": "Menu",
+        "subtitle": "Ajoutez votre carte",
+        "drag_drop": "Glissez-déposez votre menu ici",
+        "or_click": "ou cliquez pour sélectionner"
+      },
+      "visuals": {
+        "title": "Visuels",
+        "subtitle": "Mettez en valeur votre établissement",
+        "cover_image": "Image de couverture",
+        "cover_help": "L'image principale affichée sur les cartes et en-têtes.",
+        "no_cover_link": "Aucun lien d'image",
+        "preview_badge": "APERÇU",
+        "gallery": "Galerie photos",
+        "gallery_hint": "Jusqu'à 8 photos",
+        "add_image": "Ajouter une image",
+        "no_images": "Aucune image ajoutée pour le moment.",
+        "empty_description": "Les images permettent à votre restaurant de se démarquer. Ajoutez des liens vers vos photos."
+      },
+      "payment": {
+        "title": "Paiement",
+        "subtitle": "Finalisez votre inscription",
+        "card_holder": "Titulaire de la carte",
+        "card_holder_placeholder": "NOM PRÉNOM",
+        "card_number": "Numéro de carte",
+        "expiry": "Expiration",
+        "expiry_placeholder": "MM/AA",
+        "cvc": "CVC",
+        "pay_button": "Payer et Créer",
+        "secure_text": "Paiement sécurisé via Stripe (Simulation)",
+        "secure_text_detail": "Chiffrement SSL 256 bits de niveau bancaire"
+      },
+      "preview": {
+        "title": "Aperçu en direct",
+        "live_badge": "Direct",
+        "status": "Statut",
+        "in_progress": "En cours",
+        "not_started": "Non commencé",
+        "steps_label": "Étapes",
+        "steps_list": "Essentiels, Identité, Détails, Menu, Visuels, Paiement",
+        "placeholder_cuisine": "Cuisine",
+        "placeholder_slogan": "Votre slogan accrocheur apparaîtra ici..."
+      }
+    },
+    "errors": {
+      "fix_errors": "Veuillez corriger les erreurs avant de continuer"
+    },
+    "navigation": {
+      "next": "Suivant",
+      "previous": "Précédent",
+      "finish": "Terminer",
+      "cancel": "Annuler"
+    },
+    "placeholders": {
+      "no_menu_links": "Aucun lien de menu ajouté pour le moment."
+    }
+  },
   "auth": {
     "login": {
       "title": "Se connecter"
@@ -11,7 +135,8 @@
     "back_home": "Retour à l'accueil",
     "not_specified": "Non spécifié",
     "learn_more": "En savoir plus",
-    "see_all": "Voir tous les restaurants"
+    "see_all": "Voir tous les restaurants",
+    "cancel": "Annuler"
   },
   "navbar": {
     "home": "Accueil",
@@ -68,6 +193,7 @@
         "no_results": "Aucun restaurant trouvé pour le moment."
       },
       "card": {
+        "new_badge": "Nouveau",
         "book_button": "Réserver",
         "availability_today": "Dispo. aujourd'hui"
       },
@@ -801,7 +927,10 @@
       "about": "À propos",
       "no_description": "Aucune description disponible.",
       "photos": "Photos",
-      "no_menu_available": "Aucun menu disponible pour le moment.",
+      "features": "Équipements",
+      "capacity": "Capacité",
+      "seats": "{{count}} couverts",
+      "no_menu_available": "Menu non disponible.",
       "no_reviews_yet": "Aucun avis pour le moment.",
       "info": "Informations",
       "address": "Adresse",
@@ -836,6 +965,7 @@
           "guests_max": "Maximum 20 couverts.",
           "name_required": "Le nom est requis.",
           "email_invalid": "Adresse email invalide.",
+          "missing_fields": "Veuillez remplir tous les champs obligatoires.",
           "phone_required": "Le numéro de téléphone est requis."
         }
       },

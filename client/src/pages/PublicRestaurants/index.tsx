@@ -109,10 +109,12 @@ export const PublicRestaurants = () => {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Any Price</SelectItem>
-              <SelectItem value="$">$</SelectItem>
-              <SelectItem value="$$">$$</SelectItem>
-              <SelectItem value="$$$">$$$</SelectItem>
+              <SelectItem value="all">{t("common.not_specified", "Any Price")}</SelectItem>
+              <SelectItem value="$">$ ({t("create.steps.identity.price_options.vlow")})</SelectItem>
+              <SelectItem value="$$">$$ ({t("create.steps.identity.price_options.low")})</SelectItem>
+              <SelectItem value="$$$">$$$ ({t("create.steps.identity.price_options.medium")})</SelectItem>
+              <SelectItem value="$$$$">$$$$ ({t("create.steps.identity.price_options.high")})</SelectItem>
+              <SelectItem value="$$$$$">$$$$$ ({t("create.steps.identity.price_options.vhigh")})</SelectItem>
             </SelectContent>
           </Select>
 
@@ -133,17 +135,21 @@ export const PublicRestaurants = () => {
             </SelectContent>
           </Select>
 
-          {/* Search button acts as visual confirmation, but search is live */}
-          <Button size="lg" className="w-full font-bold">
+          {/* Search button with strong hover feedback */}
+          <Button size="lg" className="w-full font-bold shadow-md hover:shadow-xl hover:translate-y-[-1px] transition-all duration-300">
             {t("pages.home.search.button")}
           </Button>
         </div>
 
-        {/* Reset Filters Link */}
+        {/* Reset Filters Link - Subtle but clear hover */}
         {(filters.search || filters.city || filters.priceRange || filters.cuisineType) && (
-          <div className="text-right mt-2">
-            <Button variant="link" onClick={clearFilters} className="text-muted-foreground p-0 h-auto">
-              Clear all filters
+          <div className="text-right mt-3">
+            <Button
+              variant="link"
+              onClick={clearFilters}
+              className="text-muted-foreground p-0 h-auto hover:text-primary hover:no-underline transition-colors font-medium"
+            >
+              {t("pages.restaurants.filters.clear", "Clear all filters")}
             </Button>
           </div>
         )}

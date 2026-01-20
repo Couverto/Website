@@ -68,9 +68,17 @@ export const Router = () => {
           <Route index element={<Navigate to="profile" replace />} />
           <Route path="profile" element={<AccountProfile />} />
           <Route path="restaurants" element={<AccountRestaurants />} />
-          <Route path="restaurants/new" element={<AddRestaurantWizard />} />
           <Route path="bookings" element={<AccountBooking />} />
         </Route>
+
+        <Route
+          path="/pro/create-restaurant"
+          element={
+            <ProtectedRoute authRequired={true}>
+              <AddRestaurantWizard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Public Restaurant List */}
         <Route path="/restaurants" element={<PublicRestaurants />} />
