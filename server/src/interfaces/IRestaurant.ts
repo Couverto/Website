@@ -32,6 +32,7 @@ export interface IRestaurant extends Document {
   cuisineType: string[];
   priceRange: string;
   rating: number;
+  isClosed: boolean;
   collaborators: Array<mongoose.Types.ObjectId>;
   createdAt: Date;
   updatedAt: Date;

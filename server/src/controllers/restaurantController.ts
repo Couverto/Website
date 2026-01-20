@@ -137,6 +137,43 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
 };
 
 /**
+ * @function toggleRestaurantClosed
+ * @description Toggles the closed status of a restaurant.
+ */
+export const toggleRestaurantClosed = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    // Verify user is a collaborator
+    if (!restaurant.collaborators.some((c) => c.toString() === req.userId?.toString())) {
+      res.status(403).json({ error: "server.global.errors.forbidden" });
+      return;
+    }
+
+    restaurant.isClosed = !restaurant.isClosed;
+    await restaurant.save();
+
+    createLog({
+      message: `Restaurant '${restaurant.name}' ${restaurant.isClosed ? "closed" : "reopened"}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({
+      restaurant,
+      message: restaurant.isClosed ? "server.restaurants.messages.closed" : "server.restaurants.messages.reopened",
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
  * @function isRestaurantOpen
  * @description Helper to determine if a restaurant is currently open.
  */

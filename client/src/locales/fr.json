@@ -75,7 +75,9 @@
         "title": "Menu",
         "subtitle": "Ajoutez votre carte",
         "drag_drop": "Glissez-déposez votre menu ici",
-        "or_click": "ou cliquez pour sélectionner"
+        "or_click": "ou cliquez pour sélectionner",
+        "add_menu_link": "Ajouter un lien vers votre menu (PDF/Image)",
+        "added_links": "Liens du menu ajoutés"
       },
       "visuals": {
         "title": "Visuels",
@@ -141,7 +143,9 @@
     "not_specified": "Non spécifié",
     "learn_more": "En savoir plus",
     "see_all": "Voir tous les restaurants",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "download": "Télécharger",
+    "open_in_new_tab": "Ouvrir dans un nouvel onglet"
   },
   "navbar": {
     "home": "Accueil",
@@ -896,7 +900,27 @@
         },
         "save": "Enregistrer les modifications",
         "saved": "Modifications enregistrées",
-        "error": "Erreur lors de l'enregistrement"
+        "error": "Erreur lors de l'enregistrement",
+        "danger_zone": "Zone de danger",
+        "danger_zone_description": "Actions irréversibles ou ayant un impact majeur sur votre restaurant",
+        "close_restaurant": "Fermer le restaurant",
+        "close_description": "Bloque les nouvelles réservations. Votre restaurant reste visible mais les clients ne peuvent plus réserver.",
+        "close": "Fermer",
+        "reopen_restaurant": "Rouvrir le restaurant",
+        "reopen_description": "Réactive les réservations. Votre restaurant acceptera à nouveau les réservations.",
+        "reopen": "Rouvrir",
+        "confirm_close_title": "Fermer le restaurant ?",
+        "confirm_close_description": "Les clients ne pourront plus effectuer de réservations. Vous pourrez rouvrir à tout moment.",
+        "confirm_reopen_title": "Rouvrir le restaurant ?",
+        "confirm_reopen_description": "Les clients pourront à nouveau effectuer des réservations.",
+        "restaurant_closed": "Restaurant fermé",
+        "restaurant_reopened": "Restaurant rouvert",
+        "delete_restaurant": "Supprimer le restaurant",
+        "delete_description": "Cette action est irréversible. Toutes les données seront définitivement effacées.",
+        "delete": "Supprimer",
+        "confirm_delete_title": "Supprimer définitivement ?",
+        "confirm_delete_description": "Cette action est irréversible. Toutes les réservations, données clients et paramètres seront perdus.",
+        "restaurant_deleted": "Restaurant supprimé"
       }
     },
     "join": {
@@ -955,7 +979,8 @@
         "friday": "vendredi",
         "saturday": "samedi",
         "sunday": "dimanche"
-      }
+      },
+      "preview_unavailable": "Aperçu non disponible"
     }
   },
   "components": {

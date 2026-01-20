@@ -12,7 +12,7 @@ interface StepProps {
   errors?: Record<string, string>;
 }
 
-export const StepMenu = ({ data, updateData }: StepProps) => {
+export const StepMenu = ({ data, updateData, errors }: StepProps) => {
   const { t } = useTranslation();
   const [newMenuUrl, setNewMenuUrl] = useState("");
 
@@ -57,6 +57,8 @@ export const StepMenu = ({ data, updateData }: StepProps) => {
             </Button>
           </div>
         </div>
+
+        {errors?.menu && <p className="text-xs font-medium text-red-500 px-1 animate-in slide-in-from-top-1">{errors.menu}</p>}
 
         <div className="space-y-4 pt-4 border-t">
           <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">

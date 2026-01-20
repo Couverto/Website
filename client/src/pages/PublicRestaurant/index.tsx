@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
-import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft, FileText, ExternalLink } from "lucide-react";
+import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft, FileText, ExternalLink, Utensils } from "lucide-react";
 import { BookingDialog } from "../Home/components/Booking/BookingDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +35,7 @@ interface PublicRestaurant {
     tiktok?: string;
   };
   isOpenNow?: boolean;
+  isClosed?: boolean;
 }
 
 export const PublicRestaurant = () => {
@@ -109,9 +110,28 @@ export const PublicRestaurant = () => {
         <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
-              <Badge variant="secondary" className="mb-4">
-                {Array.isArray(restaurant.cuisineType) ? restaurant.cuisineType.join(", ") : restaurant.cuisineType || "Cuisine"}
-              </Badge>
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {Array.isArray(restaurant.cuisineType) && restaurant.cuisineType.length > 0 ? (
+                  <>
+                    {restaurant.cuisineType.slice(0, 3).map((cuisine, idx) => (
+                      <Badge
+                        key={idx}
+                        variant="secondary"
+                        className="bg-white/90 text-foreground backdrop-blur-sm border-none shadow-sm px-3 py-1 text-xs"
+                      >
+                        {cuisine}
+                      </Badge>
+                    ))}
+                    {restaurant.cuisineType.length > 3 && (
+                      <span className="text-xs text-white/80 font-medium">+{restaurant.cuisineType.length - 3}</span>
+                    )}
+                  </>
+                ) : (
+                  <Badge variant="secondary" className="bg-white/90 text-foreground backdrop-blur-sm">
+                    {restaurant.cuisineType || "Cuisine"}
+                  </Badge>
+                )}
+              </div>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">{restaurant.name}</h1>
               <div className="flex items-center gap-4 text-muted-foreground">
                 <a
@@ -148,17 +168,30 @@ export const PublicRestaurant = () => {
                   <span className="font-medium text-foreground">{restaurant.rating || "NEW"}</span>
                 </div>
               </div>
-              {restaurant.isOpenNow !== undefined && (
-                <Badge
-                  variant={restaurant.isOpenNow ? "default" : "destructive"}
-                  className={`mt-4 text-sm py-1 px-3 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
-                >
-                  {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
-                </Badge>
-              )}
+              <div>
+                {restaurant.isClosed ? (
+                  <Badge variant="destructive" className="mt-4 text-sm py-1 px-3 bg-red-600 hover:bg-red-700">
+                    {t("pages.restaurant.settings.restaurant_closed")}
+                  </Badge>
+                ) : (
+                  restaurant.isOpenNow !== undefined && (
+                    <Badge
+                      variant={restaurant.isOpenNow ? "default" : "destructive"}
+                      className={`mt-4 text-sm py-1 px-3 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                    >
+                      {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
+                    </Badge>
+                  )
+                )}
+              </div>
             </div>
-            <Button size="lg" className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all" onClick={() => setIsBookingOpen(true)}>
-              {t("pages.public_restaurant.book_table")}
+            <Button
+              size="lg"
+              className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all"
+              onClick={() => setIsBookingOpen(true)}
+              disabled={restaurant.isClosed}
+            >
+              {restaurant.isClosed ? t("pages.restaurant.settings.restaurant_closed") : t("pages.public_restaurant.book_table")}
             </Button>
           </div>
         </div>
@@ -237,29 +270,58 @@ export const PublicRestaurant = () => {
                 <Card>
                   <CardContent className="pt-6">
                     {restaurant.menu && restaurant.menu.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {restaurant.menu.map((url, idx) => (
-                          <a
-                            key={idx}
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center justify-between p-4 rounded-xl border border-muted-foreground/10 hover:border-primary/30 hover:bg-primary/[0.02] transition-all group"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <FileText className="h-5 w-5 text-primary" />
+                      <div className="space-y-6">
+                        {restaurant.menu.map((url, idx) => {
+                          const isPdf = url.toLowerCase().endsWith(".pdf");
+                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                          return (
+                            <div key={idx} className="border rounded-xl overflow-hidden">
+                              <div className="flex items-center justify-between p-3 bg-muted/30 border-b">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-primary" />
+                                  <span className="text-sm font-medium">{t("pages.public_restaurant.view_menu", { count: idx + 1 })}</span>
+                                  <Badge variant="outline" className="text-[10px] uppercase">
+                                    {url.split(".").pop()?.toUpperCase() || "FILE"}
+                                  </Badge>
+                                </div>
+                                <a
+                                  href={url}
+                                  download
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  {t("common.download")}
+                                </a>
                               </div>
-                              <div className="flex flex-col">
-                                <span className="text-sm font-semibold">{t("pages.public_restaurant.view_menu", { count: idx + 1 })}</span>
-                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                                  {url.split(".").pop()?.toUpperCase() || "PDF"}
-                                </span>
+                              <div className="bg-muted/10">
+                                {isImage ? (
+                                  <img src={url} alt={`Menu ${idx + 1}`} className="w-full max-h-[600px] object-contain" />
+                                ) : isPdf ? (
+                                  <iframe
+                                    src={`${url}#toolbar=0&navpanes=0`}
+                                    className="w-full h-[600px] border-0"
+                                    title={`Menu ${idx + 1}`}
+                                  />
+                                ) : (
+                                  <div className="p-8 text-center text-muted-foreground">
+                                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                                    <p>{t("pages.public_restaurant.preview_unavailable")}</p>
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-primary hover:underline text-sm mt-2 inline-block"
+                                    >
+                                      {t("common.open_in_new_tab")}
+                                    </a>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                          </a>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">

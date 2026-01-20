@@ -3,6 +3,9 @@ import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
 import { useTranslation } from "react-i18next";
 import { CreditCard, Calendar, Lock } from "lucide-react";
+import Cards from "react-credit-cards-2";
+import "react-credit-cards-2/dist/es/styles-compiled.css";
+import { useState } from "react";
 
 interface StepProps {
   data: WizardData;
@@ -12,6 +15,7 @@ interface StepProps {
 
 export const StepPayment = ({ data, updateData, errors }: StepProps) => {
   const { t } = useTranslation();
+  const [focus, setFocus] = useState<any>("");
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
@@ -34,37 +38,21 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
     updateData({ cvc: value });
   };
 
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setFocus(e.target.name);
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="max-w-md mx-auto space-y-8">
-        {/* Visa/Mastercard Icons or similar would be nice, but stick to premium styling */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 shadow-2xl border border-white/10 text-white min-h-[220px] flex flex-col justify-between group">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-
-          <div className="flex justify-between items-start relative z-10">
-            <div className="h-10 w-14 bg-gradient-to-br from-yellow-400/80 to-yellow-600/80 rounded-lg shadow-inner border border-white/20" />
-            <div className="flex -space-x-3">
-              <div className="h-10 w-10 rounded-full bg-red-500/80 backdrop-blur-sm shadow-sm" />
-              <div className="h-10 w-10 rounded-full bg-orange-400/80 backdrop-blur-sm shadow-sm" />
-            </div>
-          </div>
-
-          <div className="space-y-4 relative z-10 mt-8">
-            <p className="text-2xl font-mono tracking-[0.3em] shadow-sm truncate h-8">
-              {data.cardNumber ? data.cardNumber.replace(/(.{4})/g, "$1 ").trim() : "•••• •••• •••• ••••"}
-            </p>
-
-            <div className="flex justify-between items-end">
-              <div className="space-y-1">
-                <p className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-50">{t("create.steps.payment.card_holder")}</p>
-                <p className="text-sm font-medium tracking-wide h-5 uppercase">{data.cardHolder || "Your Name"}</p>
-              </div>
-              <div className="text-right space-y-1">
-                <p className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-50">{t("create.steps.payment.expiry")}</p>
-                <p className="text-sm font-medium tracking-wide h-5">{data.expiry || "MM/YY"}</p>
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-center py-4">
+          <Cards
+            number={data.cardNumber || ""}
+            expiry={data.expiry || ""}
+            cvc={data.cvc || ""}
+            name={data.cardHolder || ""}
+            focused={focus}
+          />
         </div>
 
         <div className="space-y-6 pt-4">
@@ -77,10 +65,12 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
             </Label>
             <Input
               id="cardHolder"
+              name="name" // react-credit-cards-2 expects 'name' for focus
               placeholder={t("create.steps.payment.card_holder_placeholder")}
               className={`uppercase h-12 text-base transition-all ${errors?.cardHolder ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
               value={data.cardHolder || ""}
               onChange={(e) => updateData({ cardHolder: e.target.value.toUpperCase() })}
+              onFocus={handleInputFocus}
             />
             {errors?.cardHolder && <p className="text-xs font-medium text-red-500 px-1">{errors.cardHolder}</p>}
           </div>
@@ -98,10 +88,12 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
               />
               <Input
                 id="cardNumber"
+                name="number"
                 placeholder="0000 0000 0000 0000"
                 className={`pl-10 h-12 text-base transition-all ${errors?.cardNumber ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
                 value={data.cardNumber || ""}
                 onChange={handleCardNumberChange}
+                onFocus={handleInputFocus}
               />
             </div>
             {errors?.cardNumber && <p className="text-xs font-medium text-red-500 px-1">{errors.cardNumber}</p>}
@@ -121,10 +113,12 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
                 />
                 <Input
                   id="expiry"
+                  name="expiry"
                   placeholder={t("create.steps.payment.expiry_placeholder")}
                   className={`pl-10 h-12 text-base transition-all ${errors?.expiry ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
                   value={data.expiry || ""}
                   onChange={handleExpiryChange}
+                  onFocus={handleInputFocus}
                 />
               </div>
               {errors?.expiry && <p className="text-xs font-medium text-red-500 px-1">{errors.expiry}</p>}
@@ -142,11 +136,13 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
                 />
                 <Input
                   id="cvc"
+                  name="cvc"
                   placeholder="123"
-                  type="password"
+                  type="tel"
                   className={`pl-10 h-12 text-base transition-all ${errors?.cvc ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
                   value={data.cvc || ""}
                   onChange={handleCVCChange}
+                  onFocus={handleInputFocus}
                   maxLength={4}
                 />
               </div>

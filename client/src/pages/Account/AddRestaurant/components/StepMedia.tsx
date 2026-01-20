@@ -116,6 +116,7 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
             <Plus className="h-5 w-5" />
           </Button>
         </div>
+        {errors?.images && <p className="text-xs font-medium text-red-500 px-1 animate-in slide-in-from-top-1 mt-2">{errors.images}</p>}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
           {data.images?.map((img: string, idx: number) => (

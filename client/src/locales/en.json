@@ -75,7 +75,9 @@
         "title": "Menu",
         "subtitle": "Add your menu",
         "drag_drop": "Drag & drop your menu here",
-        "or_click": "or click to select"
+        "or_click": "or click to select",
+        "add_menu_link": "Add link to your menu (PDF/Image)",
+        "added_links": "Added menu links"
       },
       "visuals": {
         "title": "Visuals",
@@ -141,7 +143,9 @@
     "not_specified": "Not specified",
     "learn_more": "Learn more",
     "see_all": "See all restaurants",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "download": "Download",
+    "open_in_new_tab": "Open in new tab"
   },
   "navbar": {
     "home": "Home",
@@ -905,7 +909,27 @@
         },
         "save": "Save changes",
         "saved": "Changes saved",
-        "error": "Error saving changes"
+        "error": "Error saving changes",
+        "danger_zone": "Danger Zone",
+        "danger_zone_description": "Irreversible actions or actions with major impact on your restaurant",
+        "close_restaurant": "Close restaurant",
+        "close_description": "Pauses new bookings. Your restaurant remains visible but clients cannot book anymore.",
+        "close": "Close",
+        "reopen_restaurant": "Reopen restaurant",
+        "reopen_description": "Re-enables bookings. Your restaurant will accept reservations again.",
+        "reopen": "Reopen",
+        "confirm_close_title": "Close restaurant?",
+        "confirm_close_description": "Clients won't be able to make bookings anymore. You can reopen at any time.",
+        "confirm_reopen_title": "Reopen restaurant?",
+        "confirm_reopen_description": "Clients will be able to make bookings again.",
+        "restaurant_closed": "Restaurant closed",
+        "restaurant_reopened": "Restaurant reopened",
+        "delete_restaurant": "Delete restaurant",
+        "delete_description": "This action is irreversible. All data will be permanently deleted.",
+        "delete": "Delete",
+        "confirm_delete_title": "Delete permanently?",
+        "confirm_delete_description": "This action is irreversible. All bookings, client data, and settings will be lost.",
+        "restaurant_deleted": "Restaurant deleted"
       }
     },
     "join": {
@@ -964,7 +988,8 @@
         "friday": "Friday",
         "saturday": "Saturday",
         "sunday": "Sunday"
-      }
+      },
+      "preview_unavailable": "Preview not available"
     }
   },
   "components": {

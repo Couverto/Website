@@ -124,29 +124,37 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
             </div>
           )}
 
-          {restaurant.isOpenNow !== undefined && (
-            <div
-              className={`flex items-center gap-2 text-xs font-medium p-2 rounded border mt-auto ${
-                restaurant.isOpenNow
-                  ? "text-emerald-600 bg-emerald-50/50 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/50"
-                  : "text-red-600 bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/50"
-              }`}
-            >
-              <div className={`w-2 h-2 rounded-full ${restaurant.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
-              {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
+          {restaurant.isClosed ? (
+            <div className="flex items-center gap-2 text-xs font-medium p-2 rounded border mt-auto text-red-600 bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/50">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              {t("pages.restaurant.settings.restaurant_closed")}
             </div>
+          ) : (
+            restaurant.isOpenNow !== undefined && (
+              <div
+                className={`flex items-center gap-2 text-xs font-medium p-2 rounded border mt-auto ${
+                  restaurant.isOpenNow
+                    ? "text-emerald-600 bg-emerald-50/50 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/50"
+                    : "text-red-600 bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/50"
+                }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${restaurant.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
+                {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
+              </div>
+            )
           )}
         </CardContent>
 
         <CardFooter className="p-4 pt-0">
           <Button
             className="w-full font-semibold shadow-sm hover:shadow-md transition-all"
+            disabled={restaurant.isClosed}
             onClick={(e) => {
               e.stopPropagation();
               setIsBookingOpen(true);
             }}
           >
-            {t("pages.home.card.book_button")}
+            {restaurant.isClosed ? t("pages.restaurant.settings.restaurant_closed") : t("pages.home.card.book_button")}
           </Button>
         </CardFooter>
       </Card>

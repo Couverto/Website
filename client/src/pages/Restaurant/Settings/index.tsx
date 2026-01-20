@@ -1,4 +1,4 @@
-import { useParams, useOutletContext } from "react-router-dom";
+import { useParams, useOutletContext, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
@@ -44,8 +44,22 @@ import {
   Smartphone,
   Ticket,
   StickyNote,
+  Power,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface RestaurantSettingsForm {
   name: string;
@@ -65,7 +79,7 @@ interface RestaurantSettingsForm {
   };
   coverImage?: string;
   images: string[];
-  openingHours: Record<string, string>;
+  openingHours: Record<string, { isClosed: boolean; periods: { open: string; close: string }[] }>;
 }
 
 interface RestaurantContext {
@@ -125,6 +139,10 @@ export const RestaurantSettings = () => {
   const [saving, setSaving] = useState(false);
   const [cuisineSearch, setCuisineSearch] = useState("");
   const [cuisineOpen, setCuisineOpen] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
+  const [toggling, setToggling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
 
   const isFetched = useRef(false);
 
@@ -147,6 +165,7 @@ export const RestaurantSettings = () => {
       try {
         const response = await api.get(`/restaurants/${id}/details`);
         reset(response.data.restaurant);
+        setIsClosed(response.data.restaurant.isClosed || false);
         isFetched.current = true;
       } catch (error) {
         console.error("Failed to fetch restaurant", error);
@@ -156,6 +175,36 @@ export const RestaurantSettings = () => {
     };
     if (id) fetchRestaurant();
   }, [id, reset]);
+
+  const handleToggleClosed = async () => {
+    setToggling(true);
+    try {
+      const response = await api.patch(`/restaurants/${id}/toggle-closed`);
+      setIsClosed(response.data.restaurant.isClosed);
+      toast.success(
+        response.data.restaurant.isClosed
+          ? t("pages.restaurant.settings.restaurant_closed")
+          : t("pages.restaurant.settings.restaurant_reopened"),
+      );
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || t("pages.restaurant.settings.error"));
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  const handleDeleteRestaurant = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/restaurants/${id}`);
+      toast.success(t("pages.restaurant.settings.restaurant_deleted"));
+      navigate("/account/restaurants");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || t("pages.restaurant.settings.error"));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const onSubmit = async (data: RestaurantSettingsForm) => {
     setSaving(true);
@@ -286,8 +335,13 @@ export const RestaurantSettings = () => {
 
                       <Popover open={cuisineOpen} onOpenChange={setCuisineOpen}>
                         <PopoverTrigger asChild>
-                          <div className="relative group cursor-text">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                          <div
+                            className="relative group cursor-text"
+                            onClick={(e) => {
+                              if (!cuisineOpen) setCuisineOpen(true);
+                            }}
+                          >
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
                             <Input
                               className="pl-11 pr-10 h-12 text-base border-muted-foreground/20 focus:border-primary shadow-sm transition-all"
                               placeholder="Search cuisines..."
@@ -296,49 +350,81 @@ export const RestaurantSettings = () => {
                                 setCuisineSearch(e.target.value);
                                 if (!cuisineOpen) setCuisineOpen(true);
                               }}
-                              onFocus={() => setCuisineOpen(true)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!cuisineOpen) setCuisineOpen(true);
+                              }}
                             />
                             <ChevronDown
-                              className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-300 ${cuisineOpen ? "rotate-180" : ""}`}
+                              className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-300 pointer-events-none ${cuisineOpen ? "rotate-180" : ""}`}
                             />
                           </div>
                         </PopoverTrigger>
                         <PopoverContent
                           className="w-[var(--radix-popover-trigger-width)] p-0 shadow-2xl rounded-2xl border-primary/10"
                           align="start"
+                          onOpenAutoFocus={(e) => e.preventDefault()}
                         >
                           <div className="flex flex-col">
                             <div className="max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
-                              {CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).map((cuisine) => (
+                              {CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).length === 0 &&
+                              cuisineSearch.trim() !== "" ? (
                                 <button
-                                  key={cuisine}
                                   type="button"
                                   onClick={() => {
-                                    const current = field.value || [];
-                                    if (current.includes(cuisine)) {
-                                      field.onChange(current.filter((c: string) => c !== cuisine));
-                                    } else {
-                                      field.onChange([...current, cuisine]);
+                                    const trimmed = cuisineSearch.trim();
+                                    if (trimmed) {
+                                      const current = field.value || [];
+                                      if (!current.includes(trimmed)) {
+                                        field.onChange([...current, trimmed]);
+                                      }
+                                      setCuisineSearch("");
+                                      setCuisineOpen(false);
                                     }
                                   }}
                                   className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-xl hover:bg-primary/5 hover:text-primary transition-all group text-left mb-0.5"
                                 >
-                                  <span
-                                    className={`transition-all ${field.value?.includes(cuisine) ? "font-bold text-primary translate-x-1" : ""}`}
-                                  >
-                                    {cuisine}
+                                  <span className="font-medium">
+                                    {t("create.steps.identity.add_custom", "Add")} "{cuisineSearch}"
                                   </span>
-                                  <div
-                                    className={`h-5 w-5 rounded-lg border flex items-center justify-center transition-all ${
-                                      field.value?.includes(cuisine)
-                                        ? "bg-primary border-primary text-primary-foreground"
-                                        : "border-muted-foreground/30 group-hover:border-primary/50"
-                                    }`}
-                                  >
-                                    {field.value?.includes(cuisine) && <Check className="h-3 w-3" />}
-                                  </div>
+                                  <Plus className="h-4 w-4" />
                                 </button>
-                              ))}
+                              ) : CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).length === 0 ? (
+                                <div className="py-8 text-center text-sm text-muted-foreground italic">
+                                  {t("create.steps.identity.no_results", "Type to add a custom cuisine")}
+                                </div>
+                              ) : (
+                                CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).map((cuisine) => (
+                                  <button
+                                    key={cuisine}
+                                    type="button"
+                                    onClick={() => {
+                                      const current = field.value || [];
+                                      if (current.includes(cuisine)) {
+                                        field.onChange(current.filter((c: string) => c !== cuisine));
+                                      } else {
+                                        field.onChange([...current, cuisine]);
+                                      }
+                                    }}
+                                    className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-xl hover:bg-primary/5 hover:text-primary transition-all group text-left mb-0.5"
+                                  >
+                                    <span
+                                      className={`transition-all ${field.value?.includes(cuisine) ? "font-bold text-primary translate-x-1" : ""}`}
+                                    >
+                                      {cuisine}
+                                    </span>
+                                    <div
+                                      className={`h-5 w-5 rounded-lg border flex items-center justify-center transition-all ${
+                                        field.value?.includes(cuisine)
+                                          ? "bg-primary border-primary text-primary-foreground"
+                                          : "border-muted-foreground/30 group-hover:border-primary/50"
+                                      }`}
+                                    >
+                                      {field.value?.includes(cuisine) && <Check className="h-3 w-3" />}
+                                    </div>
+                                  </button>
+                                ))
+                              )}
                             </div>
                           </div>
                         </PopoverContent>
@@ -587,6 +673,89 @@ export const RestaurantSettings = () => {
               name="openingHours"
               render={({ field }) => <OpeningHoursEditor value={field.value} onChange={field.onChange} />}
             />
+          </CardContent>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {t("pages.restaurant.settings.danger_zone")}
+            </CardTitle>
+            <CardDescription>{t("pages.restaurant.settings.danger_zone_description")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Close/Reopen Restaurant */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/20 bg-background">
+              <div>
+                <h4 className="font-semibold">
+                  {isClosed ? t("pages.restaurant.settings.reopen_restaurant") : t("pages.restaurant.settings.close_restaurant")}
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  {isClosed ? t("pages.restaurant.settings.reopen_description") : t("pages.restaurant.settings.close_description")}
+                </p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={isClosed ? "default" : "outline"}
+                    className={isClosed ? "" : "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"}
+                    disabled={toggling}
+                  >
+                    {toggling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Power className="h-4 w-4 mr-2" />}
+                    {isClosed ? t("pages.restaurant.settings.reopen") : t("pages.restaurant.settings.close")}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {isClosed ? t("pages.restaurant.settings.confirm_reopen_title") : t("pages.restaurant.settings.confirm_close_title")}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {isClosed
+                        ? t("pages.restaurant.settings.confirm_reopen_description")
+                        : t("pages.restaurant.settings.confirm_close_description")}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleToggleClosed}>
+                      {isClosed ? t("pages.restaurant.settings.reopen") : t("pages.restaurant.settings.close")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+
+            {/* Delete Restaurant */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/20 bg-background">
+              <div>
+                <h4 className="font-semibold text-destructive">{t("pages.restaurant.settings.delete_restaurant")}</h4>
+                <p className="text-sm text-muted-foreground">{t("pages.restaurant.settings.delete_description")}</p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" disabled={deleting}>
+                    {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                    {t("pages.restaurant.settings.delete")}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t("pages.restaurant.settings.confirm_delete_title")}</AlertDialogTitle>
+                    <AlertDialogDescription>{t("pages.restaurant.settings.confirm_delete_description")}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteRestaurant} className="bg-destructive hover:bg-destructive/90">
+                      {t("pages.restaurant.settings.delete")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardContent>
         </Card>
 

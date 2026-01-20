@@ -28,6 +28,7 @@ export interface RestaurantInterface {
     }
   >;
   isOpenNow?: boolean;
+  isClosed?: boolean;
   cuisineType: string[];
   priceRange: string;
   rating: number;

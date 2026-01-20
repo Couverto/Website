@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { WizardData } from "../types";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
-import { X, Search, Check, ChevronDown } from "lucide-react";
+import { X, Search, Check, ChevronDown, Plus } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -99,8 +99,16 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
 
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <div className="relative group cursor-text">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <div
+              className="relative group cursor-text"
+              onClick={(e) => {
+                // Prevent toggle behavior - only open, never close from trigger
+                if (!open) {
+                  setOpen(true);
+                }
+              }}
+            >
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
               <Input
                 className={`pl-11 pr-10 h-12 text-base transition-all ${
                   errors?.cuisineType ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"
@@ -111,18 +119,48 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
                   setSearch(e.target.value);
                   if (!open) setOpen(true);
                 }}
-                onFocus={() => setOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!open) setOpen(true);
+                }}
               />
               <ChevronDown
-                className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-transform duration-300 pointer-events-none ${open ? "rotate-180" : ""}`}
               />
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 shadow-2xl rounded-2xl border-primary/10" align="start">
+          <PopoverContent
+            className="w-[var(--radix-popover-trigger-width)] p-0 shadow-2xl rounded-2xl border-primary/10"
+            align="start"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
             <div className="flex flex-col">
               <div className="max-h-[300px] overflow-y-auto p-1 custom-scrollbar">
-                {filteredCuisines.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-muted-foreground italic">No results found.</div>
+                {filteredCuisines.length === 0 && search.trim() !== "" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const trimmed = search.trim();
+                      if (trimmed) {
+                        const current = data.cuisineType || [];
+                        if (!current.includes(trimmed)) {
+                          updateData({ cuisineType: [...current, trimmed] });
+                        }
+                        setSearch("");
+                        setOpen(false);
+                      }
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-xl hover:bg-primary/5 hover:text-primary transition-all group text-left mb-0.5"
+                  >
+                    <span className="font-medium">
+                      {t("create.steps.identity.add_custom", "Add")} "{search}"
+                    </span>
+                    <Plus className="h-4 w-4" />
+                  </button>
+                ) : filteredCuisines.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground italic">
+                    {t("create.steps.identity.no_results", "Type to add a custom cuisine")}
+                  </div>
                 ) : (
                   filteredCuisines.map((cuisine) => (
                     <button

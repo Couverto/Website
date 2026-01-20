@@ -13,6 +13,7 @@ import {
   removeCollaborator,
   updateRestaurantSettings,
   getPublicRestaurantById,
+  toggleRestaurantClosed,
 } from "../controllers/restaurantController.js";
 import {
   createInvitation,
@@ -38,12 +39,13 @@ restaurantRouter.get("/my", verifyToken(), getMyRestaurants);
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);
 restaurantRouter.post("/", verifyToken({ role: userRoles.ADMIN }), createRestaurant);
 restaurantRouter.put("/:id", verifyToken({ role: userRoles.ADMIN }), updateRestaurant);
-restaurantRouter.delete("/:id", verifyToken({ role: userRoles.ADMIN }), deleteRestaurant);
+restaurantRouter.delete("/:id", verifyToken(), verifyCollaborator(), deleteRestaurant);
 
 // Collaborator routes (requires being a collaborator of the restaurant)
 restaurantRouter.get("/:id/details", verifyToken(), verifyCollaborator(), getRestaurantById);
 restaurantRouter.get("/:id/stats", verifyToken(), verifyCollaborator(), getRestaurantStats);
 restaurantRouter.put("/:id/settings", verifyToken(), verifyCollaborator(), updateRestaurantSettings);
+restaurantRouter.patch("/:id/toggle-closed", verifyToken(), verifyCollaborator(), toggleRestaurantClosed);
 
 // Collaborator management
 restaurantRouter.get("/:id/collaborators", verifyToken(), verifyCollaborator(), getCollaborators);
