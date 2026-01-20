@@ -937,7 +937,9 @@
       "no_reviews_yet": "Aucun avis pour le moment.",
       "info": "Informations",
       "address": "Adresse",
-      "hours": "Horaires d'ouverture"
+      "hours": "Horaires d'ouverture",
+      "payment_methods": "Moyens de paiement",
+      "view_menu": "Voir le menu #{{count}}"
     }
   },
   "components": {

@@ -27,6 +27,7 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
   const form = useForm<CreateBookingSchema>({
     resolver: zodResolver(createBookingSchema),
     defaultValues: {
+      bookingDate: new Date(),
       guests: 2,
       time: "19:00",
       customer: {

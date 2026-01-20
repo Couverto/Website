@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
-import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft } from "lucide-react";
+import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft, FileText, ExternalLink } from "lucide-react";
 import { BookingDialog } from "../Home/components/Booking/BookingDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,9 +23,10 @@ interface PublicRestaurant {
   cuisineType?: string[];
   priceRange?: string;
   openingHours?: Record<string, string>;
-  menu?: string;
+  menu?: string[];
   rating?: number;
   features?: string[];
+  paymentMethods?: string[];
   averagePrice?: number;
   capacity?: number;
   socials?: {
@@ -79,6 +80,8 @@ export const PublicRestaurant = () => {
     );
   }
 
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.adress} ${restaurant.city}`)}`;
+
   return (
     <div className="min-h-screen bg-background pb-20 relative">
       {/* Back Button */}
@@ -110,10 +113,15 @@ export const PublicRestaurant = () => {
               </Badge>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">{restaurant.name}</h1>
               <div className="flex items-center gap-4 text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>{restaurant.city}</span>
-                </div>
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer group"
+                >
+                  <MapPin className="h-4 w-4 group-hover:animate-bounce" />
+                  <span className="underline decoration-dotted underline-offset-4">{restaurant.city}</span>
+                </a>
                 {restaurant.priceRange && (
                   <div className="flex items-center gap-1">
                     <Wallet className="h-4 w-4" />
@@ -198,13 +206,52 @@ export const PublicRestaurant = () => {
                     </div>
                   </section>
                 )}
+
+                {restaurant.paymentMethods && restaurant.paymentMethods.length > 0 && (
+                  <section>
+                    <h2 className="text-2xl font-semibold mb-4">{t("pages.public_restaurant.payment_methods")}</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {restaurant.paymentMethods.map((m) => {
+                        const key = m.toLowerCase().replace(/ /g, "_");
+                        return (
+                          <Badge key={m} variant="secondary" className="px-3 py-1 text-sm bg-primary/5 text-primary border-primary/10">
+                            {t(`create.steps.details.payment_options.${key}`, m)}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
               </TabsContent>
 
               <TabsContent value="menu">
                 <Card>
                   <CardContent className="pt-6">
-                    {restaurant.menu ? (
-                      <div className="whitespace-pre-wrap text-muted-foreground">{restaurant.menu}</div>
+                    {restaurant.menu && restaurant.menu.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {restaurant.menu.map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-between p-4 rounded-xl border border-muted-foreground/10 hover:border-primary/30 hover:bg-primary/[0.02] transition-all group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <FileText className="h-5 w-5 text-primary" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-semibold">{t("pages.public_restaurant.view_menu", { count: idx + 1 })}</span>
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
+                                  {url.split(".").pop()?.toUpperCase() || "PDF"}
+                                </span>
+                              </div>
+                            </div>
+                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </a>
+                        ))}
+                      </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
                         <ChefHat className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -232,20 +279,25 @@ export const PublicRestaurant = () => {
                 <h3 className="font-semibold text-lg">{t("pages.public_restaurant.info")}</h3>
 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <a
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-start gap-3 group hover:text-primary transition-colors"
+                  >
+                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5 group-hover:animate-bounce" />
                     <div>
                       <div className="font-medium">{t("pages.public_restaurant.address")}</div>
-                      <div className="text-sm text-muted-foreground">{restaurant.adress}</div>
-                      <div className="text-sm text-muted-foreground">{restaurant.city}</div>
+                      <div className="text-sm text-muted-foreground group-hover:text-primary/80 transition-colors underline decoration-dotted underline-offset-2">
+                        {restaurant.adress}, {restaurant.city}
+                      </div>
                     </div>
-                  </div>
+                  </a>
 
-                  {/* Average price removed as redundant with priceRange */}
+                  <Separator />
 
                   {(restaurant.capacity ?? 0) > 0 && (
                     <>
-                      <Separator />
                       <div className="flex items-start gap-3">
                         <ChefHat className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         <div>
@@ -255,10 +307,9 @@ export const PublicRestaurant = () => {
                           </div>
                         </div>
                       </div>
+                      <Separator />
                     </>
                   )}
-
-                  <Separator />
 
                   <div className="flex items-start gap-3">
                     <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
@@ -286,7 +337,9 @@ export const PublicRestaurant = () => {
                   {restaurant.phone && (
                     <div className="flex items-center gap-3">
                       <Phone className="h-5 w-5 text-primary shrink-0" />
-                      <span className="text-sm">{restaurant.phone}</span>
+                      <a href={`tel:${restaurant.phone}`} className="text-sm hover:text-primary transition-colors">
+                        {restaurant.phone}
+                      </a>
                     </div>
                   )}
 
