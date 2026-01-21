@@ -149,6 +149,7 @@
   },
   "navbar": {
     "home": "Accueil",
+    "about": "À propos",
     "restaurants": "Restaurants",
     "dashboard": "Tableau de bord",
     "account": "Mon compte",

@@ -9,6 +9,7 @@ import { AccountBooking } from "@/pages/Account/booking";
 import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Professional";
 import { Home } from "@/pages/Home";
+import { About } from "@/pages/About";
 import { Index } from "@/pages/Admin";
 import { Logs as AdminLogs } from "../pages/Admin/components/logs";
 import { Users as AdminUsers } from "../pages/Admin/components/users";
@@ -43,6 +44,14 @@ export const Router = () => {
           element={
             <>
               <Home />
+            </>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <>
+              <About />
             </>
           }
         />

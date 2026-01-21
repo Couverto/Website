@@ -3,7 +3,7 @@ import { ThemeChanger } from "./themeChanger";
 import { LanguageChanger } from "./languageChanger";
 import { useTranslation } from "react-i18next";
 import { Separator } from "../ui/separator";
-import { House, LogOut, Menu, User, Wrench, X, Utensils, ChefHat, Calendar, LayoutDashboard, Plus } from "lucide-react";
+import { House, LogOut, Menu, User, Users, Wrench, X, Utensils, ChefHat, Calendar, LayoutDashboard, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -60,6 +60,14 @@ export const Navbar = () => {
       path: "/",
       icon: House,
       auth: false, // Visible to everyone or irrelevant
+      hideIfAuth: false,
+    },
+    {
+      label: "About",
+      translationKey: "navbar.about",
+      path: "/about",
+      icon: Users,
+      auth: false,
       hideIfAuth: false,
     },
     {
