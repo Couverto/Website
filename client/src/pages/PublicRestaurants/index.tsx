@@ -2,13 +2,20 @@ import { RestaurantList } from "../Home/components/RestaurantList";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, ChefHat, Wallet } from "lucide-react";
+import { Search, MapPin, ChefHat, Wallet, Calendar as CalendarIcon, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
+import { CuisineSelector } from "@/components/CuisineSelector";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { fr, enUS } from "date-fns/locale";
+
+// Register locales
+registerLocale("fr", fr);
+registerLocale("en-US", enUS);
 
 export const PublicRestaurants = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState({
@@ -84,67 +91,98 @@ export const PublicRestaurants = () => {
 
       {/* Filters Section */}
       <div className="container mx-auto px-4 -mt-8 relative z-20">
-        <div className="bg-card rounded-xl shadow-xl p-6 border grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="relative">
+        <div className="bg-card rounded-xl shadow-xl p-6 border grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+          {/* Row 1 */}
+          <div className="md:col-span-4 relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t("pages.home.search.name_placeholder", "What restaurant?")}
-              className="pl-9"
+              className="pl-9 bg-background"
               value={filters.search}
               onChange={handleInputChange("search")}
               onKeyDown={handleKeyDown}
             />
           </div>
 
-          <div className="relative">
+          <div className="md:col-span-4 relative">
             <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={t("pages.home.search.location_placeholder", "City")}
-              className="pl-9"
+              className="pl-9 bg-background"
               value={filters.city}
               onChange={handleInputChange("city")}
               onKeyDown={handleKeyDown}
             />
           </div>
 
-          <Select value={filters.priceRange || "all"} onValueChange={handleCreateFilterUpdater("priceRange")}>
-            <SelectTrigger>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Wallet className="h-4 w-4" />
-                <SelectValue placeholder="Price Range" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("common.not_specified", "Any Price")}</SelectItem>
-              <SelectItem value="$">$ ({t("create.steps.identity.price_options.vlow")})</SelectItem>
-              <SelectItem value="$$">$$ ({t("create.steps.identity.price_options.low")})</SelectItem>
-              <SelectItem value="$$$">$$$ ({t("create.steps.identity.price_options.medium")})</SelectItem>
-              <SelectItem value="$$$$">$$$$ ({t("create.steps.identity.price_options.high")})</SelectItem>
-              <SelectItem value="$$$$$">$$$$$ ({t("create.steps.identity.price_options.vhigh")})</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="md:col-span-2 relative">
+            <DatePicker
+              selected={filters.date ? new Date(filters.date) : undefined}
+              onChange={(date: Date | null) => handleCreateFilterUpdater("date")(date ? date.toISOString().split("T")[0] : "")}
+              locale={i18n.language === "fr" ? "fr" : "en-US"}
+              dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+              minDate={new Date()}
+              placeholderText={t("pages.home.hero.date_placeholder")}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-9"
+              wrapperClassName="w-full"
+            />
+            <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
 
-          <Select value={filters.cuisineType || "all"} onValueChange={handleCreateFilterUpdater("cuisineType")}>
-            <SelectTrigger>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <ChefHat className="h-4 w-4" />
-                <SelectValue placeholder="Cuisine Type" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any Cuisine</SelectItem>
-              <SelectItem value="Italian">Italian</SelectItem>
-              <SelectItem value="French">French</SelectItem>
-              <SelectItem value="Japanese">Japanese</SelectItem>
-              <SelectItem value="Mexican">Mexican</SelectItem>
-              <SelectItem value="Indian">Indian</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="md:col-span-2">
+            <Select value={filters.guests || "all"} onValueChange={handleCreateFilterUpdater("guests")}>
+              <SelectTrigger className="bg-background">
+                <div className="flex items-center gap-2 text-muted-foreground min-w-0">
+                  <Users className="h-4 w-4 flex-shrink-0" />
+                  <SelectValue placeholder={t("pages.home.hero.guests_placeholder", "Guests")} />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("common.any_guests", "Any guests")}</SelectItem>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num} {t("common.people", "People")}
+                  </SelectItem>
+                ))}
+                <SelectItem value="11">10+ {t("common.people", "People")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Search button with strong hover feedback */}
-          <Button size="lg" className="w-full font-bold shadow-md hover:shadow-xl hover:translate-y-[-1px] transition-all duration-300">
-            {t("pages.home.search.button")}
-          </Button>
+          {/* Row 2 */}
+          <div className="md:col-span-2">
+            <Select value={filters.priceRange || "all"} onValueChange={handleCreateFilterUpdater("priceRange")}>
+              <SelectTrigger className="bg-background">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Wallet className="h-4 w-4" />
+                  <SelectValue placeholder="Price" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("common.not_specified", "Any Price")}</SelectItem>
+                <SelectItem value="$">$ ({t("create.steps.identity.price_options.vlow")})</SelectItem>
+                <SelectItem value="$$">$$ ({t("create.steps.identity.price_options.low")})</SelectItem>
+                <SelectItem value="$$$">$$$ ({t("create.steps.identity.price_options.medium")})</SelectItem>
+                <SelectItem value="$$$$">$$$$ ({t("create.steps.identity.price_options.high")})</SelectItem>
+                <SelectItem value="$$$$$">$$$$$ ({t("create.steps.identity.price_options.vhigh")})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="md:col-span-8">
+            <CuisineSelector
+              value={filters.cuisineType ? filters.cuisineType.split(",") : []}
+              onChange={(val) => handleCreateFilterUpdater("cuisineType")(val.join(","))}
+              variant="compact"
+              className=""
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <Button className="w-full h-9 font-bold shadow-md hover:shadow-xl hover:translate-y-[-1px] transition-all duration-300">
+              {t("pages.home.search.button")}
+            </Button>
+          </div>
         </div>
 
         {/* Reset Filters Link - Subtle but clear hover */}

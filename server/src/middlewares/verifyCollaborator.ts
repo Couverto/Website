@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { Restaurant } from "../models/restaurantModel.js";
+import { User } from "../models/userModel.js";
 import mongoose from "mongoose";
+import { userRoles } from "../utils/enums/userRoles.js";
 
 /**
  * Middleware to verify that the authenticated user is a collaborator of the restaurant.
@@ -11,17 +13,24 @@ export const verifyCollaborator = () => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const restaurantId = req.params.id || req.params.restaurantId;
 
-    if (!restaurantId) {
-      res.status(400).json({ error: "server.restaurants.errors.missing_id" });
-      return;
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
-      res.status(400).json({ error: "server.restaurants.errors.invalid_id" });
-      return;
-    }
-
     try {
+      if (req.userId) {
+        const user = await User.findById(req.userId);
+        if (user && user.role === userRoles.ADMIN) {
+          next();
+          return;
+        }
+      }
+      if (!restaurantId) {
+        res.status(400).json({ error: "server.restaurants.errors.missing_id" });
+        return;
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+        res.status(400).json({ error: "server.restaurants.errors.invalid_id" });
+        return;
+      }
+
       const restaurant = await Restaurant.findById(restaurantId);
 
       if (!restaurant) {
@@ -36,7 +45,6 @@ export const verifyCollaborator = () => {
         return;
       }
 
-      // Attach restaurant to request for later use
       req.restaurant = restaurant;
       next();
     } catch (err: any) {
