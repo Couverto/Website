@@ -13,27 +13,27 @@ export const About = () => {
   const navigate = useNavigate();
 
   const stats = [
-    { label: "Restaurants Partenaires", value: "500+" },
-    { label: "Utilisateurs Actifs", value: "50k+" },
-    { label: "Réservations / mois", value: "120k" },
-    { label: "Villes", value: "15" },
+    { label: t("pages.about.stats.partners"), value: "500+" },
+    { label: t("pages.about.stats.users"), value: "50k+" },
+    { label: t("pages.about.stats.bookings"), value: "120k" },
+    { label: t("pages.about.stats.cities"), value: "15" },
   ];
 
   const values = [
     {
       icon: Heart,
-      title: "Passion",
-      description: "Nous sommes animés par l'amour de la gastronomie et le désir de soutenir les restaurateurs.",
+      title: t("pages.about.values.passion.title"),
+      description: t("pages.about.values.passion.description"),
     },
     {
       icon: Zap,
-      title: "Innovation",
-      description: "Nous repoussons les limites de la technologie pour simplifier chaque étape de l'expérience culinaire.",
+      title: t("pages.about.values.innovation.title"),
+      description: t("pages.about.values.innovation.description"),
     },
     {
       icon: Award,
-      title: "Qualité",
-      description: "Nous nous engageons à offrir un service d'excellence, fiable et transparent pour tous.",
+      title: t("pages.about.values.quality.title"),
+      description: t("pages.about.values.quality.description"),
     },
   ];
 
@@ -42,7 +42,7 @@ export const About = () => {
       name: "Axel Elias",
       role: "CEO & Co-Founder",
       image: "/images/about/axel.jpeg",
-      bio: "Étudiant à l’IMT Nord Europe en alternance au département du Nord en qualité de Data Engineer. Axel apporte sa vision technique et stratégique au projet.",
+      bio: t("pages.about.team.axel_bio"),
       links: {
         linkedin: "https://www.linkedin.com/in/axel-elias/",
         website: "#",
@@ -53,7 +53,7 @@ export const About = () => {
       name: "Téo Villet",
       role: "CTO & Co-Founder",
       image: "/images/about/teo.png",
-      bio: "Développeur fullstack freelance basé à Grenoble, Téo apporte son expertise technique pour bâtir une plateforme performante et intuitive.",
+      bio: t("pages.about.team.teo_bio"),
       links: {
         linkedin: "https://www.linkedin.com/in/teo-villet",
         website: "https://teovillet.fr",
@@ -71,24 +71,13 @@ export const About = () => {
             {/* Left Column: Text */}
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 text-primary font-bold tracking-wide uppercase text-sm">
-                <TrendingUp className="h-4 w-4" /> Notre Histoire
+                <TrendingUp className="h-4 w-4" /> {t("pages.about.title")}
               </div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl leading-tight">
-                D'une frustration à une <span className="text-primary">Révolution</span>
-              </h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl leading-tight">{t("pages.about.subtitle")}</h2>
               <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
-                <p>
-                  Tout a commencé par un constat simple : pourquoi réserver une table est-il encore si compliqué, alors que tout le reste
-                  est devenu instantané ?
-                </p>
-                <p>
-                  En unissant nos forces, Axel (Vision & Business) et Téo (Tech & Product) ont créé {appName} avec une obsession :
-                  **simplifier vie**.
-                </p>
-                <p>
-                  Aujourd'hui, nous sommes fiers d'aider des centaines de restaurateurs à se concentrer sur ce qu'ils font de mieux :
-                  cuisiner.
-                </p>
+                <p>{t("pages.about.intro_1")}</p>
+                <p>{t("pages.about.intro_2", { appName })}</p>
+                <p>{t("pages.about.intro_3")}</p>
               </div>
             </div>
 
@@ -100,11 +89,9 @@ export const About = () => {
 
               <div className="text-center mb-8 space-y-4 relative z-10">
                 <Badge variant="secondary" className="px-4 py-1.5 text-sm font-medium rounded-full">
-                  Notre Impact
+                  {t("pages.about.stats.title")}
                 </Badge>
-                <h2 className="text-2xl font-bold tracking-tight">
-                  Des chiffres qui donnent <span className="text-primary">faim</span>
-                </h2>
+                <h2 className="text-2xl font-bold tracking-tight">{t("pages.about.stats.subtitle")}</h2>
               </div>
 
               <div className="grid grid-cols-2 gap-4 relative z-10">
@@ -127,8 +114,8 @@ export const About = () => {
       <section className="py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="text-center mb-16 space-y-4">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Nos Valeurs</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Ce qui nous guide au quotidien.</p>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">{t("pages.about.values.title")}</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t("pages.about.values.subtitle")}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {values.map((val, i) => (
@@ -152,13 +139,11 @@ export const About = () => {
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 text-primary font-bold tracking-wide uppercase text-sm">
-                <Users className="h-4 w-4" /> L'Équipe
+                <Users className="h-4 w-4" /> {t("pages.about.team.title")}
               </div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Les fondateurs</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">{t("pages.about.team.subtitle")}</h2>
             </div>
-            <p className="text-muted-foreground text-lg max-w-md text-right md:text-left">
-              Deux profils complémentaires unis par la même ambition.
-            </p>
+            <p className="text-muted-foreground text-lg max-w-md text-right md:text-left">{t("pages.about.team.description")}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
@@ -231,16 +216,14 @@ export const About = () => {
       {/* CTA Bottom */}
       <section className="py-24 text-center">
         <div className="container mx-auto px-4 flex flex-col items-center">
-          <h2 className="text-3xl font-bold mb-6">Prêt à nous rejoindre ?</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
-            Nous cherchons toujours des talents passionnés pour agrandir l'équipe.
-          </p>
+          <h2 className="text-3xl font-bold mb-6">{t("pages.about.cta.title")}</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">{t("pages.about.cta.subtitle")}</p>
           <Button
             size="lg"
             className="rounded-full px-8 h-12 text-lg font-bold shadow-lg hover:shadow-primary/25"
-            onClick={() => navigate("/contact")}
+            onClick={() => navigate("/contact", { state: { reason: "recruitment" } })}
           >
-            Nous contacter
+            {t("pages.about.cta.button")}
           </Button>
         </div>
       </section>

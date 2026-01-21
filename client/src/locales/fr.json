@@ -492,6 +492,83 @@
         }
       }
     },
+    "about": {
+      "title": "Notre Histoire",
+      "subtitle": "D'une frustration à une Révolution",
+      "intro_1": "Tout a commencé par un constat simple : pourquoi réserver une table est-il encore si compliqué, alors que tout le reste est devenu instantané ?",
+      "intro_2": "En unissant nos forces, Axel (Vision & Business) et Téo (Tech & Product) ont créé {{appName}} avec une obsession : simplifier la vie.",
+      "intro_3": "Aujourd'hui, nous sommes fiers d'aider des centaines de restaurateurs à se concentrer sur ce qu'ils font de mieux : cuisiner.",
+      "stats": {
+        "title": "Notre Impact",
+        "subtitle": "Des chiffres qui donnent faim",
+        "partners": "Restaurants Partenaires",
+        "users": "Utilisateurs Actifs",
+        "bookings": "Réservations / mois",
+        "cities": "Villes"
+      },
+      "values": {
+        "title": "Nos Valeurs",
+        "subtitle": "Ce qui nous guide au quotidien.",
+        "passion": {
+          "title": "Passion",
+          "description": "Nous sommes animés par l'amour de la gastronomie et le désir de soutenir les restaurateurs."
+        },
+        "innovation": {
+          "title": "Innovation",
+          "description": "Nous repoussons les limites de la technologie pour simplifier chaque étape de l'expérience culinaire."
+        },
+        "quality": {
+          "title": "Qualité",
+          "description": "Nous nous engageons à offrir un service d'excellence, fiable et transparent pour tous."
+        }
+      },
+      "team": {
+        "title": "L'Équipe",
+        "subtitle": "Les fondateurs",
+        "description": "Deux profils complémentaires unis par la même ambition.",
+        "axel_bio": "Étudiant à l’IMT Nord Europe en alternance au département du Nord en qualité de Data Engineer. Axel apporte sa vision technique et stratégique au projet.",
+        "teo_bio": "Développeur fullstack freelance basé à Grenoble, Téo apporte son expertise technique pour bâtir une plateforme performante et intuitive."
+      },
+      "cta": {
+        "title": "Prêt à nous rejoindre ?",
+        "subtitle": "Nous cherchons toujours des talents passionnés pour agrandir l'équipe.",
+        "button": "Nous contacter"
+      }
+    },
+    "contact": {
+      "title": "Contactez-nous",
+      "subtitle": "Une question ? Un projet ? Ou simplement envie de dire bonjour ? Nous sommes à votre écoute.",
+      "info": {
+        "title": "Discutons !",
+        "subtitle": "Remplissez le formulaire et nous reviendrons vers vous rapidement.",
+        "email": "Email"
+      },
+      "form": {
+        "title": "Envoyez-nous un message",
+        "subtitle": "Choisissez le motif de votre contact pour que nous puissions vous orienter vers la bonne personne.",
+        "name": "Nom complet",
+        "email": "Email",
+        "reason": "Motif",
+        "message": "Message",
+        "placeholders": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "reason": "Sélectionnez un sujet",
+          "message": "Dites-nous en plus..."
+        },
+        "options": {
+          "general": "Question générale",
+          "partnership": "Partenariat / Restaurant",
+          "support": "Support technique",
+          "recruitment": "Recrutement / Carrières",
+          "other": "Autre"
+        },
+        "submit": "Envoyer le message",
+        "submitting": "Envoi en cours..."
+      },
+      "success": "Message envoyé ! Nous vous répondrons dans les plus brefs délais.",
+      "error": "Une erreur est survenue lors de l'envoi du message. Veuillez réessayer."
+    },
     "login": {
       "welcome_back": "Bon retour !",
       "welcome_subtitle": "Connectez-vous pour accéder à votre tableau de bord",

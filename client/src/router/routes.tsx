@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Professional";
 import { Home } from "@/pages/Home";
 import { About } from "@/pages/About";
+import { Contact } from "@/pages/Contact";
 import { Index } from "@/pages/Admin";
 import { Logs as AdminLogs } from "../pages/Admin/components/logs";
 import { Users as AdminUsers } from "../pages/Admin/components/users";
@@ -52,6 +53,14 @@ export const Router = () => {
           element={
             <>
               <About />
+            </>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <>
+              <Contact />
             </>
           }
         />

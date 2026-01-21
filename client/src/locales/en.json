@@ -506,6 +506,83 @@
         }
       }
     },
+    "about": {
+      "title": "Our Story",
+      "subtitle": "From Frustration to a Revolution",
+      "intro_1": "It all started with a simple observation: why is booking a table still so complicated, while everything else has become instant?",
+      "intro_2": "By joining forces, Axel (Vision & Business) and Téo (Tech & Product) created {{appName}} with one obsession: simplifying life.",
+      "intro_3": "Today, we are proud to help hundreds of restaurateurs focus on what they do best: cooking.",
+      "stats": {
+        "title": "Our Impact",
+        "subtitle": "Numbers that make you hungry",
+        "partners": "Partner Restaurants",
+        "users": "Active Users",
+        "bookings": "Bookings / month",
+        "cities": "Cities"
+      },
+      "values": {
+        "title": "Our Values",
+        "subtitle": "What guides us every day.",
+        "passion": {
+          "title": "Passion",
+          "description": "We are driven by the love of gastronomy and the desire to support restaurateurs."
+        },
+        "innovation": {
+          "title": "Innovation",
+          "description": "We push the boundaries of technology to simplify every step of the culinary experience."
+        },
+        "quality": {
+          "title": "Quality",
+          "description": "We are committed to providing excellent service, reliable and transparent for everyone."
+        }
+      },
+      "team": {
+        "title": "The Team",
+        "subtitle": "The Founders",
+        "description": "Two complementary profiles united by the same ambition.",
+        "axel_bio": "Student at IMT Nord Europe on work-study at the Nord department as a Data Engineer. Axel brings his technical and strategic vision to the project.",
+        "teo_bio": "Freelance fullstack developer based in Grenoble, Téo brings his technical expertise to build a high-performance and intuitive platform."
+      },
+      "cta": {
+        "title": "Ready to join us?",
+        "subtitle": "We are always looking for passionate talent to grow the team.",
+        "button": "Contact us"
+      }
+    },
+    "contact": {
+      "title": "Contact Us",
+      "subtitle": "A question? A project? Or just want to say hello? We're listening.",
+      "info": {
+        "title": "Let's Chat!",
+        "subtitle": "Fill out the form and we'll get back to you shortly.",
+        "email": "Email"
+      },
+      "form": {
+        "title": "Send us a message",
+        "subtitle": "Choose the reason for your contact so we can direct you to the right person.",
+        "name": "Full Name",
+        "email": "Email",
+        "reason": "Reason",
+        "message": "Message",
+        "placeholders": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "reason": "Select a subject",
+          "message": "Tell us more..."
+        },
+        "options": {
+          "general": "General Question",
+          "partnership": "Partnership / Restaurant",
+          "support": "Technical Support",
+          "recruitment": "Recruitment / Careers",
+          "other": "Other"
+        },
+        "submit": "Send Message",
+        "submitting": "Sending..."
+      },
+      "success": "Message sent! We will reply as soon as possible.",
+      "error": "An error occurred while sending the message. Please try again."
+    },
     "login": {
       "welcome_back": "Welcome back!",
       "welcome_subtitle": "Sign in to access your dashboard",

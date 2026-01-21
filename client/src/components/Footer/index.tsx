@@ -19,8 +19,8 @@ export const Footer = () => {
     company: {
       title: t("pages.landing.footer.company"),
       links: [
-        { label: t("pages.landing.footer.about"), href: "#" },
-        { label: t("pages.landing.footer.contact"), href: "#" },
+        { label: t("pages.landing.footer.about"), href: "/about" },
+        { label: t("pages.landing.footer.contact"), href: "/contact" },
       ],
     },
     legal: {
@@ -53,9 +53,15 @@ export const Footer = () => {
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {link.label}
-                    </a>
+                    {link.href.startsWith("/") ? (
+                      <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a href={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
