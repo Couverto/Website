@@ -139,7 +139,7 @@ export const Navbar = () => {
             <span
               className={cn("text-xl font-bold tracking-tight transition-opacity", scrolled ? "opacity-100" : "opacity-0 md:opacity-100")}
             >
-              {configValues["APP_NAME"] || "Couverto"}
+              {configValues["APP_NAME"]}
             </span>
           </Link>
 
@@ -242,7 +242,7 @@ export const Navbar = () => {
         )}
       >
         <div className="flex justify-between items-center mb-8">
-          <span className="text-lg font-bold">{configValues["APP_NAME"] || "Couverto"}</span>
+          <span className="text-lg font-bold">{configValues["APP_NAME"]}</span>
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
             <X className="h-6 w-6" />
           </Button>

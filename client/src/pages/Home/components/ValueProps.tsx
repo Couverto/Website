@@ -39,7 +39,7 @@ const FeatureCard = ({ title, description, icon, className, delay = 0 }: Feature
 export const ValueProps = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"] || "Couverto";
+  const appName = configValues["APP_NAME"];
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden">

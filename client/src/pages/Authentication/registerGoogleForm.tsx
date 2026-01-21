@@ -95,12 +95,10 @@ export const RegisterGoogleForm = () => {
               <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                 <span className="text-2xl font-bold">C</span>
               </div>
-              <span className="text-3xl font-bold">{configValues["APP_NAME"] || "Couverto"}</span>
+              <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4">
-              {t("pages.register_google.hero_title", { appName: configValues["APP_NAME"] || "Couverto" })}
-            </h2>
+            <h2 className="text-3xl font-bold mb-4">{t("pages.register_google.hero_title", { appName: configValues["APP_NAME"] })}</h2>
 
             <p className="text-white/80 text-lg mb-8">{t("pages.register_google.hero_subtitle")}</p>
 
@@ -148,7 +146,7 @@ export const RegisterGoogleForm = () => {
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold">C</span>
             </div>
-            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"] || "Couverto"}</span>
+            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
           </Link>
 
           {/* Mobile user preview */}

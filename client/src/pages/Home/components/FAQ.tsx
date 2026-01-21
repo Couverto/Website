@@ -6,7 +6,7 @@ import { HelpCircle } from "lucide-react";
 export const FAQ = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"] || "Couverto";
+  const appName = configValues["APP_NAME"];
 
   const faqs = [
     {

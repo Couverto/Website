@@ -6,7 +6,7 @@ import { useConfigContext } from "@/contexts/configContext";
 export const DownloadApp = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"] || "Couverto";
+  const appName = configValues["APP_NAME"];
 
   return (
     <section className="py-24 bg-primary text-primary-foreground overflow-hidden relative">

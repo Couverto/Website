@@ -7,7 +7,7 @@ import { useConfigContext } from "@/contexts/configContext";
 export const Testimonials = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"] || "Couverto";
+  const appName = configValues["APP_NAME"];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const testimonials = [

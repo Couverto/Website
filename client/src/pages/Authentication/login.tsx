@@ -80,14 +80,12 @@ export const Login = () => {
               <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                 <span className="text-2xl font-bold">C</span>
               </div>
-              <span className="text-3xl font-bold">{configValues["APP_NAME"] || "Couverto"}</span>
+              <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
             </Link>
 
             <h2 className="text-3xl font-bold mb-4">{t("pages.login.hero_title")}</h2>
 
-            <p className="text-white/80 text-lg mb-8">
-              {t("pages.login.hero_subtitle", { appName: configValues["APP_NAME"] || "Couverto" })}
-            </p>
+            <p className="text-white/80 text-lg mb-8">{t("pages.login.hero_subtitle", { appName: configValues["APP_NAME"] })}</p>
 
             <div className="space-y-4">
               {benefits.map((benefit, index) => (
@@ -102,9 +100,7 @@ export const Login = () => {
 
             {/* Testimonial */}
             <div className="mt-12 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-              <p className="text-white/90 italic mb-4">
-                "{t("pages.login.testimonial_text", { appName: configValues["APP_NAME"] || "Couverto" })}"
-              </p>
+              <p className="text-white/90 italic mb-4">"{t("pages.login.testimonial_text", { appName: configValues["APP_NAME"] })}"</p>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-accent/30 flex items-center justify-center">
                   <span className="font-bold">MR</span>
@@ -127,7 +123,7 @@ export const Login = () => {
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold">C</span>
             </div>
-            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"] || "Couverto"}</span>
+            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
           </Link>
 
           <div className="text-center mb-8">

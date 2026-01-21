@@ -5,7 +5,7 @@ import { useConfigContext } from "@/contexts/configContext";
 export const Footer = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"] || "Couverto";
+  const appName = configValues["APP_NAME"];
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {

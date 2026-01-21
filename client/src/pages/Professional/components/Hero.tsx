@@ -7,7 +7,7 @@ import { useConfigContext } from "@/contexts/configContext";
 export const Hero = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"] || "Couverto";
+  const appName = configValues["APP_NAME"];
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
