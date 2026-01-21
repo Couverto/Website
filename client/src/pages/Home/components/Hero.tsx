@@ -30,16 +30,20 @@ export const Hero = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with overlay */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px] dark:bg-background/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
+        {/* Lighter global overlay */}
+        <div className="absolute inset-0 bg-black/30" />
+        {/* Radial gradient centered on text for local contrast */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,0,0,0.5)_0%,_rgba(0,0,0,0)_70%)]" />
+        {/* Bottom gradient fade */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
       </div>
 
       <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-10 pt-32 animate-in fade-in zoom-in duration-700">
         <div className="space-y-4 max-w-4xl">
-          <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-foreground drop-shadow-md">
+          <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg">
             {t("pages.home.hero.title")}
           </h1>
-          <p className="mx-auto max-w-[700px] text-lg sm:text-xl md:text-2xl text-foreground/80 font-medium drop-shadow-sm">
+          <p className="mx-auto max-w-[700px] text-lg sm:text-xl md:text-2xl text-white/95 font-medium drop-shadow-md">
             {t("pages.home.hero.subtitle")}
           </p>
         </div>
