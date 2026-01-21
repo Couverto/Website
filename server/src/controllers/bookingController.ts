@@ -44,6 +44,52 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       }
     }
 
+    // Check for auto-confirmation based on capacity
+    // Default status is PENDING
+    // logic: if capacity is set (>0) and (current bookings count + new guests) <= capacity, then CONFIRMED
+
+    if (restaurantExists.capacity && restaurantExists.capacity > 0) {
+      const bookingTime = new Date(bookingDate).getTime();
+      // Assume 2 hours meal duration for overlap check
+      // Check bookings that overlap with [bookingTime, bookingTime + 2h]
+      // Valid overlap: existing.start < new.end && existing.end > new.start
+      // For simplicity, we check bookings within +/- 2 hours range
+
+      const twoHours = 2 * 60 * 60 * 1000;
+      const startTime = new Date(bookingTime - twoHours);
+      const endTime = new Date(bookingTime + twoHours);
+
+      const existingBookings = await Booking.find({
+        restaurant: restaurant,
+        bookingDate: { $gte: startTime, $lte: endTime },
+        status: { $in: [bookingStatus.CONFIRMED, bookingStatus.PENDING] },
+      });
+
+      // Filter deeper if needed for precise overlap, but 2h window query is a decent approximation
+      // Let's do precise overlap check if we consider fixed 2h slots logic implicit
+      // New booking interval: [T, T+2h]
+      // Existing booking interval: [Tb, Tb+2h]
+      // Overlap if: Tb < T+2h && Tb+2h > T
+
+      const newStart = bookingTime;
+      const newEnd = bookingTime + twoHours;
+
+      let currentHeadCount = 0;
+
+      for (const booking of existingBookings) {
+        const bStart = new Date(booking.bookingDate).getTime();
+        const bEnd = bStart + twoHours;
+
+        if (bStart < newEnd && bEnd > newStart) {
+          currentHeadCount += booking.guests;
+        }
+      }
+
+      if (currentHeadCount + Number(guests) <= restaurantExists.capacity) {
+        bookingData.status = bookingStatus.CONFIRMED;
+      }
+    }
+
     const newBooking = await Booking.create(bookingData);
 
     // Emit real-time event to restaurant room
@@ -94,7 +140,7 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
     const search = req.query.search as string;
 
     // Build query
-    const query: any = { user: userId, status: { $ne: bookingStatus.HIDDEN } };
+    const query: any = { user: userId };
 
     // Filter by status if provided
     if (status && Object.values(bookingStatus).includes(status as bookingStatus)) {
@@ -234,31 +280,6 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
 };
 
 /**
- * @function hideBooking
- * @description Hides a booking from the user's list (soft hide).
- */
-export const hideBooking = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId;
-
-    const booking = await Booking.findOne({ _id: id, user: userId });
-
-    if (!booking) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
-      return;
-    }
-
-    booking.status = bookingStatus.HIDDEN;
-    await booking.save();
-
-    res.status(200).json({ message: "server.bookings.messages.hidden" });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/**
  * @function createManualBooking
  * @description Allows admin/restaurant staff to create a manual booking.
  */
@@ -312,9 +333,6 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
     // Filter by status
     if (status && Object.values(bookingStatus).includes(status as bookingStatus)) {
       query.status = status;
-    } else {
-      // Exclude hidden bookings by default
-      query.status = { $ne: bookingStatus.HIDDEN };
     }
 
     // Filter by date range

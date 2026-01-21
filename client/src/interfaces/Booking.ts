@@ -1,6 +1,6 @@
 import { RestaurantInterface } from "./Restaurant";
 
-export type BookingStatus = "DRAFT" | "PENDING" | "CONFIRMED" | "CANCELLED" | "HIDDEN";
+export type BookingStatus = "DRAFT" | "PENDING" | "CONFIRMED" | "CANCELLED";
 
 export interface BookingCustomer {
   name: string;

@@ -5,7 +5,6 @@ import {
   getBookingById,
   updateBooking,
   cancelBooking,
-  hideBooking,
   createManualBooking,
   getRestaurantBookings,
   getRestaurantClients,
@@ -51,13 +50,6 @@ bookingRouter.put("/:id", verifyToken(), updateBooking);
  * @access Private
  */
 bookingRouter.patch("/:id/cancel", verifyToken(), cancelBooking);
-
-/**
- * @route PATCH /api/bookings/:id/hide
- * @desc Hide a booking from user profile
- * @access Private
- */
-bookingRouter.patch("/:id/hide", verifyToken(), hideBooking);
 
 /**
  * @route POST /api/bookings/manual

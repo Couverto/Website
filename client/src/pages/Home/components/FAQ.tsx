@@ -2,11 +2,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 import { HelpCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const FAQ = () => {
   const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
+  const navigate = useNavigate();
 
   const faqs = [
     {
@@ -40,9 +42,16 @@ export const FAQ = () => {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pages.home.faq.title")}</h2>
             <p className="text-muted-foreground text-lg leading-relaxed">{t("pages.home.faq.subtitle", { appName })}</p>
             <div className="p-6 bg-background rounded-2xl border shadow-sm">
-              <p className="font-semibold mb-2">Vous ne trouvez pas votre réponse ?</p>
-              <p className="text-sm text-muted-foreground mb-4">Notre équipe de support est là pour vous aider 24/7.</p>
-              <button className="text-primary font-bold text-sm hover:underline">Contacter le support &rarr;</button>
+              <p className="font-semibold mb-2">{t("pages.home.faq.cant_find_answer")}</p>
+              <p className="text-sm text-muted-foreground mb-4">{t("pages.home.faq.support_team")}</p>
+              <button
+                onClick={() => {
+                  navigate("/contact");
+                }}
+                className="text-primary font-bold text-sm hover:underline"
+              >
+                {t("pages.home.faq.contact_support")} &rarr;
+              </button>
             </div>
           </div>
 

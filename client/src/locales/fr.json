@@ -245,7 +245,10 @@
         "q3": "Dois-je créer un compte ?",
         "a3": "Non, vous pouvez réserver en tant qu'invité. Cependant, créer un compte vous permet de gérer vos réservations plus facilement.",
         "q4": "Comment savoir si ma réservation est confirmée ?",
-        "a4": "Vous recevez une confirmation immédiate par email et SMS dès que vous validez votre réservation."
+        "a4": "Vous recevez une confirmation immédiate par email et SMS dès que vous validez votre réservation.",
+        "cant_find_answer": "Vous ne trouvez pas votre réponse ?",
+        "support_team": "Notre équipe de support est là pour vous aider 24/7.",
+        "contact_support": "Contacter le support"
       },
       "how_it_works": {
         "title": "Comment ça marche",

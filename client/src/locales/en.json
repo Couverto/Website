@@ -249,7 +249,10 @@
         "q3": "Do I need to create an account?",
         "a3": "No, you can book as a guest. However, creating an account allows you to manage your bookings more easily.",
         "q4": "How do I know if my booking is confirmed?",
-        "a4": "You receive an immediate confirmation by email and SMS as soon as you validate your booking."
+        "a4": "You receive an immediate confirmation by email and SMS as soon as you validate your booking.",
+        "cant_find_answer": "Can't find your answer?",
+        "support_team": "Our support team is here to help you 24/7.",
+        "contact_support": "Contact support"
       },
       "how_it_works": {
         "title": "How it works",

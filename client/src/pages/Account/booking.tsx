@@ -13,7 +13,7 @@ import { useEffect, useState, useCallback } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { BookingInterface, BookingsResponse, BookingStatus } from "@/interfaces/Booking";
-import { Calendar as CalendarIcon, Clock, Users, MapPin, Search, X, Pencil, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Users, MapPin, Search, X, Pencil, Loader2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -23,20 +23,19 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
   CONFIRMED: "bg-green-100 text-green-800",
   CANCELLED: "bg-red-100 text-red-800",
-  HIDDEN: "bg-gray-100 text-gray-800",
 };
 
 interface BookingCardProps {
   booking: BookingInterface;
   onCancel: () => void;
-  onHide: () => void;
+
   onEdit: () => void;
   t: (key: string, options?: any) => string;
   locale: any;
   isPast: boolean;
 }
 
-const BookingCard = ({ booking, onCancel, onHide, onEdit, t, locale, isPast }: BookingCardProps) => {
+const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCardProps) => {
   const restaurant = booking.restaurant;
   const bookingDate = new Date(booking.bookingDate);
 
@@ -105,10 +104,6 @@ const BookingCard = ({ booking, onCancel, onHide, onEdit, t, locale, isPast }: B
                   </Button>
                 </>
               )}
-              <Button variant="ghost" size="sm" onClick={onHide}>
-                <EyeOff className="w-4 h-4 mr-1" />
-                {t("pages.account.bookings_page.hide_booking")}
-              </Button>
             </div>
           </div>
         </div>
@@ -155,7 +150,7 @@ export const AccountBooking = () => {
   // Dialogs
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [hideDialogOpen, setHideDialogOpen] = useState(false);
+
   const [selectedBooking, setSelectedBooking] = useState<BookingInterface | null>(null);
 
   // Edit form state
@@ -234,27 +229,6 @@ export const AccountBooking = () => {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleHideBooking = async () => {
-    if (!selectedBooking) return;
-    setActionLoading(true);
-    try {
-      await axiosConfig.patch(`/bookings/${selectedBooking._id}/hide`);
-      toast.success(t("server.bookings.messages.hidden"));
-      setHideDialogOpen(false);
-      setSelectedBooking(null);
-      fetchBookings(0, false);
-    } catch (error: any) {
-      toast.error(t(error.response?.data?.error || "server.global.errors.not_found"));
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const openHideDialog = (booking: BookingInterface) => {
-    setSelectedBooking(booking);
-    setHideDialogOpen(true);
   };
 
   const handleEditBooking = async () => {
@@ -358,7 +332,6 @@ export const AccountBooking = () => {
                   key={booking._id}
                   booking={booking}
                   onCancel={() => openCancelDialog(booking)}
-                  onHide={() => openHideDialog(booking)}
                   onEdit={() => openEditDialog(booking)}
                   t={t}
                   locale={locale}
@@ -394,28 +367,6 @@ export const AccountBooking = () => {
             <Button variant="destructive" onClick={handleCancelBooking} disabled={actionLoading}>
               {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t("pages.account.bookings_page.cancel_booking")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Hide Dialog */}
-      <Dialog open={hideDialogOpen} onOpenChange={setHideDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("pages.account.bookings_page.hide_confirm_title")}</DialogTitle>
-            <DialogDescription className="space-y-2">
-              <p>{t("pages.account.bookings_page.hide_confirm_description")}</p>
-              <p className="text-amber-600 font-medium">{t("pages.account.bookings_page.hide_confirm_warning")}</p>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setHideDialogOpen(false)}>
-              {t("global.buttons.cancel")}
-            </Button>
-            <Button variant="secondary" onClick={handleHideBooking} disabled={actionLoading}>
-              {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {t("pages.account.bookings_page.hide_booking")}
             </Button>
           </DialogFooter>
         </DialogContent>
