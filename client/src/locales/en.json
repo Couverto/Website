@@ -495,6 +495,7 @@
         "hide_confirm_description": "This action will hide the booking from your history.",
         "hide_confirm_warning": "⚠️ The booking will still exist in our system, but you will never be able to see it again from your account.",
         "cannot_modify_past": "Cannot modify a past booking",
+        "restaurant_deleted": "Restaurant deleted",
         "status": {
           "DRAFT": "Draft",
           "PENDING": "Pending",

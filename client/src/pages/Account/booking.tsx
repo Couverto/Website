@@ -40,6 +40,14 @@ const BookingCard = ({ booking, onCancel, onHide, onEdit, t, locale, isPast }: B
   const restaurant = booking.restaurant;
   const bookingDate = new Date(booking.bookingDate);
 
+  if (!restaurant) {
+    return (
+      <Card className="overflow-hidden p-6 text-center text-muted-foreground">
+        <div>{t("pages.account.bookings_page.restaurant_deleted")}</div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="flex flex-col md:flex-row">

@@ -38,6 +38,7 @@
     "country-flag-icons": "^1.5.19",
     "date-fns": "^4.1.0",
     "firebase": "^11.8.1",
+    "framer-motion": "^12.27.5",
     "i18next": "25.2.1",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "0.511.0",

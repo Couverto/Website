@@ -52,7 +52,17 @@ export const PublicRestaurant = () => {
     const fetchRestaurant = async () => {
       try {
         const response = await api.get(`/restaurants/public/${id}`);
-        setRestaurant(response.data.restaurant);
+        const data = response.data.restaurant;
+        setRestaurant(data);
+
+        if (data.coverImage) {
+          await new Promise((resolve) => {
+            const img = new Image();
+            img.src = data.coverImage!; // Non-null assertion safe due to check
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }
       } catch (err: any) {
         setError(t("server.global.errors.not_found"));
       } finally {

@@ -27,14 +27,14 @@ export const Hero = () => {
   };
 
   return (
-    <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with overlay */}
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px] dark:bg-background/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+        <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px] dark:bg-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 to-transparent" />
       </div>
 
-      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-10 animate-in fade-in zoom-in duration-700">
+      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-10 pt-32 animate-in fade-in zoom-in duration-700">
         <div className="space-y-4 max-w-4xl">
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-foreground drop-shadow-md">
             {t("pages.home.hero.title")}
@@ -107,6 +107,27 @@ export const Hero = () => {
             No Booking Fees
           </div>
         </div>
+      </div>
+
+      {/* Scroll Down Indicator */}
+      <div
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce cursor-pointer"
+        onClick={() => window.scrollTo({ top: window.innerHeight, behavior: "smooth" })}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-8 w-8 text-muted-foreground/50 hover:text-primary transition-colors"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </div>
     </section>
   );

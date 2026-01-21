@@ -1,9 +1,9 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ThemeChanger } from "./themeChanger";
 import { LanguageChanger } from "./languageChanger";
 import { useTranslation } from "react-i18next";
 import { Separator } from "../ui/separator";
-import { House, LogOut, Menu, User, Wrench, X, Utensils } from "lucide-react";
+import { House, LogOut, Menu, User, Wrench, X, Utensils, ChefHat, Calendar, LayoutDashboard, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -15,7 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useLogout } from "@/hooks/useLogout";
@@ -24,14 +23,26 @@ import { useConfigContext } from "../../contexts/configContext";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
-  const { logout, loading } = useLogout();
+  const { logout } = useLogout();
   const { authUser } = useAuthContext();
   const { configValues } = useConfigContext();
 
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node) && isOpen) {
@@ -42,205 +53,288 @@ export const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const closeDialogAndNavigate = (link: string) => {
-    setIsOpen(false);
-    navigate(link);
-  };
-
   const navLinks = [
     {
-      label: "Dashboard", // Key for translation if needed, or static
-      translationKey: "navbar.dashboard",
-      path: "/admin/dashboard",
-      icon: Wrench,
-      auth: true,
-      role: "admin",
+      label: "Home",
+      translationKey: "navbar.home",
+      path: "/",
+      icon: House,
+      auth: false, // Visible to everyone or irrelevant
+      hideIfAuth: false,
+    },
+    {
+      label: "Restaurants",
+      translationKey: "navbar.restaurants",
+      path: "/restaurants",
+      icon: Utensils,
+      auth: false,
+      hideIfAuth: false,
+    },
+    {
+      label: "Are you Pro?",
+      translationKey: "pages.home.navbar.are_you_pro",
+      path: "/pro",
+      icon: ChefHat,
+      auth: false,
+      hideIfAuth: true, // Hide if logged in (assuming logged in might be pro)
+    },
+  ];
+
+  const userLinks = [
+    {
+      label: "My Bookings",
+      translationKey: "pages.account_menu.bookings",
+      path: "/account/bookings",
+      icon: Calendar,
+      role: "user",
     },
     {
       label: "My Restaurants",
       translationKey: "pages.account_menu.restaurants",
       path: "/account/restaurants",
-      icon: Utensils,
-      auth: true,
+      icon: ChefHat,
+      role: "user", // Also accessible to users who want to be pros
     },
     {
-      label: "My Bookings", // Using bookings key
-      translationKey: "pages.account_menu.bookings",
-      path: "/account/bookings",
-      icon: Menu,
-      auth: true,
-    },
-    {
-      label: "My Account",
-      translationKey: "navbar.account",
-      path: "/account",
-      icon: User,
-      auth: true,
+      label: "Dashboard",
+      translationKey: "navbar.dashboard",
+      path: "/admin/dashboard",
+      icon: Wrench,
+      role: "admin",
     },
   ];
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center px-4 md:px-6">
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 pointer-events-none">
+        <nav
+          className={cn(
+            "pointer-events-auto w-full max-w-7xl rounded-full border transition-all duration-300 ease-in-out px-4 md:px-6 h-16 flex items-center justify-between",
+            "bg-background backdrop-blur-md border-border/40 shadow-sm", // Default state (always visible/glassy)
+            scrolled || isOpen ? "bg-background shadow-lg border-border" : "",
+          )}
+        >
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 font-semibold mr-6">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-semibold group"
+            onClick={(e) => {
+              if (location.pathname === "/") {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+          >
+            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground shadow-lg group-hover:scale-110 transition-transform duration-300">
               <Utensils className="h-5 w-5" />
             </div>
-            <span className="text-xl font-bold tracking-tight">{configValues["APP_NAME"] || "Couverto"}</span>
+            <span
+              className={cn("text-xl font-bold tracking-tight transition-opacity", scrolled ? "opacity-100" : "opacity-0 md:opacity-100")}
+            >
+              {configValues["APP_NAME"] || "Couverto"}
+            </span>
           </Link>
-          <div className="ml-auto flex items-center gap-4">
-            {/* Pro Link (Desktop) */}
 
-            {/* Restaurants Link */}
-            <Link to="/restaurants" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden md:block">
-              {t("navbar.restaurants")}
-            </Link>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2">
+            {navLinks.map((link) => {
+              if (link.hideIfAuth && authUser) return null;
+              const isActive = location.pathname === link.path;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    "relative text-sm font-medium transition-all duration-200 px-4 py-2 rounded-full",
+                    isActive
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                >
+                  {t(link.translationKey)}
+                </Link>
+              );
+            })}
+          </div>
 
-            {/* Pro Link (Desktop) */}
-            <Link to="/pro" className="text-sm font-medium text-muted-foreground hover:text-foreground hidden md:block">
-              {t("pages.home.navbar.are_you_pro")}
-            </Link>
-
-            <Separator orientation="vertical" className="h-6 hidden md:block" />
-
+          {/* Right Section */}
+          <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-2">
               <LanguageChanger />
               <ThemeChanger />
+              <Separator orientation="vertical" className="h-6 mx-2" />
             </div>
-
-            <Separator orientation="vertical" className="h-6 hidden md:block" />
-
-            {/* Auth Buttons / User Menu */}
-            <div className="flex items-center gap-2">
-              {authUser ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild className="hover:cursor-pointer">
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <AvatarWithStatusCell user={authUser} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{authUser.username}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{authUser.email}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                      {navLinks
-                        .filter((link) => !link.role || link.role === authUser.role)
-                        .map((link) => (
-                          <DropdownMenuItem key={link.path} className="cursor-pointer" onClick={() => navigate(link.path)}>
-                            <link.icon className="mr-2 h-4 w-4" />
-                            <span>{t(link.translationKey)}</span>
-                          </DropdownMenuItem>
-                        ))}
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer" onClick={() => logout()}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>{t("navbar.logout")}</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <div className="hidden md:flex items-center gap-2">
-                  <Button variant="ghost" asChild className="hover:bg-primary/10 hover:text-primary">
-                    <Link to="/login">{t("auth.login.title")}</Link>
-                  </Button>
-                  <Button asChild>
-                    <Link to="/register">{t("auth.register.title")}</Link>
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile Menu Trigger */}
-            <div className="md:hidden flex items-center">
-              <Menu onClick={() => setIsOpen(!isOpen)} className="cursor-pointer h-6 w-6" />
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Sidebar */}
-        <div
-          ref={menuRef}
-          className={cn(
-            "fixed top-0 right-0 w-3/4 sm:w-1/2 h-screen overflow-y-auto bg-background border-l shadow-2xl transition-transform duration-300 ease-in-out z-50 p-6 md:hidden",
-            isOpen ? "translate-x-0" : "translate-x-full invisible",
-          )}
-        >
-          <div className="flex justify-end mb-8">
-            <X onClick={() => setIsOpen(false)} className="cursor-pointer h-6 w-6" />
-          </div>
-
-          <div className="flex flex-col gap-6">
-            <Link to="/" onClick={() => setIsOpen(false)} className="text-lg font-medium">
-              {t("navbar.restaurants")}
-            </Link>
-            <Link to="/pro" onClick={() => setIsOpen(false)} className="text-lg font-medium">
-              {t("pages.home.navbar.are_you_pro")}
-            </Link>
-
-            <Separator />
 
             {authUser ? (
-              <div className="flex flex-col gap-4">
-                <div className="text-sm font-medium text-muted-foreground mb-2">{authUser.username}</div>
-                {navLinks
-                  .filter((link) => !link.role || link.role === authUser.role)
-                  .map((link) => (
-                    <Link key={link.path} to={link.path} onClick={() => setIsOpen(false)} className="flex items-center gap-2 text-lg">
-                      <link.icon className="h-5 w-5" />
-                      {t(link.translationKey)}
-                    </Link>
-                  ))}
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    logout();
-                    setIsOpen(false);
-                  }}
-                  className="justify-start px-0 text-lg text-destructive hover:text-destructive"
-                >
-                  <LogOut className="mr-2 h-5 w-5" />
-                  {t("navbar.logout")}
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild className="cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-all hover:scale-105"
+                  >
+                    <AvatarWithStatusCell user={authUser} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{authUser.username}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{authUser.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => navigate("/account")} className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>{t("navbar.account")}</span>
+                    </DropdownMenuItem>
+                    {userLinks
+                      .filter((link) => !link.role || (link.role === "admin" ? authUser.role === "admin" : true))
+                      .map((link) => (
+                        <DropdownMenuItem key={link.path} className="cursor-pointer" onClick={() => navigate(link.path)}>
+                          <link.icon className="mr-2 h-4 w-4" />
+                          <span>{t(link.translationKey)}</span>
+                        </DropdownMenuItem>
+                      ))}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={() => logout()}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>{t("navbar.logout")}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <div className="flex flex-col gap-4">
-                <Button asChild className="w-full">
-                  <Link to="/login" onClick={() => setIsOpen(false)}>
-                    {t("auth.login.title")}
-                  </Link>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" asChild className="hidden md:flex rounded-full hover:bg-primary/5">
+                  <Link to="/login">{t("auth.login.title")}</Link>
                 </Button>
-                <Button variant="outline" asChild className="w-full">
-                  <Link to="/register" onClick={() => setIsOpen(false)}>
-                    {t("auth.register.title")}
-                  </Link>
+                <Button asChild className="rounded-full shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
+                  <Link to="/register">{t("auth.register.title")}</Link>
                 </Button>
               </div>
             )}
 
-            <Separator />
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{t("navbar.language")}</span>
-              <LanguageChanger />
+            {/* Mobile Menu Trigger */}
+            <div className="md:hidden">
+              <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="rounded-full">
+                <Menu className="h-6 w-6" />
+              </Button>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Theme</span>
+          </div>
+        </nav>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div
+        ref={menuRef}
+        className={cn(
+          "fixed top-0 right-0 w-[80%] max-w-sm h-[100dvh] overflow-y-auto bg-background/95 backdrop-blur-xl border-l shadow-2xl transition-transform duration-500 cubic-bezier(0.32, 0.72, 0, 1) z-[60] p-6 md:hidden",
+          isOpen ? "translate-x-0" : "translate-x-full",
+        )}
+      >
+        <div className="flex justify-between items-center mb-8">
+          <span className="text-lg font-bold">{configValues["APP_NAME"] || "Couverto"}</span>
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
+            <X className="h-6 w-6" />
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          {navLinks.map((link) => {
+            if (link.hideIfAuth && authUser) return null;
+            return (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 text-lg font-medium p-2 rounded-xl hover:bg-muted transition-colors"
+              >
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <link.icon className="h-5 w-5" />
+                </div>
+                {t(link.translationKey)}
+              </Link>
+            );
+          })}
+
+          <Separator />
+
+          {authUser ? (
+            <div className="flex flex-col gap-2">
+              <div className="text-sm font-medium text-muted-foreground px-2 mb-2">{t("navbar.account")}</div>
+
+              <Link
+                to="/account"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 text-lg font-medium p-2 rounded-xl hover:bg-muted transition-colors"
+              >
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <User className="h-5 w-5" />
+                </div>
+                {t("navbar.account")}
+              </Link>
+
+              {userLinks
+                .filter((link) => !link.role || (link.role === "admin" ? authUser.role === "admin" : true))
+                .map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-4 text-lg font-medium p-2 rounded-xl hover:bg-muted transition-colors"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <link.icon className="h-5 w-5" />
+                    </div>
+                    {t(link.translationKey)}
+                  </Link>
+                ))}
+
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  logout();
+                  setIsOpen(false);
+                }}
+                className="justify-start px-2 mt-4 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                {t("navbar.logout")}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 mt-4">
+              <Button asChild className="w-full rounded-full h-12 text-base">
+                <Link to="/login" onClick={() => setIsOpen(false)}>
+                  {t("auth.login.title")}
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="w-full rounded-full h-12 text-base">
+                <Link to="/register" onClick={() => setIsOpen(false)}>
+                  {t("auth.register.title")}
+                </Link>
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-auto pt-8 flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">Preferences</span>
+            <div className="flex gap-2">
               <ThemeChanger />
+              <LanguageChanger />
             </div>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* Overlay */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsOpen(false)} />}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] md:hidden animate-in fade-in duration-300"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
     </>
   );
 };

@@ -481,6 +481,7 @@
         "hide_confirm_description": "Cette action masquera la réservation de votre historique.",
         "hide_confirm_warning": "⚠️ La réservation existera toujours dans notre système, mais vous ne pourrez plus jamais la voir depuis votre compte.",
         "cannot_modify_past": "Impossible de modifier une réservation passée",
+        "restaurant_deleted": "Restaurant supprimé",
         "status": {
           "DRAFT": "Brouillon",
           "PENDING": "En attente",
