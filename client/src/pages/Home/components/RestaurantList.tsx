@@ -15,6 +15,8 @@ interface RestaurantListProps {
     city?: string;
     priceRange?: string;
     cuisineType?: string;
+    date?: string;
+    guests?: string;
   };
 }
 

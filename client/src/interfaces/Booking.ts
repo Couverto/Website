@@ -10,7 +10,7 @@ export interface BookingCustomer {
 
 export interface BookingInterface {
   _id: string;
-  restaurant: Pick<RestaurantInterface, "_id" | "name" | "slug" | "coverImage" | "city">;
+  restaurant: Pick<RestaurantInterface, "_id" | "name" | "slug" | "coverImage" | "city" | "adress" | "phone" | "website" | "openingHours">;
   status: BookingStatus;
   bookingDate: string;
   guests: number;

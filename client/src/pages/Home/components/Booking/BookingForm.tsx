@@ -6,14 +6,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2, CalendarIcon } from "lucide-react";
+import { format, startOfDay } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/authContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DatePicker, { registerLocale } from "react-datepicker";
+
+// Register locales
+registerLocale("fr", fr);
+registerLocale("en-US", enUS);
 
 interface BookingFormProps {
   restaurant: RestaurantInterface;
@@ -21,15 +28,19 @@ interface BookingFormProps {
 }
 
 export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { authUser: user } = useAuthContext();
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [closedDays, setClosedDays] = useState<number[]>([]); // 0 = Sunday, 6 = Saturday
 
   const form = useForm<CreateBookingSchema>({
     resolver: zodResolver(createBookingSchema),
+    mode: "onChange",
     defaultValues: {
-      bookingDate: new Date(),
+      // bookingDate is handled by useEffect to check for closed days
       guests: 2,
-      time: "19:00",
+      time: "",
       customer: {
         name: "",
         email: "",
@@ -45,6 +56,65 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
       form.setValue("customer.phone", user.phone || "");
     }
   }, [user, form]);
+
+  // Determine closed days from restaurant opening hours
+  useEffect(() => {
+    // If no opening hours configured, allow all days (don't block any)
+    if (!restaurant.openingHours || Object.keys(restaurant.openingHours).length === 0) {
+      setClosedDays([]);
+      return;
+    }
+
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const closed: number[] = [];
+    days.forEach((day, index) => {
+      const dayInfo = restaurant.openingHours[day];
+      if (!dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0) {
+        closed.push(index);
+      }
+    });
+    setClosedDays(closed);
+  }, [restaurant.openingHours]);
+
+  // Set initial date to today if it's open, otherwise leave empty
+  useEffect(() => {
+    if (closedDays.length === 0) return;
+    const today = new Date();
+    const todayDayOfWeek = today.getDay();
+
+    // If today is open, use today
+    if (!closedDays.includes(todayDayOfWeek)) {
+      form.setValue("bookingDate", today);
+    } else {
+      // If today is closed, do not pre-fill date (user must select)
+      form.resetField("bookingDate");
+    }
+  }, [closedDays, form]);
+
+  // Fetch available slots when date changes
+  const bookingDate = form.watch("bookingDate");
+  useEffect(() => {
+    const fetchSlots = async () => {
+      if (!bookingDate) return;
+      setLoadingSlots(true);
+      try {
+        const response = await axiosConfig.get(`/restaurants/public/${restaurant._id}/slots`, {
+          params: { date: format(bookingDate, "yyyy-MM-dd") },
+        });
+        setTimeSlots(response.data.slots || []);
+        // Set first slot as default if available
+        if (response.data.slots?.length > 0) {
+          form.setValue("time", response.data.slots[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch slots:", error);
+        setTimeSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+    fetchSlots();
+  }, [bookingDate, restaurant._id, form]);
 
   const onSubmit = async (values: CreateBookingSchema) => {
     try {
@@ -81,24 +151,40 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4">
           <FormField
             control={form.control}
             name="bookingDate"
+            rules={{
+              validate: (date) => {
+                if (!date) return true;
+                const day = new Date(date).getDay();
+                if (closedDays.includes(day)) {
+                  return t("components.booking.form.errors.closed_day");
+                }
+                return true;
+              },
+            }}
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>{t("components.booking.form.date")}</FormLabel>
-                <FormControl>
-                  <Input
-                    type="date"
-                    min={format(new Date(), "yyyy-MM-dd")}
-                    value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                    onChange={(e) => {
-                      const date = e.target.value ? new Date(e.target.value) : undefined;
-                      field.onChange(date);
-                    }}
+                <div className="relative">
+                  <DatePicker
+                    selected={field.value}
+                    onChange={(date: Date | null) => field.onChange(date)}
+                    locale={i18n.language === "fr" ? "fr" : "en-US"}
+                    dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+                    minDate={new Date()}
+                    filterDate={(date) => !closedDays.includes(date.getDay())}
+                    placeholderText={t("components.booking.form.select_date")}
+                    className={cn(
+                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                      !field.value && "text-muted-foreground",
+                    )}
+                    wrapperClassName="w-full"
                   />
-                </FormControl>
+                  <CalendarIcon className="pointer-events-none absolute right-3 top-3 h-4 w-4 opacity-50" />
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -110,9 +196,22 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t("components.booking.form.time")}</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} value={field.value} disabled={loadingSlots || timeSlots.length === 0}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={loadingSlots ? t("components.booking.form.loading_slots") : t("components.booking.form.select_time")}
+                      />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -193,7 +292,11 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting || !form.formState.isValid || (bookingDate && closedDays.includes(bookingDate.getDay()))}
+        >
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {t("components.booking.form.submit")}
         </Button>

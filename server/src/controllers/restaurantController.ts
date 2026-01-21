@@ -222,9 +222,11 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
   const city = (req.query.city as string) || "";
   const priceRange = (req.query.priceRange as string) || "";
   const cuisineType = (req.query.cuisineType as string) || "";
+  const date = (req.query.date as string) || "";
+  const guests = parseInt(req.query.guests as string) || 0;
 
   try {
-    const query: any = {};
+    const query: any = { isClosed: false }; // Only show open restaurants by default
 
     if (search) {
       query.name = { $regex: search, $options: "i" };
@@ -237,6 +239,23 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
     }
     if (cuisineType) {
       query.cuisineType = { $regex: cuisineType, $options: "i" };
+    }
+    if (guests > 0) {
+      query.capacity = { $gte: guests };
+    }
+    if (date) {
+      const queryDate = new Date(date);
+      if (!isNaN(queryDate.getTime())) {
+        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const dayName = dayNames[queryDate.getDay()];
+
+        // Ensure the restaurant is open on this specific day
+        // 1. The day entry must not be marked as closed
+        // 2. The day entry must have at least one opening period
+        // Note: We use dynamic key access matching Mongoose Map structure
+        query[`openingHours.${dayName}.isClosed`] = { $ne: true };
+        query[`openingHours.${dayName}.periods.0`] = { $exists: true };
+      }
     }
 
     const restaurants = await Restaurant.find(query)
@@ -258,6 +277,75 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
     });
 
     res.status(200).json({ restaurants: restaurantsWithStatus, count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function getRestaurantSlots
+ * @description Retrieves available time slots for a restaurant on a specific date.
+ */
+export const getRestaurantSlots = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { date } = req.query;
+
+  if (!date) {
+    res.status(400).json({ error: "Date parameter is required" });
+    return;
+  }
+
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    const queryDate = new Date(date as string);
+    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dayName = dayNames[queryDate.getDay()];
+
+    // Check if openingHours exists and is not empty
+    if (
+      !restaurant.openingHours ||
+      (restaurant.openingHours instanceof Map ? restaurant.openingHours.size === 0 : Object.keys(restaurant.openingHours).length === 0)
+    ) {
+      res.status(200).json({ slots: [] });
+      return;
+    }
+
+    // Access the day schedule (handle Mongoose Map)
+    const daySchedule: any =
+      restaurant.openingHours instanceof Map ? restaurant.openingHours.get(dayName) : (restaurant.openingHours as any)[dayName];
+
+    if (!daySchedule || daySchedule.isClosed || !daySchedule.periods || daySchedule.periods.length === 0) {
+      res.status(200).json({ slots: [] });
+      return;
+    }
+
+    const allSlots = Array.from({ length: 48 }, (_, i) => {
+      const hour = Math.floor(i / 2);
+      const minute = (i % 2) * 30;
+      return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+    });
+
+    const slots = allSlots.filter((slot) => {
+      const [slotHour, slotMinute] = slot.split(":").map(Number);
+      const slotTime = slotHour * 60 + slotMinute;
+
+      return daySchedule.periods.some((period: any) => {
+        const [openHour, openMinute] = period.open.split(":").map(Number);
+        const [closeHour, closeMinute] = period.close.split(":").map(Number);
+
+        const openTime = openHour * 60 + openMinute;
+        const closeTime = closeHour * 60 + closeMinute;
+
+        return slotTime >= openTime && slotTime <= closeTime;
+      });
+    });
+
+    res.status(200).json({ slots });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

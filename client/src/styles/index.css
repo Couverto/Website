@@ -1,5 +1,30 @@
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
 @plugin 'tailwindcss-animate';
+
+/* React Datepicker Overrides */
+/* React Datepicker Overrides */
+@layer components {
+  .react-datepicker-wrapper {
+    width: 100%;
+  }
+  .react-datepicker__input-container input {
+    width: 100%;
+    height: 2.5rem; /* h-10 */
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background-color: var(--background);
+    padding-left: 0.75rem; /* px-3 */
+    padding-right: 0.75rem; /* px-3 */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+    color: var(--foreground);
+  }
+  .react-datepicker__input-container input:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
 
 @custom-variant dark (&:is(.dark *));
 

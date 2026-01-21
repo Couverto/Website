@@ -5,16 +5,34 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
+import DatePicker, { registerLocale } from "react-datepicker";
+
+// Register locales
+registerLocale("fr", fr);
+registerLocale("en-US", enUS);
 import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { BookingInterface, BookingsResponse, BookingStatus } from "@/interfaces/Booking";
-import { Calendar as CalendarIcon, Clock, Users, MapPin, Search, X, Pencil, Loader2, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  Users,
+  MapPin,
+  Search,
+  X,
+  Pencil,
+  Loader2,
+  RefreshCw,
+  Phone,
+  Globe,
+  Navigation,
+  MoreHorizontal,
+} from "lucide-react";
+import { format, startOfDay } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -47,65 +65,132 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
     );
   }
 
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.adress}, ${restaurant.city}`)}`;
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="flex flex-col md:flex-row">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 group">
+      <div className="flex flex-col md:flex-row h-full relative">
         {/* Restaurant Image */}
-        <div className="relative h-48 md:h-auto md:w-48 shrink-0">
+        <div className="relative h-48 md:h-auto md:w-64 shrink-0 overflow-hidden">
           <img
             src={restaurant.coverImage || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop"}
             alt={restaurant.name}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <Badge className={cn("absolute top-2 right-2", STATUS_COLORS[booking.status])}>
+        </div>
+        <div className="absolute top-3 left-3 z-20">
+          <Badge className={cn("shadow-sm", STATUS_COLORS[booking.status])}>
             {t(`pages.account.bookings_page.status.${booking.status}`)}
           </Badge>
         </div>
 
         {/* Booking Details */}
-        <div className="flex-1 p-4">
-          <div className="flex flex-col h-full">
-            <div className="flex-1">
-              <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
-              <div className="flex items-center text-muted-foreground text-sm mb-3">
-                <MapPin className="w-4 h-4 mr-1" />
-                <span>{restaurant.city}</span>
+        <div className="flex-1 flex flex-col p-5 space-y-4">
+          {/* Header & Main Info */}
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
+              <div>
+                <h3 className="font-bold text-xl mb-1">{restaurant.name}</h3>
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-muted-foreground text-sm hover:text-primary transition-colors"
+                >
+                  <MapPin className="w-4 h-4 mr-1.5 shrink-0" />
+                  <span className="truncate">
+                    {restaurant.adress}, {restaurant.city}
+                  </span>
+                </a>
               </div>
-
-              <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                  <span>{format(bookingDate, "PPP", { locale })}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span>{format(bookingDate, "HH:mm", { locale })}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span>{t("pages.account.bookings_page.guests", { count: booking.guests })}</span>
-                </div>
+              {/* Quick Actions (Desktop mainly, available on mobile too) */}
+              <div className="flex flex-wrap gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                        <Navigation className="w-4 h-4 mr-2" />
+                        {t("pages.account.bookings_page.actions.itinerary")}
+                      </a>
+                    </DropdownMenuItem>
+                    {restaurant.website && (
+                      <DropdownMenuItem asChild>
+                        <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                          <Globe className="w-4 h-4 mr-2" />
+                          {t("pages.account.bookings_page.actions.website")}
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+                    {restaurant.phone && (
+                      <DropdownMenuItem asChild>
+                        <a href={`tel:${restaurant.phone}`} className="cursor-pointer">
+                          <Phone className="w-4 h-4 mr-2" />
+                          {t("pages.account.bookings_page.actions.call")}
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-
-              {booking.notes && <p className="text-sm text-muted-foreground italic mb-4">"{booking.notes}"</p>}
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2 pt-2 border-t">
-              {!isPast && booking.status !== "CANCELLED" && (
-                <>
-                  <Button variant="outline" size="sm" onClick={onEdit}>
-                    <Pencil className="w-4 h-4 mr-1" />
-                    {t("pages.account.bookings_page.update_booking")}
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={onCancel}>
-                    <X className="w-4 h-4 mr-1" />
-                    {t("pages.account.bookings_page.cancel_booking")}
-                  </Button>
-                </>
-              )}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-muted/40 rounded-xl border mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-background rounded-lg shadow-sm border">
+                  <CalendarIcon className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">{t("components.booking.form.date")}</p>
+                  <p className="text-sm font-semibold">{format(bookingDate, "PPP", { locale })}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-background rounded-lg shadow-sm border">
+                  <Clock className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">{t("components.booking.form.time")}</p>
+                  <p className="text-sm font-semibold">{format(bookingDate, "HH:mm", { locale })}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-background rounded-lg shadow-sm border">
+                  <Users className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium">{t("components.booking.form.guests")}</p>
+                  <p className="text-sm font-semibold">{t("pages.account.bookings_page.guests", { count: booking.guests })}</p>
+                </div>
+              </div>
             </div>
+
+            {booking.notes && (
+              <div className="bg-amber-50 border-amber-100 border text-amber-900 px-4 py-3 rounded-lg text-sm mb-2">
+                <span className="font-semibold block mb-0.5">{t("components.booking.form.notes")}:</span>"{booking.notes}"
+              </div>
+            )}
           </div>
+
+          {/* Footer Actions */}
+          {!isPast && booking.status !== "CANCELLED" && (
+            <div className="pt-4 border-t flex justify-end gap-3">
+              <Button variant="outline" size="sm" onClick={onEdit}>
+                <Pencil className="w-4 h-4 mr-2" />
+                {t("pages.account.bookings_page.update_booking")}
+              </Button>
+              <Button variant="destructive" size="sm" onClick={onCancel}>
+                <X className="w-4 h-4 mr-2" />
+                {t("pages.account.bookings_page.cancel_booking")}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -241,6 +326,22 @@ export const AccountBooking = () => {
       const bookingDate = new Date(editDate);
       bookingDate.setHours(hours, minutes);
 
+      // Final validation before sending
+      if (
+        selectedBooking &&
+        (selectedBooking.restaurant as any)?.openingHours &&
+        (() => {
+          const h = (selectedBooking.restaurant as any).openingHours;
+          const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+          const dayName = dayNames[bookingDate.getDay()];
+          const dayInfo = h[dayName];
+          return !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
+        })()
+      ) {
+        toast.error(t("components.booking.form.errors.closed_day"));
+        return;
+      }
+
       await axiosConfig.put(`/bookings/${selectedBooking._id}`, {
         bookingDate: bookingDate.toISOString(),
         guests: editGuests,
@@ -275,11 +376,38 @@ export const AccountBooking = () => {
     return new Date(booking.bookingDate) < new Date();
   };
 
-  const timeSlots = Array.from({ length: 28 }, (_, i) => {
-    const hour = Math.floor(i / 2) + 11;
-    const minute = (i % 2) * 30;
-    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-  });
+  /* Time slots management */
+  const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
+  const fetchSlots = useCallback(
+    async (date: Date, restaurantId: string) => {
+      setLoadingSlots(true);
+      try {
+        const formattedDate = format(date, "yyyy-MM-dd");
+        const { data } = await axiosConfig.get(`/restaurants/public/${restaurantId}/slots?date=${formattedDate}`);
+        setTimeSlots(data.slots || []);
+
+        // If current editTime is not in new slots, clear it (unless it's empty)
+        if (editTime && !data.slots.includes(editTime)) {
+          setEditTime("");
+        }
+      } catch (error) {
+        console.error("Error fetching slots:", error);
+        setTimeSlots([]);
+      } finally {
+        setLoadingSlots(false);
+      }
+    },
+    [editTime],
+  );
+
+  // Fetch slots when editDate changes
+  useEffect(() => {
+    if (editDate && selectedBooking?.restaurant?._id && editDialogOpen) {
+      fetchSlots(editDate, selectedBooking.restaurant._id);
+    }
+  }, [editDate, selectedBooking, editDialogOpen, fetchSlots]);
 
   return (
     <>
@@ -382,25 +510,49 @@ export const AccountBooking = () => {
             {/* Date picker */}
             <div className="space-y-2">
               <Label>{t("components.booking.form.date")}</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editDate ? format(editDate, "PPP", { locale }) : t("components.booking.form.pick_date")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={editDate} onSelect={setEditDate} disabled={(date) => date < new Date()} initialFocus />
-                </PopoverContent>
-              </Popover>
+              <div className="relative">
+                <DatePicker
+                  preventOpenOnFocus
+                  selected={editDate}
+                  onChange={(date: Date | null) => setEditDate(date || undefined)}
+                  locale={i18n.language === "fr" ? "fr" : "en-US"}
+                  dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+                  minDate={new Date()}
+                  filterDate={(date) => {
+                    if (!selectedBooking?.restaurant) return true;
+                    const h = (selectedBooking.restaurant as any).openingHours;
+                    if (!h) return true; // Default open if no hours? Or closed? Assuming open if missing for now or handle as per logic
+                    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                    const dayName = dayNames[date.getDay()];
+                    const dayInfo = h[dayName];
+                    const isClosed = !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
+                    return !isClosed;
+                  }}
+                  placeholderText={t("components.booking.form.select_date")}
+                  className={cn(
+                    "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                    !editDate && "text-muted-foreground",
+                  )}
+                  wrapperClassName="w-full"
+                />
+                <CalendarIcon className="pointer-events-none absolute right-3 top-3 h-4 w-4 opacity-50" />
+              </div>
             </div>
 
             {/* Time picker */}
             <div className="space-y-2">
               <Label>{t("components.booking.form.time")}</Label>
-              <Select value={editTime} onValueChange={setEditTime}>
+              <Select value={editTime} onValueChange={setEditTime} disabled={loadingSlots || timeSlots.length === 0}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue
+                    placeholder={
+                      loadingSlots
+                        ? t("common.loading")
+                        : timeSlots.length === 0
+                          ? t("components.booking.form.errors.closed_today")
+                          : undefined
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {timeSlots.map((slot) => (
@@ -410,6 +562,9 @@ export const AccountBooking = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {timeSlots.length === 0 && editDate && (
+                <p className="text-sm text-destructive">{t("components.booking.form.errors.no_slots")}</p>
+              )}
             </div>
 
             {/* Guests */}
@@ -433,7 +588,23 @@ export const AccountBooking = () => {
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               {t("global.buttons.cancel")}
             </Button>
-            <Button onClick={handleEditBooking} disabled={actionLoading || !editDate}>
+            <Button
+              onClick={handleEditBooking}
+              disabled={
+                actionLoading ||
+                !editDate ||
+                !editTime ||
+                (editDate &&
+                  selectedBooking &&
+                  (() => {
+                    const h = (selectedBooking.restaurant as any)?.openingHours;
+                    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                    const dayName = dayNames[editDate.getDay()];
+                    const dayInfo = h?.[dayName];
+                    return !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
+                  })())
+              }
+            >
               {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t("global.buttons.update")}
             </Button>

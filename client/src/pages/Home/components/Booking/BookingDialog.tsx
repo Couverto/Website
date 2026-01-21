@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 import { BookingForm } from "./BookingForm";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { useTranslation } from "react-i18next";
@@ -29,7 +30,7 @@ export const BookingDialog = ({ open, onOpenChange, restaurant }: BookingDialogP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {success
@@ -56,7 +57,10 @@ export const BookingDialog = ({ open, onOpenChange, restaurant }: BookingDialogP
               </svg>
             </div>
             <p className="text-center text-muted-foreground">{t("components.booking.dialog.success_message")}</p>
-            <button onClick={handleClose} className="text-primary hover:underline">
+            <Link to="/account/bookings" className="text-primary font-medium hover:underline" onClick={handleClose}>
+              {t("components.booking.dialog.view_bookings")}
+            </Link>
+            <button onClick={handleClose} className="text-muted-foreground text-sm hover:underline">
               {t("components.booking.dialog.close")}
             </button>
           </div>

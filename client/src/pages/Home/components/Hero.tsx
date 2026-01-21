@@ -1,22 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Calendar, Users } from "lucide-react";
+import { Search, MapPin, Calendar as CalendarIcon, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { fr, enUS } from "date-fns/locale";
+
+// Register locales
+registerLocale("fr", fr);
+registerLocale("en-US", enUS);
 
 export const Hero = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [location, setLocation] = useState("");
+  const [date, setDate] = useState<Date | undefined>(new Date());
+
+  const [guests, setGuests] = useState("2");
 
   const handleSearch = () => {
-    // Navigate to restaurants page with the city filter
+    // Navigate to restaurants page with filters
     const params = new URLSearchParams();
-    if (location) {
-      params.append("city", location);
-    }
+    if (location) params.append("city", location);
+    // Format date as YYYY-MM-DD for consistency
+    if (date) params.append("date", date.toISOString().split("T")[0]);
+    if (guests) params.append("guests", guests);
+
     navigate(`/restaurants?${params.toString()}`);
   };
 
@@ -48,7 +59,7 @@ export const Hero = () => {
           </p>
         </div>
 
-        <div className="w-full max-w-5xl bg-background/95 backdrop-blur-md rounded-2xl shadow-2xl border p-4 flex flex-col lg:flex-row gap-4 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+        <div className="w-full max-w-5xl bg-background/95 backdrop-blur-md rounded-2xl shadow-2xl border p-4 flex flex-col lg:flex-row gap-4 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative z-50">
           <div className="flex-1 relative group">
             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             <Input
@@ -63,17 +74,24 @@ export const Hero = () => {
           <div className="w-[1px] bg-border hidden lg:block" />
 
           <div className="flex-1 relative group">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            <Input
-              type="date"
-              className="pl-12 h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent"
+            <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors z-10" />
+            <DatePicker
+              selected={date}
+              onChange={(date: Date | null) => setDate(date || undefined)}
+              locale={i18n.language === "fr" ? "fr" : "en-US"}
+              dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+              minDate={new Date()}
+              placeholderText={t("pages.home.hero.date_placeholder")}
+              className="pl-12 h-14 w-full text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent rounded-md outline-none focus:outline-none placeholder:text-muted-foreground"
+              wrapperClassName="w-full"
+              popperClassName="!z-[100]"
             />
           </div>
 
           <div className="w-[1px] bg-border hidden lg:block" />
 
           <div className="w-full lg:w-[220px]">
-            <Select defaultValue="2">
+            <Select value={guests} onValueChange={setGuests}>
               <SelectTrigger className="w-full h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus:ring-0">
                 <div className="flex items-center">
                   <Users className="mr-3 h-5 w-5 text-muted-foreground" />

@@ -185,7 +185,8 @@
       },
       "hero": {
         "title": "Réservez une table simplement.",
-        "subtitle": "Découvrez les meilleurs restaurants autour de vous en quelques clics."
+        "subtitle": "Découvrez les meilleurs restaurants autour de vous en quelques clics.",
+        "date_placeholder": "Date"
       },
       "search": {
         "location_placeholder": "Où ? (Ville, code postal)",
@@ -486,6 +487,11 @@
         "hide_confirm_warning": "⚠️ La réservation existera toujours dans notre système, mais vous ne pourrez plus jamais la voir depuis votre compte.",
         "cannot_modify_past": "Impossible de modifier une réservation passée",
         "restaurant_deleted": "Restaurant supprimé",
+        "actions": {
+          "itinerary": "Y aller",
+          "call": "Appeler",
+          "website": "Site web"
+        },
         "status": {
           "DRAFT": "Brouillon",
           "PENDING": "En attente",
@@ -1094,8 +1100,15 @@
           "name_required": "Le nom est requis.",
           "email_invalid": "Adresse email invalide.",
           "missing_fields": "Veuillez remplir tous les champs obligatoires.",
-          "phone_required": "Le numéro de téléphone est requis."
-        }
+          "phone_required": "Le numéro de téléphone est requis.",
+          "closed_today": "Fermé ce jour",
+          "closed_day": "Le restaurant est fermé ce jour-là",
+          "no_slots": "Aucun créneau disponible pour cette date"
+        },
+        "submitting": "Réservation en cours...",
+        "loading_slots": "Chargement des créneaux...",
+        "select_time": "Sélectionner une heure",
+        "select_date": "Choisir une date"
       },
       "dialog": {
         "title": "Réserver une table chez {{restaurantName}}",
@@ -1220,7 +1233,8 @@
     "bookings": {
       "errors": {
         "cannot_update_cancelled": "Impossible de modifier une réservation annulée",
-        "cannot_update_past": "Impossible de modifier une réservation passée"
+        "cannot_update_past": "Impossible de modifier une réservation passée",
+        "closed": "Le restaurant est fermé à cette heure"
       },
       "messages": {
         "created": "Réservation créée avec succès",

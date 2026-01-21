@@ -6,6 +6,29 @@ import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { getIO } from "../sockets/socket.js";
+import { getDay } from "date-fns";
+
+// Validate that the booking date falls within the restaurant's opening hours
+function validateBookingTime(restaurant: any, bookingDate: string): boolean {
+  const date = new Date(bookingDate);
+  const dayIndex = getDay(date); // 0 (Sunday) - 6 (Saturday)
+  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const dayName = days[dayIndex];
+  const dayInfo = restaurant.openingHours?.get ? restaurant.openingHours.get(dayName) : restaurant.openingHours?.[dayName];
+  if (!dayInfo) return false;
+  if (dayInfo.isClosed) return false;
+  const timeMinutes = date.getHours() * 60 + date.getMinutes();
+  for (const period of dayInfo.periods) {
+    const [openH, openM] = period.open.split(":").map(Number);
+    const [closeH, closeM] = period.close.split(":").map(Number);
+    const openMinutes = openH * 60 + openM;
+    const closeMinutes = closeH * 60 + closeM;
+    if (timeMinutes >= openMinutes && timeMinutes <= closeMinutes) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * @function createBooking
@@ -21,6 +44,13 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     const restaurantExists = await Restaurant.findById(restaurant);
     if (!restaurantExists) {
       res.status(404).json({ error: "server.global.errors.not_found" });
+      return;
+    }
+
+    // Validate opening hours
+    const isValidTime = validateBookingTime(restaurantExists, bookingDate);
+    if (!isValidTime) {
+      res.status(400).json({ error: "server.bookings.errors.closed" });
       return;
     }
 
@@ -148,7 +178,9 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
     }
 
     // Get bookings with population
-    let bookingsQuery = Booking.find(query).populate("restaurant", "name slug address city coverImage").sort({ bookingDate: -1 });
+    let bookingsQuery = Booking.find(query)
+      .populate("restaurant", "name slug adress city coverImage phone website openingHours")
+      .sort({ bookingDate: -1 });
 
     // If search is provided, we need to filter after population
     let bookings = await bookingsQuery;

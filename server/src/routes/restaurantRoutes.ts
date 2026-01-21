@@ -14,6 +14,7 @@ import {
   updateRestaurantSettings,
   getPublicRestaurantById,
   toggleRestaurantClosed,
+  getRestaurantSlots,
 } from "../controllers/restaurantController.js";
 import {
   createInvitation,
@@ -31,6 +32,7 @@ export const restaurantRouter = express.Router();
 // Public routes
 restaurantRouter.get("/public", getPublicRestaurants);
 restaurantRouter.get("/public/:id", getPublicRestaurantById);
+restaurantRouter.get("/public/:id/slots", getRestaurantSlots);
 
 // User routes (authenticated)
 restaurantRouter.get("/my", verifyToken(), getMyRestaurants);

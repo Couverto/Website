@@ -16,6 +16,8 @@ export const PublicRestaurants = () => {
     city: searchParams.get("city") || "",
     priceRange: searchParams.get("priceRange") || "",
     cuisineType: searchParams.get("cuisineType") || "",
+    date: searchParams.get("date") || "",
+    guests: searchParams.get("guests") || "",
   });
 
   // Debounce logic for inputs could be added, but user asked for "execute also if you type".
@@ -28,6 +30,8 @@ export const PublicRestaurants = () => {
     if (filters.city) params.set("city", filters.city);
     if (filters.priceRange) params.set("priceRange", filters.priceRange);
     if (filters.cuisineType) params.set("cuisineType", filters.cuisineType);
+    if (filters.date) params.set("date", filters.date);
+    if (filters.guests) params.set("guests", filters.guests);
 
     // Replace URL without reloading
     setSearchParams(params, { replace: true });
@@ -59,6 +63,8 @@ export const PublicRestaurants = () => {
       city: "",
       priceRange: "",
       cuisineType: "",
+      date: "",
+      guests: "",
     });
   };
 

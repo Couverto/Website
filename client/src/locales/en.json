@@ -186,6 +186,7 @@
       "hero": {
         "title": "Book a table simply.",
         "subtitle": "Discover the best restaurants around you in just a few clicks.",
+        "date_placeholder": "Date",
         "badges": {
           "instant": "Instant Confirmation",
           "fees": "No Booking Fees"
@@ -500,6 +501,11 @@
         "hide_confirm_warning": "⚠️ The booking will still exist in our system, but you will never be able to see it again from your account.",
         "cannot_modify_past": "Cannot modify a past booking",
         "restaurant_deleted": "Restaurant deleted",
+        "actions": {
+          "itinerary": "Get directions",
+          "call": "Call",
+          "website": "Website"
+        },
         "status": {
           "DRAFT": "Draft",
           "PENDING": "Pending",
@@ -1103,8 +1109,15 @@
           "name_required": "Name is required.",
           "email_invalid": "Invalid email address.",
           "missing_fields": "Please fill in all required fields.",
-          "phone_required": "Phone number is required."
-        }
+          "phone_required": "Phone number is required.",
+          "closed_today": "Closed today",
+          "closed_day": "Restaurant is closed on this day",
+          "no_slots": "No slots available for this date"
+        },
+        "submitting": "Booking...",
+        "loading_slots": "Loading slots...",
+        "select_time": "Select a time",
+        "select_date": "Pick a date"
       },
       "dialog": {
         "title": "Book a table at {{restaurantName}}",
@@ -1229,7 +1242,8 @@
     "bookings": {
       "errors": {
         "cannot_update_cancelled": "Cannot update a cancelled booking",
-        "cannot_update_past": "Cannot update a past booking"
+        "cannot_update_past": "Cannot update a past booking",
+        "closed": "Restaurant is closed at this time"
       },
       "messages": {
         "created": "Booking created successfully",
