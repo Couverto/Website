@@ -56,7 +56,7 @@ export const About = () => {
       bio: t("pages.about.team.teo_bio"),
       links: {
         linkedin: "https://www.linkedin.com/in/teo-villet",
-        website: "https://teovillet.fr",
+        // website: "https://teovillet.fr",
         github: "https://github.com/teovlt",
       },
     },

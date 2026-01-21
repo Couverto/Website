@@ -180,7 +180,7 @@
     "home": {
       "welcome_message": "Bienvenue sur {{appName}}",
       "navbar": {
-        "are_you_pro": "Vous êtes restaurateur ?",
+        "are_you_pro": "Espace Pro",
         "my_account": "Mon compte"
       },
       "hero": {

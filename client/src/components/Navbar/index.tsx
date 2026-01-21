@@ -79,7 +79,7 @@ export const Navbar = () => {
       hideIfAuth: false,
     },
     {
-      label: "Are you Pro?",
+      label: "Pro Area",
       translationKey: "pages.home.navbar.are_you_pro",
       path: "/pro",
       icon: ChefHat,

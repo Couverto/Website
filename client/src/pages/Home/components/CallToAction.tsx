@@ -25,7 +25,7 @@ export const CallToAction = () => {
             <p className="mx-auto max-w-[600px] text-background/60 text-xl font-medium leading-relaxed">{t("pages.home.cta.subtitle")}</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row justify-center gap-6 w-full max-w-md mx-auto">
             <Button
               size="lg"
               className="h-14 px-8 text-lg font-bold rounded-full shadow-lg hover:scale-105 transition-transform bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
