@@ -14,7 +14,11 @@ export interface BookingInterface {
   status: BookingStatus;
   bookingDate: string;
   guests: number;
-  customer: BookingCustomer;
+  customer: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
   notes?: string;
   createdAt: string;
   updatedAt: string;

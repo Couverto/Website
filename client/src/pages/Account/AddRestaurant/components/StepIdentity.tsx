@@ -8,12 +8,7 @@ import { X, Search, Check, ChevronDown, Plus } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-
-interface StepProps {
-  data: WizardData;
-  updateData: (data: Partial<WizardData>) => void;
-  errors?: Record<string, string>;
-}
+import { StepProps } from "@/interfaces/Components";
 
 const CUISINES = [
   "Française",

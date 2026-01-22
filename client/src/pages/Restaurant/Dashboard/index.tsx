@@ -12,39 +12,17 @@ import { useSocketContext } from "@/contexts/socketContext";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { RestaurantInterface } from "@/interfaces/Restaurant";
-
-interface Stats {
-  today: { bookings: number; guests: number };
-  week: { bookings: number };
-  month: { bookings: number };
-  totalClients: number;
-}
-
-interface Booking {
-  _id: string;
-  bookingDate: string;
-  guests: number;
-  status: string;
-  customer: {
-    name: string;
-    phone: string;
-    email?: string;
-  };
-}
-
-interface RestaurantContext {
-  restaurant: RestaurantInterface;
-}
+import { RestaurantInterface, RestaurantStats } from "@/interfaces/Restaurant";
+import { BookingInterface } from "@/interfaces/Booking";
+import { RestaurantContext } from "@/interfaces/Components";
 
 export const RestaurantDashboard = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const context = useOutletContext<RestaurantContext>();
   const { socket } = useSocketContext();
-
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
+  const [stats, setStats] = useState<RestaurantStats | null>(null);
+  const [upcomingBookings, setUpcomingBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [newBookingIds, setNewBookingIds] = useState<Set<string>>(new Set());
 
@@ -72,7 +50,7 @@ export const RestaurantDashboard = () => {
     if (socket && id) {
       socket.emit("joinRestaurant", id);
 
-      const handleNewBooking = (newBooking: Booking) => {
+      const handleNewBooking = (newBooking: BookingInterface) => {
         // Play sound
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
         const playPromise = audio.play();
@@ -114,7 +92,7 @@ export const RestaurantDashboard = () => {
   const updateStatus = async (bookingId: string, newStatus: string) => {
     try {
       await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus });
-      setUpcomingBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus } : b)));
+      setUpcomingBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus as any } : b)));
 
       // Remove "new" indicator if action taken
       if (newBookingIds.has(bookingId)) {

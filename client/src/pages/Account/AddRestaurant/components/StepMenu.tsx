@@ -5,12 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
-interface StepProps {
-  data: WizardData;
-  updateData: (data: Partial<WizardData>) => void;
-  errors?: Record<string, string>;
-}
+import { StepProps } from "@/interfaces/Components";
 
 export const StepMenu = ({ data, updateData, errors }: StepProps) => {
   const { t } = useTranslation();

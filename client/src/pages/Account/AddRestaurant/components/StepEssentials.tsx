@@ -3,12 +3,7 @@ import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
 import { useTranslation } from "react-i18next";
 import { MapPin, Phone, Mail, Store } from "lucide-react";
-
-interface StepProps {
-  data: WizardData;
-  updateData: (data: Partial<WizardData>) => void;
-  errors?: Record<string, string>;
-}
+import { StepProps } from "@/interfaces/Components";
 
 export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
   const { t } = useTranslation();

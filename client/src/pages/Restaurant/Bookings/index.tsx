@@ -14,26 +14,13 @@ import { fr } from "date-fns/locale";
 import { Search, MoreHorizontal, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSocketContext } from "@/contexts/socketContext";
-
-interface Booking {
-  _id: string;
-  bookingDate: string;
-  guests: number;
-  status: string;
-  customer: {
-    name: string;
-    phone: string;
-    email?: string;
-  };
-  notes?: string;
-  createdAt: string;
-}
+import { BookingInterface, BookingStatus } from "@/interfaces/Booking";
 
 export const RestaurantBookings = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const { socket } = useSocketContext(); // access socket
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -70,7 +57,7 @@ export const RestaurantBookings = () => {
     if (socket && id) {
       socket.emit("joinRestaurant", id);
 
-      const handleNewBooking = (newBooking: Booking) => {
+      const handleNewBooking = (newBooking: BookingInterface) => {
         // Play sound
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
         const playPromise = audio.play();
@@ -122,7 +109,7 @@ export const RestaurantBookings = () => {
   const updateStatus = async (bookingId: string, newStatus: string) => {
     try {
       await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus });
-      setBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus } : b)));
+      setBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus as BookingStatus } : b)));
 
       // Remove "new" indicator if action taken
       if (newBookingIds.has(bookingId)) {

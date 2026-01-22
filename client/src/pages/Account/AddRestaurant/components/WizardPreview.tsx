@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Star, Utensils, MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { WizardData } from "../types";
-
-interface PreviewProps {
-  data: WizardData;
-}
+import { PreviewProps } from "@/interfaces/Components";
 
 export const WizardPreview = ({ data }: PreviewProps) => {
   const { t } = useTranslation();

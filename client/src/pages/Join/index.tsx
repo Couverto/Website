@@ -6,19 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle, XCircle, Users } from "lucide-react";
 import { useAuthContext } from "@/contexts/authContext";
-
-interface InvitationInfo {
-  restaurant: {
-    _id: string;
-    name: string;
-    coverImage?: string;
-    city: string;
-  };
-  createdBy: {
-    name: string;
-    forename: string;
-  };
-}
+import { InvitationInfo } from "@/interfaces/Components";
 
 export const JoinRestaurant = () => {
   const { t } = useTranslation();

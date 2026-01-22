@@ -36,3 +36,10 @@ export interface RestaurantInterface {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface RestaurantStats {
+  today: { bookings: number; guests: number };
+  week: { bookings: number };
+  month: { bookings: number };
+  totalClients: number;
+}

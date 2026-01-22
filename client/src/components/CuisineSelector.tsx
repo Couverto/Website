@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-
-interface CuisineSelectorProps {
-  value: string[];
-  onChange: (value: string[]) => void;
-  className?: string; // Additional classes for the container
-  variant?: "default" | "compact";
-}
+import { CuisineSelectorProps } from "@/interfaces/Components";
 
 export const CUISINES = [
   "Française",

@@ -9,14 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 import { BookingDialog } from "./Booking/BookingDialog";
 import { useState } from "react";
-
-interface RestaurantCardProps {
-  restaurant: RestaurantInterface;
-  filters?: {
-    date?: string;
-    guests?: string;
-  };
-}
+import { RestaurantCardProps } from "@/interfaces/Components";
 
 export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => {
   const { t } = useTranslation();

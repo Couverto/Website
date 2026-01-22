@@ -25,12 +25,7 @@ import {
   Music2,
 } from "lucide-react";
 import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
-
-interface StepProps {
-  data: WizardData;
-  updateData: (data: Partial<WizardData>) => void;
-  errors?: Record<string, string>;
-}
+import { StepProps } from "@/interfaces/Components";
 
 const FEATURES_LIST = [
   { id: "terrace", value: "terrace", icon: Umbrella },

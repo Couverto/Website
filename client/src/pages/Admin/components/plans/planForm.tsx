@@ -12,13 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plan } from "@/interfaces/Plan";
 import { useTranslation } from "react-i18next";
 import { getCreatePlanSchema, getDeletePlanSchema, getUpdatePlanSchema } from "@/lib/zod/schemas/admin/zod";
-
-interface PlanFormProps {
-  dialog: (isOpen: boolean) => void;
-  refresh: () => void;
-  action: string;
-  plan?: Plan;
-}
+import { PlanFormProps } from "@/interfaces/Components";
 
 export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
   const [loading, setLoading] = useState(false);

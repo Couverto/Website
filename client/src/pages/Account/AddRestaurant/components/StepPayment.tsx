@@ -6,12 +6,7 @@ import { CreditCard, Calendar, Lock } from "lucide-react";
 import Cards from "react-credit-cards-2";
 import "react-credit-cards-2/dist/es/styles-compiled.css";
 import { useState } from "react";
-
-interface StepProps {
-  data: WizardData;
-  updateData: (data: Partial<WizardData>) => void;
-  errors?: Record<string, string>;
-}
+import { StepProps } from "@/interfaces/Components";
 
 export const StepPayment = ({ data, updateData, errors }: StepProps) => {
   const { t } = useTranslation();

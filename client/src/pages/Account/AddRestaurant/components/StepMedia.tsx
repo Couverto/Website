@@ -6,12 +6,7 @@ import { Plus, X, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
-
-interface StepProps {
-  data: WizardData;
-  updateData: (data: Partial<WizardData>) => void;
-  errors?: Record<string, string>;
-}
+import { StepProps } from "@/interfaces/Components";
 
 export const StepMedia = ({ data, updateData, errors }: StepProps) => {
   const { t } = useTranslation();

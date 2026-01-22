@@ -12,13 +12,7 @@ import { Copy } from "lucide-react";
 import { UserInterface } from "@/interfaces/User";
 import { useTranslation } from "react-i18next";
 import { getCreateUserSchema, getDeleteUserSchema, getUpdateUserSchema } from "@/lib/zod/schemas/admin/zod";
-
-interface UserFormProps {
-  dialog: (isOpen: boolean) => void;
-  refresh: () => void;
-  action: string;
-  user?: UserInterface;
-}
+import { UserFormProps } from "@/interfaces/Components";
 
 export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
   const [loading, setLoading] = useState(false);

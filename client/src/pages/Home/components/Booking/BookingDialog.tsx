@@ -4,16 +4,7 @@ import { BookingForm } from "./BookingForm";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-
-interface BookingDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  restaurant: RestaurantInterface;
-  initialData?: {
-    date?: string;
-    guests?: string | number;
-  };
-}
+import { BookingDialogProps } from "@/interfaces/Components";
 
 export const BookingDialog = ({ open, onOpenChange, restaurant, initialData }: BookingDialogProps) => {
   const { t } = useTranslation();
