@@ -11,6 +11,7 @@ import {
   searchUsers,
 } from "../controllers/userController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { userRoles } from "../utils/enums/userRoles.js";
 
 export const userRouter: Router = express.Router();
 
@@ -24,16 +25,16 @@ userRouter.get("/search", verifyToken(), searchUsers);
 /**
  * @route GET /
  * @description Retrieves a list of all users.
- * @middleware verifyToken({ role: "admin" }) - Ensures the user has an admin role to access this route.
+ * @middleware verifyToken({ role: userRoles.ADMIN }) - Ensures the user has an admin role to access this route.
  */
-userRouter.get("/", verifyToken({ role: "admin" }), getUsers);
+userRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getUsers);
 
 /**
  * @route POST /
  * @description Creates a new user with the provided data.
- * @middleware verifyToken({ role: "admin" }) - Ensures the user has an admin role to access this route.
+ * @middleware verifyToken({ role: userRoles.ADMIN }) - Ensures the user has an admin role to access this route.
  */
-userRouter.post("/", verifyToken({ role: "admin" }), createUser);
+userRouter.post("/", verifyToken({ role: userRoles.ADMIN }), createUser);
 
 /**
  * @route PUT /:id
@@ -47,16 +48,16 @@ userRouter.put("/:id", verifyToken(), updateUser);
  * @route DELETE /:id
  * @description Deletes a user by their ID.
  * @param {string} id - The ID of the user to delete.
- * @middleware verifyToken({ role: "admin" }) - Ensures the user has an admin role to access this route.
+ * @middleware verifyToken({ role: userRoles.ADMIN }) - Ensures the user has an admin role to access this route.
  */
-userRouter.delete("/:id", verifyToken({ role: "admin" }), deleteUser);
+userRouter.delete("/:id", verifyToken({ role: userRoles.ADMIN }), deleteUser);
 
 /**
  * @route GET /utils/generatePassword
  * @description Generates a random password for the user.
- * @middleware verifyToken({ role: "admin" }) - Ensures the user has an admin role to access this route.
+ * @middleware verifyToken({ role: userRoles.ADMIN }) - Ensures the user has an admin role to access this route.
  */
-userRouter.get("/utils/generatePassword", verifyToken({ role: "admin" }), generateUserPassword);
+userRouter.get("/utils/generatePassword", verifyToken({ role: userRoles.ADMIN }), generateUserPassword);
 
 /**
  * @route PUT /:id/password
@@ -75,6 +76,6 @@ userRouter.delete("/delete/account", verifyToken(), deleteAccount);
 
 /** * @route GET /stats/authTypes
  * @description Retrieves statistics about the different authentication types used by users.
- * @middleware verifyToken("admin") - Ensures the user has an admin role to access this route.
+ * @middleware verifyToken(userRoles.ADMIN) - Ensures the user has an admin role to access this route.
  */
-userRouter.get("/stats/authTypes", verifyToken({ role: "admin" }), getAuthTypesStat);
+userRouter.get("/stats/authTypes", verifyToken({ role: userRoles.ADMIN }), getAuthTypesStat);

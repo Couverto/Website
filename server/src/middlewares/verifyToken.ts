@@ -3,6 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { User } from "../models/userModel.js";
 import { createLog } from "../controllers/logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { userRoles } from "../utils/enums/userRoles.js";
 import mongoose from "mongoose";
 
 interface TokenPayload extends JwtPayload {
@@ -10,7 +11,7 @@ interface TokenPayload extends JwtPayload {
 }
 
 interface VerifyTokenOptions {
-  role?: string;
+  role?: userRoles;
 }
 
 /**
