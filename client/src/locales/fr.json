@@ -697,7 +697,10 @@
         "app_name": "Nom de l'application",
         "app_name_description": "Saisissez le nom de votre application. Il sera affiché dans l'en-tête et à divers endroits de l'application.",
         "accent_color": "Couleur d'accentuation",
-        "accent_color_description": "Choisissez la couleur d'accentuation de votre application. Elle sera utilisée à plusieurs endroits dans l'application."
+        "accent_color_description": "Choisissez la couleur d'accentuation de votre application. Elle sera utilisée à plusieurs endroits dans l'application.",
+        "palette_title": "Palette de couleurs",
+        "palette_description": "Personnalisez l'identité visuelle de votre application. Générez une palette harmonieuse ou ajustez chaque couleur individuellement.",
+        "generate_palette": "Générer une palette"
       },
       "log_page": {
         "level": "Niveau",
@@ -1163,11 +1166,17 @@
     }
   },
   "global": {
+    "themes": {
+      "light": "Clair",
+      "dark": "Sombre"
+    },
     "buttons": {
       "cancel": "Annuler",
       "save": "Enregistrer",
       "update": "Mettre à jour",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "presets": "Préréglages",
+      "custom": "Personnalisé"
     },
     "expired_session": "Votre session a expiré, veuillez vous reconnecter."
   },

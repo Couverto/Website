@@ -711,7 +711,10 @@
         "app_name": "Application Name",
         "app_name_description": "Enter the name of your application. This will be displayed in the header and in various places throughout the application.",
         "accent_color": "Accent Color",
-        "accent_color_description": "Choose the accent color for your application. This will be used in various places throughout the application."
+        "accent_color_description": "Choose the accent color for your application. This will be used in various places throughout the application.",
+        "palette_title": "Color Palette",
+        "palette_description": "Customize your application's visual identity. Generate a harmonious palette or adjust each color individually.",
+        "generate_palette": "Generate a palette"
       },
       "log_page": {
         "level": "Level",
@@ -1172,11 +1175,17 @@
     }
   },
   "global": {
+    "themes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
     "buttons": {
       "cancel": "Cancel",
       "save": "Save",
       "update": "Update",
-      "delete": "Delete"
+      "delete": "Delete",
+      "presets": "Presets",
+      "custom": "Custom"
     },
     "expired_session": "Your session has expired, please log in again."
   },
