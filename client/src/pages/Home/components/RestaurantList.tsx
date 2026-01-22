@@ -73,69 +73,71 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
 
   return (
     <section className="py-20 bg-muted/20 w-full">
-      <div className="w-full px-4 md:px-8">
+      <div className="container mx-auto px-4 md:px-6">
         {isPreview && (
-          <Button
-            variant="ghost"
-            className="hidden md:flex group text-primary font-semibold hover:bg-primary/10"
-            onClick={() => navigate("/restaurants")}
-          >
-            {t("common.see_all", "See all restaurants")}
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          <div className="flex justify-end mb-8">
+            <Button
+              variant="ghost"
+              className="hidden md:flex group text-primary font-semibold hover:bg-primary/10"
+              onClick={() => navigate("/restaurants")}
+            >
+              {t("common.see_all", "See all restaurants")}
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
         )}
-      </div>
 
-      {loading && page === 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-[1920px] mx-auto">
-          {[...Array(isPreview ? 4 : 8)].map((_, i) => (
-            <div key={i} className="space-y-3">
-              <Skeleton className="h-64 w-full rounded-2xl" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-[1920px] mx-auto">
-          {restaurants.map((restaurant) => (
-            <RestaurantCard key={restaurant._id} restaurant={restaurant} />
-          ))}
-        </div>
-      )}
-
-      {!loading && restaurants.length === 0 && (
-        <div className="text-center py-24 text-muted-foreground text-lg">{t("pages.home.list.no_results")}</div>
-      )}
-
-      <div className="mt-12 text-center md:hidden">
-        {isPreview ? (
-          <Button variant="outline" size="lg" className="rounded-full px-8" onClick={() => navigate("/restaurants")}>
-            {t("common.see_all", "See all restaurants")}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+        {loading && page === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {[...Array(isPreview ? 4 : 8)].map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-64 w-full rounded-2xl" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
         ) : (
-          hasMore && (
-            <Button variant="outline" size="lg" onClick={loadMore} disabled={loading}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {restaurants.map((restaurant) => (
+              <RestaurantCard key={restaurant._id} restaurant={restaurant} />
+            ))}
+          </div>
+        )}
+
+        {!loading && restaurants.length === 0 && (
+          <div className="text-center py-24 text-muted-foreground text-lg">{t("pages.home.list.no_results")}</div>
+        )}
+
+        <div className="mt-12 text-center md:hidden">
+          {isPreview ? (
+            <Button variant="outline" size="lg" className="rounded-full px-8" onClick={() => navigate("/restaurants")}>
+              {t("common.see_all", "See all restaurants")}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            hasMore && (
+              <Button variant="outline" size="lg" onClick={loadMore} disabled={loading}>
+                {loading ? t("pages.home.list.loading") : t("pages.home.list.load_more")}
+              </Button>
+            )
+          )}
+        </div>
+
+        {!isPreview && hasMore && (
+          <div className="mt-16 text-center hidden md:block">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full px-12 h-12 text-base shadow-sm hover:shadow-md transition-all"
+              onClick={loadMore}
+              disabled={loading}
+            >
               {loading ? t("pages.home.list.loading") : t("pages.home.list.load_more")}
             </Button>
-          )
+          </div>
         )}
       </div>
-
-      {!isPreview && hasMore && (
-        <div className="mt-16 text-center hidden md:block">
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full px-12 h-12 text-base shadow-sm hover:shadow-md transition-all"
-            onClick={loadMore}
-            disabled={loading}
-          >
-            {loading ? t("pages.home.list.loading") : t("pages.home.list.load_more")}
-          </Button>
-        </div>
-      )}
     </section>
   );
 };
