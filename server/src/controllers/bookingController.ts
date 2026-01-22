@@ -7,6 +7,7 @@ import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { getIO } from "../sockets/socket.js";
 import { getDay } from "date-fns";
+import { getPaginationParams } from "../utils/pagination.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -164,8 +165,7 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 10;
+    const { page, size } = getPaginationParams(req);
     const status = req.query.status as string;
     const search = req.query.search as string;
 
@@ -353,8 +353,7 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
 export const getRestaurantBookings = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 20;
+    const { page, size } = getPaginationParams(req, 20);
     const status = req.query.status as string;
     const search = req.query.search as string;
     const dateFrom = req.query.dateFrom as string;
@@ -403,8 +402,7 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
 export const getRestaurantClients = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const page = parseInt(req.query.page as string) || 0;
-    const size = parseInt(req.query.size as string) || 20;
+    const { page, size } = getPaginationParams(req, 20);
     const search = req.query.search as string;
 
     const mongoose = await import("mongoose");

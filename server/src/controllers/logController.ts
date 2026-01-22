@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { Log } from "../models/logModel.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { getPaginationParams } from "../utils/pagination.js";
 
 /**
  * Retrieves logs from the database.
@@ -9,8 +10,7 @@ import { logLevels } from "../utils/enums/logLevels.js";
  * @returns {Object} JSON response with logs or error message.
  */
 export const getLogs = async (req: Request, res: Response): Promise<void> => {
-  const size = parseInt(req.query.size as string);
-  const page = parseInt(req.query.page as string);
+  const { page, size } = getPaginationParams(req);
 
   try {
     const logs = await Log.find({})

@@ -1,13 +1,20 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { LevelBadge } from "../../../../components/customs/levelBadge";
+import { IconBadge } from "../../../../components/customs/IconBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, EllipsisVertical, Trash } from "lucide-react";
+import { ArrowUpDown, Copy, EllipsisVertical, Trash, Info, AlertTriangle, XCircle, Bug } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarWithStatusCell } from "../../../../components/customs/avatarStatusCell";
 import { LogInterface } from "@/interfaces/Log";
 import { TFunction } from "i18next";
+
+const levelSettings: Record<string, { icon: any; color: string }> = {
+  info: { icon: Info, color: "text-blue-500" },
+  warn: { icon: AlertTriangle, color: "text-yellow-500" },
+  error: { icon: XCircle, color: "text-red-500" },
+  debug: { icon: Bug, color: "text-green-500" },
+};
 
 export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"translation">): ColumnDef<LogInterface>[] => [
   {
@@ -19,8 +26,9 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
       </Button>
     ),
     cell: ({ row }) => {
-      const value = row.getValue("level");
-      return <LevelBadge level={value as any} />;
+      const level = row.getValue("level") as string;
+      const { icon, color } = levelSettings[level] || { icon: null, color: "text-gray-500" };
+      return <IconBadge icon={icon} color={color} label={level} translationKey={`pages.admin.log_page.levels.${level}`} />;
     },
   },
   {

@@ -2,13 +2,18 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, EllipsisVertical, Pencil, Trash } from "lucide-react";
+import { ArrowUpDown, Copy, EllipsisVertical, Pencil, Trash, User2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarWithStatusCell } from "../../../../components/customs/avatarStatusCell";
 import { UserInterface } from "@/interfaces/User";
 import { Badge } from "@/components/ui/badge";
 import { TFunction } from "i18next";
-import { UserRoleBadge } from "@/components/customs/userRoleBadge";
+import { IconBadge } from "@/components/customs/IconBadge";
+
+const roleSettings: Record<string, { icon: any; color: string }> = {
+  admin: { icon: ShieldCheck, color: "text-purple-500" },
+  user: { icon: User2, color: "text-blue-500" },
+};
 
 export const getColumns = (callback: (action: string, data: any) => void, t: TFunction<"translation">): ColumnDef<UserInterface>[] => [
   {
@@ -38,8 +43,9 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
       </Button>
     ),
     cell: ({ row }) => {
-      const value = row.getValue("role");
-      return <UserRoleBadge role={value as any} />;
+      const role = row.getValue("role") as string;
+      const { icon, color } = roleSettings[role] || { icon: null, color: "text-gray-500" };
+      return <IconBadge icon={icon} color={color} label={role} translationKey={`pages.admin.users_page.roles.${role}`} />;
     },
   },
   {

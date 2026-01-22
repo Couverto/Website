@@ -4,14 +4,14 @@ import { User } from "../models/userModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { userRoles } from "../utils/enums/userRoles.js";
+import { getPaginationParams } from "../utils/pagination.js";
 
 /**
  * @function getRestaurants
  * @description Retrieves all restaurants with pagination and search.
  */
 export const getRestaurants = async (req: Request, res: Response): Promise<void> => {
-  const size = parseInt(req.query.size as string) || 10;
-  const page = parseInt(req.query.page as string) || 0;
+  const { page, size } = getPaginationParams(req);
   const search = (req.query.search as string) || "";
 
   try {
@@ -216,8 +216,7 @@ const convertOpeningHoursToObject = (openingHours: any) => {
  * @description Retrieves public restaurants with search and filters.
  */
 export const getPublicRestaurants = async (req: Request, res: Response): Promise<void> => {
-  const size = parseInt(req.query.size as string) || 12; // Larger page size for grid
-  const page = parseInt(req.query.page as string) || 0;
+  const { page, size } = getPaginationParams(req, 12);
   const search = (req.query.search as string) || "";
   const city = (req.query.city as string) || "";
   const priceRange = (req.query.priceRange as string) || "";

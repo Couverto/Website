@@ -10,6 +10,7 @@ import { authTypes } from "../utils/enums/authTypes.js";
 import { generateRandomAvatar } from "../utils/generateRandomAvatar.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { Constants } from "../constants/constants.js";
+import { getPaginationParams } from "../utils/pagination.js";
 
 /**
  * @function getUsers
@@ -17,8 +18,7 @@ import { Constants } from "../constants/constants.js";
  * @returns {Object} JSON response with a list of users or error message.
  */
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
-  const size = parseInt(req.query.size as string);
-  const page = parseInt(req.query.page as string);
+  const { page, size } = getPaginationParams(req);
 
   try {
     const users = await User.find({})
