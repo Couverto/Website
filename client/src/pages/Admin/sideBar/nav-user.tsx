@@ -17,12 +17,13 @@ import { useState } from "react";
 import { UserInterface } from "@/interfaces/User";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 export function NavUser({ user }: { user: UserInterface | null }) {
   if (!user) return null;
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const { logout, loading } = useLogout();
-  const { isMobile } = useSidebar();
+  const { isMobile, state } = useSidebar();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLLIElement | null>(null);
   const { t } = useTranslation();
@@ -47,17 +48,24 @@ export function NavUser({ user }: { user: UserInterface | null }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer"
+              className={cn(
+                "data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer transition-all",
+                state === "collapsed" && "justify-center p-0",
+              )}
               onClick={() => setDropdownOpen((prev) => !prev)}
             >
               <Avatar className="w-8 h-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt="User Avatar" className="object-cover object-center w-full h-full rounded-full" />
               </Avatar>
-              <div className="grid flex-1 text-sm leading-tight text-left">
-                <span className="font-semibold truncate">{user.username}</span>
-                <span className="text-xs truncate">{user.email}</span>
-              </div>
-              <ChevronRight className="ml-auto size-4" />
+              {state === "expanded" && (
+                <>
+                  <div className="grid flex-1 text-sm leading-tight text-left">
+                    <span className="font-semibold truncate">{user.username}</span>
+                    <span className="text-xs truncate">{user.email}</span>
+                  </div>
+                  <ChevronRight className="ml-auto size-4" />
+                </>
+              )}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -100,7 +108,7 @@ export function NavUser({ user }: { user: UserInterface | null }) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="hover:cursor-pointer" onClick={() => logout()} disabled={loading}>
+              <DropdownMenuItem className="hover:cursor-pointer cursor-pointer" onClick={() => logout()} disabled={loading}>
                 {t("navbar.logout")}
                 <DropdownMenuShortcut>
                   <LogOut className="w-4 h-4" />

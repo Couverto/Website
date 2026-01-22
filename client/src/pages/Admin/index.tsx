@@ -1,10 +1,11 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { AppSidebar } from "./sideBar/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@radix-ui/react-separator";
+import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { LayoutDashboard, ChevronRight } from "lucide-react";
 
 export const Index = () => {
   const { t } = useTranslation();
@@ -14,41 +15,57 @@ export const Index = () => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="h-4 mr-2" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                {pathSegments.map((segment, index) => {
-                  const href = "/" + pathSegments.slice(0, index + 1).join("/");
-                  const isLast = index === pathSegments.length - 1;
-                  // Skip 'app' in breadcrumb display, show it as root
-                  if ((segment === "admin" || segment === "account") && index === 0) {
-                    return null;
-                  }
+      <SidebarInset className="bg-zinc-50/50 dark:bg-zinc-950/20">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-6 transition-all">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="-ml-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" />
+              <Separator orientation="vertical" className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-800" />
+              <Breadcrumb>
+                <BreadcrumbList className="gap-1 sm:gap-2">
+                  <BreadcrumbItem>
+                    <Link to="/admin/dashboard" className="text-zinc-400 hover:text-primary transition-colors cursor-pointer">
+                      <LayoutDashboard className="w-4 h-4" />
+                    </Link>
+                  </BreadcrumbItem>
+                  {pathSegments.map((segment, index) => {
+                    const href = "/" + pathSegments.slice(0, index + 1).join("/");
+                    const isLast = index === pathSegments.length - 1;
 
-                  return (
-                    <React.Fragment key={href}>
-                      {index > 1 && <BreadcrumbSeparator />}
-                      <BreadcrumbItem>
-                        {isLast ? (
-                          <BreadcrumbPage> {t(`pages.admin.${segment}`)}</BreadcrumbPage>
-                        ) : (
-                          <Link to={href} className="text-sm text-muted-foreground hover:text-foreground">
-                            {t(`pages.admin.${segment}`)}
-                          </Link>
-                        )}
-                      </BreadcrumbItem>
-                    </React.Fragment>
-                  );
-                })}
-              </BreadcrumbList>
-            </Breadcrumb>
+                    if ((segment === "admin" || segment === "account") && index === 0) {
+                      return null;
+                    }
+
+                    return (
+                      <React.Fragment key={href}>
+                        <BreadcrumbSeparator className="opacity-20">
+                          <ChevronRight className="w-3 h-3" />
+                        </BreadcrumbSeparator>
+                        <BreadcrumbItem>
+                          {isLast ? (
+                            <BreadcrumbPage className="font-bold tracking-tight text-zinc-900 dark:text-zinc-100 italic">
+                              {t(`pages.admin.${segment}`)}
+                            </BreadcrumbPage>
+                          ) : (
+                            <Link
+                              to={href}
+                              className="text-xs sm:text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors uppercase tracking-widest cursor-pointer"
+                            >
+                              {t(`pages.admin.${segment}`)}
+                            </Link>
+                          )}
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    );
+                  })}
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
           </div>
         </header>
-        <Outlet />
+        <main className="flex-1 p-6 md:p-10">
+          <Outlet />
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

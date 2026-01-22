@@ -71,16 +71,17 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
     fetchRestaurants(nextPage);
   };
 
+  const handleSeeAll = () => {
+    navigate("/restaurants");
+    window.scrollTo(0, 0);
+  };
+
   return (
     <section className="py-20 bg-muted/20 w-full">
       <div className="container mx-auto px-4 md:px-6">
         {isPreview && (
           <div className="flex justify-end mb-8">
-            <Button
-              variant="ghost"
-              className="hidden md:flex group text-primary font-semibold hover:bg-primary/10"
-              onClick={() => navigate("/restaurants")}
-            >
+            <Button variant="ghost" className="hidden md:flex group text-primary font-semibold hover:bg-primary/10" onClick={handleSeeAll}>
               {t("common.see_all", "See all restaurants")}
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
