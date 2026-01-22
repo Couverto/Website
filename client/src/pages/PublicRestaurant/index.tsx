@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft, FileText, ExternalLink, Utensils } from "lucide-react";
@@ -40,6 +40,7 @@ interface PublicRestaurant {
 
 export const PublicRestaurant = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<PublicRestaurant | null>(null);
@@ -488,7 +489,15 @@ export const PublicRestaurant = () => {
         </div>
       </div>
       {/* Type assertion needed because PublicRestaurant interface might differ slightly from RestaurantInterface expected by BookingDialog */}
-      <BookingDialog open={isBookingOpen} onOpenChange={setIsBookingOpen} restaurant={restaurant as any} />
+      <BookingDialog
+        open={isBookingOpen}
+        onOpenChange={setIsBookingOpen}
+        restaurant={restaurant as any}
+        initialData={{
+          date: searchParams.get("date") || undefined,
+          guests: searchParams.get("guests") || undefined,
+        }}
+      />
     </div>
   );
 };

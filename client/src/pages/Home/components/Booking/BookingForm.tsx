@@ -25,9 +25,13 @@ registerLocale("en-US", enUS);
 interface BookingFormProps {
   restaurant: RestaurantInterface;
   onSuccess: () => void;
+  initialData?: {
+    date?: string;
+    guests?: string | number;
+  };
 }
 
-export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
+export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormProps) => {
   const { t, i18n } = useTranslation();
   const { authUser: user } = useAuthContext();
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
@@ -39,7 +43,7 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
     mode: "onChange",
     defaultValues: {
       // bookingDate is handled by useEffect to check for closed days
-      guests: 2,
+      guests: initialData?.guests ? Number(initialData.guests) : 2,
       time: "",
       customer: {
         name: "",
@@ -76,20 +80,25 @@ export const BookingForm = ({ restaurant, onSuccess }: BookingFormProps) => {
     setClosedDays(closed);
   }, [restaurant.openingHours]);
 
-  // Set initial date to today if it's open, otherwise leave empty
+  // Set initial date from filters, or today if it's open, otherwise leave empty
   useEffect(() => {
     if (closedDays.length === 0) return;
-    const today = new Date();
-    const todayDayOfWeek = today.getDay();
 
-    // If today is open, use today
-    if (!closedDays.includes(todayDayOfWeek)) {
-      form.setValue("bookingDate", today);
-    } else {
-      // If today is closed, do not pre-fill date (user must select)
+    let targetDate = new Date();
+    if (initialData?.date) {
+      targetDate = new Date(initialData.date);
+    }
+
+    const dayOfWeek = targetDate.getDay();
+
+    if (!closedDays.includes(dayOfWeek)) {
+      form.setValue("bookingDate", targetDate);
+    } else if (!initialData?.date) {
+      // Only reset if we were trying to set today and today is closed.
+      // If user passed a specific date that is closed, we still reset to force them to pick a valid one.
       form.resetField("bookingDate");
     }
-  }, [closedDays, form]);
+  }, [closedDays, form, initialData]);
 
   // Fetch available slots when date changes
   const bookingDate = form.watch("bookingDate");

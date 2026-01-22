@@ -12,15 +12,23 @@ import { useState } from "react";
 
 interface RestaurantCardProps {
   restaurant: RestaurantInterface;
+  filters?: {
+    date?: string;
+    guests?: string;
+  };
 }
 
-export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
+export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const handleCardClick = () => {
-    navigate(`/restaurants/infos/${restaurant._id}`);
+    const params = new URLSearchParams();
+    if (filters?.date) params.append("date", filters.date);
+    if (filters?.guests) params.append("guests", filters.guests);
+    const queryString = params.toString();
+    navigate(`/restaurants/infos/${restaurant._id}${queryString ? `?${queryString}` : ""}`);
   };
 
   return (
@@ -159,7 +167,12 @@ export const RestaurantCard = ({ restaurant }: RestaurantCardProps) => {
         </CardFooter>
       </Card>
 
-      <BookingDialog open={isBookingOpen} onOpenChange={setIsBookingOpen} restaurant={restaurant} />
+      <BookingDialog
+        open={isBookingOpen}
+        onOpenChange={setIsBookingOpen}
+        restaurant={restaurant}
+        initialData={{ date: filters?.date, guests: filters?.guests }}
+      />
     </>
   );
 };

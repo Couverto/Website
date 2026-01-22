@@ -9,9 +9,13 @@ interface BookingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   restaurant: RestaurantInterface;
+  initialData?: {
+    date?: string;
+    guests?: string | number;
+  };
 }
 
-export const BookingDialog = ({ open, onOpenChange, restaurant }: BookingDialogProps) => {
+export const BookingDialog = ({ open, onOpenChange, restaurant, initialData }: BookingDialogProps) => {
   const { t } = useTranslation();
   const [success, setSuccess] = useState(false);
 
@@ -65,7 +69,7 @@ export const BookingDialog = ({ open, onOpenChange, restaurant }: BookingDialogP
             </button>
           </div>
         ) : (
-          <BookingForm restaurant={restaurant} onSuccess={handleSuccess} />
+          <BookingForm restaurant={restaurant} onSuccess={handleSuccess} initialData={initialData} />
         )}
       </DialogContent>
     </Dialog>

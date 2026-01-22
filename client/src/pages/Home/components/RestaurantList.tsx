@@ -100,7 +100,7 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {restaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant._id} restaurant={restaurant} />
+              <RestaurantCard key={restaurant._id} restaurant={restaurant} filters={filters} />
             ))}
           </div>
         )}
