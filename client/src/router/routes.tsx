@@ -16,7 +16,6 @@ import { Logs as AdminLogs } from "../pages/Admin/components/logs";
 import { Users as AdminUsers } from "../pages/Admin/components/users";
 import { AdminPlans } from "../pages/Admin/components/plans";
 import { Dashboard } from "../pages/Admin/components/dashboard";
-import { Restaurants } from "../pages/Admin/components/restaurants";
 import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
@@ -164,7 +163,6 @@ export const Router = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<AdminUsers />} />
-          <Route path="restaurants" element={<Restaurants />} />
           <Route path="plans" element={<AdminPlans />} />
           <Route path="logs" element={<AdminLogs />} />
           <Route path="settings" element={<Config />} />

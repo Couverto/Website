@@ -33,12 +33,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         roles: ["admin"],
       },
       {
-        title: "restaurants",
-        url: "/admin/restaurants",
-        icon: Utensils,
-        roles: ["admin"],
-      },
-      {
         title: "plans",
         url: "/admin/plans",
         icon: DollarSign,
