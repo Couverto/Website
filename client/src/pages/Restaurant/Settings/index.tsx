@@ -20,7 +20,6 @@ import {
   Clock,
   Utensils,
   Info,
-  DollarSign,
   X,
   Plus,
   Search,
@@ -28,10 +27,7 @@ import {
   ChevronDown,
   Facebook,
   Instagram,
-  Twitter,
-  Users,
   Share2,
-  Wallet,
   Wifi,
   Umbrella,
   Accessibility,
@@ -47,6 +43,7 @@ import {
   Power,
   Trash2,
   AlertTriangle,
+  Music2,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -60,31 +57,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-interface RestaurantSettingsForm {
-  name: string;
-  description?: string;
-  shortDescription?: string;
-  phone: string;
-  website?: string;
-  priceRange: string;
-  cuisineType: string[];
-  features: string[];
-  paymentMethods: string[];
-  capacity: number;
-  socials: {
-    facebook: string;
-    instagram: string;
-    tiktok: string;
-  };
-  coverImage?: string;
-  images: string[];
-  openingHours: Record<string, { isClosed: boolean; periods: { open: string; close: string }[] }>;
-}
-
-interface RestaurantContext {
-  restaurant: any;
-}
+import { RestaurantInterface } from "@/interfaces/Restaurant";
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 const CUISINES = [
@@ -146,7 +119,7 @@ export const RestaurantSettings = () => {
 
   const isFetched = useRef(false);
 
-  const { register, handleSubmit, control, setValue, watch, reset } = useForm<RestaurantSettingsForm>({
+  const { register, handleSubmit, control, setValue, watch, reset } = useForm<RestaurantInterface>({
     defaultValues: {
       cuisineType: [],
       features: [],
@@ -206,7 +179,7 @@ export const RestaurantSettings = () => {
     }
   };
 
-  const onSubmit = async (data: RestaurantSettingsForm) => {
+  const onSubmit = async (data: RestaurantInterface) => {
     setSaving(true);
     try {
       await api.put(`/restaurants/${id}/settings`, data);
@@ -599,8 +572,8 @@ export const RestaurantSettings = () => {
                   <Input className="pl-10 h-11" placeholder="Instagram URL" {...register("socials.instagram")} />
                 </div>
                 <div className="relative">
-                  <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-10 h-11" placeholder="TikTok URL" {...register("socials.tiktok")} />
+                  <Music2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input className="pl-10 h-11" placeholder="Tiktok URL" {...register("socials.tiktok")} />
                 </div>
               </div>
             </div>

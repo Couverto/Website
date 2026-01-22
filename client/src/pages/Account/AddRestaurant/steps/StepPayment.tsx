@@ -9,7 +9,7 @@ import { CreditCard as CardIcon, Calendar, Lock } from "lucide-react";
 const formSchema = z.object({
   cardNumber: z.string().min(16, "Card number must be 16 digits").max(19, "Card number too long"),
   expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/?([0-9]{2})$/, "Invalid expiry date (MM/YY)"),
-  cvc: z.string().min(3, "CVC must be 3 digits").max(4, "CVC too long"),
+  cvc: z.string().min(3, "CVC must be 3 digits").max(3, "CVC too long"),
   cardHolder: z.string().min(2, "Card holder name required"),
 });
 

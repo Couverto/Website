@@ -4,19 +4,12 @@ import { RestaurantSidebar } from "./components/RestaurantSidebar";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Loader2 } from "lucide-react";
-
-interface Restaurant {
-  _id: string;
-  name: string;
-  slug: string;
-  coverImage?: string;
-  description?: string;
-}
+import { RestaurantInterface } from "@/interfaces/Restaurant";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurant, setRestaurant] = useState<RestaurantInterface | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

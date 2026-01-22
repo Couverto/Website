@@ -29,6 +29,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
     if (filters?.guests) params.append("guests", filters.guests);
     const queryString = params.toString();
     navigate(`/restaurants/infos/${restaurant._id}${queryString ? `?${queryString}` : ""}`);
+    window.scrollTo(0, 0);
   };
 
   return (

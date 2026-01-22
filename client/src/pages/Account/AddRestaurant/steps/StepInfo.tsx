@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
-  description: z.string().optional(),
+  description: z.string().min(20, "Description must be at least 20 characters"),
   phone: z.string().min(10, "Phone number must be at least 10 characters."),
   website: z.string().url().optional().or(z.literal("")),
 });

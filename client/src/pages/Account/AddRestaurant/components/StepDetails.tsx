@@ -2,15 +2,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Facebook,
   Instagram,
-  Twitter,
   Users,
   Wallet,
   Share2,
-  X,
   Check,
   Wifi,
   Umbrella,
@@ -25,10 +22,8 @@ import {
   Ticket,
   StickyNote,
   Clock,
+  Music2,
 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 
 interface StepProps {
@@ -254,10 +249,10 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
           </div>
           <div className="space-y-2 group">
             <div className="relative">
-              <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Music2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
-                placeholder="TikTok URL"
+                placeholder="Tiktok URL"
                 value={data.socials?.tiktok || ""}
                 onChange={(e) => updateSocial("tiktok", e.target.value)}
               />

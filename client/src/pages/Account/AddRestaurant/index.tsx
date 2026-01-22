@@ -41,6 +41,7 @@ const INITIAL_DATA: WizardData = {
   cardNumber: "",
   expiry: "",
   cvc: "",
+  openingHours: {},
 };
 
 export const AddRestaurantWizard = () => {

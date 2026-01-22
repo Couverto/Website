@@ -12,6 +12,7 @@ import { useSocketContext } from "@/contexts/socketContext";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { RestaurantInterface } from "@/interfaces/Restaurant";
 
 interface Stats {
   today: { bookings: number; guests: number };
@@ -33,10 +34,7 @@ interface Booking {
 }
 
 interface RestaurantContext {
-  restaurant: {
-    _id: string;
-    name: string;
-  };
+  restaurant: RestaurantInterface;
 }
 
 export const RestaurantDashboard = () => {
