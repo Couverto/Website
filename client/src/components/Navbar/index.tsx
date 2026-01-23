@@ -178,7 +178,7 @@ export const Navbar = () => {
                 <DropdownMenuTrigger asChild className="cursor-pointer">
                   <Button
                     variant="ghost"
-                    className="relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-all hover:scale-105"
+                    className="relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-colors"
                   >
                     <AvatarWithStatusCell user={authUser} />
                   </Button>
