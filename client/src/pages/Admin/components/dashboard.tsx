@@ -52,15 +52,18 @@ export const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [usersRes, restaurantsRes] = await Promise.all([
+        const [usersRes, restaurantsRes, authStatsRes] = await Promise.all([
           axiosConfig.get("/users?page=0&size=1000"),
           axiosConfig.get("/restaurants?page=0&size=1"),
+          axiosConfig.get("/users/stats/authTypes"),
         ]);
 
         const users = usersRes.data.users || [];
-        const passwordUsers = users.filter((u: any) => !u.authType || u.authType === "password").length;
-        const googleUsers = users.filter((u: any) => u.authType === "google").length;
         const admins = users.filter((u: any) => u.role === "admin").length;
+
+        const authData = authStatsRes.data.data;
+        const googleUsers = authData.find((s: any) => s.label === "Google")?.value || 0;
+        const passwordUsers = authData.find((s: any) => s.label === "Local")?.value || 0;
 
         setStats({
           usersCount: usersRes.data.count,
