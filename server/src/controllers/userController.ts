@@ -257,6 +257,12 @@ export const updatePassword = async (req: Request, res: Response): Promise<void>
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.updateOne({ _id: id }, { password: hashedPassword });
 
+    createLog({
+      message: `Password updated for user ${id}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
     res.status(200).json({ message: "server.users.messages.password_updated" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

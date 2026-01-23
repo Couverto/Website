@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { Plan } from "../models/planModel.js";
+import { createLog } from "./logController.js";
+import { logLevels } from "../utils/enums/logLevels.js";
 
 /**
  * @function getPlans
@@ -38,6 +40,11 @@ export const getAllPlans = async (req: Request, res: Response): Promise<void> =>
 export const createPlan = async (req: Request, res: Response): Promise<void> => {
   try {
     const plan = await Plan.create(req.body);
+    createLog({
+      message: `Plan '${plan.name}' created`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
     res.status(201).json({ plan, message: "server.plans.messages.created" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -56,6 +63,11 @@ export const updatePlan = async (req: Request, res: Response): Promise<void> => 
       res.status(404).json({ error: "server.global.errors.not_found" });
       return;
     }
+    createLog({
+      message: `Plan '${plan.name}' updated`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
     res.status(200).json({ plan, message: "server.plans.messages.updated" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -74,6 +86,11 @@ export const deletePlan = async (req: Request, res: Response): Promise<void> => 
       res.status(404).json({ error: "server.global.errors.not_found" });
       return;
     }
+    createLog({
+      message: `Plan '${plan.name}' deleted`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
     res.status(200).json({ message: "server.plans.messages.deleted" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

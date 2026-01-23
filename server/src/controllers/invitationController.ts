@@ -78,6 +78,12 @@ export const deleteInvitation = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    createLog({
+      message: `Invitation ${invitationId} revoked for restaurant ${id}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
     res.status(200).json({ message: "server.invitations.messages.deleted" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

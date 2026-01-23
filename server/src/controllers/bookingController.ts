@@ -280,6 +280,12 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
 
     await booking.save();
 
+    createLog({
+      message: `Booking ${id} updated`,
+      userId: userId,
+      level: logLevels.INFO,
+    });
+
     res.status(200).json({ booking, message: "server.bookings.messages.updated" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -304,6 +310,12 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
 
     booking.status = bookingStatus.CANCELLED;
     await booking.save();
+
+    createLog({
+      message: `Booking ${id} cancelled by user`,
+      userId: userId,
+      level: logLevels.INFO,
+    });
 
     res.status(200).json({ message: "server.bookings.messages.cancelled" });
   } catch (err: any) {

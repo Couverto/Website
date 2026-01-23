@@ -131,6 +131,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const { password: _password, ...userWithoutPassword } = user.toObject();
 
+    createLog({
+      message: `User ${user.username} logged in successfully`,
+      userId: user._id,
+      level: logLevels.INFO,
+    });
+
     res.status(201).json({ user: userWithoutPassword, message: "server.auth.messages.login_success", accessToken });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -141,6 +147,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
  * Logs out a user by clearing the access token cookie.
  */
 export const logout = async (req: Request, res: Response): Promise<void> => {
+  if (req.userId) {
+    const user = await User.findById(req.userId);
+    createLog({
+      message: `User ${user?.username || req.userId} logged out`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+  }
   res.status(200).json({ message: "server.auth.messages.logout_success" });
 };
 
@@ -177,6 +191,12 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
     }
 
     const accessToken = generateAccessToken(user._id);
+
+    createLog({
+      message: `User ${user.username} logged in with Google`,
+      userId: user._id,
+      level: logLevels.INFO,
+    });
 
     res.status(201).json({ user, message: "server.auth.messages.login_success", accessToken });
   } catch (err: any) {

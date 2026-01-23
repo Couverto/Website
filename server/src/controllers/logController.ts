@@ -77,6 +77,11 @@ export const deleteLog = async (req: Request, res: Response): Promise<void> => {
 export const deleteAllLogs = async (req: Request, res: Response): Promise<void> => {
   try {
     await Log.deleteMany();
+    createLog({
+      message: `All logs cleared`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
     res.status(200).json({ message: "server.admin.messages.logs_cleared" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

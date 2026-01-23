@@ -1,4 +1,4 @@
-import { Users, Utensils, LayoutDashboard, Database, ShieldCheck, Mail } from "lucide-react";
+import { Users, Utensils, LayoutDashboard, Mail, Calendar, Activity } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
@@ -40,38 +40,30 @@ const StatCard = ({
 export const Dashboard = () => {
   const { t } = useTranslation();
   const [stats, setStats] = useState({
-    usersCount: 0,
-    restaurantsCount: 0,
-    adminsCount: 0,
-    authMethods: {
-      password: 0,
-      google: 0,
-    },
+    users: { total: 0, newLast7Days: 0 },
+    restaurants: { total: 0, newLast7Days: 0 },
+    bookings: { total: 0, pending: 0, confirmed: 0, cancelled: 0, totalGuests: 0 },
+    system: { totalLogs: 0, errorLogsLast24h: 0 },
+    authMethods: { google: 0, local: 0 },
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [usersRes, restaurantsRes, authStatsRes] = await Promise.all([
-          axiosConfig.get("/users?page=0&size=1000"),
-          axiosConfig.get("/restaurants?page=0&size=1"),
+        const [adminStatsRes, authStatsRes] = await Promise.all([
+          axiosConfig.get("/admin/stats"),
           axiosConfig.get("/users/stats/authTypes"),
         ]);
 
-        const users = usersRes.data.users || [];
-        const admins = users.filter((u: any) => u.role === "admin").length;
-
         const authData = authStatsRes.data.data;
         const googleUsers = authData.find((s: any) => s.label === "Google")?.value || 0;
-        const passwordUsers = authData.find((s: any) => s.label === "Local")?.value || 0;
+        const localUsers = authData.find((s: any) => s.label === "Local")?.value || 0;
 
         setStats({
-          usersCount: usersRes.data.count,
-          restaurantsCount: restaurantsRes.data.count,
-          adminsCount: admins,
+          ...adminStatsRes.data,
           authMethods: {
-            password: passwordUsers,
             google: googleUsers,
+            local: localUsers,
           },
         });
       } catch (error: any) {
@@ -114,15 +106,33 @@ export const Dashboard = () => {
 
       {/* Main Stats Grid */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Utilisateurs" value={stats.usersCount} caption="Comptes enregistrés" icon={Users} color="primary" />
-        <StatCard title="Restaurants" value={stats.restaurantsCount} caption="Inscrits sur la plateforme" icon={Utensils} color="accent" />
-        <StatCard title="Administrateurs" value={stats.adminsCount} caption="Accès privilégiés" icon={ShieldCheck} color="primary" />
         <StatCard
-          title="Base de données"
-          value={stats.usersCount + stats.restaurantsCount}
-          caption="Entrées totales"
-          icon={Database}
-          color="zinc-500"
+          title="Total Utilisateurs"
+          value={stats.users.total}
+          caption={`+${stats.users.newLast7Days} ces 7 derniers jours`}
+          icon={Users}
+          color="primary"
+        />
+        <StatCard
+          title="Restaurants"
+          value={stats.restaurants.total}
+          caption={`+${stats.restaurants.newLast7Days} ces 7 derniers jours`}
+          icon={Utensils}
+          color="accent"
+        />
+        <StatCard
+          title="Réservations"
+          value={stats.bookings.total}
+          caption={`${stats.bookings.totalGuests || 0} couverts au total`}
+          icon={Calendar}
+          color="primary"
+        />
+        <StatCard
+          title="Santé Système"
+          value={stats.system.errorLogsLast24h}
+          caption="Erreurs (24h)"
+          icon={Activity}
+          color={stats.system.errorLogsLast24h > 0 ? "destructive" : "emerald-500"}
         />
       </div>
 
@@ -143,7 +153,7 @@ export const Dashboard = () => {
               <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-1000"
-                  style={{ width: `${(stats.authMethods.google / (stats.usersCount || 1)) * 100}%` }}
+                  style={{ width: `${(stats.authMethods.google / (stats.users.total || 1)) * 100}%` }}
                 />
               </div>
             </div>
@@ -151,12 +161,12 @@ export const Dashboard = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-bold uppercase tracking-widest opacity-60">
                 <span>Mot de passe classique</span>
-                <span>{stats.authMethods.password}</span>
+                <span>{stats.authMethods.local}</span>
               </div>
               <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-zinc-400 dark:bg-zinc-600 transition-all duration-1000"
-                  style={{ width: `${(stats.authMethods.password / (stats.usersCount || 1)) * 100}%` }}
+                  style={{ width: `${(stats.authMethods.local / (stats.users.total || 1)) * 100}%` }}
                 />
               </div>
             </div>
