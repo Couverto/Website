@@ -15,6 +15,8 @@ const UserSchema = new Schema<IUser>(
     avatar: { type: String, default: "" },
     phone: { type: String, default: "" },
     auth_type: { type: String, default: authTypes.LOCAL },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
   { timestamps: true },
 );

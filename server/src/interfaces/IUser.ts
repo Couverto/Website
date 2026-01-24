@@ -13,4 +13,6 @@ export interface IUser extends Document {
   phone: string;
   auth_type: string;
   fullname?: string; // virtual
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
 }

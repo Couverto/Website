@@ -1,5 +1,13 @@
 import express, { Router } from "express";
-import { getConnectedUser, login, logout, register, signInWithGoogle } from "../controllers/authenticationController.js";
+import {
+  getConnectedUser,
+  login,
+  logout,
+  register,
+  signInWithGoogle,
+  forgotPassword,
+  resetPassword,
+} from "../controllers/authenticationController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 
 export const authRouter: Router = express.Router();
@@ -21,6 +29,18 @@ authRouter.post("/login/google", signInWithGoogle);
  * @description Registers a new user with the provided details.
  */
 authRouter.post("/register", register);
+
+/**
+ * @route POST /forgot-password
+ * @description Initiates the password reset process.
+ */
+authRouter.post("/forgot-password", forgotPassword);
+
+/**
+ * @route POST /reset-password/:resetToken
+ * @description Resets the password using a valid token.
+ */
+authRouter.post("/reset-password/:resetToken", resetPassword);
 
 /**
  * @route GET /logout

@@ -581,7 +581,7 @@
     "login": {
       "welcome_back": "Bon retour !",
       "welcome_subtitle": "Connectez-vous pour accéder à votre tableau de bord",
-      "field": "Email ou nom d'utilisateur",
+      "field": "Email",
       "field_placeholder": "votre@email.com",
       "field_description": "Entrez votre nom d'utilisateur ou email",
       "password": "Mot de passe",

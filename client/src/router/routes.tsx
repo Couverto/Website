@@ -20,6 +20,8 @@ import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
 import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
+import { ForgotPassword } from "@/pages/Authentication/ForgotPassword";
+import { ResetPassword } from "@/pages/Authentication/ResetPassword";
 import { Footer } from "@/components/Footer";
 import { NotFound } from "@/pages/NotFound";
 import { AddRestaurantWizard } from "@/pages/Account/AddRestaurant";
@@ -146,6 +148,22 @@ export const Router = () => {
           element={
             <ProtectedRoute authRequired={false}>
               <RegisterGoogleForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <ProtectedRoute authRequired={false}>
+              <ForgotPassword />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reset-password/:resetToken"
+          element={
+            <ProtectedRoute authRequired={false}>
+              <ResetPassword />
             </ProtectedRoute>
           }
         />
