@@ -17,6 +17,7 @@ export const getCreateUserSchema = () =>
       .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
     email: z.string().email({ message: "Adresse e-mail invalide." }),
     password: z.string().min(1, { message: "Le mot de passe est requis." }),
+    phone: z.string().optional(),
     role: z.string(),
   });
 
@@ -37,6 +38,7 @@ export const getUpdateUserSchema = () =>
       .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
     email: z.string().email({ message: "Adresse e-mail invalide." }),
     role: z.string(),
+    phone: z.string().optional(),
     password: z.string().optional(),
   });
 

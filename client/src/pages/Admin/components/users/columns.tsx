@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { AvatarWithStatusCell } from "../../../../components/customs/avatarStatusCell";
 import { UserInterface } from "@/interfaces/User";
 import { Badge } from "@/components/ui/badge";
-import { IconBadge } from "@/components/customs/IconBadge";
 
 const roleSettings: Record<string, { icon: any; color: string; bg: string }> = {
   admin: { icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-100 dark:bg-purple-900/30 border-purple-200" },

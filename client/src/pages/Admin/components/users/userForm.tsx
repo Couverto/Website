@@ -28,6 +28,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
       username: "",
       email: "",
       password: "",
+      phone: "",
       role: "user",
     },
   });
@@ -39,6 +40,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
       forename: user?.forename,
       username: user?.username,
       email: user?.email,
+      phone: user?.phone ?? "",
       role: user?.role,
       password: user?.password ?? "",
     },
@@ -185,6 +187,19 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
           />
           <FormField
             control={createForm.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{"Téléphone"}</FormLabel>
+                <FormControl>
+                  <Input placeholder="06 12 34 56 78" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={createForm.control}
             name="role"
             render={({ field }) => (
               <FormItem>
@@ -294,6 +309,19 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
                 <FormLabel>{"E-mail"}</FormLabel>
                 <FormControl>
                   <Input placeholder="john.doe@gmail.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={updateForm.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{"Téléphone"}</FormLabel>
+                <FormControl>
+                  <Input placeholder="06 12 34 56 78" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
