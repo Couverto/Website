@@ -47,6 +47,11 @@ const RestaurantSchema = new Schema<IRestaurant>(
       ref: "User",
       required: true,
     },
+    collaboratorRoles: {
+      type: Map,
+      of: String,
+      default: new Map(),
+    },
   },
   { timestamps: true },
 );

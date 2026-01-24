@@ -8,10 +8,8 @@ export interface IUser extends Document {
   username: string;
   password: string;
   role: string;
-  restaurant: mongoose.Types.ObjectId;
   avatar: string;
   phone: string;
-  restaurantRole: string;
   auth_type: string;
   fullname?: string; // virtual
   resetPasswordToken?: string;

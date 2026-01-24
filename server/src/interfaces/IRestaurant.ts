@@ -36,6 +36,7 @@ export interface IRestaurant extends Document {
   rating: number;
   isClosed: boolean;
   collaborators: Array<mongoose.Types.ObjectId>;
+  collaboratorRoles: Map<string, string>;
   createdAt: Date;
   updatedAt: Date;
 }

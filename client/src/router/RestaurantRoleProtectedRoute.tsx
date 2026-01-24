@@ -1,6 +1,10 @@
 import { ReactNode } from "react";
-import { Navigate, useParams } from "react-router-dom";
-import { useAuthContext } from "../contexts/authContext";
+import { Navigate, useParams, useOutletContext } from "react-router-dom";
+
+interface RestaurantContext {
+  restaurant: any;
+  userRole: string;
+}
 
 interface RestaurantRoleProtectedRouteProps {
   roles: string[];
@@ -8,10 +12,10 @@ interface RestaurantRoleProtectedRouteProps {
 }
 
 export const RestaurantRoleProtectedRoute = ({ roles, children }: RestaurantRoleProtectedRouteProps) => {
-  const { authUser } = useAuthContext();
   const { id } = useParams();
+  const context = useOutletContext<RestaurantContext>();
 
-  const userRole = authUser?.restaurantRole || "employee";
+  const userRole = context?.userRole || "employee";
 
   if (!roles.includes(userRole)) {
     return <Navigate to={`/restaurant/${id}/dashboard`} replace />;

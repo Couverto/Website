@@ -49,9 +49,6 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    creator.restaurantRole = restaurantRoles.ADMIN;
-    await creator.save();
-
     collaborators.push(creator._id);
 
     const existingRestaurant = await Restaurant.findOne({ slug });
@@ -59,6 +56,10 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       res.status(409).json({ error: "Ce slug est déjà utilisé" });
       return;
     }
+
+    // Create collaboratorRoles Map with creator as admin
+    const collaboratorRoles = new Map<string, string>();
+    collaboratorRoles.set(creator._id.toString(), restaurantRoles.ADMIN);
 
     const restaurant = await Restaurant.create({
       name,
@@ -68,6 +69,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       phone,
       website,
       collaborators,
+      collaboratorRoles,
       ...otherFields,
     });
 
@@ -131,9 +133,10 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     }
 
     // Protection: If last admin but others still exist, block deletion
-    const adminCount = await User.countDocuments({
-      restaurant: id,
-      restaurantRole: restaurantRoles.ADMIN,
+    // Count admins from collaboratorRoles Map
+    let adminCount = 0;
+    restaurant.collaboratorRoles.forEach((role) => {
+      if (role === restaurantRoles.ADMIN) adminCount++;
     });
 
     if (adminCount <= 1 && restaurant.collaborators.length > 1) {
@@ -144,9 +147,6 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     }
 
     await Restaurant.findByIdAndDelete(id);
-
-    // Also clear restaurant info for the last user (the current admin)
-    await User.updateOne({ _id: req.userId }, { $set: { restaurantRole: null, restaurant: null } });
 
     createLog({
       message: `Restaurant '${restaurant.name}' deleted successfully`,
@@ -427,7 +427,10 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
     // Restaurant is already attached by verifyCollaborator middleware
     const restaurant = await Restaurant.findById(req.params.id).populate("collaborators", "name forename email avatar");
 
-    res.status(200).json({ restaurant });
+    // Get the requesting user's role for this restaurant
+    const userRole = restaurant?.collaboratorRoles.get(req.userId!.toString()) || restaurantRoles.EMPLOYEE;
+
+    res.status(200).json({ restaurant, userRole });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -647,17 +650,23 @@ export const getCollaborators = async (req: Request, res: Response): Promise<voi
   const { id } = req.params;
 
   try {
-    const restaurant = await Restaurant.findById(id).populate(
-      "collaborators",
-      "name forename email avatar username restaurantRole createdAt",
-    );
+    const restaurant = await Restaurant.findById(id).populate("collaborators", "name forename email avatar username createdAt");
 
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
-    res.status(200).json({ collaborators: restaurant.collaborators });
+    // Map collaborators to include their role from collaboratorRoles
+    const collaboratorsWithRoles = restaurant.collaborators.map((collab: any) => {
+      const role = restaurant.collaboratorRoles.get(collab._id.toString()) || restaurantRoles.EMPLOYEE;
+      return {
+        ...collab.toObject(),
+        restaurantRole: role,
+      };
+    });
+
+    res.status(200).json({ collaborators: collaboratorsWithRoles });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -692,11 +701,8 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
     }
 
     restaurant.collaborators.push(userId);
+    restaurant.collaboratorRoles.set(userId, restaurantRoles.EMPLOYEE);
     await restaurant.save();
-
-    user.restaurantRole = restaurantRoles.EMPLOYEE;
-    user.restaurant = restaurant._id as any;
-    await user.save();
 
     // Send email notification
     try {
@@ -762,17 +768,20 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    // Get collaborator's role from restaurant
+    const collaboratorRole = restaurant.collaboratorRoles.get(collaboratorId) || restaurantRoles.EMPLOYEE;
+
     // Protection: Managers cannot remove Administrators
-    if (user.restaurantRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
+    if (collaboratorRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
       res.status(403).json({ error: "Vous ne pouvez pas retirer un administrateur" });
       return;
     }
 
     // Admin Persistence: Cannot remove the last Administrator
-    if (user.restaurantRole === restaurantRoles.ADMIN) {
-      const adminCount = await User.countDocuments({
-        restaurant: id,
-        restaurantRole: restaurantRoles.ADMIN,
+    if (collaboratorRole === restaurantRoles.ADMIN) {
+      let adminCount = 0;
+      restaurant.collaboratorRoles.forEach((role) => {
+        if (role === restaurantRoles.ADMIN) adminCount++;
       });
       if (adminCount <= 1) {
         res.status(400).json({ error: "Un restaurant doit avoir au moins un administrateur" });
@@ -781,29 +790,25 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
     }
 
     restaurant.collaborators.splice(collaboratorIndex, 1);
+    restaurant.collaboratorRoles.delete(collaboratorId);
     await restaurant.save();
-    if (user) {
-      user.restaurantRole = null as any;
-      user.restaurant = null as any;
-      await user.save();
 
-      // Send email notification
-      try {
-        if (user.email) {
-          const htmlContent = collaboratorEmailTemplate({
-            name: user.forename,
-            restaurantName: restaurant.name,
-            action: "removed",
-          });
-          await sendEmail({
-            email: user.email,
-            subject: `Fin de collaboration - ${restaurant.name}`,
-            message: htmlContent,
-          });
-        }
-      } catch (emailErr) {
-        console.error("Collaborator removed email failed", emailErr);
+    // Send email notification
+    try {
+      if (user.email) {
+        const htmlContent = collaboratorEmailTemplate({
+          name: user.forename,
+          restaurantName: restaurant.name,
+          action: "removed",
+        });
+        await sendEmail({
+          email: user.email,
+          subject: `Fin de collaboration - ${restaurant.name}`,
+          message: htmlContent,
+        });
       }
+    } catch (emailErr) {
+      console.error("Collaborator removed email failed", emailErr);
     }
 
     createLog({
@@ -902,17 +907,20 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
       return;
     }
 
+    // Get current role from restaurant's collaboratorRoles
+    const currentRole = restaurant.collaboratorRoles.get(collaboratorId) || restaurantRoles.EMPLOYEE;
+
     // Protection: Managers cannot change the role of an Administrator
-    if (user.restaurantRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
+    if (currentRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
       res.status(403).json({ error: "Vous ne pouvez pas modifier le rôle d'un administrateur" });
       return;
     }
 
     // Admin Persistence: Cannot downgrade the last Administrator
-    if (user.restaurantRole === restaurantRoles.ADMIN && role !== restaurantRoles.ADMIN) {
-      const adminCount = await User.countDocuments({
-        restaurant: id,
-        restaurantRole: restaurantRoles.ADMIN,
+    if (currentRole === restaurantRoles.ADMIN && role !== restaurantRoles.ADMIN) {
+      let adminCount = 0;
+      restaurant.collaboratorRoles.forEach((r) => {
+        if (r === restaurantRoles.ADMIN) adminCount++;
       });
       if (adminCount <= 1) {
         res.status(400).json({ error: "Un restaurant doit avoir au moins un administrateur" });
@@ -920,8 +928,8 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
       }
     }
 
-    user.restaurantRole = role;
-    await user.save();
+    restaurant.collaboratorRoles.set(collaboratorId, role);
+    await restaurant.save();
 
     createLog({
       message: `Role of collaborator ${user.username} updated to ${role} in ${restaurant.name}`,

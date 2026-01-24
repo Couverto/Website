@@ -16,6 +16,7 @@ export const RestaurantLayout = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<RestaurantInterface | null>(null);
+  const [userRole, setUserRole] = useState<string>("employee");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,7 @@ export const RestaurantLayout = () => {
       try {
         const response = await api.get(`/restaurants/${id}/details`);
         setRestaurant(response.data.restaurant);
+        setUserRole(response.data.userRole || "employee");
       } catch (err: any) {
         if (err.response?.status === 403) {
           setError("not_collaborator");
@@ -86,7 +88,7 @@ export const RestaurantLayout = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <RestaurantSidebar restaurant={restaurant || undefined} />
+        <RestaurantSidebar restaurant={restaurant || undefined} userRole={userRole} />
         <main className="flex-1 overflow-auto">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
             <div className="flex items-center gap-2 justify-between w-full">
@@ -101,7 +103,7 @@ export const RestaurantLayout = () => {
             </div>
           </header>
           <div className="p-6">
-            <Outlet context={{ restaurant }} />
+            <Outlet context={{ restaurant, userRole }} />
           </div>
         </main>
       </div>

@@ -25,15 +25,16 @@ interface RestaurantSidebarProps {
     name: string;
     coverImage?: string;
   };
+  userRole?: string;
 }
 
-export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
+export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: RestaurantSidebarProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { authUser } = useAuthContext();
   const { state } = useSidebar();
 
-  const role = authUser?.restaurantRole || "employee";
+  const role = userRole;
 
   const navItems = [
     {

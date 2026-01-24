@@ -3,6 +3,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { User } from "../models/userModel.js";
 import mongoose from "mongoose";
 import { userRoles } from "../utils/enums/userRoles.js";
+import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 
 /**
  * Middleware to verify that the authenticated user is a collaborator of the restaurant and has the required role.
@@ -44,15 +45,11 @@ export const verifyCollaborator = (allowedRoles?: string[]) => {
         return;
       }
 
-      const user = await User.findById(req.userId);
-      if (!user) {
-        res.status(404).json({ error: "Utilisateur introuvable" });
-        return;
-      }
+      // Get user's role from restaurant's collaboratorRoles Map
+      const userRole = restaurant.collaboratorRoles.get(req.userId!.toString()) || restaurantRoles.EMPLOYEE;
 
       // Check if user has required role
       if (allowedRoles && allowedRoles.length > 0) {
-        const userRole = user.restaurantRole || "employee";
         if (!allowedRoles.includes(userRole)) {
           res.status(403).json({ error: "Vous n'avez pas les permissions nécessaires pour effectuer cette action" });
           return;
@@ -60,7 +57,7 @@ export const verifyCollaborator = (allowedRoles?: string[]) => {
       }
 
       req.restaurant = restaurant;
-      req.restaurantRole = user.restaurantRole;
+      req.restaurantRole = userRole;
 
       next();
     } catch (err: any) {

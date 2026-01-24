@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,9 +59,15 @@ interface SearchUser {
   avatar?: string;
 }
 
+interface RestaurantContext {
+  restaurant: any;
+  userRole: string;
+}
+
 export const RestaurantCollaborators = () => {
   const { id } = useParams();
   const { authUser } = useAuthContext();
+  const { userRole } = useOutletContext<RestaurantContext>();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -416,7 +422,7 @@ export const RestaurantCollaborators = () => {
           const adminCount = collaborators.filter((c) => c.restaurantRole === "admin").length;
           return (
             <DataTable
-              columns={getCollaboratorColumns(handleCallback, collaborators.length, authUser?.restaurantRole, adminCount)}
+              columns={getCollaboratorColumns(handleCallback, collaborators.length, userRole, adminCount)}
               data={paginatedCollaborators}
               dataCount={collaborators.length}
               fetchData={handlePageChange}
