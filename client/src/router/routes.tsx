@@ -29,6 +29,7 @@ import { RestaurantBookings } from "@/pages/Restaurant/Bookings";
 import { RestaurantClients } from "@/pages/Restaurant/Clients";
 import { RestaurantSettings } from "@/pages/Restaurant/Settings";
 import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
+import { RestaurantStats } from "@/pages/Restaurant/Stats";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/PublicRestaurants";
@@ -120,6 +121,7 @@ export const Router = () => {
           <Route path="bookings" element={<RestaurantBookings />} />
           <Route path="clients" element={<RestaurantClients />} />
           <Route path="collaborators" element={<RestaurantCollaborators />} />
+          <Route path="stats" element={<RestaurantStats />} />
           <Route path="settings" element={<RestaurantSettings />} />
         </Route>
         {/* Auth Routes */}

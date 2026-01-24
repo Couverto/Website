@@ -533,6 +533,13 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     booking.status = status;
     await booking.save();
 
+    // Emit real-time event to restaurant room
+    try {
+      getIO().to(`restaurant_${id}`).emit("updateBooking", booking);
+    } catch (error) {
+      console.error("Socket emit failed", error);
+    }
+
     createLog({
       message: `Booking status updated to ${status}`,
       userId: req.userId,

@@ -865,7 +865,8 @@
         "bookings": "Réservations",
         "clients": "Clients",
         "collaborators": "Collaborateurs",
-        "settings": "Paramètres"
+        "settings": "Paramètres",
+        "stats": "Statistiques"
       },
       "collaborators": {
         "title": "Collaborateurs",
@@ -918,7 +919,31 @@
         "unique_clients": "Clients différents",
         "upcoming_bookings": "Prochaines réservations",
         "upcoming_bookings_desc": "Les 10 prochaines réservations à venir",
-        "no_upcoming": "Aucune réservation à venir"
+        "no_upcoming": "Aucune réservation à venir",
+        "calendar": "Calendrier",
+        "view_public": "Voir la page publique",
+        "new_booking": "Nouvelle réservation",
+        "weekly_trend": "Tendance hebdomadaire",
+        "weekly_trend_desc": "Nombre de réservations sur les 7 derniers jours",
+        "guest_distribution": "Taille des groupes",
+        "guest_distribution_desc": "Répartition par nombre de couverts",
+        "bookings_for_selected_date": "Liste des réservations pour le jour sélectionné",
+        "no_bookings_date": "Aucune réservation pour cette date",
+        "time": "Heure",
+        "title_stats": "Statistiques",
+        "subtitle_stats": "Analyse détaillée de votre activité",
+        "recent_bookings": "Dernières réservations",
+        "recent_bookings_desc": "Les 10 dernières réservations reçues",
+        "view_all": "Voir tout",
+        "no_recent_bookings": "Aucune réservation récente",
+        "no_recent_bookings_hint": "Les nouvelles réservations apparaîtront ici",
+        "prevues_today": "prévus aujourd'hui",
+        "pending_bookings": "En attente",
+        "require_action": "Nécessitent une action",
+        "week_summary": "Cette semaine",
+        "total_week_bookings": "Réservations cette semaine",
+        "cancel_confirm_title": "Confirmer l'annulation ?",
+        "cancel_confirm_desc": "Cette action est irréversible. Le client recevra une notification d'annulation."
       },
       "bookings": {
         "title": "Réservations",
@@ -1176,7 +1201,11 @@
       "update": "Mettre à jour",
       "delete": "Supprimer",
       "presets": "Préréglages",
-      "custom": "Personnalisé"
+      "custom": "Personnalisé",
+      "today": "Aujourd'hui",
+      "back": "Retour",
+      "confirm_cancel": "Confirmer l'annulation",
+      "confirm": "Confirmer"
     },
     "expired_session": "Votre session a expiré, veuillez vous reconnecter."
   },

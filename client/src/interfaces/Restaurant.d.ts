@@ -42,4 +42,8 @@ export interface RestaurantStats {
   week: { bookings: number };
   month: { bookings: number };
   totalClients: number;
+  dailyStats: { date: string; count: number }[];
+  hourlyStats: { hour: number; count: number }[];
+  statusBreakdown: Record<string, number>;
+  guestDistribution: Record<string, number>;
 }

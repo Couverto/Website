@@ -1,6 +1,6 @@
 import { NavLink, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft, BarChart3 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -48,6 +48,11 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
       title: t("pages.restaurant.nav.collaborators"),
       url: `/restaurant/${id}/collaborators`,
       icon: UserPlus,
+    },
+    {
+      title: t("pages.restaurant.nav.stats") || "Statistiques",
+      url: `/restaurant/${id}/stats`,
+      icon: BarChart3,
     },
     {
       title: t("pages.restaurant.nav.settings"),

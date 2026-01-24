@@ -468,6 +468,58 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       .limit(10)
       .populate("user", "name forename avatar");
 
+    // Daily stats for the last 7 days
+    const sevenDaysAgo = new Date(startOfToday);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const dailyStats = await Booking.aggregate([
+      {
+        $match: {
+          restaurant: new (await import("mongoose")).Types.ObjectId(id),
+          bookingDate: { $gte: sevenDaysAgo },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Hourly distribution for today
+    const hourlyStats = await Booking.aggregate([
+      {
+        $match: {
+          restaurant: new (await import("mongoose")).Types.ObjectId(id),
+          bookingDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000) },
+        },
+      },
+      {
+        $group: {
+          _id: { $hour: "$bookingDate" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Status breakdown
+    const statusBreakdown = await Booking.aggregate([
+      {
+        $match: {
+          restaurant: new (await import("mongoose")).Types.ObjectId(id),
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
     // Total unique clients
     const uniqueClients = await Booking.distinct("customer.phone", { restaurant: id });
 
@@ -484,6 +536,27 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
           bookings: monthBookings,
         },
         totalClients: uniqueClients.length,
+        dailyStats: dailyStats.map((d) => ({ date: d._id, count: d.count })),
+        hourlyStats: hourlyStats.map((h) => ({ hour: h._id, count: h.count })),
+        statusBreakdown: statusBreakdown.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
+        guestDistribution: await Booking.aggregate([
+          { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } },
+          {
+            $project: {
+              range: {
+                $switch: {
+                  branches: [
+                    { case: { $lte: ["$guests", 2] }, then: "1-2" },
+                    { case: { $lte: ["$guests", 4] }, then: "3-4" },
+                    { case: { $lte: ["$guests", 6] }, then: "5-6" },
+                  ],
+                  default: "7+",
+                },
+              },
+            },
+          },
+          { $group: { _id: "$range", count: { $sum: 1 } } },
+        ]).then((res) => res.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {})),
       },
       upcomingBookings,
     });

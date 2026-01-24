@@ -874,7 +874,8 @@
         "bookings": "Bookings",
         "clients": "Clients",
         "collaborators": "Collaborators",
-        "settings": "Settings"
+        "settings": "Settings",
+        "stats": "Statistics"
       },
       "collaborators": {
         "title": "Collaborators",
@@ -927,7 +928,31 @@
         "unique_clients": "Unique customers",
         "upcoming_bookings": "Upcoming bookings",
         "upcoming_bookings_desc": "Next 10 upcoming reservations",
-        "no_upcoming": "No upcoming bookings"
+        "no_upcoming": "No upcoming bookings",
+        "calendar": "Calendar",
+        "view_public": "View Public Page",
+        "new_booking": "New Booking",
+        "weekly_trend": "Weekly Trend",
+        "weekly_trend_desc": "Number of bookings over the last 7 days",
+        "guest_distribution": "Guest Sizes",
+        "guest_distribution_desc": "Distribution by guest count ranges",
+        "bookings_for_selected_date": "List of bookings for the selected day",
+        "no_bookings_date": "No bookings for this date",
+        "time": "Time",
+        "title_stats": "Statistics",
+        "subtitle_stats": "Detailed analysis of your activity",
+        "recent_bookings": "Recent bookings",
+        "recent_bookings_desc": "The last 10 bookings received",
+        "view_all": "View all",
+        "no_recent_bookings": "No recent bookings",
+        "no_recent_bookings_hint": "New bookings will appear here",
+        "prevues_today": "scheduled for today",
+        "pending_bookings": "Pending",
+        "require_action": "Require action",
+        "week_summary": "This week",
+        "total_week_bookings": "Bookings this week",
+        "cancel_confirm_title": "Cancel this booking?",
+        "cancel_confirm_desc": "This action cannot be undone. The client will receive a cancellation notification."
       },
       "bookings": {
         "title": "Bookings",
@@ -1185,7 +1210,11 @@
       "update": "Update",
       "delete": "Delete",
       "presets": "Presets",
-      "custom": "Custom"
+      "custom": "Custom",
+      "today": "Today",
+      "back": "Back",
+      "confirm_cancel": "Confirm cancellation",
+      "confirm": "Confirm"
     },
     "expired_session": "Your session has expired, please log in again."
   },
