@@ -1,11 +1,9 @@
 import * as React from "react";
 import { LayoutDashboard, Users, FileText, Settings, Utensils, House, Paperclip, DollarSign } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
 import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/contexts/authContext";
-import { LanguageChanger } from "@/components/Navbar/languageChanger";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
 import { useConfigContext } from "@/contexts/configContext";
 import { useNavigate } from "react-router-dom";
@@ -15,38 +13,37 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { authUser } = useAuthContext();
   const { state } = useSidebar();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
 
   const adminMenus = {
     navMain: [
       {
-        title: "dashboard",
+        title: "Tableau de bord",
         url: "/admin/dashboard",
         icon: LayoutDashboard,
         isActive: true,
         roles: ["admin", "user"],
       },
       {
-        title: "users",
+        title: "Utilisateurs",
         url: "/admin/users",
         icon: Users,
         roles: ["admin"],
       },
       {
-        title: "plans",
+        title: "Offres",
         url: "/admin/plans",
         icon: DollarSign,
         roles: ["admin"],
       },
       {
-        title: "logs",
+        title: "Logs",
         url: "/admin/logs",
         icon: FileText,
         roles: ["admin"],
       },
       {
-        title: "settings",
+        title: "Paramètres",
         url: "/admin/settings",
         icon: Settings,
         roles: ["admin"],
@@ -54,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ].filter((item) => !item.roles || (authUser?.role && item.roles.includes(authUser.role))),
     navSecondary: [
       {
-        title: "menu.back_to_website",
+        title: "Retour au site",
         url: "/",
         icon: House,
         isActive: false,
@@ -87,7 +84,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className="flex items-center justify-between w-full gap-2 px-1 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:px-0">
             <ThemeChanger />
             {state === "expanded" && <Separator orientation="vertical" className="h-4 w-[1px] opacity-20" />}
-            <LanguageChanger />
           </div>
           <NavUser user={authUser} />
         </div>

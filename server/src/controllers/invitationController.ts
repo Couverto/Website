@@ -31,7 +31,7 @@ export const createInvitation = async (req: Request, res: Response): Promise<voi
     res.status(201).json({
       invitation,
       inviteLink: `/join/${token}`,
-      message: "server.invitations.messages.created",
+      message: "Invitation créée",
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -74,7 +74,7 @@ export const deleteInvitation = async (req: Request, res: Response): Promise<voi
     });
 
     if (!invitation) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -84,7 +84,7 @@ export const deleteInvitation = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "server.invitations.messages.deleted" });
+    res.status(200).json({ message: "Invitation supprimée" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -103,17 +103,17 @@ export const getInvitationInfo = async (req: Request, res: Response): Promise<vo
       .populate("createdBy", "name forename");
 
     if (!invitation) {
-      res.status(404).json({ error: "server.invitations.errors.not_found" });
+      res.status(404).json({ error: "Invitation introuvable" });
       return;
     }
 
     if (invitation.used) {
-      res.status(400).json({ error: "server.invitations.errors.already_used" });
+      res.status(400).json({ error: "Invitation déjà utilisée" });
       return;
     }
 
     if (invitation.expiresAt < new Date()) {
-      res.status(400).json({ error: "server.invitations.errors.expired" });
+      res.status(400).json({ error: "Invitation expirée" });
       return;
     }
 
@@ -134,23 +134,23 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
     const invitation = await Invitation.findOne({ token });
 
     if (!invitation) {
-      res.status(404).json({ error: "server.invitations.errors.not_found" });
+      res.status(404).json({ error: "Invitation introuvable" });
       return;
     }
 
     if (invitation.used) {
-      res.status(400).json({ error: "server.invitations.errors.already_used" });
+      res.status(400).json({ error: "Invitation déjà utilisée" });
       return;
     }
 
     if (invitation.expiresAt < new Date()) {
-      res.status(400).json({ error: "server.invitations.errors.expired" });
+      res.status(400).json({ error: "Invitation expirée" });
       return;
     }
 
     const restaurant = await Restaurant.findById(invitation.restaurant);
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -158,7 +158,7 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
     const isAlreadyCollaborator = restaurant.collaborators.some((collab) => collab.toString() === req.userId?.toString());
 
     if (isAlreadyCollaborator) {
-      res.status(400).json({ error: "server.invitations.errors.already_collaborator" });
+      res.status(400).json({ error: "L'utilisateur est déjà collaborateur" });
       return;
     }
 
@@ -179,7 +179,7 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
     });
 
     res.status(200).json({
-      message: "server.invitations.messages.accepted",
+      message: "Invitation acceptée",
       restaurant: {
         _id: restaurant._id,
         name: restaurant.name,

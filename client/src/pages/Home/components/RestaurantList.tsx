@@ -4,7 +4,6 @@ import { RestaurantCard } from "./RestaurantCard";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
@@ -25,7 +24,6 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const fetchRestaurants = async (currentPage: number, reset = false) => {
@@ -82,7 +80,7 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
         {isPreview && (
           <div className="flex justify-end mb-8">
             <Button variant="ghost" className="hidden md:flex group text-primary font-semibold hover:bg-primary/10" onClick={handleSeeAll}>
-              {t("common.see_all", "See all restaurants")}
+              {"Voir tous les restaurants"}
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
@@ -107,19 +105,19 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
         )}
 
         {!loading && restaurants.length === 0 && (
-          <div className="text-center py-24 text-muted-foreground text-lg">{t("pages.home.list.no_results")}</div>
+          <div className="text-center py-24 text-muted-foreground text-lg">{"Aucun restaurant trouvé pour le moment."}</div>
         )}
 
         <div className="mt-12 text-center md:hidden">
           {isPreview ? (
             <Button variant="outline" size="lg" className="rounded-full px-8" onClick={() => navigate("/restaurants")}>
-              {t("common.see_all", "See all restaurants")}
+              {"Voir tous les restaurants"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
             hasMore && (
               <Button variant="outline" size="lg" onClick={loadMore} disabled={loading}>
-                {loading ? t("pages.home.list.loading") : t("pages.home.list.load_more")}
+                {loading ? "Chargement..." : "Voir plus de restaurants"}
               </Button>
             )
           )}
@@ -134,7 +132,7 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
               onClick={loadMore}
               disabled={loading}
             >
-              {loading ? t("pages.home.list.loading") : t("pages.home.list.load_more")}
+              {loading ? "Chargement..." : "Voir plus de restaurants"}
             </Button>
           </div>
         )}

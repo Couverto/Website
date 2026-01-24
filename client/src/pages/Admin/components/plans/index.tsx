@@ -1,7 +1,6 @@
 import { DataTable } from "@/components/customs/dataTable";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useColumns } from "./columns";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Plan } from "@/interfaces/Plan";
@@ -10,7 +9,6 @@ import { PlanForm } from "./planForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const AdminPlans = () => {
-  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [dataCount, setDataCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -26,9 +24,8 @@ export const AdminPlans = () => {
       const response = await axiosConfig.get(`/plans?page=${pageIndex}&size=${pageSize}`);
       setPlans(response.data.plans);
       setDataCount(response.data.count);
-    } catch (error) {
-      console.error(error);
-      toast.error(t("server.admin.errors.log_not_found")); // fallback error
+    } catch (error: any) {
+      toast.error(error.response?.data?.error);
     } finally {
       setLoading(false);
     }
@@ -63,7 +60,7 @@ export const AdminPlans = () => {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">{t("pages.admin.plans_page.plans")}</CardTitle>
+            <CardTitle className="text-2xl font-bold">{"Formules"}</CardTitle>
           </CardHeader>
           <CardContent>
             <DataTable<Plan, any>
@@ -88,7 +85,7 @@ export const AdminPlans = () => {
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {t(`pages.admin.plans_page.actions_type.${action}`)} {t("pages.admin.plans_page.a_plan")}
+              {action === "create" ? "Créer" : action === "update" ? "Modifier" : "Supprimer"} {"une formule"}
             </DialogTitle>
           </DialogHeader>
           <PlanForm dialog={setIsDialogOpen} refresh={() => fetchPlans(0, 10)} action={action} plan={selectedPlan} />

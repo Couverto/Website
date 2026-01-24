@@ -6,7 +6,6 @@ import { Dialog, DialogHeader, DialogContent, DialogTitle } from "@/components/u
 import { UserForm } from "./userForm";
 import { UserInterface } from "@/interfaces/User";
 import { DataTable } from "@/components/customs/dataTable";
-import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Users = () => {
@@ -17,8 +16,6 @@ export const Users = () => {
   const [selectedUser, setSelectedUser] = useState<UserInterface>();
   const [userCount, setUserCount] = useState(0);
 
-  const { t } = useTranslation();
-
   async function fetchUsers(page: number = 0, size: number = 10) {
     setLoading(true);
     try {
@@ -26,7 +23,7 @@ export const Users = () => {
       setUsers(response.data.users);
       setUserCount(response.data.count);
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Erreur lors du chargement des utilisateurs");
     } finally {
       setLoading(false);
     }
@@ -57,11 +54,11 @@ export const Users = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">{t("pages.admin.users")}</CardTitle>
+          <CardTitle className="text-2xl font-bold">{"Utilisateurs"}</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
-            columns={getColumns(callback, t)}
+            columns={getColumns(callback)}
             data={users}
             dataCount={userCount}
             fetchData={fetchUsers}
@@ -77,7 +74,7 @@ export const Users = () => {
           <DialogContent className="sm:max-w-[625px]">
             <DialogHeader>
               <DialogTitle>
-                {t(`pages.admin.users_page.actions_type.` + action)} {t("pages.admin.users_page.a_user")}
+                {action === "create" ? "Créer" : action === "update" ? "Modifier" : "Supprimer"} {"un utilisateur"}
               </DialogTitle>
             </DialogHeader>
             <UserForm dialog={setOpenDialog} refresh={fetchUsers} action={action} user={selectedUser} />

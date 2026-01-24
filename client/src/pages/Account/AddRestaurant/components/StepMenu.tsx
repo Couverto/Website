@@ -1,14 +1,12 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
-import { useTranslation } from "react-i18next";
 import { Plus, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { StepProps } from "@/interfaces/Components";
 
 export const StepMenu = ({ data, updateData, errors }: StepProps) => {
-  const { t } = useTranslation();
   const [newMenuUrl, setNewMenuUrl] = useState("");
 
   const addMenu = () => {
@@ -29,7 +27,7 @@ export const StepMenu = ({ data, updateData, errors }: StepProps) => {
       <div className="space-y-6">
         <div className="space-y-4">
           <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("create.steps.menu.add_menu_link") || "Add Link to Menu"}
+            {"Ajouter un lien vers votre menu (PDF/Image)"}
           </Label>
           <div className="flex gap-3">
             <div className="relative flex-1 group">
@@ -56,9 +54,7 @@ export const StepMenu = ({ data, updateData, errors }: StepProps) => {
         {errors?.menu && <p className="text-xs font-medium text-red-500 px-1 animate-in slide-in-from-top-1">{errors.menu}</p>}
 
         <div className="space-y-4 pt-4 border-t">
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("create.steps.menu.added_links") || "Added Links"}
-          </Label>
+          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{"Liens du menu ajoutés"}</Label>
           <div className="grid gap-4">
             {data.menu?.map((url: string, idx: number) => (
               <div
@@ -72,7 +68,7 @@ export const StepMenu = ({ data, updateData, errors }: StepProps) => {
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-medium truncate max-w-[300px]">{url}</span>
                     <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
-                      {url.split(".").pop()?.toUpperCase()} Document
+                      Document {url.split(".").pop()?.toUpperCase()}
                     </span>
                   </div>
                 </div>
@@ -92,8 +88,8 @@ export const StepMenu = ({ data, updateData, errors }: StepProps) => {
                   <FileText className="h-6 w-6 opacity-30" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium">{t("create.placeholders.no_menu_links")}</p>
-                  <p className="text-xs opacity-60">Add PDF or Image links to your restaurant menu</p>
+                  <p className="font-medium">{"Aucun lien de menu ajouté pour le moment."}</p>
+                  <p className="text-xs opacity-60">Ajoutez des liens PDF ou Image vers votre carte</p>
                 </div>
               </div>
             )}

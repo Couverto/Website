@@ -47,14 +47,14 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     // Validate restaurant existence
     const restaurantExists = await Restaurant.findById(restaurant);
     if (!restaurantExists) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
     // Validate opening hours
     const isValidTime = validateBookingTime(restaurantExists, bookingDate);
     if (!isValidTime) {
-      res.status(400).json({ error: "server.bookings.errors.closed" });
+      res.status(400).json({ error: "Le restaurant est fermé" });
       return;
     }
 
@@ -181,7 +181,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ booking: newBooking, message: "server.bookings.messages.created" });
+    res.status(201).json({ booking: newBooking, message: "Réservation créée" });
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -200,7 +200,7 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
   try {
     const userId = req.userId;
     if (!userId) {
-      res.status(401).json({ error: "server.auth.errors.unauthorized" });
+      res.status(401).json({ error: "Non autorisé" });
       return;
     }
 
@@ -262,7 +262,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
     const booking = await Booking.findById(id).populate("restaurant");
 
     if (!booking) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -270,7 +270,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
     // Assuming this route is for the 'My Bookings' detail view, so user must own it.
     if (booking.user && booking.user.toString() !== userId.toString()) {
       // TODO: Add Admin check here if admins need to see any booking via this route
-      res.status(403).json({ error: "server.auth.errors.forbidden" });
+      res.status(403).json({ error: "Accès interdit" });
       return;
     }
 
@@ -294,18 +294,18 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
     const booking = await Booking.findOne({ _id: id, user: userId });
 
     if (!booking) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
     // Check if booking date is in the past
     if (new Date(booking.bookingDate) < new Date()) {
-      res.status(400).json({ error: "server.bookings.errors.cannot_update_past" });
+      res.status(400).json({ error: "Impossible de modifier une réservation passée" });
       return;
     }
 
     if (booking.status === bookingStatus.CANCELLED) {
-      res.status(400).json({ error: "server.bookings.errors.cannot_update_cancelled" });
+      res.status(400).json({ error: "Impossible de modifier une réservation annulée" });
       return;
     }
 
@@ -325,7 +325,7 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ booking, message: "server.bookings.messages.updated" });
+    res.status(200).json({ booking, message: "Réservation mise à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -343,7 +343,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
     const booking = await Booking.findOne({ _id: id, user: userId });
 
     if (!booking) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -356,7 +356,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "server.bookings.messages.cancelled" });
+    res.status(200).json({ message: "Réservation annulée" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -391,7 +391,7 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ booking: newBooking, message: "server.bookings.messages.created" });
+    res.status(201).json({ booking: newBooking, message: "Réservation créée" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -558,14 +558,14 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     const { status } = req.body;
 
     if (!Object.values(bookingStatus).includes(status)) {
-      res.status(400).json({ error: "server.bookings.errors.invalid_status" });
+      res.status(400).json({ error: "Statut invalide" });
       return;
     }
 
     const booking = await Booking.findOne({ _id: bookingId, restaurant: id });
 
     if (!booking) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -613,7 +613,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ booking, message: "server.bookings.messages.updated" });
+    res.status(200).json({ booking, message: "Réservation mise à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

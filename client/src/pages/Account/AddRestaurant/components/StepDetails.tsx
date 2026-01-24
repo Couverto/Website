@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
-import { useTranslation } from "react-i18next";
 import {
   Facebook,
   Instagram,
@@ -28,28 +27,26 @@ import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 import { StepProps } from "@/interfaces/Components";
 
 const FEATURES_LIST = [
-  { id: "terrace", value: "terrace", icon: Umbrella },
-  { id: "wifi", value: "wifi", icon: Wifi },
-  { id: "accessible", value: "accessible", icon: Accessibility },
-  { id: "bar", value: "bar", icon: Beer },
-  { id: "air_conditioning", value: "air_conditioning", icon: Wind },
-  { id: "parking", value: "parking", icon: Car },
-  { id: "pets_allowed", value: "pets_allowed", icon: Dog },
+  { id: "terrace", value: "Terrasse", icon: Umbrella },
+  { id: "wifi", value: "Wifi", icon: Wifi },
+  { id: "accessible", value: "Accès PMR", icon: Accessibility },
+  { id: "bar", value: "Bar", icon: Beer },
+  { id: "air_conditioning", value: "Climatisation", icon: Wind },
+  { id: "parking", value: "Parking", icon: Car },
+  { id: "pets_allowed", value: "Animaux acceptés", icon: Dog },
 ];
 
 const PAYMENT_METHODS = [
-  { id: "card", value: "card", icon: CreditCard },
-  { id: "cash", value: "cash", icon: Banknote },
-  { id: "apple_pay", value: "apple_pay", icon: Smartphone },
-  { id: "google_pay", value: "google_pay", icon: Smartphone },
-  { id: "tickets_restaurant", value: "tickets_restaurant", icon: Ticket },
-  { id: "cheque", value: "cheque", icon: StickyNote },
-  { id: "ancv", value: "ancv", icon: Ticket },
+  { id: "card", value: "Carte Bancaire", icon: CreditCard },
+  { id: "cash", value: "Espèces", icon: Banknote },
+  { id: "apple_pay", value: "Apple Pay", icon: Smartphone },
+  { id: "google_pay", value: "Google Pay", icon: Smartphone },
+  { id: "tickets_restaurant", value: "Tickets Restaurant", icon: Ticket },
+  { id: "cheque", value: "Chèque", icon: StickyNote },
+  { id: "ancv", value: "Chèque-Vacances (ANCV)", icon: Ticket },
 ];
 
 export const StepDetails = ({ data, updateData, errors }: StepProps) => {
-  const { t } = useTranslation();
-
   const handleFeatureToggle = (featureValue: string) => {
     const current = (data.features as string[]) || [];
     const updated = current.includes(featureValue) ? current.filter((f: string) => f !== featureValue) : [...current, featureValue];
@@ -78,9 +75,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
           <div className="flex justify-between items-end">
             <div className="flex items-center gap-2">
               <Share2 className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("create.steps.details.features")}
-              </Label>
+              <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{"Équipements"}</Label>
             </div>
             <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
               Multiple possible
@@ -111,7 +106,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
                     <Icon className="h-6 w-6" />
                   </div>
                   <span className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                    {t(`create.steps.details.options.${feature.id}`)}
+                    {feature.value}
                   </span>
                   {isSelected && (
                     <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-sm animate-in zoom-in duration-300">
@@ -131,7 +126,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
               <Label
                 className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.paymentMethods ? "text-red-500" : ""}`}
               >
-                {t("create.steps.details.payment_methods")}
+                {"Moyens de paiement"}
               </Label>
             </div>
             <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
@@ -165,7 +160,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
                     <Icon className="h-6 w-6" />
                   </div>
                   <span className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                    {t(`create.steps.details.payment_options.${method.id}`)}
+                    {method.value}
                   </span>
                   {isSelected && (
                     <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1 shadow-sm animate-in zoom-in duration-300">
@@ -188,7 +183,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
             htmlFor="capacity"
             className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.capacity ? "text-red-500" : ""}`}
           >
-            {t("create.steps.details.capacity")}
+            {"Capacité (couverts)"}
           </Label>
           <div className="relative group">
             <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -208,24 +203,20 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
       <div className="space-y-6 pt-8 border-t">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-primary" />
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("create.steps.details.opening_hours", "Opening Hours")}
-          </Label>
+          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Horaires d'ouverture</Label>
         </div>
         <OpeningHoursEditor value={data.openingHours as any} onChange={(val) => updateData({ openingHours: val as any })} />
       </div>
 
       <div className="space-y-4 pt-8 border-t">
-        <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("create.steps.details.social_networks")}
-        </Label>
+        <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{"Réseaux sociaux"}</Label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2 group">
             <div className="relative">
               <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
-                placeholder="Facebook URL"
+                placeholder="URL Facebook"
                 value={data.socials?.facebook || ""}
                 onChange={(e) => updateSocial("facebook", e.target.value)}
               />
@@ -236,7 +227,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
               <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
-                placeholder="Instagram URL"
+                placeholder="URL Instagram"
                 value={data.socials?.instagram || ""}
                 onChange={(e) => updateSocial("instagram", e.target.value)}
               />
@@ -247,7 +238,7 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
               <Music2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
-                placeholder="Tiktok URL"
+                placeholder="URL Tiktok"
                 value={data.socials?.tiktok || ""}
                 onChange={(e) => updateSocial("tiktok", e.target.value)}
               />

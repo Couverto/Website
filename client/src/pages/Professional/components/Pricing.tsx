@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Plan } from "@/interfaces/Plan";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Pricing = () => {
-  const { t } = useTranslation();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,10 +44,14 @@ export const Pricing = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent mb-6">
-            {t("pages.landing.pricing.badge")}
+            {"Tarification claire"}
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">{t("pages.landing.pricing.title")}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t("pages.landing.pricing.subtitle")}</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">
+            {"Une formule adaptée à chaque restaurant"}
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {"Des tarifs simples et transparents, sans surprise. Choisissez la formule qui correspond à vos besoins."}
+          </p>
         </div>
 
         {/* Pricing Cards */}
@@ -62,7 +64,7 @@ export const Pricing = () => {
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center gap-1">
                   <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                  <span className="text-muted-foreground">€ / {t("pages.landing.pricing.per_month")}</span>
+                  <span className="text-muted-foreground">€ / mois</span>
                 </div>
               </div>
 
@@ -81,7 +83,7 @@ export const Pricing = () => {
               {/* CTA */}
               <Link to="/register" className="block mt-auto">
                 <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  {t("pages.landing.pricing.cta")}
+                  {"Choisir cette formule"}
                 </Button>
               </Link>
             </div>
@@ -92,15 +94,15 @@ export const Pricing = () => {
         <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-accent" />
-            <span>{t("pages.landing.pricing.no_commitment")}</span>
+            <span>{"Sans engagement"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-accent" />
-            <span>{t("pages.landing.pricing.cancel_anytime")}</span>
+            <span>{"Annulation à tout moment"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-accent" />
-            <span>{t("pages.landing.pricing.secure_payment")}</span>
+            <span>{"Paiement sécurisé"}</span>
           </div>
         </div>
       </div>

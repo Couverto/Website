@@ -1,13 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
-import { useTranslation } from "react-i18next";
 import { MapPin, Phone, Store } from "lucide-react";
 import { StepProps } from "@/interfaces/Components";
 
 export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -16,7 +13,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
             htmlFor="name"
             className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.name ? "text-red-500" : ""}`}
           >
-            {t("create.steps.essentials.name")}
+            {"Nom du restaurant"}
           </Label>
           <div className="relative group">
             <Store
@@ -26,7 +23,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
               id="name"
               value={data.name}
               onChange={(e) => updateData({ name: e.target.value })}
-              placeholder={t("create.steps.essentials.placeholders.name")}
+              placeholder={"Le Gourmet"}
               className={`pl-10 h-12 text-base transition-all ${errors?.name ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
             />
           </div>
@@ -42,7 +39,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
             htmlFor="phone"
             className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.phone ? "text-red-500" : ""}`}
           >
-            {t("create.steps.essentials.phone")}
+            {"Téléphone"}
           </Label>
           <div className="relative group">
             <Phone
@@ -52,7 +49,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
               id="phone"
               value={data.phone}
               onChange={(e) => updateData({ phone: e.target.value })}
-              placeholder={t("create.steps.essentials.placeholders.phone")}
+              placeholder={"+33 1 23 45 67 89"}
               className={`pl-10 h-12 text-base transition-all ${errors?.phone ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
             />
           </div>
@@ -69,7 +66,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
           htmlFor="address"
           className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.address ? "text-red-500" : ""}`}
         >
-          {t("create.steps.essentials.address")}
+          {"Adresse"}
         </Label>
         <div className="relative group">
           <MapPin
@@ -79,7 +76,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
             id="address"
             value={data.address}
             onChange={(e) => updateData({ address: e.target.value })}
-            placeholder={t("create.steps.essentials.placeholders.address")}
+            placeholder={"123 Avenue des Champs-Elysées"}
             className={`pl-10 h-12 text-base transition-all ${errors?.address ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
           />
         </div>
@@ -95,7 +92,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
           htmlFor="city"
           className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.city ? "text-red-500" : ""}`}
         >
-          {t("create.steps.essentials.city")}
+          {"Ville"}
         </Label>
         <div className="relative group">
           <MapPin
@@ -105,7 +102,7 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
             id="city"
             value={data.city}
             onChange={(e) => updateData({ city: e.target.value })}
-            placeholder={t("create.steps.essentials.placeholders.city")}
+            placeholder={"Paris"}
             className={`pl-10 h-12 text-base transition-all ${errors?.city ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
           />
         </div>

@@ -7,7 +7,6 @@ import { ArrowUpDown, Copy, EllipsisVertical, Trash, Info, AlertTriangle, XCircl
 import { toast } from "sonner";
 import { AvatarWithStatusCell } from "../../../../components/customs/avatarStatusCell";
 import { LogInterface } from "@/interfaces/Log";
-import { TFunction } from "i18next";
 
 const levelSettings: Record<string, { icon: any; color: string }> = {
   info: { icon: Info, color: "text-blue-500" },
@@ -16,28 +15,29 @@ const levelSettings: Record<string, { icon: any; color: string }> = {
   debug: { icon: Bug, color: "text-green-500" },
 };
 
-export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"translation">): ColumnDef<LogInterface>[] => [
+export const getColumns = (deleteLog: (id: string) => void): ColumnDef<LogInterface>[] => [
   {
     accessorKey: "level",
     header: ({ column }) => (
       <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.admin.log_page.level")}
+        {"Niveau"}
         <ArrowUpDown className="w-4 h-4 ml-2" />
       </Button>
     ),
     cell: ({ row }) => {
       const level = row.getValue("level") as string;
       const { icon, color } = levelSettings[level] || { icon: null, color: "text-gray-500" };
-      return <IconBadge icon={icon} color={color} label={level} translationKey={`pages.admin.log_page.levels.${level}`} />;
+      return <IconBadge icon={icon} color={color} label={level} />;
     },
+    meta: { label: "Niveau" },
   },
   {
     accessorKey: "user",
-    header: t("pages.admin.log_page.user"),
+    header: "Utilisateur",
     cell: ({ row }) => {
       const user = row.original.user;
       if (!user) {
-        return <span className="italic text-gray-500"> {t("pages.admin.log_page.unknow_user")}</span>;
+        return <span className="italic text-gray-500"> {"Utilisateur inconnu"}</span>;
       }
       return (
         <div className="flex items-center gap-4">
@@ -51,22 +51,24 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
         </div>
       );
     },
+    meta: { label: "Utilisateur" },
   },
   {
     accessorKey: "message",
     header: ({ column }) => (
       <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.admin.log_page.message")}
+        {"Message"}
         <ArrowUpDown className="w-4 h-4 ml-2" />
       </Button>
     ),
     cell: ({ row }) => <div>{row.getValue("message")}</div>,
+    meta: { label: "Message" },
   },
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
       <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.admin.log_page.date")}
+        {"Date"}
         <ArrowUpDown className="w-4 h-4 ml-2" />
       </Button>
     ),
@@ -75,11 +77,12 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
       const formatted = format(new Date(value as Date), "dd/MM/yyyy HH:mm");
       return <div>{formatted}</div>;
     },
+    meta: { label: "Date" },
   },
   {
     id: "actions",
     enableHiding: false,
-    header: t("pages.admin.log_page.actions"),
+    header: "Actions",
     cell: ({ row }) => {
       const log = row.original;
 
@@ -95,14 +98,14 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
               className="flex gap-4"
               onClick={() => {
                 navigator.clipboard.writeText(log._id);
-                toast.success(t("pages.admin.log_page.copy_id_success"));
+                toast.success("ID de la log copié dans le presse-papiers");
               }}
             >
-              <Copy className="w-4 h-4" /> {t("pages.admin.log_page.copy_id")}
+              <Copy className="w-4 h-4" /> {"Copier l'ID de la log"}
             </DropdownMenuItem>
             <DropdownMenuItem className="flex gap-4 text-destructive hover:text-destructive!" onClick={() => deleteLog(log._id)}>
               <Trash className="w-4 h-4 " />
-              <span> {t("pages.admin.log_page.delete_log")}</span>
+              <span> {"Supprimer cette log"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

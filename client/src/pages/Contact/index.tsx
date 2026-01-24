@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, MessageSquare, Send, User } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 const contactSchema = z.object({
-  name: z.string().min(2, "min_2_chars"),
-  email: z.string().email("invalid_email"),
-  reason: z.string().min(1, "required"),
-  message: z.string().min(10, "min_10_chars"),
+  name: z.string().min(2, "Le nom doit faire au moins 2 caractères"),
+  email: z.string().email("Email invalide"),
+  reason: z.string().min(1, "Ce champ est requis"),
+  message: z.string().min(10, "Le message doit faire au moins 10 caractères"),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
 
 export const Contact = () => {
-  const { t } = useTranslation();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -59,13 +57,13 @@ export const Contact = () => {
       });
 
       if (response.ok) {
-        toast.success(t("pages.contact.success"));
+        toast.success("Message envoyé ! Nous vous répondrons dans les plus brefs délais.");
         form.reset();
       } else {
         throw new Error("Erreur lors de l'envoi");
       }
     } catch (error) {
-      toast.error(t("pages.contact.error"));
+      toast.error("Une erreur est survenue lors de l'envoi du message. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,8 +76,10 @@ export const Contact = () => {
           {/* Left Column: Visuals & Info */}
           <div className="space-y-8 order-2 lg:order-1">
             <div className="space-y-4">
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">{t("pages.contact.title")}</h1>
-              <p className="text-xl text-muted-foreground">{t("pages.contact.subtitle")}</p>
+              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">{"Contactez-nous"}</h1>
+              <p className="text-xl text-muted-foreground">
+                {"Une question ? Un projet ? Ou simplement envie de dire bonjour ? Nous sommes à votre écoute."}
+              </p>
             </div>
 
             <div className="grid gap-6">
@@ -89,7 +89,7 @@ export const Contact = () => {
                     <Mail className="w-6 h-6" />
                   </div>
                   <div className="space-y-1 relative z-10">
-                    <h3 className="font-semibold text-lg">{t("pages.contact.info.email")}</h3>
+                    <h3 className="font-semibold text-lg">{"Email"}</h3>
                     <p className="text-muted-foreground">contact@couverto.fr</p>
                   </div>
                 </CardContent>
@@ -100,8 +100,10 @@ export const Contact = () => {
                   <MessageSquare className="w-48 h-48 -mr-10 -mt-10" />
                 </div>
                 <div className="relative z-10 space-y-4">
-                  <h3 className="text-2xl font-bold">{t("pages.contact.info.title")}</h3>
-                  <p className="text-primary-foreground/90 text-lg">{t("pages.contact.info.subtitle")}</p>
+                  <h3 className="text-2xl font-bold">{"Discutons !"}</h3>
+                  <p className="text-primary-foreground/90 text-lg">
+                    {"Remplissez le formulaire et nous reviendrons vers vous rapidement."}
+                  </p>
                 </div>
               </div>
             </div>
@@ -111,8 +113,10 @@ export const Contact = () => {
           <div className="order-1 lg:order-2">
             <Card className="border-border/50 shadow-2xl bg-card/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>{t("pages.contact.form.title")}</CardTitle>
-                <CardDescription>{t("pages.contact.form.subtitle")}</CardDescription>
+                <CardTitle>{"Envoyez-nous un message"}</CardTitle>
+                <CardDescription>
+                  {"Choisissez le motif de votre contact pour que nous puissions vous orienter vers la bonne personne."}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
@@ -123,11 +127,11 @@ export const Contact = () => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("pages.contact.form.name")}</FormLabel>
+                            <FormLabel>{"Nom complet"}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input className="pl-9" placeholder={t("pages.contact.form.placeholders.name")} {...field} />
+                                <Input className="pl-9" placeholder={"John Doe"} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -140,11 +144,11 @@ export const Contact = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("pages.contact.form.email")}</FormLabel>
+                            <FormLabel>{"Email"}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input className="pl-9" placeholder={t("pages.contact.form.placeholders.email")} {...field} />
+                                <Input className="pl-9" placeholder={"john@example.com"} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage />
@@ -158,19 +162,19 @@ export const Contact = () => {
                       name="reason"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("pages.contact.form.reason")}</FormLabel>
+                          <FormLabel>{"Motif"}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder={t("pages.contact.form.placeholders.reason")} />
+                                <SelectValue placeholder={"Sélectionnez un sujet"} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="general">{t("pages.contact.form.options.general")}</SelectItem>
-                              <SelectItem value="partnership">{t("pages.contact.form.options.partnership")}</SelectItem>
-                              <SelectItem value="support">{t("pages.contact.form.options.support")}</SelectItem>
-                              <SelectItem value="recruitment">{t("pages.contact.form.options.recruitment")}</SelectItem>
-                              <SelectItem value="other">{t("pages.contact.form.options.other")}</SelectItem>
+                              <SelectItem value="general">{"Question générale"}</SelectItem>
+                              <SelectItem value="partnership">{"Partenariat / Restaurant"}</SelectItem>
+                              <SelectItem value="support">{"Support technique"}</SelectItem>
+                              <SelectItem value="recruitment">{"Recrutement / Carrières"}</SelectItem>
+                              <SelectItem value="other">{"Autre"}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -183,13 +187,9 @@ export const Contact = () => {
                       name="message"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("pages.contact.form.message")}</FormLabel>
+                          <FormLabel>{"Message"}</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder={t("pages.contact.form.placeholders.message")}
-                              className="min-h-[120px] resize-y"
-                              {...field}
-                            />
+                            <Textarea placeholder={"Dites-nous en plus..."} className="min-h-[120px] resize-y" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -198,10 +198,10 @@ export const Contact = () => {
 
                     <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                       {isSubmitting ? (
-                        t("pages.contact.form.submitting")
+                        "Envoi en cours..."
                       ) : (
                         <>
-                          {t("pages.contact.form.submit")} <Send className="ml-2 h-4 w-4" />
+                          {"Envoyer le message"} <Send className="ml-2 h-4 w-4" />
                         </>
                       )}
                     </Button>

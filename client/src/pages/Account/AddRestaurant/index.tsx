@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { StepEssentials } from "./components/StepEssentials";
 import { StepIdentity } from "./components/StepIdentity";
 import { StepDetails } from "./components/StepDetails";
@@ -45,7 +44,6 @@ const INITIAL_DATA: WizardData = {
 };
 
 export const AddRestaurantWizard = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -66,22 +64,22 @@ export const AddRestaurantWizard = () => {
     let schema;
     switch (currentStep) {
       case 1:
-        schema = getEssentialsSchema(t);
+        schema = getEssentialsSchema();
         break;
       case 2:
-        schema = getIdentitySchema(t);
+        schema = getIdentitySchema();
         break;
       case 3:
-        schema = getDetailsSchema(t);
+        schema = getDetailsSchema();
         break;
       case 4:
-        schema = getMenuSchema(t);
+        schema = getMenuSchema();
         break;
       case 5:
-        schema = getMediaSchema(t);
+        schema = getMediaSchema();
         break;
       case 6:
-        schema = getPaymentSchema(t);
+        schema = getPaymentSchema();
         break;
       default:
         return true;
@@ -94,7 +92,7 @@ export const AddRestaurantWizard = () => {
         fieldErrors[issue.path[0] as string] = issue.message;
       });
       setErrors(fieldErrors);
-      toast.error(t("create.errors.fix_errors") || "Please fix the errors before proceeding");
+      toast.error("Veuillez corriger les erreurs avant de continuer");
       return false;
     }
     return true;
@@ -102,13 +100,13 @@ export const AddRestaurantWizard = () => {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      setStep((prev) => Math.min(prev + 1, 6));
+      setStep((prev: number) => Math.min(prev + 1, 6));
       window.scrollTo(0, 0);
     }
   };
 
   const prevStep = () => {
-    setStep((prev) => Math.max(prev - 1, 1));
+    setStep((prev: number) => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
 
@@ -123,7 +121,7 @@ export const AddRestaurantWizard = () => {
       };
 
       await axiosConfig.post("/restaurants", payload);
-      toast.success(t("create.success"));
+      toast.success("Restaurant créé avec succès !");
       navigate("/account/restaurants");
     } catch (error: any) {
       console.error("Failed to create restaurant", error);
@@ -134,12 +132,12 @@ export const AddRestaurantWizard = () => {
   };
 
   const steps = [
-    { id: 1, key: "essentials", label: t("create.steps.essentials.title") },
-    { id: 2, key: "identity", label: t("create.steps.identity.title") },
-    { id: 3, key: "details", label: t("create.steps.details.title") },
-    { id: 4, key: "menu", label: t("create.steps.menu.title") },
-    { id: 5, key: "visuals", label: t("create.steps.visuals.title") },
-    { id: 6, key: "payment", label: t("create.steps.payment.title") },
+    { id: 1, key: "essentials", label: "L'essentiel" },
+    { id: 2, key: "identity", label: "Identité" },
+    { id: 3, key: "details", label: "Détails" },
+    { id: 4, key: "menu", label: "Menu" },
+    { id: 5, key: "visuals", label: "Visuels" },
+    { id: 6, key: "payment", label: "Paiement" },
   ];
 
   return (
@@ -157,7 +155,7 @@ export const AddRestaurantWizard = () => {
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <div className="h-6 w-px bg-border hidden sm:block" />
-            <h1 className="text-lg font-semibold tracking-tight hidden sm:block">{t("create.title")}</h1>
+            <h1 className="text-lg font-semibold tracking-tight hidden sm:block">{"Créer votre restaurant"}</h1>
           </div>
 
           <div className="flex-1 max-w-xl px-4 md:px-12">
@@ -184,7 +182,7 @@ export const AddRestaurantWizard = () => {
               onClick={() => navigate("/account/restaurants")}
               className="text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors font-medium"
             >
-              {t("create.navigation.cancel")}
+              {"Annuler"}
             </Button>
           </div>
         </div>
@@ -196,7 +194,19 @@ export const AddRestaurantWizard = () => {
           <div className="max-w-4xl mx-auto">
             <div className="mb-12">
               <h2 className="text-3xl font-bold tracking-tight mb-2">{steps[step - 1].label}</h2>
-              <p className="text-muted-foreground text-lg">{t(`create.steps.${steps[step - 1].key}.subtitle`)}</p>
+              <p className="text-muted-foreground text-lg">
+                {step === 1
+                  ? "Commençons par les informations de base de votre établissement."
+                  : step === 2
+                    ? "Définissez le style et l'ambiance de votre cuisine."
+                    : step === 3
+                      ? "Précisez vos services, équipements et moyens de paiement."
+                      : step === 4
+                        ? "Ajoutez vos menus et cartes pour allécher vos clients."
+                        : step === 5
+                          ? "Mettez en avant votre restaurant avec de belles photos."
+                          : "Configurez vos informations de facturation."}
+              </p>
             </div>
 
             <div className="bg-card rounded-2xl shadow-xl shadow-black/5 border p-8 md:p-12 min-h-[500px]">
@@ -217,7 +227,7 @@ export const AddRestaurantWizard = () => {
                   className="gap-2 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all font-medium"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  {t("create.navigation.previous")}
+                  {"Précédent"}
                 </Button>
 
                 {step < 6 ? (
@@ -225,7 +235,7 @@ export const AddRestaurantWizard = () => {
                     onClick={nextStep}
                     className="gap-2 px-8 h-11 text-base font-medium shadow-lg hover:shadow-primary/20 transition-all"
                   >
-                    {t("create.navigation.next")}
+                    {"Suivant"}
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 ) : (
@@ -235,7 +245,7 @@ export const AddRestaurantWizard = () => {
                     className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-8 h-11 text-base font-medium shadow-lg transition-all min-w-[160px]"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    {t("create.steps.payment.pay_button")}
+                    {"Payer et Créer"}
                   </Button>
                 )}
               </div>
@@ -257,9 +267,9 @@ export const AddRestaurantWizard = () => {
         <aside className="hidden lg:flex w-[400px] xl:w-[500px] border-l bg-background overflow-y-auto p-12 shrink-0">
           <div className="w-full">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">{t("create.steps.preview.title")}</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/60">{"Aperçu en direct"}</h3>
               <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">
-                {t("create.steps.preview.live_badge")}
+                {"Direct"}
               </Badge>
             </div>
             <WizardPreview data={formData} />

@@ -2,12 +2,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Link } from "react-router-dom";
 import { BookingForm } from "./BookingForm";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
-import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { BookingDialogProps } from "@/interfaces/Components";
 
 export const BookingDialog = ({ open, onOpenChange, restaurant, initialData }: BookingDialogProps) => {
-  const { t } = useTranslation();
   const [success, setSuccess] = useState(false);
 
   const handleSuccess = () => {
@@ -27,13 +25,9 @@ export const BookingDialog = ({ open, onOpenChange, restaurant, initialData }: B
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {success
-              ? t("components.booking.dialog.success_title")
-              : t("components.booking.dialog.title", { restaurantName: restaurant.name })}
-          </DialogTitle>
+          <DialogTitle>{success ? "Réservation Confirmée !" : `Réserver une table chez ${restaurant.name}`}</DialogTitle>
           <DialogDescription>
-            {success ? t("components.booking.dialog.success_description") : t("components.booking.dialog.description")}
+            {success ? "Au plaisir de vous recevoir." : "Remplissez les détails ci-dessous pour confirmer votre réservation."}
           </DialogDescription>
         </DialogHeader>
 
@@ -51,12 +45,14 @@ export const BookingDialog = ({ open, onOpenChange, restaurant, initialData }: B
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
-            <p className="text-center text-muted-foreground">{t("components.booking.dialog.success_message")}</p>
+            <p className="text-center text-muted-foreground">
+              {"Votre réservation a été créée avec succès. Vous recevrez une confirmation sous peu."}
+            </p>
             <Link to="/account/bookings" className="text-primary font-medium hover:underline" onClick={handleClose}>
-              {t("components.booking.dialog.view_bookings")}
+              {"Voir mes réservations"}
             </Link>
             <button onClick={handleClose} className="text-muted-foreground text-sm hover:underline">
-              {t("components.booking.dialog.close")}
+              {"Fermer"}
             </button>
           </div>
         ) : (

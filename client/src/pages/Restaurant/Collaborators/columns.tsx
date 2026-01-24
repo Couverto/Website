@@ -5,7 +5,6 @@ import { Copy, EllipsisVertical, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { TFunction } from "i18next";
 import { toast } from "sonner";
 
 interface Collaborator {
@@ -18,17 +17,13 @@ interface Collaborator {
   createdAt: string;
 }
 
-export const getColumns = (
-  callback: (action: string, data: any) => void,
-  t: TFunction<"translation">,
-  count: number,
-): ColumnDef<Collaborator>[] => [
+export const getColumns = (callback: (action: string, data: any) => void, count: number): ColumnDef<Collaborator>[] => [
   {
     id: "name",
     accessorFn: (row) => `${row.forename} ${row.name}`,
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.collaborators.user")}
+        {"Utilisateur"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -52,30 +47,33 @@ export const getColumns = (
         </div>
       );
     },
+    meta: { label: "Utilisateur" },
   },
   {
     accessorKey: "email",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.collaborators.email")}
+        {"Email"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
+    meta: { label: "Email" },
   },
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.collaborators.joined")}
+        {"Membre depuis"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => format(new Date(row.getValue("createdAt")), "dd MMM yyyy", { locale: fr }),
+    meta: { label: "Membre depuis" },
   },
   {
     id: "actions",
     enableHiding: false,
-    header: t("pages.restaurant.collaborators.actions"),
+    header: "Actions",
     cell: ({ row }) => {
       const collab = row.original;
 
@@ -92,11 +90,11 @@ export const getColumns = (
               className="flex gap-2"
               onClick={() => {
                 navigator.clipboard.writeText(collab._id);
-                toast.success(t("pages.restaurant.collaborators.copy_id_success"));
+                toast.success("ID copié dans le presse-papiers");
               }}
             >
               <Copy className="w-4 h-4 text-muted-foreground" />
-              {t("pages.restaurant.collaborators.copy_id")}
+              {"Copier l'ID"}
             </DropdownMenuItem>
             {count > 1 && (
               <DropdownMenuItem
@@ -104,7 +102,7 @@ export const getColumns = (
                 onClick={() => callback("delete", collab._id)}
               >
                 <Trash2 className="w-4 h-4" />
-                {t("pages.restaurant.collaborators.remove")}
+                {"Retirer"}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

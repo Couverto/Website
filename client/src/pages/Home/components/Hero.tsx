@@ -2,18 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, Calendar as CalendarIcon, Users } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker, { registerLocale } from "react-datepicker";
-import { fr, enUS } from "date-fns/locale";
+import { fr } from "date-fns/locale";
 
-// Register locales
+// Register locale
 registerLocale("fr", fr);
-registerLocale("en-US", enUS);
 
 export const Hero = () => {
-  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [location, setLocation] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -52,10 +49,10 @@ export const Hero = () => {
       <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-10 pt-32 animate-in fade-in zoom-in duration-700">
         <div className="space-y-4 max-w-4xl">
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg">
-            {t("pages.home.hero.title")}
+            {"Réservez une table simplement."}
           </h1>
           <p className="mx-auto max-w-[700px] text-lg sm:text-xl md:text-2xl text-white/95 font-medium drop-shadow-md">
-            {t("pages.home.hero.subtitle")}
+            {"Découvrez les meilleurs restaurants autour de vous en quelques clics."}
           </p>
         </div>
 
@@ -64,7 +61,7 @@ export const Hero = () => {
             <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             <Input
               className="pl-12 h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent"
-              placeholder={t("pages.home.search.location_placeholder")}
+              placeholder={"Où ? (Ville, code postal)"}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -78,10 +75,10 @@ export const Hero = () => {
             <DatePicker
               selected={date}
               onChange={(date: Date | null) => setDate(date || undefined)}
-              locale={i18n.language === "fr" ? "fr" : "en-US"}
-              dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+              locale="fr"
+              dateFormat="dd/MM/yyyy"
               minDate={new Date()}
-              placeholderText={t("pages.home.hero.date_placeholder")}
+              placeholderText={"Date"}
               className="pl-12 h-14 w-full text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus-visible:ring-0 focus-visible:bg-transparent rounded-md outline-none focus:outline-none placeholder:text-muted-foreground"
               wrapperClassName="w-full"
               popperClassName="!z-[100]"
@@ -95,16 +92,16 @@ export const Hero = () => {
               <SelectTrigger className="w-full h-14 text-lg border-transparent bg-muted/30 hover:bg-muted/50 focus:ring-0">
                 <div className="flex items-center">
                   <Users className="mr-3 h-5 w-5 text-muted-foreground" />
-                  <SelectValue placeholder={t("pages.home.search.guests")} />
+                  <SelectValue placeholder={"Personnes"} />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1 {t("pages.home.search.person")}</SelectItem>
-                <SelectItem value="2">2 {t("pages.home.search.people")}</SelectItem>
-                <SelectItem value="3">3 {t("pages.home.search.people")}</SelectItem>
-                <SelectItem value="4">4 {t("pages.home.search.people")}</SelectItem>
-                <SelectItem value="5">5 {t("pages.home.search.people")}</SelectItem>
-                <SelectItem value="6">6+ {t("pages.home.search.people")}</SelectItem>
+                <SelectItem value="1">1 {"Personne"}</SelectItem>
+                <SelectItem value="2">2 {"Personnes"}</SelectItem>
+                <SelectItem value="3">3 {"Personnes"}</SelectItem>
+                <SelectItem value="4">4 {"Personnes"}</SelectItem>
+                <SelectItem value="5">5 {"Personnes"}</SelectItem>
+                <SelectItem value="6">6+ {"Personnes"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -115,18 +112,18 @@ export const Hero = () => {
             onClick={handleSearch}
           >
             <Search className="mr-2 h-5 w-5" />
-            {t("pages.home.search.button")}
+            {"Trouver un restaurant"}
           </Button>
         </div>
 
         <div className="flex gap-4 pt-4">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full">
             <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
-            Instant Confirmation
+            Confirmation instantanée
           </div>
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full">
             <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
-            No Booking Fees
+            Sans frais de réservation
           </div>
         </div>
       </div>

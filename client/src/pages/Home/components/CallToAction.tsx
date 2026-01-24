@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { ArrowRight, UtensilsCrossed } from "lucide-react";
 
 export const CallToAction = () => {
-  const { t } = useTranslation();
-
   return (
     <section className="py-24 relative overflow-hidden bg-foreground text-background">
       {/* Background Elements */}
@@ -20,9 +17,11 @@ export const CallToAction = () => {
 
           <div className="space-y-6">
             <h2 className="text-4xl font-black tracking-tighter sm:text-6xl md:text-7xl max-w-3xl mx-auto leading-[1.1]">
-              {t("pages.home.cta.title")}
+              {"Prêt à réserver ?"}
             </h2>
-            <p className="mx-auto max-w-[600px] text-background/60 text-xl font-medium leading-relaxed">{t("pages.home.cta.subtitle")}</p>
+            <p className="mx-auto max-w-[600px] text-background/60 text-xl font-medium leading-relaxed">
+              {"Trouvez la table parfaite pour votre prochaine occasion."}
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 w-full max-w-md mx-auto">
@@ -30,7 +29,7 @@ export const CallToAction = () => {
               size="lg"
               className="h-14 px-8 text-lg font-bold rounded-full shadow-lg hover:scale-105 transition-transform bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
             >
-              {t("pages.home.cta.button")}
+              {"Trouver une table maintenant"}
             </Button>
             <Button
               size="lg"

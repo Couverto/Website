@@ -1,5 +1,4 @@
 import { NavLink, useParams, useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft, BarChart3 } from "lucide-react";
 import {
   Sidebar,
@@ -18,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { NavUser } from "@/components/nav-user";
 import { useAuthContext } from "@/contexts/authContext";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
-import { LanguageChanger } from "@/components/Navbar/languageChanger";
 import { Separator } from "@/components/ui/separator";
 
 interface RestaurantSidebarProps {
@@ -30,7 +28,6 @@ interface RestaurantSidebarProps {
 }
 
 export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
-  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { authUser } = useAuthContext();
@@ -38,32 +35,32 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
 
   const navItems = [
     {
-      title: t("pages.restaurant.nav.dashboard"),
+      title: "Tableau de bord",
       url: `/restaurant/${id}/dashboard`,
       icon: LayoutDashboard,
     },
     {
-      title: t("pages.restaurant.nav.bookings"),
+      title: "Réservations",
       url: `/restaurant/${id}/bookings`,
       icon: CalendarDays,
     },
     {
-      title: t("pages.restaurant.nav.clients"),
+      title: "Clients",
       url: `/restaurant/${id}/clients`,
       icon: Users,
     },
     {
-      title: t("pages.restaurant.nav.collaborators"),
+      title: "Collaborateurs",
       url: `/restaurant/${id}/collaborators`,
       icon: UserPlus,
     },
     {
-      title: t("pages.restaurant.nav.stats") || "Statistiques",
+      title: "Statistiques",
       url: `/restaurant/${id}/stats`,
       icon: BarChart3,
     },
     {
-      title: t("pages.restaurant.nav.settings"),
+      title: "Paramètres",
       url: `/restaurant/${id}/settings`,
       icon: Settings,
     },
@@ -95,14 +92,14 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
           )}
           <div className="flex flex-col overflow-hidden transition-all group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
             <h2 className="font-semibold truncate">{restaurant?.name || "Restaurant"}</h2>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.portal")}</p>
+            <p className="text-xs text-muted-foreground">{"Espace restaurateur"}</p>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t("pages.restaurant.nav.title")}</SidebarGroupLabel>
+          <SidebarGroupLabel>{"Navigation"}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => {
@@ -135,11 +132,6 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
 
       <SidebarFooter className="p-4 group-data-[state=collapsed]:p-2 flex flex-col gap-4 bg-zinc-50/50 dark:bg-zinc-900/10 border-t border-zinc-100 dark:border-zinc-900/50 backdrop-blur-sm transition-all">
         <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center justify-between w-full gap-2 px-1 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:px-0">
-            <ThemeChanger />
-            {state === "expanded" && <Separator orientation="vertical" className="h-4 w-[1px] opacity-20" />}
-            <LanguageChanger />
-          </div>
           <NavUser user={authUser} />
         </div>
       </SidebarFooter>

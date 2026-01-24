@@ -2,13 +2,11 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
 import { useAuthContext } from "@/contexts/authContext";
 
 export const useAxiosInterceptor = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
   const { setAuthUser } = useAuthContext();
 
   useEffect(() => {

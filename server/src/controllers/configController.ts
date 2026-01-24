@@ -32,7 +32,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
       message: "Invalid configuration update request",
       userId: req.userId,
     });
-    res.status(400).json({ message: "invalid_config" });
+    res.status(400).json({ message: "Requête de mise à jour de configuration invalide" });
     return;
   }
 
@@ -51,7 +51,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
           message: `Key ${key} not found in config object`,
           userId: req.userId,
         });
-        res.status(400).json({ message: `config_not_found` });
+        res.status(400).json({ message: `Clé ${key} non trouvée` });
         return;
       }
     }

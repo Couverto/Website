@@ -1,5 +1,4 @@
 import { RestaurantList } from "../Home/components/RestaurantList";
-import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, ChefHat, Wallet, Calendar as CalendarIcon, Users } from "lucide-react";
@@ -15,7 +14,6 @@ registerLocale("fr", fr);
 registerLocale("en-US", enUS);
 
 export const PublicRestaurants = () => {
-  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filters, setFilters] = useState({
@@ -84,8 +82,10 @@ export const PublicRestaurants = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 text-center space-y-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-white shadow-sm">{t("pages.restaurants.list.title")}</h1>
-          <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto shadow-sm">{t("pages.restaurants.list.subtitle")}</p>
+          <h1 className="text-4xl md:text-6xl font-bold text-white shadow-sm">{"Tous les restaurants"}</h1>
+          <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto shadow-sm">
+            {"Découvrez notre sélection des meilleurs restaurants"}
+          </p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ export const PublicRestaurants = () => {
           <div className="md:col-span-4 relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t("pages.home.search.name_placeholder", "What restaurant?")}
+              placeholder="Nom du restaurant"
               className="pl-9 bg-background"
               value={filters.search}
               onChange={handleInputChange("search")}
@@ -107,7 +107,7 @@ export const PublicRestaurants = () => {
           <div className="md:col-span-4 relative">
             <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t("pages.home.search.location_placeholder", "City")}
+              placeholder="Ville"
               className="pl-9 bg-background"
               value={filters.city}
               onChange={handleInputChange("city")}
@@ -119,10 +119,10 @@ export const PublicRestaurants = () => {
             <DatePicker
               selected={filters.date ? new Date(filters.date) : undefined}
               onChange={(date: Date | null) => handleCreateFilterUpdater("date")(date ? date.toISOString().split("T")[0] : "")}
-              locale={i18n.language === "fr" ? "fr" : "en-US"}
-              dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+              locale="fr"
+              dateFormat="dd/MM/yyyy"
               minDate={new Date()}
-              placeholderText={t("pages.home.hero.date_placeholder")}
+              placeholderText={"Date"}
               className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-9"
               wrapperClassName="w-full"
             />
@@ -134,17 +134,17 @@ export const PublicRestaurants = () => {
               <SelectTrigger className="bg-background">
                 <div className="flex items-center gap-2 text-muted-foreground min-w-0">
                   <Users className="h-4 w-4 flex-shrink-0" />
-                  <SelectValue placeholder={t("pages.home.hero.guests_placeholder", "Guests")} />
+                  <SelectValue placeholder="Convives" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("common.any_guests", "Any guests")}</SelectItem>
+                <SelectItem value="all">Nombre de personnes</SelectItem>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <SelectItem key={num} value={num.toString()}>
-                    {num} {t("common.people", "People")}
+                    {num} Personne{num > 1 ? "s" : ""}
                   </SelectItem>
                 ))}
-                <SelectItem value="11">10+ {t("common.people", "People")}</SelectItem>
+                <SelectItem value="11">10+ Personnes</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -155,16 +155,16 @@ export const PublicRestaurants = () => {
               <SelectTrigger className="bg-background">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Wallet className="h-4 w-4" />
-                  <SelectValue placeholder="Price" />
+                  <SelectValue placeholder="Prix" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("common.not_specified", "Any Price")}</SelectItem>
-                <SelectItem value="$">$ ({t("create.steps.identity.price_options.vlow")})</SelectItem>
-                <SelectItem value="$$">$$ ({t("create.steps.identity.price_options.low")})</SelectItem>
-                <SelectItem value="$$$">$$$ ({t("create.steps.identity.price_options.medium")})</SelectItem>
-                <SelectItem value="$$$$">$$$$ ({t("create.steps.identity.price_options.high")})</SelectItem>
-                <SelectItem value="$$$$$">$$$$$ ({t("create.steps.identity.price_options.vhigh")})</SelectItem>
+                <SelectItem value="all">Tous les prix</SelectItem>
+                <SelectItem value="$">$ ({"10€ - 20€"})</SelectItem>
+                <SelectItem value="$$">$$ ({"20€ - 30€"})</SelectItem>
+                <SelectItem value="$$$">$$$ ({"30€ - 40€"})</SelectItem>
+                <SelectItem value="$$$$">$$$$ ({"40€ - 50€"})</SelectItem>
+                <SelectItem value="$$$$$">$$$$$ ({"50€+"})</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -180,7 +180,7 @@ export const PublicRestaurants = () => {
 
           <div className="md:col-span-2">
             <Button className="w-full h-9 font-bold shadow-md hover:shadow-xl hover:translate-y-[-1px] transition-all duration-300">
-              {t("pages.home.search.button")}
+              {"Trouver un restaurant"}
             </Button>
           </div>
         </div>
@@ -193,7 +193,7 @@ export const PublicRestaurants = () => {
               onClick={clearFilters}
               className="text-muted-foreground p-0 h-auto hover:text-primary hover:no-underline transition-colors font-medium"
             >
-              {t("pages.restaurants.filters.clear", "Clear all filters")}
+              Réinitialiser les filtres
             </Button>
           </div>
         )}

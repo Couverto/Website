@@ -25,7 +25,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, RefreshCw, Search, Settings2, Trash } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 
@@ -61,8 +60,6 @@ export function DataTable<TData, TValue>({
     pageSize: 10,
   });
   const [isSearching, setIsSearching] = useState(false);
-
-  const { t } = useTranslation();
 
   useEffect(() => {
     fetchData(pagination.pageIndex, pagination.pageSize);
@@ -114,7 +111,7 @@ export function DataTable<TData, TValue>({
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t(`components.dataTable.filters.${searchElement}`) || "Filter..."}
+              placeholder={"Filtrer..."}
               value={(table.getColumn(searchElement)?.getFilterValue() as string) ?? ""}
               onChange={(event) => table.getColumn(searchElement)?.setFilterValue(event.target.value)}
               className="h-9 w-full pl-9 bg-background"
@@ -132,7 +129,7 @@ export function DataTable<TData, TValue>({
           {actions.includes("create") && (
             <Button size="sm" className="hidden sm:flex h-9 gap-1" onClick={() => callback("create", null)}>
               <Plus className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">{t("components.dataTable.create_entity")}</span>
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">{"Créer une nouvelle entité"}</span>
             </Button>
           )}
 
@@ -140,11 +137,11 @@ export function DataTable<TData, TValue>({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 ml-auto sm:ml-0 bg-transparent">
                 <Settings2 className="h-3.5 w-3.5 mr-2" />
-                {t("components.dataTable.columns")}
+                {"Colonnes"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("components.dataTable.toggle_columns")}</DropdownMenuLabel>
+              <DropdownMenuLabel>{"Afficher/Masquer les colonnes"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {table
                 .getAllColumns()
@@ -157,7 +154,7 @@ export function DataTable<TData, TValue>({
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
-                      {t(`components.dataTable.columns_list.${column.id}`) || column.id}
+                      {(column.columnDef.meta as any)?.label || column.id}
                     </DropdownMenuCheckboxItem>
                   );
                 })}
@@ -219,7 +216,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  {t("components.dataTable.no_data")}
+                  {"Aucune donnée disponible"}
                 </TableCell>
               </TableRow>
             )}
@@ -230,12 +227,11 @@ export function DataTable<TData, TValue>({
       {/* Pagination */}
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {t("components.dataTable.footer.page")} {pagination.pageIndex + 1} / {table.getPageCount() || 1} • {dataCount}{" "}
-          {t("components.dataTable.footer.total")}
+          {"Page"} {pagination.pageIndex + 1} / {table.getPageCount() || 1} • {dataCount} {"total"}
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">{t("components.dataTable.footer.per_page")}</p>
+            <p className="text-sm font-medium">{"Par page"}</p>
             <Select
               value={`${pagination.pageSize}`}
               onValueChange={(value) => {
@@ -251,7 +247,7 @@ export function DataTable<TData, TValue>({
                     {pageSize}
                   </SelectItem>
                 ))}
-                <SelectItem value={`${dataCount}`}>{t("components.dataTable.footer.all")}</SelectItem>
+                <SelectItem value={`${dataCount}`}>{"Tout"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -301,12 +297,14 @@ export function DataTable<TData, TValue>({
         <Dialog open={openModal} onOpenChange={setOpenModal}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t("components.dataTable.delete_title")}</DialogTitle>
-              <DialogDescription>{t("components.dataTable.delete_description")}</DialogDescription>
+              <DialogTitle>{"Supprimer toutes les entités"}</DialogTitle>
+              <DialogDescription>
+                {"Êtes-vous sûr de vouloir supprimer toutes les entités ? Cette action est irréversible."}
+              </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpenModal(false)}>
-                {t("global.buttons.cancel")}
+                {"Annuler"}
               </Button>
               <Button
                 variant="destructive"
@@ -315,7 +313,7 @@ export function DataTable<TData, TValue>({
                   setOpenModal(false);
                 }}
               >
-                {t("global.buttons.delete")}
+                {"Supprimer"}
               </Button>
             </DialogFooter>
           </DialogContent>

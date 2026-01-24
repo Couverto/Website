@@ -139,7 +139,7 @@ export const StepPayment = ({ data, updateData, onSubmit, onBack, loading }: Ste
               <FormItem>
                 <FormLabel>Card Holder Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder="Jean Dupont" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

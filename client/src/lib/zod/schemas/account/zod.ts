@@ -1,43 +1,45 @@
 import { z } from "zod";
 
-export const getUpdateAccountSchema = (t: (key: string) => string) =>
+export const getUpdateAccountSchema = () =>
   z.object({
     name: z
       .string()
-      .min(2, { message: t("pages.account.errors.name_min") })
-      .max(25, { message: t("pages.account.errors.name_max") }),
+      .min(2, { message: "Le nom doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le nom doit comporter au maximum 25 caractères." }),
     forename: z
       .string()
-      .min(2, { message: t("pages.account.errors.forename_min") })
-      .max(25, { message: t("pages.account.errors.forename_max") }),
+      .min(2, { message: "Le prénom doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le prénom doit comporter au maximum 25 caractères." }),
     username: z
       .string()
-      .min(2, { message: t("pages.account.errors.username_min") })
-      .max(25, { message: t("pages.account.errors.username_max") })
-      .regex(/^[^A-Z\s]+$/, { message: t("pages.account.errors.username_no_spaces") }),
+      .min(2, { message: "Le nom d'utilisateur doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le nom d'utilisateur doit comporter au maximum 25 caractères." })
+      .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
 
-    email: z.string().email({ message: t("pages.account.errors.invalid_email") }),
+    phone: z.string().optional(),
+
+    email: z.string().email({ message: "Adresse e-mail invalide." }),
   });
 
-export const getUpdatePasswordSchema = (t: (key: string) => string) =>
+export const getUpdatePasswordSchema = () =>
   z
     .object({
-      currentPassword: z.string().min(6, { message: t("pages.account.errors.current_password_min") }),
+      currentPassword: z.string().min(6, { message: "Le mot de passe actuel doit comporter au moins 6 caractères." }),
       newPassword: z
         .string()
-        .min(6, { message: t("pages.account.errors.new_password_min") })
-        .max(25, { message: t("pages.account.errors.new_password_max") }),
-      newPasswordConfirm: z.string().min(6, { message: t("pages.account.errors.new_password_confirm_min") }),
+        .min(6, { message: "Le nouveau mot de passe doit comporter au moins 6 caractères." })
+        .max(25, { message: "Le mot de passe doit comporter au maximum 25 caractères." }),
+      newPasswordConfirm: z.string().min(6, { message: "La confirmation du nouveau mot de passe doit comporter au moins 6 caractères." }),
     })
     .refine((data) => data.newPassword === data.newPasswordConfirm, {
-      message: t("pages.account.errors.passwords_do_not_match"),
+      message: "Les mots de passe ne correspondent pas.",
       path: ["newPasswordConfirm"],
     });
 
-export const getDeleteAccountSchema = (t: (key: string) => string) =>
+export const getDeleteAccountSchema = () =>
   z.object({
     checkApproval: z.boolean().refine((val) => val === true, {
-      message: t("pages.account.errors.check_approval"),
+      message: "Veuillez cocher la case pour confirmer la suppression de votre compte.",
     }),
-    password: z.string().min(6, { message: t("pages.account.errors.password_min") }),
+    password: z.string().min(6, { message: "Le mot de passe doit comporter au moins 6 caractères." }),
   });

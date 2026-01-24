@@ -2,7 +2,6 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, Utensils, MoreHorizontal, Info } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,7 +11,6 @@ import { useState } from "react";
 import { RestaurantCardProps } from "@/interfaces/Components";
 
 export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -63,7 +61,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate(`/restaurants/infos/${restaurant._id}`)}>
                     <Info className="mr-2 h-4 w-4" />
-                    <span>{t("common.learn_more")}</span>
+                    <span>{"En savoir plus"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -73,19 +71,15 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
           <div className="absolute bottom-3 left-3 right-3 text-white">
             {restaurant.priceRange && (
               <Badge variant="outline" className="text-white border-white/40 bg-black/20 backdrop-blur-sm mb-2 hover:bg-black/40">
-                {t(
-                  `create.steps.identity.price_options.${
-                    restaurant.priceRange === "$"
-                      ? "vlow"
-                      : restaurant.priceRange === "$$"
-                        ? "low"
-                        : restaurant.priceRange === "$$$"
-                          ? "medium"
-                          : restaurant.priceRange === "$$$$"
-                            ? "high"
-                            : "vhigh"
-                  }`,
-                )}
+                {restaurant.priceRange === "$"
+                  ? "Très abordable"
+                  : restaurant.priceRange === "$$"
+                    ? "Abordable"
+                    : restaurant.priceRange === "$$$"
+                      ? "Intermédiaire"
+                      : restaurant.priceRange === "$$$$"
+                        ? "Haut de gamme"
+                        : "Gastronomique"}
               </Badge>
             )}
             <h3 className="font-bold text-xl leading-tight text-white shadow-sm truncate">{restaurant.name}</h3>
@@ -113,10 +107,9 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
               {restaurant.features.slice(0, 3).map((f) => {
                 const key = f.toLowerCase().replace(/ /g, "_");
                 // Manual mapping for known discrepancies or strict matching if needed
-                const translationKey = `create.steps.details.options.${key}`;
                 return (
                   <Badge key={f} variant="outline" className="text-[10px] px-1 h-5">
-                    {t(translationKey, { defaultValue: f })}
+                    {f}
                   </Badge>
                 );
               })}
@@ -129,7 +122,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
           {restaurant.isClosed ? (
             <div className="flex items-center gap-2 text-xs font-medium p-2 rounded border mt-auto text-red-600 bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/50">
               <div className="w-2 h-2 rounded-full bg-red-500" />
-              {t("pages.restaurant.settings.restaurant_closed")}
+              {"Restaurant fermé"}
             </div>
           ) : (
             restaurant.isOpenNow !== undefined && (
@@ -141,7 +134,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full ${restaurant.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
-                {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
+                {restaurant.isOpenNow ? "Ouvert maintenant" : "Fermé actuellement"}
               </div>
             )
           )}
@@ -156,7 +149,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
               setIsBookingOpen(true);
             }}
           >
-            {restaurant.isClosed ? t("pages.restaurant.settings.restaurant_closed") : t("pages.home.card.book_button")}
+            {restaurant.isClosed ? "Restaurant fermé" : "Réserver"}
           </Button>
         </CardFooter>
       </Card>

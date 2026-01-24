@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useTranslation } from "react-i18next";
 import { Separator } from "@/components/ui/separator";
 
 interface PublicRestaurant {
@@ -42,7 +41,6 @@ interface PublicRestaurant {
 export const PublicRestaurant = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<PublicRestaurant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +64,7 @@ export const PublicRestaurant = () => {
           });
         }
       } catch (err: any) {
-        setError(t("server.global.errors.not_found"));
+        setError("Ressource non trouvée");
       } finally {
         setLoading(false);
       }
@@ -75,7 +73,7 @@ export const PublicRestaurant = () => {
     if (id) {
       fetchRestaurant();
     }
-  }, [id, t]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -88,8 +86,8 @@ export const PublicRestaurant = () => {
   if (error || !restaurant) {
     return (
       <div className="container mx-auto py-20 text-center">
-        <h2 className="text-2xl font-bold mb-4">{error || t("server.global.errors.not_found")}</h2>
-        <Button onClick={() => navigate(-1)}>{t("common.back_home")}</Button>
+        <h2 className="text-2xl font-bold mb-4">{error || "Ressource non trouvée"}</h2>
+        <Button onClick={() => navigate(-1)}>{"Retour à l'accueil"}</Button>
       </div>
     );
   }
@@ -155,26 +153,20 @@ export const PublicRestaurant = () => {
                   <MapPin className="h-4 w-4 group-hover:animate-bounce" />
                   <span className="underline decoration-dotted underline-offset-4">{restaurant.city}</span>
                 </a>
-                {restaurant.priceRange && (
-                  <div className="flex items-center gap-1">
-                    <Wallet className="h-4 w-4" />
-                    <span>
-                      {t(
-                        `create.steps.identity.price_options.${
-                          restaurant.priceRange === "$"
-                            ? "vlow"
-                            : restaurant.priceRange === "$$"
-                              ? "low"
-                              : restaurant.priceRange === "$$$"
-                                ? "medium"
-                                : restaurant.priceRange === "$$$$"
-                                  ? "high"
-                                  : "vhigh"
-                        }`,
-                      )}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <Wallet className="h-4 w-4" />
+                  <span>
+                    {restaurant.priceRange === "$"
+                      ? "Très abordable"
+                      : restaurant.priceRange === "$$"
+                        ? "Abordable"
+                        : restaurant.priceRange === "$$$"
+                          ? "Prix moyen"
+                          : restaurant.priceRange === "$$$$"
+                            ? "Haut de gamme"
+                            : "Luxe"}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1 text-yellow-500">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-medium text-foreground">{restaurant.rating || "NEW"}</span>
@@ -183,7 +175,7 @@ export const PublicRestaurant = () => {
               <div>
                 {restaurant.isClosed ? (
                   <Badge variant="destructive" className="mt-4 text-sm py-1 px-3 bg-red-600 hover:bg-red-700">
-                    {t("pages.restaurant.settings.restaurant_closed")}
+                    {"Restaurant fermé"}
                   </Badge>
                 ) : (
                   restaurant.isOpenNow !== undefined && (
@@ -191,7 +183,7 @@ export const PublicRestaurant = () => {
                       variant={restaurant.isOpenNow ? "default" : "destructive"}
                       className={`mt-4 text-sm py-1 px-3 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
                     >
-                      {restaurant.isOpenNow ? t("pages.public_restaurant.open_now") : t("pages.public_restaurant.closed_now")}
+                      {restaurant.isOpenNow ? "Ouvert maintenant" : "Fermé actuellement"}
                     </Badge>
                   )
                 )}
@@ -203,7 +195,7 @@ export const PublicRestaurant = () => {
               onClick={() => setIsBookingOpen(true)}
               disabled={restaurant.isClosed}
             >
-              {restaurant.isClosed ? t("pages.restaurant.settings.restaurant_closed") : t("pages.public_restaurant.book_table")}
+              {restaurant.isClosed ? "Restaurant fermé" : "Réserver une table"}
             </Button>
           </div>
         </div>
@@ -215,24 +207,22 @@ export const PublicRestaurant = () => {
           <div className="lg:col-span-2">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="mb-8">
-                <TabsTrigger value="overview">{t("pages.public_restaurant.tabs.overview")}</TabsTrigger>
-                <TabsTrigger value="menu">{t("pages.public_restaurant.tabs.menu")}</TabsTrigger>
-                {restaurant.reviews && restaurant.reviews.length > 0 && (
-                  <TabsTrigger value="reviews">{t("pages.public_restaurant.tabs.reviews")}</TabsTrigger>
-                )}
+                <TabsTrigger value="overview">{"Aperçu"}</TabsTrigger>
+                <TabsTrigger value="menu">{"Menu"}</TabsTrigger>
+                {restaurant.reviews && restaurant.reviews.length > 0 && <TabsTrigger value="reviews">{"Avis"}</TabsTrigger>}
               </TabsList>
 
               <TabsContent value="overview" className="space-y-8">
                 <section>
-                  <h2 className="text-2xl font-semibold mb-4">{t("pages.public_restaurant.about")}</h2>
+                  <h2 className="text-2xl font-semibold mb-4">{"À propos"}</h2>
                   <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {restaurant.description || t("pages.public_restaurant.no_description")}
+                    {restaurant.description || "Aucune description disponible."}
                   </p>
                 </section>
 
                 {restaurant.images && restaurant.images.length > 0 && (
                   <section>
-                    <h2 className="text-2xl font-semibold mb-4">{t("pages.public_restaurant.photos")}</h2>
+                    <h2 className="text-2xl font-semibold mb-4">{"Photos"}</h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {restaurant.images.map((img, idx) => (
                         <img
@@ -248,33 +238,26 @@ export const PublicRestaurant = () => {
 
                 {restaurant.features && restaurant.features.length > 0 && (
                   <section>
-                    <h2 className="text-2xl font-semibold mb-4">{t("pages.public_restaurant.features")}</h2>
+                    <h2 className="text-2xl font-semibold mb-4">{"Équipements"}</h2>
                     <div className="flex flex-wrap gap-2">
-                      {restaurant.features.map((f) => {
-                        const key = f.toLowerCase().replace(/ /g, "_");
-                        const translationKey = `create.steps.details.options.${key}`;
-                        return (
-                          <Badge key={f} variant="secondary" className="px-3 py-1 text-sm">
-                            {t(translationKey, { defaultValue: f })}
-                          </Badge>
-                        );
-                      })}
+                      {restaurant.features.map((f) => (
+                        <Badge key={f} variant="secondary" className="px-3 py-1 text-sm">
+                          {f}
+                        </Badge>
+                      ))}
                     </div>
                   </section>
                 )}
 
                 {restaurant.paymentMethods && restaurant.paymentMethods.length > 0 && (
                   <section>
-                    <h2 className="text-2xl font-semibold mb-4">{t("pages.public_restaurant.payment_methods")}</h2>
+                    <h2 className="text-2xl font-semibold mb-4">{"Moyens de paiement"}</h2>
                     <div className="flex flex-wrap gap-2">
-                      {restaurant.paymentMethods.map((m) => {
-                        const key = m.toLowerCase().replace(/ /g, "_");
-                        return (
-                          <Badge key={m} variant="secondary" className="px-3 py-1 text-sm bg-primary/5 text-primary border-primary/10">
-                            {t(`create.steps.details.payment_options.${key}`, m)}
-                          </Badge>
-                        );
-                      })}
+                      {restaurant.paymentMethods.map((m) => (
+                        <Badge key={m} variant="secondary" className="px-3 py-1 text-sm bg-primary/5 text-primary border-primary/10">
+                          {m}
+                        </Badge>
+                      ))}
                     </div>
                   </section>
                 )}
@@ -293,7 +276,7 @@ export const PublicRestaurant = () => {
                               <div className="flex items-center justify-between p-3 bg-muted/30 border-b">
                                 <div className="flex items-center gap-2">
                                   <FileText className="h-4 w-4 text-primary" />
-                                  <span className="text-sm font-medium">{t("pages.public_restaurant.view_menu", { count: idx + 1 })}</span>
+                                  <span className="text-sm font-medium">Voir le menu #{idx + 1}</span>
                                   <Badge variant="outline" className="text-[10px] uppercase">
                                     {url.split(".").pop()?.toUpperCase() || "FILE"}
                                   </Badge>
@@ -306,7 +289,7 @@ export const PublicRestaurant = () => {
                                   className="flex items-center gap-1 text-xs text-primary hover:underline"
                                 >
                                   <ExternalLink className="h-3 w-3" />
-                                  {t("common.download")}
+                                  {"Télécharger"}
                                 </a>
                               </div>
                               <div className="bg-muted/10">
@@ -321,14 +304,14 @@ export const PublicRestaurant = () => {
                                 ) : (
                                   <div className="p-8 text-center text-muted-foreground">
                                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                    <p>{t("pages.public_restaurant.preview_unavailable")}</p>
+                                    <p>{"Aperçu non disponible"}</p>
                                     <a
                                       href={url}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="text-primary hover:underline text-sm mt-2 inline-block"
                                     >
-                                      {t("common.open_in_new_tab")}
+                                      {"Ouvrir dans un nouvel onglet"}
                                     </a>
                                   </div>
                                 )}
@@ -340,7 +323,7 @@ export const PublicRestaurant = () => {
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
                         <ChefHat className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>{t("pages.public_restaurant.no_menu_available")}</p>
+                        <p>{"Menu non disponible."}</p>
                       </div>
                     )}
                   </CardContent>
@@ -350,7 +333,7 @@ export const PublicRestaurant = () => {
               <TabsContent value="reviews">
                 <Card>
                   <CardContent className="pt-6 text-center py-12 text-muted-foreground">
-                    <p>{t("pages.public_restaurant.no_reviews_yet")}</p>
+                    <p>{"Aucun avis pour le moment."}</p>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -361,7 +344,7 @@ export const PublicRestaurant = () => {
           <div className="space-y-6">
             <Card>
               <CardContent className="p-6 space-y-6">
-                <h3 className="font-semibold text-lg">{t("pages.public_restaurant.info")}</h3>
+                <h3 className="font-semibold text-lg">{"Informations"}</h3>
 
                 <div className="space-y-4">
                   <a
@@ -372,7 +355,7 @@ export const PublicRestaurant = () => {
                   >
                     <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5 group-hover:animate-bounce" />
                     <div>
-                      <div className="font-medium">{t("pages.public_restaurant.address")}</div>
+                      <div className="font-medium">{"Adresse"}</div>
                       <div className="text-sm text-muted-foreground group-hover:text-primary/80 transition-colors underline decoration-dotted underline-offset-2">
                         {restaurant.adress}, {restaurant.city}
                       </div>
@@ -386,9 +369,11 @@ export const PublicRestaurant = () => {
                       <div className="flex items-start gap-3">
                         <ChefHat className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                         <div>
-                          <div className="font-medium">{t("pages.public_restaurant.capacity")}</div>
+                          <div className="font-medium">{"Capacité"}</div>
                           <div className="text-sm text-muted-foreground">
-                            {t("pages.public_restaurant.seats", { count: restaurant.capacity })}
+                            <div className="text-sm text-muted-foreground">
+                              {restaurant.capacity} place{restaurant.capacity! > 1 ? "s" : ""}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -399,23 +384,37 @@ export const PublicRestaurant = () => {
                   <div className="flex items-start gap-3">
                     <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium">{t("pages.public_restaurant.hours")}</div>
+                      <div className="font-medium">{"Horaires d'ouverture"}</div>
                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">
                         {restaurant.openingHours && Object.keys(restaurant.openingHours).length > 0 ? (
                           <div className="space-y-1 mt-1">
                             {Object.entries(restaurant.openingHours).map(([day, schedule]: [string, any]) => (
                               <div key={day} className="flex justify-between gap-4">
-                                <span className="capitalize w-24">{t(`pages.public_restaurant.days.${day.toLowerCase()}`, day)}</span>
+                                <span className="capitalize w-24">
+                                  {day === "MO"
+                                    ? "Lundi"
+                                    : day === "TU"
+                                      ? "Mardi"
+                                      : day === "WE"
+                                        ? "Mercredi"
+                                        : day === "TH"
+                                          ? "Jeudi"
+                                          : day === "FR"
+                                            ? "Vendredi"
+                                            : day === "SA"
+                                              ? "Samedi"
+                                              : "Dimanche"}
+                                </span>
                                 <span className={`${schedule?.isClosed ? "text-destructive font-medium" : ""}`}>
                                   {schedule?.isClosed
-                                    ? t("create.steps.details.closed")
+                                    ? "Fermé"
                                     : schedule?.periods?.map((p: any) => `${p.open} - ${p.close}`).join(", ") || "-"}
                                 </span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          t("common.not_specified")
+                          "Non spécifié"
                         )}
                       </div>
                     </div>

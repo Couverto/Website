@@ -1,34 +1,32 @@
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const Footer = () => {
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     product: {
-      title: t("pages.landing.footer.product"),
+      title: "Produit",
       links: [
-        { label: t("pages.landing.footer.features"), href: "#features" },
-        { label: t("pages.landing.footer.pricing"), href: "#pricing" },
+        { label: "Fonctionnalités", href: "#features" },
+        { label: "Tarifs", href: "#pricing" },
       ],
     },
     company: {
-      title: t("pages.landing.footer.company"),
+      title: "Entreprise",
       links: [
-        { label: t("pages.landing.footer.about"), href: "/about" },
-        { label: t("pages.landing.footer.contact"), href: "/contact" },
+        { label: "À propos", href: "/about" },
+        { label: "Contact", href: "/contact" },
       ],
     },
     legal: {
-      title: t("pages.landing.footer.legal"),
+      title: "Légal",
       links: [
-        { label: t("pages.landing.footer.legal_notice"), href: "#" },
-        { label: t("pages.landing.footer.privacy"), href: "#" },
-        { label: t("pages.landing.footer.terms"), href: "#" },
+        { label: "Mentions légales", href: "#" },
+        { label: "Politique de confidentialité", href: "#" },
+        { label: "CGU", href: "#" },
       ],
     },
   };
@@ -43,7 +41,9 @@ export const Footer = () => {
             <Link to="/" className="inline-block mb-4">
               <span className="text-2xl font-bold text-primary">{appName}</span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-4 max-w-xs">{t("pages.landing.footer.slogan", { appName })}</p>
+            <p className="text-sm text-muted-foreground mb-4 max-w-xs">
+              La gestion du service, simplement. Un outil conçu pour les restaurateurs indépendants.
+            </p>
           </div>
 
           {/* Links Columns */}
@@ -72,9 +72,9 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>
-            © {currentYear} {t("pages.landing.footer.copyright", { appName })}
+            © {currentYear} {appName}. Tous droits réservés.
           </p>
-          <p>{t("pages.landing.footer.made_with_love")}</p>
+          <p>{"Fait avec soin pour les restaurateurs indépendants 🇫🇷"}</p>
         </div>
       </div>
     </footer>

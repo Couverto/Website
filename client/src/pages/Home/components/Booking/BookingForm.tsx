@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useTranslation } from "react-i18next";
 import { Loader2, CalendarIcon } from "lucide-react";
 import { format, startOfDay } from "date-fns";
-import { fr, enUS } from "date-fns/locale";
+import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { axiosConfig } from "@/config/axiosConfig";
@@ -18,9 +17,8 @@ import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DatePicker, { registerLocale } from "react-datepicker";
 
-// Register locales
+// Register locale
 registerLocale("fr", fr);
-registerLocale("en-US", enUS);
 
 interface BookingFormProps {
   restaurant: RestaurantInterface;
@@ -32,7 +30,6 @@ interface BookingFormProps {
 }
 
 export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormProps) => {
-  const { t, i18n } = useTranslation();
   const { authUser: user } = useAuthContext();
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -149,11 +146,11 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
       // Use /guest endpoint when user is not authenticated
       const endpoint = user ? "/bookings" : "/bookings/guest";
       await axiosConfig.post(endpoint, payload);
-      toast.success(t("components.booking.form.success"));
+      toast.success("Réservation créée avec succès !");
       onSuccess();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.error ? t(error.response.data.error) : t("components.booking.form.error"));
+      toast.error(error.response?.data?.error || "Erreur lors de la création de la réservation. Veuillez réessayer.");
     }
   };
 
@@ -169,23 +166,23 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                 if (!date) return true;
                 const day = new Date(date).getDay();
                 if (closedDays.includes(day)) {
-                  return t("components.booking.form.errors.closed_day");
+                  return "Le restaurant est fermé ce jour-là";
                 }
                 return true;
               },
             }}
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>{t("components.booking.form.date")}</FormLabel>
+                <FormLabel>{"Date"}</FormLabel>
                 <div className="relative">
                   <DatePicker
                     selected={field.value}
                     onChange={(date: Date | null) => field.onChange(date)}
-                    locale={i18n.language === "fr" ? "fr" : "en-US"}
-                    dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+                    locale="fr"
+                    dateFormat="dd/MM/yyyy"
                     minDate={new Date()}
                     filterDate={(date) => !closedDays.includes(date.getDay())}
-                    placeholderText={t("components.booking.form.select_date")}
+                    placeholderText={"Choisir une date"}
                     className={cn(
                       "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                       !field.value && "text-muted-foreground",
@@ -204,13 +201,11 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("components.booking.form.time")}</FormLabel>
+                <FormLabel>{"Heure"}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={loadingSlots || timeSlots.length === 0}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder={loadingSlots ? t("components.booking.form.loading_slots") : t("components.booking.form.select_time")}
-                      />
+                      <SelectValue placeholder={loadingSlots ? "Chargement des créneaux..." : "Sélectionner une heure"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -232,7 +227,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           name="guests"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("components.booking.form.guests")}</FormLabel>
+              <FormLabel>{"Couverts"}</FormLabel>
               <FormControl>
                 <Input type="number" min={1} {...field} />
               </FormControl>
@@ -242,15 +237,15 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
         />
 
         <div className="space-y-4 border-t pt-4">
-          <h4 className="font-medium text-sm text-muted-foreground">{t("components.booking.form.contact_details")}</h4>
+          <h4 className="font-medium text-sm text-muted-foreground">{"Coordonnées"}</h4>
           <FormField
             control={form.control}
             name="customer.name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("components.booking.form.name")}</FormLabel>
+                <FormLabel>{"Nom"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder="Jean Dupont" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -263,7 +258,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
               name="customer.email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("components.booking.form.email")}</FormLabel>
+                  <FormLabel>{"Email"}</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="john@example.com" {...field} />
                   </FormControl>
@@ -276,7 +271,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
               name="customer.phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("components.booking.form.phone")}</FormLabel>
+                  <FormLabel>{"Téléphone"}</FormLabel>
                   <FormControl>
                     <Input type="tel" placeholder="+33 6 12 34 56 78" {...field} />
                   </FormControl>
@@ -292,9 +287,9 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("components.booking.form.notes")}</FormLabel>
+              <FormLabel>{"Notes"}</FormLabel>
               <FormControl>
-                <Textarea placeholder={t("components.booking.form.notes_placeholder")} className="resize-none" {...field} />
+                <Textarea placeholder={"Demandes spéciales ? (Allergies, occasion, etc.)"} className="resize-none" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -307,7 +302,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           disabled={form.formState.isSubmitting || !form.formState.isValid || (bookingDate && closedDays.includes(bookingDate.getDay()))}
         >
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t("components.booking.form.submit")}
+          {"Confirmer la réservation"}
         </Button>
       </form>
     </Form>

@@ -1,61 +1,61 @@
 import { z } from "zod";
 
-export const getCreateUserSchema = (t: (key: string) => string) =>
+export const getCreateUserSchema = () =>
   z.object({
     name: z
       .string()
-      .min(2, { message: t("pages.admin.users_page.form.name_min") })
-      .max(25, { message: t("pages.admin.users_page.form.name_max") }),
+      .min(2, { message: "Le nom doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le nom doit comporter au maximum 25 caractères." }),
     forename: z
       .string()
-      .min(2, { message: t("pages.admin.users_page.form.forename_min") })
-      .max(25, { message: t("pages.admin.users_page.form.forename_max") }),
+      .min(2, { message: "Le prénom doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le prénom doit comporter au maximum 25 caractères." }),
     username: z
       .string()
-      .min(2, { message: t("pages.admin.users_page.form.username_min") })
-      .max(25, { message: t("pages.admin.users_page.form.username_max") })
-      .regex(/^[^A-Z\s]+$/, { message: t("pages.admin.users_page.form.username_no_spaces") }),
-    email: z.string().email({ message: t("pages.admin.users_page.form.invalid_email") }),
-    password: z.string().min(1, { message: t("pages.admin.users_page.form.password_required") }),
+      .min(2, { message: "Le nom d'utilisateur doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le nom d'utilisateur doit comporter au maximum 25 caractères." })
+      .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
+    email: z.string().email({ message: "Adresse e-mail invalide." }),
+    password: z.string().min(1, { message: "Le mot de passe est requis." }),
     role: z.string(),
   });
 
-export const getUpdateUserSchema = (t: (key: string) => string) =>
+export const getUpdateUserSchema = () =>
   z.object({
     name: z
       .string()
-      .min(2, { message: t("pages.admin.users_page.form.name_min") })
-      .max(25, { message: t("pages.admin.users_page.form.name_max") }),
+      .min(2, { message: "Le nom doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le nom doit comporter au maximum 25 caractères." }),
     forename: z
       .string()
-      .min(2, { message: t("pages.admin.users_page.form.forename_min") })
-      .max(25, { message: t("pages.admin.users_page.form.forename_max") }),
+      .min(2, { message: "Le prénom doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le prénom doit comporter au maximum 25 caractères." }),
     username: z
       .string()
-      .min(2, { message: t("pages.admin.users_page.form.username_min") })
-      .max(25, { message: t("pages.admin.users_page.form.username_max") })
-      .regex(/^[^A-Z\s]+$/, { message: t("pages.admin.users_page.form.username_no_spaces") }),
-    email: z.string().email({ message: t("pages.admin.users_page.form.invalid_email") }),
+      .min(2, { message: "Le nom d'utilisateur doit comporter au moins 2 caractères." })
+      .max(25, { message: "Le nom d'utilisateur doit comporter au maximum 25 caractères." })
+      .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
+    email: z.string().email({ message: "Adresse e-mail invalide." }),
     role: z.string(),
     password: z.string().optional(),
   });
 
-export const getDeleteUserSchema = (t: (key: string) => string) =>
+export const getDeleteUserSchema = () =>
   z.object({
     confirmDelete: z
       .string()
-      .min(1, { message: t("pages.admin.users_page.form.confirm_delete_required") })
+      .min(1, { message: 'Confirmez la suppression en tapant "DELETE".' })
       .transform((val) => val.toUpperCase()),
   });
 
-export const getCreateRestaurantSchema = (t: (key: string) => string) => {
+export const getCreateRestaurantSchema = () => {
   return z.object({
-    name: z.string().min(1, { message: t("pages.admin.restaurants_page.form.errors.name_required") }),
-    slug: z.string().min(1, { message: t("pages.admin.restaurants_page.form.errors.slug_required") }),
+    name: z.string().min(1, { message: "Le nom est requis" }),
+    slug: z.string().min(1, { message: "Le slug est requis" }),
     description: z.string().optional(),
-    address: z.string().min(1, { message: t("pages.admin.restaurants_page.form.errors.address_required") }),
-    city: z.string().min(1, { message: t("pages.admin.restaurants_page.form.errors.city_required") }),
-    phone: z.string().min(1, { message: t("pages.admin.restaurants_page.form.errors.phone_required") }),
+    address: z.string().min(1, { message: "L'adresse est requise" }),
+    city: z.string().min(1, { message: "La ville est requise" }),
+    phone: z.string().min(1, { message: "Le téléphone est requis" }),
     website: z.string().optional(),
     coverImage: z.string().optional(),
     priceRange: z.enum(["$", "$$", "$$$"]).default("$$"),
@@ -67,7 +67,7 @@ export const getCreateRestaurantSchema = (t: (key: string) => string) => {
   });
 };
 
-export const getUpdateRestaurantSchema = (t: (key: string) => string) => {
+export const getUpdateRestaurantSchema = () => {
   return z.object({
     name: z.string().optional(),
     slug: z.string().optional(),
@@ -86,18 +86,18 @@ export const getUpdateRestaurantSchema = (t: (key: string) => string) => {
   });
 };
 
-export const getDeleteRestaurantSchema = (t: (key: string) => string) => {
+export const getDeleteRestaurantSchema = () => {
   return z.object({
     confirmDelete: z.string().min(1, {
-      message: t("pages.admin.users_page.form.errors.confirm_delete_required"),
+      message: "Veuillez confirmer la suppression.",
     }),
   });
 };
-export const getCreatePlanSchema = (t: (key: string) => string) => {
+export const getCreatePlanSchema = () => {
   return z.object({
-    name: z.string().min(1, { message: t("pages.admin.plans_page.form.errors.name_required") }),
+    name: z.string().min(1, { message: "Le nom est requis" }),
     description: z.string().optional(),
-    price: z.coerce.number().min(0, { message: t("pages.admin.plans_page.form.errors.price_required") }),
+    price: z.coerce.number().min(0, { message: "Le prix est requis" }),
     features: z.string().optional(),
     stripePriceId: z.string().optional(),
     active: z.boolean(),
@@ -105,11 +105,11 @@ export const getCreatePlanSchema = (t: (key: string) => string) => {
   });
 };
 
-export const getUpdatePlanSchema = (t: (key: string) => string) => {
+export const getUpdatePlanSchema = () => {
   return z.object({
-    name: z.string().min(1, { message: t("pages.admin.plans_page.form.errors.name_required") }),
+    name: z.string().min(1, { message: "Le nom est requis" }),
     description: z.string().optional(),
-    price: z.coerce.number().min(0, { message: t("pages.admin.plans_page.form.errors.price_required") }),
+    price: z.coerce.number().min(0, { message: "Le prix est requis" }),
     features: z.string().optional(),
     stripePriceId: z.string().optional(),
     active: z.boolean(),
@@ -117,10 +117,10 @@ export const getUpdatePlanSchema = (t: (key: string) => string) => {
   });
 };
 
-export const getDeletePlanSchema = (t: (key: string) => string) => {
+export const getDeletePlanSchema = () => {
   return z.object({
     confirmDelete: z.string().min(1, {
-      message: t("pages.admin.plans_page.form.errors.confirm_delete_required"),
+      message: 'Confirmez la suppression en tapant "DELETE".',
     }),
   });
 };

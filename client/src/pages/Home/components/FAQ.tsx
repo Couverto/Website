@@ -1,31 +1,30 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 import { HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const FAQ = () => {
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
   const navigate = useNavigate();
 
   const faqs = [
     {
-      question: t("pages.home.faq.q1"),
-      answer: t("pages.home.faq.a1"),
+      question: "Est-ce vraiment gratuit ?",
+      answer: "Oui, pour les utilisateurs, la réservation est 100% gratuite. Vous payez simplement votre repas au restaurant.",
     },
     {
-      question: t("pages.home.faq.q2"),
-      answer: t("pages.home.faq.a2"),
+      question: "Comment annuler ma réservation ?",
+      answer: "Vous pouvez annuler ou modifier votre réservation à tout moment depuis votre compte ou via le lien reçu par SMS/Email.",
     },
     {
-      question: t("pages.home.faq.q3"),
-      answer: t("pages.home.faq.a3"),
+      question: "Dois-je créer un compte ?",
+      answer:
+        "Non, vous pouvez réserver en tant qu'invité. Cependant, créer un compte vous permet de gérer vos réservations plus facilement.",
     },
     {
-      question: t("pages.home.faq.q4"),
-      answer: t("pages.home.faq.a4"),
+      question: "Comment savoir si ma réservation est confirmée ?",
+      answer: "Vous recevez une confirmation immédiate par email et SMS dès que vous validez votre réservation.",
     },
     // Adding dummy questions to fill space if needed, or stick to provided ones but style them better
   ];
@@ -39,18 +38,20 @@ export const FAQ = () => {
             <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl text-primary mb-2">
               <HelpCircle className="h-6 w-6" />
             </div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pages.home.faq.title")}</h2>
-            <p className="text-muted-foreground text-lg leading-relaxed">{t("pages.home.faq.subtitle", { appName })}</p>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{"Questions Fréquentes"}</h2>
+            <p className="text-muted-foreground text-lg leading-relaxed">
+              Tout ce que vous devez savoir pour profiter au mieux de {appName}.
+            </p>
             <div className="p-6 bg-background rounded-2xl border shadow-sm">
-              <p className="font-semibold mb-2">{t("pages.home.faq.cant_find_answer")}</p>
-              <p className="text-sm text-muted-foreground mb-4">{t("pages.home.faq.support_team")}</p>
+              <p className="font-semibold mb-2">{"Vous ne trouvez pas votre réponse ?"}</p>
+              <p className="text-sm text-muted-foreground mb-4">{"Notre équipe de support est là pour vous aider 24/7."}</p>
               <button
                 onClick={() => {
                   navigate("/contact");
                 }}
                 className="text-primary font-bold text-sm hover:underline"
               >
-                {t("pages.home.faq.contact_support")} &rarr;
+                {"Contacter le support"} &rarr;
               </button>
             </div>
           </div>

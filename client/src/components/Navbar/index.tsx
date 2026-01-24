@@ -1,7 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ThemeChanger } from "./themeChanger";
-import { LanguageChanger } from "./languageChanger";
-import { useTranslation } from "react-i18next";
 import { Separator } from "../ui/separator";
 import { House, LogOut, Menu, User, Users, Wrench, X, Utensils, ChefHat, Calendar, LayoutDashboard, Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -28,7 +26,6 @@ export const Navbar = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
   const { logout } = useLogout();
   const { authUser } = useAuthContext();
   const { configValues } = useConfigContext();
@@ -56,7 +53,7 @@ export const Navbar = () => {
   const navLinks = [
     {
       label: "Home",
-      translationKey: "navbar.home",
+      translationKey: "Accueil",
       path: "/",
       icon: House,
       auth: false, // Visible to everyone or irrelevant
@@ -64,7 +61,7 @@ export const Navbar = () => {
     },
     {
       label: "About",
-      translationKey: "navbar.about",
+      translationKey: "A propos",
       path: "/about",
       icon: Users,
       auth: false,
@@ -72,7 +69,7 @@ export const Navbar = () => {
     },
     {
       label: "Restaurants",
-      translationKey: "navbar.restaurants",
+      translationKey: "Restaurants",
       path: "/restaurants",
       icon: Utensils,
       auth: false,
@@ -80,7 +77,7 @@ export const Navbar = () => {
     },
     {
       label: "Pro Area",
-      translationKey: "pages.home.navbar.are_you_pro",
+      translationKey: "Espace Pro",
       path: "/pro",
       icon: ChefHat,
       auth: false,
@@ -91,21 +88,21 @@ export const Navbar = () => {
   const userLinks = [
     {
       label: "My Bookings",
-      translationKey: "pages.account_menu.bookings",
+      translationKey: "Mes réservations",
       path: "/account/bookings",
       icon: Calendar,
       role: "user",
     },
     {
       label: "My Restaurants",
-      translationKey: "pages.account_menu.restaurants",
+      translationKey: "Mes restaurants",
       path: "/account/restaurants",
       icon: ChefHat,
       role: "user", // Also accessible to users who want to be pros
     },
     {
       label: "Dashboard",
-      translationKey: "navbar.dashboard",
+      translationKey: "Tableau de bord",
       path: "/admin/dashboard",
       icon: Wrench,
       role: "admin",
@@ -159,7 +156,7 @@ export const Navbar = () => {
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
-                  {t(link.translationKey)}
+                  {link.translationKey}
                 </Link>
               );
             })}
@@ -168,9 +165,7 @@ export const Navbar = () => {
           {/* Right Section */}
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-2">
-              <LanguageChanger />
               <ThemeChanger />
-              <Separator orientation="vertical" className="h-6 mx-2" />
             </div>
 
             {authUser ? (
@@ -194,31 +189,31 @@ export const Navbar = () => {
                   <DropdownMenuGroup>
                     <DropdownMenuItem onClick={() => navigate("/account")} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      <span>{t("navbar.account")}</span>
+                      <span>{"Mon compte"}</span>
                     </DropdownMenuItem>
                     {userLinks
                       .filter((link) => !link.role || (link.role === "admin" ? authUser.role === "admin" : true))
                       .map((link) => (
                         <DropdownMenuItem key={link.path} className="cursor-pointer" onClick={() => navigate(link.path)}>
                           <link.icon className="mr-2 h-4 w-4" />
-                          <span>{t(link.translationKey)}</span>
+                          <span>{link.translationKey}</span>
                         </DropdownMenuItem>
                       ))}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={() => logout()}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>{t("navbar.logout")}</span>
+                    <span>{"Se déconnecter"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
                 <Button variant="ghost" asChild className="hidden md:flex rounded-full hover:bg-primary/5">
-                  <Link to="/login">{t("auth.login.title")}</Link>
+                  <Link to="/login">{"Se connecter"}</Link>
                 </Button>
                 <Button asChild className="rounded-full shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">
-                  <Link to="/register">{t("auth.register.title")}</Link>
+                  <Link to="/register">{"Créer un compte"}</Link>
                 </Button>
               </div>
             )}
@@ -261,7 +256,7 @@ export const Navbar = () => {
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <link.icon className="h-5 w-5" />
                 </div>
-                {t(link.translationKey)}
+                {link.translationKey}
               </Link>
             );
           })}
@@ -270,7 +265,7 @@ export const Navbar = () => {
 
           {authUser ? (
             <div className="flex flex-col gap-2">
-              <div className="text-sm font-medium text-muted-foreground px-2 mb-2">{t("navbar.account")}</div>
+              <div className="text-sm font-medium text-muted-foreground px-2 mb-2">{"Mon compte"}</div>
 
               <Link
                 to="/account"
@@ -280,7 +275,7 @@ export const Navbar = () => {
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <User className="h-5 w-5" />
                 </div>
-                {t("navbar.account")}
+                {"Mon compte"}
               </Link>
 
               {userLinks
@@ -295,7 +290,7 @@ export const Navbar = () => {
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                       <link.icon className="h-5 w-5" />
                     </div>
-                    {t(link.translationKey)}
+                    {link.translationKey}
                   </Link>
                 ))}
 
@@ -308,19 +303,19 @@ export const Navbar = () => {
                 className="justify-start px-2 mt-4 text-destructive hover:text-destructive hover:bg-destructive/10"
               >
                 <LogOut className="mr-2 h-5 w-5" />
-                {t("navbar.logout")}
+                {"Se déconnecter"}
               </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-3 mt-4">
               <Button asChild className="w-full rounded-full h-12 text-base">
                 <Link to="/login" onClick={() => setIsOpen(false)}>
-                  {t("auth.login.title")}
+                  {"Se connecter"}
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full rounded-full h-12 text-base">
                 <Link to="/register" onClick={() => setIsOpen(false)}>
-                  {t("auth.register.title")}
+                  {"Créer un compte"}
                 </Link>
               </Button>
             </div>
@@ -330,7 +325,6 @@ export const Navbar = () => {
             <span className="text-sm font-medium text-muted-foreground">Preferences</span>
             <div className="flex gap-2">
               <ThemeChanger />
-              <LanguageChanger />
             </div>
           </div>
         </div>

@@ -5,7 +5,6 @@ import { User as UserIcon, ArrowUpDown, Phone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TFunction } from "i18next";
 
 interface Client {
   _id: string;
@@ -21,12 +20,12 @@ interface Client {
   firstVisit: string;
 }
 
-export const getColumns = (t: TFunction<"translation">): ColumnDef<Client>[] => [
+export const getColumns = (): ColumnDef<Client>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.clients.user")}
+        {"Utilisateur"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -51,13 +50,14 @@ export const getColumns = (t: TFunction<"translation">): ColumnDef<Client>[] => 
         </div>
       );
     },
+    meta: { label: "Utilisateur" },
   },
   {
     id: "contact",
     accessorFn: (row) => row.phone,
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.clients.contact")}
+        {"Contact"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -70,12 +70,13 @@ export const getColumns = (t: TFunction<"translation">): ColumnDef<Client>[] => 
         </span>
       );
     },
+    meta: { label: "Contact" },
   },
   {
     accessorKey: "totalBookings",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.clients.visits")}
+        {"Visites"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -86,35 +87,39 @@ export const getColumns = (t: TFunction<"translation">): ColumnDef<Client>[] => 
         </Badge>
       </div>
     ),
+    meta: { label: "Visites" },
   },
   {
     accessorKey: "totalGuests",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.clients.total_guests")}
+        {"Total couverts"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => <div className="text-center text-muted-foreground font-medium">{row.original.totalGuests}</div>,
+    meta: { label: "Total couverts" },
   },
   {
     accessorKey: "lastVisit",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.clients.last_visit")}
+        {"Dernière visite"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => format(new Date(row.original.lastVisit), "dd MMM yyyy", { locale: fr }),
+    meta: { label: "Dernière visite" },
   },
   {
     accessorKey: "firstVisit",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.clients.first_visit")}
+        {"Première visite"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => format(new Date(row.original.firstVisit), "dd MMM yyyy", { locale: fr }),
+    meta: { label: "Première visite" },
   },
 ];

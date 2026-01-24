@@ -1,24 +1,21 @@
 import { Search, CalendarDays, PartyPopper } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export const HowItWorks = () => {
-  const { t } = useTranslation();
-
   const steps = [
     {
       icon: <Search className="h-10 w-10 text-primary" />,
-      titleKey: "pages.home.how_it_works.step_1_title",
-      descKey: "pages.home.how_it_works.step_1_desc",
+      title: "Trouvez un restaurant",
+      description: "Explorez les meilleurs restaurants de votre ville.",
     },
     {
       icon: <CalendarDays className="h-10 w-10 text-primary" />,
-      titleKey: "pages.home.how_it_works.step_2_title",
-      descKey: "pages.home.how_it_works.step_2_desc",
+      title: "Réservez en un clic",
+      description: "Sélectionnez votre date et le nombre de convives.",
     },
     {
       icon: <PartyPopper className="h-10 w-10 text-primary" />,
-      titleKey: "pages.home.how_it_works.step_3_title",
-      descKey: "pages.home.how_it_works.step_3_desc",
+      title: "Profitez du repas",
+      description: "Recevez une confirmation immédiate et rendez-vous sur place.",
     },
   ];
 
@@ -26,8 +23,8 @@ export const HowItWorks = () => {
     <section className="py-20 bg-background">
       <div className="container px-4 md:px-6 mx-auto">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{t("pages.home.how_it_works.title")}</h2>
-          <p className="mx-auto max-w-[600px] text-muted-foreground text-lg">{t("pages.home.how_it_works.subtitle")}</p>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">{"Comment ça marche"}</h2>
+          <p className="mx-auto max-w-[600px] text-muted-foreground text-lg">{"Réservez votre table en 3 étapes simples"}</p>
         </div>
 
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -42,8 +39,8 @@ export const HowItWorks = () => {
                   {i + 1}
                 </div>
               </div>
-              <h3 className="text-2xl font-bold">{t(step.titleKey)}</h3>
-              <p className="text-muted-foreground leading-relaxed max-w-xs">{t(step.descKey)}</p>
+              <h3 className="text-2xl font-bold">{step.title}</h3>
+              <p className="text-muted-foreground leading-relaxed max-w-xs">{step.description}</p>
             </div>
           ))}
         </div>

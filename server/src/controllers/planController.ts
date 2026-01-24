@@ -45,7 +45,7 @@ export const createPlan = async (req: Request, res: Response): Promise<void> => 
       userId: req.userId,
       level: logLevels.INFO,
     });
-    res.status(201).json({ plan, message: "server.plans.messages.created" });
+    res.status(201).json({ plan, message: "Plan créé" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -60,7 +60,7 @@ export const updatePlan = async (req: Request, res: Response): Promise<void> => 
   try {
     const plan = await Plan.findByIdAndUpdate(id, req.body, { new: true });
     if (!plan) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
     createLog({
@@ -68,7 +68,7 @@ export const updatePlan = async (req: Request, res: Response): Promise<void> => 
       userId: req.userId,
       level: logLevels.INFO,
     });
-    res.status(200).json({ plan, message: "server.plans.messages.updated" });
+    res.status(200).json({ plan, message: "Plan mis à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -83,7 +83,7 @@ export const deletePlan = async (req: Request, res: Response): Promise<void> => 
   try {
     const plan = await Plan.findByIdAndDelete(id);
     if (!plan) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
     createLog({
@@ -91,7 +91,7 @@ export const deletePlan = async (req: Request, res: Response): Promise<void> => 
       userId: req.userId,
       level: logLevels.INFO,
     });
-    res.status(200).json({ message: "server.plans.messages.deleted" });
+    res.status(200).json({ message: "Plan supprimé" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

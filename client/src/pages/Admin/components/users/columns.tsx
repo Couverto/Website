@@ -3,12 +3,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, EllipsisVertical, Pencil, Trash, User2, ShieldCheck, Mail, Calendar, Key } from "lucide-react";
+import { ArrowUpDown, Copy, EllipsisVertical, Pencil, Trash, User2, ShieldCheck, Mail, Calendar, Key, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarWithStatusCell } from "../../../../components/customs/avatarStatusCell";
 import { UserInterface } from "@/interfaces/User";
 import { Badge } from "@/components/ui/badge";
-import { TFunction } from "i18next";
 import { IconBadge } from "@/components/customs/IconBadge";
 
 const roleSettings: Record<string, { icon: any; color: string; bg: string }> = {
@@ -16,11 +15,11 @@ const roleSettings: Record<string, { icon: any; color: string; bg: string }> = {
   user: { icon: User2, color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/30 border-blue-200" },
 };
 
-export const getColumns = (callback: (action: string, data: any) => void, t: TFunction<"translation">): ColumnDef<UserInterface>[] => [
+export const getColumns = (callback: (action: string, data: any) => void): ColumnDef<UserInterface>[] => [
   {
     id: "user",
     accessorFn: (row) => `${row.name} ${row.forename} ${row.username}`,
-    header: t("pages.admin.users_page.user"),
+    header: "Utilisateur",
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -35,6 +34,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         </div>
       );
     },
+    meta: { label: "Utilisateur" },
   },
 
   {
@@ -45,7 +45,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         className="font-medium text-xs uppercase tracking-wider hover:text-primary"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        {t("pages.admin.users_page.role")} <ArrowUpDown className="w-3 h-3 ml-2" />
+        {"Rôle"} <ArrowUpDown className="w-3 h-3 ml-2" />
       </Button>
     ),
     cell: ({ row }) => {
@@ -54,10 +54,11 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
       return (
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border w-fit ${bg}`}>
           {Icon && <Icon className={`w-3.5 h-3.5 ${color}`} />}
-          <span className={`text-xs font-medium capitalize ${color}`}>{t(`pages.admin.users_page.roles.${role}`) || role}</span>
+          <span className={`text-xs font-medium capitalize ${color}`}>{role === "admin" ? "Administrateur" : "Utilisateur"}</span>
         </div>
       );
     },
+    meta: { label: "Rôle" },
   },
   {
     accessorKey: "email",
@@ -67,7 +68,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         className="font-medium text-xs uppercase tracking-wider hover:text-primary"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        {t("pages.admin.users_page.email")}
+        {"E-mail"}
         <ArrowUpDown className="w-3 h-3 ml-2" />
       </Button>
     ),
@@ -77,6 +78,22 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         {row.getValue("email")}
       </div>
     ),
+    meta: { label: "E-mail" },
+  },
+  {
+    accessorKey: "phone",
+    header: "Téléphone",
+    cell: ({ row }) => {
+      const phone = row.getValue("phone") as string;
+      if (!phone) return <span className="text-muted-foreground text-xs">-</span>;
+      return (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Phone className="h-3.5 w-3.5" />
+          {phone}
+        </div>
+      );
+    },
+    meta: { label: "Téléphone" },
   },
   {
     accessorKey: "auth_type",
@@ -86,7 +103,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         className="font-medium text-xs uppercase tracking-wider hover:text-primary"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        {t("pages.admin.users_page.auth_type")}
+        {"Type d'authentification"}
         <ArrowUpDown className="w-3 h-3 ml-2" />
       </Button>
     ),
@@ -113,6 +130,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         </Badge>
       );
     },
+    meta: { label: "Type d'authentification" },
   },
   {
     accessorKey: "createdAt",
@@ -122,7 +140,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         className="font-medium text-xs uppercase tracking-wider hover:text-primary"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        {t("pages.admin.users_page.joined")}
+        {"Inscrit le"}
         <ArrowUpDown className="w-3 h-3 ml-2" />
       </Button>
     ),
@@ -137,7 +155,7 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         </div>
       );
     },
-    meta: { label: "Joined" },
+    meta: { label: "Inscrit le" },
   },
   {
     id: "actions",
@@ -159,17 +177,17 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
               className="flex gap-2"
               onClick={() => {
                 navigator.clipboard.writeText(user._id);
-                toast.success(t("pages.admin.users_page.copy_id_success"));
+                toast.success("ID de l'utilisateur copié dans le presse-papiers");
               }}
             >
               <Copy className="w-4 h-4 text-muted-foreground" />
-              {t("pages.admin.users_page.copy_id")}
+              {"Copier l'ID de l'utilisateur"}
             </DropdownMenuItem>
             <DropdownMenuItem className="flex gap-2" onClick={() => callback("update", user._id)}>
-              <Pencil className="w-4 h-4 text-blue-500" /> {t("pages.admin.users_page.update_user")}
+              <Pencil className="w-4 h-4 text-blue-500" /> {"Mettre à jour cet utilisateur"}
             </DropdownMenuItem>
             <DropdownMenuItem className="flex gap-2 text-destructive focus:text-destructive" onClick={() => callback("delete", user._id)}>
-              <Trash className="w-4 h-4" /> {t("pages.admin.users_page.delete_user")}
+              <Trash className="w-4 h-4" /> {"Supprimer cet utilisateur"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

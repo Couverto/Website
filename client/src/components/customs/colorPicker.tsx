@@ -4,7 +4,6 @@ import type React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { ChevronDown, Palette, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ColorPickerProps {
@@ -42,7 +41,6 @@ export default function ColorPicker({ value = "#3B82F6", onChange, className, di
   const [lightness, setLightness] = useState(50);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation();
 
   const hexToHsl = useCallback((hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -165,10 +163,10 @@ export default function ColorPicker({ value = "#3B82F6", onChange, className, di
           <Tabs defaultValue="swatch" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4 h-8 p-1">
               <TabsTrigger value="swatch" className="text-xs">
-                {t("global.buttons.presets")}
+                {"Préréglages"}
               </TabsTrigger>
               <TabsTrigger value="custom" className="text-xs">
-                {t("global.buttons.custom")}
+                {"Personnalisé"}
               </TabsTrigger>
             </TabsList>
 

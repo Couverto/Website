@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, LayoutGrid, Users, Utensils, Clock, Star, ChefHat } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const Hero = () => {
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
 
@@ -35,31 +33,37 @@ export const Hero = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              {t("pages.landing.hero.badge")}
+              {"Pour restaurateurs indépendants"}
             </div>
 
             {/* Main Headline */}
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              {t("pages.landing.hero.headline")} <span className="text-primary">{t("pages.landing.hero.headline_highlight")}</span>
+              {"Gérez vos réservations et votre salle"} <span className="text-primary">{"sans complexité."}</span>
             </h1>
 
             {/* Slogan */}
-            <p className="text-lg text-muted-foreground md:text-xl max-w-xl">{t("pages.landing.hero.slogan", { appName })}</p>
+            <p className="text-lg text-muted-foreground md:text-xl max-w-xl">
+              {appName} est l'outil indispensable pour gérer votre restaurant en toute simplicité.
+            </p>
 
             {/* Description */}
-            <p className="text-muted-foreground max-w-xl">{t("pages.landing.hero.description")}</p>
+            <p className="text-muted-foreground max-w-xl">
+              {
+                "Un logiciel conçu pour les restaurateurs indépendants qui veulent se concentrer sur leur métier, pas sur des outils complexes."
+              }
+            </p>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link to="/register">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 w-full sm:w-auto">
-                  {t("pages.landing.hero.cta_primary")}
+                  {"Découvrir nos offres"}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <a href="#features">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  {t("pages.landing.hero.cta_secondary")}
+                  {"Voir les fonctionnalités"}
                 </Button>
               </a>
             </div>
@@ -74,7 +78,7 @@ export const Hero = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>{t("pages.landing.hero.trust_no_commitment")}</span>
+                <span>{"Sans engagement"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
@@ -84,7 +88,7 @@ export const Hero = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>{t("pages.landing.hero.trust_quick_setup")}</span>
+                <span>{"Configuration en 5 minutes"}</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
@@ -94,7 +98,7 @@ export const Hero = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>{t("pages.landing.hero.trust_support")}</span>
+                <span>{"Support inclus"}</span>
               </div>
             </div>
           </div>
@@ -110,7 +114,7 @@ export const Hero = () => {
                     <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                       <span className="text-primary-foreground font-bold text-sm">C</span>
                     </div>
-                    <span className="font-semibold text-foreground">{t("pages.landing.dashboard_preview.title")}</span>
+                    <span className="font-semibold text-foreground">{"Tableau de bord"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-muted"></div>
@@ -124,32 +128,32 @@ export const Hero = () => {
                     <div className="rounded-lg bg-card border border-border p-3">
                       <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                         <Calendar className="h-3 w-3" />
-                        <span>{t("pages.landing.dashboard_preview.reservations")}</span>
+                        <span>{"Réservations"}</span>
                       </div>
                       <div className="text-xl font-bold text-foreground">12</div>
-                      <div className="text-xs text-accent">{t("pages.landing.dashboard_preview.tonight")}</div>
+                      <div className="text-xs text-accent">{"Ce soir"}</div>
                     </div>
                     <div className="rounded-lg bg-card border border-border p-3">
                       <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                         <LayoutGrid className="h-3 w-3" />
-                        <span>{t("pages.landing.dashboard_preview.tables")}</span>
+                        <span>{"Tables"}</span>
                       </div>
                       <div className="text-xl font-bold text-foreground">14/18</div>
-                      <div className="text-xs text-muted-foreground">{t("pages.landing.dashboard_preview.occupied")}</div>
+                      <div className="text-xs text-muted-foreground">{"Occupées"}</div>
                     </div>
                     <div className="rounded-lg bg-card border border-border p-3">
                       <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                         <Users className="h-3 w-3" />
-                        <span>{t("pages.landing.dashboard_preview.covers")}</span>
+                        <span>{"Couverts"}</span>
                       </div>
                       <div className="text-xl font-bold text-foreground">38</div>
-                      <div className="text-xs text-muted-foreground">{t("pages.landing.dashboard_preview.estimated")}</div>
+                      <div className="text-xs text-muted-foreground">{"Estimés"}</div>
                     </div>
                   </div>
 
                   {/* Reservations List */}
                   <div className="rounded-lg bg-card border border-border p-3">
-                    <div className="text-sm font-medium text-foreground mb-3">{t("pages.landing.dashboard_preview.upcoming")}</div>
+                    <div className="text-sm font-medium text-foreground mb-3">{"Prochaines réservations"}</div>
                     <div className="space-y-2">
                       {[
                         { name: "Dupont", time: "19:00", covers: 4, table: "T3" },
@@ -164,7 +168,7 @@ export const Hero = () => {
                             <div>
                               <div className="text-sm font-medium text-foreground">{reservation.name}</div>
                               <div className="text-xs text-muted-foreground">
-                                {reservation.covers} {t("pages.landing.dashboard_preview.covers_count")}
+                                {reservation.covers} {"couverts"}
                               </div>
                             </div>
                           </div>

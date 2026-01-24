@@ -18,18 +18,18 @@ export const updateUserAvatar = async (req: Request, res: Response): Promise<voi
     const user = await User.findById(userId);
 
     if (!user) {
-      res.status(400).json({ error: "server.global.errors.no_such_user" });
+      res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
 
     if (!req.file) {
-      res.status(400).json({ error: "server.upload.errors.no_file" });
+      res.status(400).json({ error: "Aucun fichier fourni" });
       return;
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"];
     if (!allowedTypes.includes(req.file.mimetype)) {
-      res.status(400).json({ error: "server.upload.errors.invalid_file_type" });
+      res.status(400).json({ error: "Type de fichier invalide" });
       return;
     }
 
@@ -51,7 +51,7 @@ export const updateUserAvatar = async (req: Request, res: Response): Promise<voi
     await user.save();
 
     res.status(200).json({
-      message: "server.upload.messages.avatar_success",
+      message: "Avatar mis à jour",
       user,
     });
   } catch (err: any) {

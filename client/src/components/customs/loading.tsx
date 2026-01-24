@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 export const Loading = () => {
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
-  const accentColor = configValues["ACCENT_COLOR"] || "var(--primary)";
+  const accentColor = configValues["ACCENT_COLOR"];
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-background overflow-hidden">

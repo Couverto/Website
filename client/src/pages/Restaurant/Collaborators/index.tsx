@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,7 +58,6 @@ interface SearchUser {
 }
 
 export const RestaurantCollaborators = () => {
-  const { t } = useTranslation();
   const { id } = useParams();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -166,13 +164,13 @@ export const RestaurantCollaborators = () => {
       await fetchData();
       setSearchQuery("");
       setSearchResults([]);
-      toast.success(t("pages.restaurant.collaborators.added"));
+      toast.success("Collaborateur ajouté");
     } catch (error: any) {
       const errorKey = error.response?.data?.error;
       if (errorKey === "server.restaurants.errors.already_collaborator") {
-        toast.error(t("pages.restaurant.collaborators.already_collaborator"));
+        toast.error("Cet utilisateur est déjà collaborateur");
       } else {
-        toast.error(t("global.error"));
+        toast.error("Une erreur est survenue");
       }
     } finally {
       setIsAddingUser(null);
@@ -186,11 +184,11 @@ export const RestaurantCollaborators = () => {
       const link = `${window.location.origin}/join/${response.data.invitation.token}`;
       navigator.clipboard.writeText(link);
       await fetchData();
-      toast.success(t("pages.restaurant.collaborators.link_created_copied"));
+      toast.success("Lien d'invitation créé et copié !");
       setIsInviteDialogOpen(false);
       setNewInviteLink(null);
     } catch (error) {
-      toast.error(t("pages.restaurant.collaborators.link_error"));
+      toast.error("Erreur lors de la création du lien");
     } finally {
       setIsCreatingInvite(false);
     }
@@ -199,16 +197,16 @@ export const RestaurantCollaborators = () => {
   const copyLink = (token: string) => {
     const link = `${window.location.origin}/join/${token}`;
     navigator.clipboard.writeText(link);
-    toast.success(t("pages.restaurant.collaborators.link_copied"));
+    toast.success("Lien copié dans le presse-papiers");
   };
 
   const deleteInvitation = async (invitationId: string) => {
     try {
       await api.delete(`/restaurants/${id}/invitations/${invitationId}`);
       setInvitations((prev) => prev.filter((inv) => inv._id !== invitationId));
-      toast.success(t("pages.restaurant.collaborators.invitation_deleted"));
+      toast.success("Invitation supprimée");
     } catch (error) {
-      toast.error(t("global.error"));
+      toast.error("Une erreur est survenue");
     }
   };
 
@@ -216,13 +214,13 @@ export const RestaurantCollaborators = () => {
     try {
       await api.delete(`/restaurants/${id}/collaborators/${collaboratorId}`);
       setCollaborators((prev) => prev.filter((c) => c._id !== collaboratorId));
-      toast.success(t("pages.restaurant.collaborators.removed"));
+      toast.success("Collaborateur retiré");
     } catch (error: any) {
       const errorKey = error.response?.data?.error;
       if (errorKey === "server.restaurants.errors.cannot_remove_last") {
-        toast.error(t("pages.restaurant.collaborators.cannot_remove_last"));
+        toast.error("Impossible de retirer le dernier collaborateur");
       } else {
-        toast.error(t("global.error"));
+        toast.error("Une erreur est survenue");
       }
     }
   };
@@ -239,30 +237,32 @@ export const RestaurantCollaborators = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{t("pages.restaurant.collaborators.page_title")}</h1>
-          <p className="text-muted-foreground">{t("pages.restaurant.collaborators.page_subtitle")}</p>
+          <h1 className="text-3xl font-bold">{"Collaborateurs"}</h1>
+          <p className="text-muted-foreground">{"Gérez l'équipe qui a accès à ce restaurant"}</p>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />
-              {t("pages.restaurant.collaborators.invite")}
+              {"Inviter"}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle className="text-xl">{t("pages.restaurant.collaborators.add_title")}</DialogTitle>
-              <DialogDescription className="text-base">{t("pages.restaurant.collaborators.add_description")}</DialogDescription>
+              <DialogTitle className="text-xl">{"Ajouter un collaborateur"}</DialogTitle>
+              <DialogDescription className="text-base">
+                {"Partagez un lien d'invitation pour permettre à quelqu'un de rejoindre votre équipe."}
+              </DialogDescription>
             </DialogHeader>
             <Tabs defaultValue="search" className="mt-4 w-full">
               <TabsList className="grid w-full grid-cols-2 p-1 h-11 bg-muted/50">
                 <TabsTrigger value="search" className="data-[state=active]:bg-background data-[state=active]:shadow-sm h-9">
                   <Search className="h-4 w-4 mr-2" />
-                  {t("pages.restaurant.collaborators.search_user")}
+                  {"Rechercher"}
                 </TabsTrigger>
                 <TabsTrigger value="link" className="data-[state=active]:bg-background data-[state=active]:shadow-sm h-9">
                   <LinkIcon className="h-4 w-4 mr-2" />
-                  {t("pages.restaurant.collaborators.invite_link")}
+                  {"Lien d'invitation"}
                 </TabsTrigger>
               </TabsList>
 
@@ -270,7 +270,7 @@ export const RestaurantCollaborators = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={t("pages.restaurant.collaborators.search_placeholder")}
+                    placeholder={"Rechercher par nom ou email..."}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 h-11 text-base"
@@ -315,7 +315,7 @@ export const RestaurantCollaborators = () => {
                           ) : (
                             <>
                               <Plus className="h-4 w-4 mr-1.5" />
-                              {t("global.buttons.add") || "Ajouter"}
+                              {"Ajouter"}
                             </>
                           )}
                         </Button>
@@ -326,7 +326,7 @@ export const RestaurantCollaborators = () => {
                 {!isSearching && searchQuery.length >= 2 && searchResults.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                     <Users className="h-8 w-8 mb-2 opacity-20" />
-                    <p>{t("pages.restaurant.collaborators.no_results")}</p>
+                    <p>{"Aucun utilisateur trouvé"}</p>
                   </div>
                 )}
                 {!isSearching && searchQuery.length < 2 && (
@@ -351,13 +351,13 @@ export const RestaurantCollaborators = () => {
                 {!newInviteLink ? (
                   <Button onClick={createInviteLink} disabled={isCreatingInvite} className="w-full h-11 text-base">
                     {isCreatingInvite ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LinkIcon className="h-4 w-4 mr-2" />}
-                    {isCreatingInvite ? t("pages.restaurant.collaborators.creating_link") : t("pages.restaurant.collaborators.create_link")}
+                    {isCreatingInvite ? "Création en cours..." : "Créer un lien d'invitation"}
                   </Button>
                 ) : (
                   <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
                     <p className="text-sm font-medium text-green-600 flex items-center gap-2">
                       <Check className="h-4 w-4" />
-                      {t("pages.restaurant.collaborators.link_ready")}
+                      {"Lien prêt à être partagé"}
                     </p>
                     <div className="flex gap-2">
                       <Input value={newInviteLink} readOnly className="font-mono text-xs h-10 bg-background" />
@@ -365,7 +365,7 @@ export const RestaurantCollaborators = () => {
                         size="icon"
                         onClick={() => {
                           navigator.clipboard.writeText(newInviteLink);
-                          toast.success(t("pages.restaurant.collaborators.link_copied"));
+                          toast.success("Lien copié dans le presse-papiers");
                         }}
                       >
                         <Copy className="h-4 w-4" />
@@ -388,7 +388,7 @@ export const RestaurantCollaborators = () => {
                   setSearchResults([]);
                 }}
               >
-                {t("global.buttons.cancel")}
+                {"Annuler"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -398,7 +398,7 @@ export const RestaurantCollaborators = () => {
       {/* Current Collaborators DataTable */}
       <div className="bg-card rounded-md border p-4">
         <DataTable
-          columns={getCollaboratorColumns(handleCallback, t, collaborators.length)}
+          columns={getCollaboratorColumns(handleCallback, collaborators.length)}
           data={paginatedCollaborators}
           dataCount={collaborators.length}
           fetchData={handlePageChange}
@@ -413,21 +413,21 @@ export const RestaurantCollaborators = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            {t("pages.restaurant.collaborators.pending")} ({invitations.length})
+            {"Invitations en attente"} ({invitations.length})
           </CardTitle>
-          <CardDescription>{t("pages.restaurant.collaborators.pending_desc")}</CardDescription>
+          <CardDescription>{"Liens d'invitation actifs qui n'ont pas encore été utilisés"}</CardDescription>
         </CardHeader>
         <CardContent>
           {invitations.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">{t("pages.restaurant.collaborators.no_invitations")}</p>
+            <p className="text-center text-muted-foreground py-8">{"Aucune invitation en attente"}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("pages.restaurant.collaborators.created_by")}</TableHead>
-                  <TableHead>{t("pages.restaurant.collaborators.created_at")}</TableHead>
-                  <TableHead>{t("pages.restaurant.collaborators.expires_at")}</TableHead>
-                  <TableHead className="w-32">{t("pages.restaurant.collaborators.actions")}</TableHead>
+                  <TableHead>{"Créée par"}</TableHead>
+                  <TableHead>{"Créée le"}</TableHead>
+                  <TableHead>{"Expire le"}</TableHead>
+                  <TableHead className="w-32">{"Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -460,15 +460,15 @@ export const RestaurantCollaborators = () => {
       <AlertDialog open={!!collaboratorToDelete} onOpenChange={(open) => !open && setCollaboratorToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("pages.restaurant.collaborators.remove_title")}</AlertDialogTitle>
+            <AlertDialogTitle>{"Retirer ce collaborateur ?"}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("pages.restaurant.collaborators.remove_description", {
-                name: collaboratorToDelete ? `${collaboratorToDelete.forename} ${collaboratorToDelete.name}` : "",
-              })}
+              {collaboratorToDelete
+                ? `Êtes-vous sûr de vouloir retirer ${collaboratorToDelete.forename} ${collaboratorToDelete.name} de l'équipe ?`
+                : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("global.buttons.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{"Annuler"}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (collaboratorToDelete) {
@@ -478,7 +478,7 @@ export const RestaurantCollaborators = () => {
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {t("global.buttons.delete")}
+              {"Supprimer"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

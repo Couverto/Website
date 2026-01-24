@@ -1,5 +1,4 @@
 import { Users, Utensils, LayoutDashboard, Mail, Calendar, Activity, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -41,7 +40,6 @@ const StatCard = ({
 );
 
 export const Dashboard = () => {
-  const { t } = useTranslation();
   const [stats, setStats] = useState({
     users: { total: 0, newLast7Days: 0 },
     restaurants: { total: 0, newLast7Days: 0 },
@@ -90,7 +88,7 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">{t("pages.admin.dashboard")}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{"Tableau de bord"}</h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

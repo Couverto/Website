@@ -4,11 +4,17 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import React from "react";
-import { useTranslation } from "react-i18next";
+const segmentLabels: Record<string, string> = {
+  dashboard: "Tableau de bord",
+  users: "Utilisateurs",
+  restaurants: "Restaurants",
+  plans: "Abonnements",
+  configs: "Configurations",
+  logs: "Logs",
+};
 import { LayoutDashboard, ChevronRight } from "lucide-react";
 
 export const Index = () => {
-  const { t } = useTranslation();
   const location = useLocation();
   const pathSegments = location.pathname.split("/").filter(Boolean);
 
@@ -41,10 +47,10 @@ export const Index = () => {
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
                           {isLast ? (
-                            <BreadcrumbPage>{t(`pages.admin.${segment}`)}</BreadcrumbPage>
+                            <BreadcrumbPage>{segmentLabels[segment] || segment}</BreadcrumbPage>
                           ) : (
                             <Link to={href} className="transition-colors hover:text-foreground">
-                              {t(`pages.admin.${segment}`)}
+                              {segmentLabels[segment] || segment}
                             </Link>
                           )}
                         </BreadcrumbItem>

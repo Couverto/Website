@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChefHat, Check, ChevronDown, Plus, Search, X } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +25,6 @@ export const CUISINES = [
 ];
 
 export const CuisineSelector = ({ value = [], onChange, className, variant = "default" }: CuisineSelectorProps) => {
-  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -57,15 +55,11 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
           onClick={() => addCustomCuisine(search.trim())}
           className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-xl hover:bg-primary/5 hover:text-primary transition-all group text-left mb-0.5"
         >
-          <span className="font-medium">
-            {t("create.steps.identity.add_custom", "Add")} "{search}"
-          </span>
+          <span className="font-medium">Ajouter "{search}"</span>
           <Plus className="h-4 w-4" />
         </button>
       ) : filteredCuisines.length === 0 ? (
-        <div className="py-8 text-center text-sm text-muted-foreground italic">
-          {t("create.steps.identity.no_results", "Type to add a custom cuisine")}
-        </div>
+        <div className="py-8 text-center text-sm text-muted-foreground italic">Tapez pour ajouter une cuisine personnalisée</div>
       ) : (
         filteredCuisines.map((cuisine) => (
           <button
@@ -104,9 +98,7 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
           >
             <div className="flex items-center gap-2 overflow-hidden">
               <ChefHat className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">
-                {value.length > 0 ? value.join(", ") : t("create.steps.identity.placeholders.cuisine", "Cuisine Type")}
-              </span>
+              <span className="truncate">{value.length > 0 ? value.join(", ") : "Type de cuisine"}</span>
             </div>
             <ChevronDown className="ml-2 h-4 w-4 opacity-50 flex-shrink-0" />
           </Button>
@@ -116,7 +108,7 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t("create.steps.identity.placeholders.search_input", "Search...")}
+                placeholder="Rechercher..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 bg-muted/30 border-none focus-visible:ring-1"
@@ -134,11 +126,11 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
     <div className={`space-y-3 ${className}`}>
       <div className="flex justify-between items-end">
         <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          {t("create.steps.identity.cuisine_type", "Cuisine Type")}
+          Type de cuisine
         </Label>
         {value.length > 0 && (
           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
-            {value.length} selected
+            {value.length} sélectionnés
           </span>
         )}
       </div>
@@ -164,9 +156,7 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
           </Badge>
         ))}
         {value.length === 0 && (
-          <p className="text-sm text-muted-foreground italic px-1 flex items-center h-8">
-            {t("create.steps.identity.placeholders.cuisine", "Select cuisine types...")}
-          </p>
+          <p className="text-sm text-muted-foreground italic px-1 flex items-center h-8">Sélectionner les types de cuisine...</p>
         )}
       </div>
 
@@ -181,7 +171,7 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
             <Input
               className="pl-11 pr-10 h-12 text-base border-muted-foreground/20 focus:border-primary shadow-sm transition-all"
-              placeholder={t("create.steps.identity.placeholders.search_cuisine", "Search cuisines...")}
+              placeholder="Rechercher des cuisines..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

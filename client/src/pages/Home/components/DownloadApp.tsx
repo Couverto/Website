@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { Smartphone, CheckCircle2, Star, MapPin } from "lucide-react";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const DownloadApp = () => {
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
 
@@ -28,10 +26,10 @@ export const DownloadApp = () => {
             </div>
 
             <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-white">
-              {t("pages.home.download_app.title", { appName })}
+              Téléchargez {appName} sur votre téléphone{" "}
             </h2>
             <p className="max-w-[600px] mx-auto lg:mx-0 text-white/80 text-xl leading-relaxed">
-              {t("pages.home.download_app.subtitle", { appName })}
+              {appName + " disponible sur votre portable gratuitement"}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">

@@ -8,9 +8,9 @@ import { Loader2 } from "lucide-react";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { useSocketContext } from "@/contexts/socketContext";
 import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
 import { BookingInterface } from "@/interfaces/Booking";
 import { Separator } from "@/components/ui/separator";
+import { ThemeChanger } from "@/components/Navbar/themeChanger";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -19,7 +19,6 @@ export const RestaurantLayout = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { t } = useTranslation();
   const { socket } = useSocketContext();
 
   useEffect(() => {
@@ -51,7 +50,7 @@ export const RestaurantLayout = () => {
       const handleNewBooking = (newBooking: BookingInterface) => {
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
         audio.play().catch((e) => console.error("Audio play failed", e));
-        toast.info(t("pages.restaurant.bookings.new_booking_notification"));
+        toast.info("Nouvelle réservation reçue !");
       };
 
       socket.on("newBooking", handleNewBooking);
@@ -60,7 +59,7 @@ export const RestaurantLayout = () => {
         socket.off("newBooking", handleNewBooking);
       };
     }
-  }, [socket, id, t]);
+  }, [socket, id]);
 
   if (loading) {
     return (
@@ -90,10 +89,15 @@ export const RestaurantLayout = () => {
         <RestaurantSidebar restaurant={restaurant || undefined} />
         <main className="flex-1 overflow-auto">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              <RestaurantBreadcrumb restaurant={restaurant} />
+            <div className="flex items-center gap-2 justify-between w-full">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <RestaurantBreadcrumb restaurant={restaurant} />
+              </div>
+              <div className="flex items-center gap-2">
+                <ThemeChanger />
+              </div>
             </div>
           </header>
           <div className="p-6">

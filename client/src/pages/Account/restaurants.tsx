@@ -1,5 +1,4 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,6 @@ import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const AccountRestaurants = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState<RestaurantInterface[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,12 +31,12 @@ export const AccountRestaurants = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>{t("pages.account_menu.restaurants")}</CardTitle>
-            <CardDescription>Manage your restaurants here.</CardDescription>
+            <CardTitle>{"Mes Restaurants"}</CardTitle>
+            <CardDescription>{"Gérez vos établissements ici."}</CardDescription>
           </div>
           <Button onClick={() => navigate("/pro/create-restaurant")}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Restaurant
+            {"Ajouter un restaurant"}
           </Button>
         </CardHeader>
         <CardContent>
@@ -50,9 +48,9 @@ export const AccountRestaurants = () => {
             </div>
           ) : restaurants.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-muted-foreground mb-4">You don't have any restaurants yet.</p>
+              <p className="text-muted-foreground mb-4">Vous n'avez pas encore de restaurant.</p>
               <Link to="/pro/create-restaurant">
-                <Button variant="outline">Create your first restaurant</Button>
+                <Button variant="outline">Créez votre premier établissement</Button>
               </Link>
             </div>
           ) : (

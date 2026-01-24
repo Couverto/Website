@@ -10,7 +10,6 @@ import { useAuthContext } from "@/contexts/authContext";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { OAuth } from "@/components/customs/oauth";
 import { useConfigContext } from "@/contexts/configContext";
 import { Calendar, Users, UtensilsCrossed, Check } from "lucide-react";
@@ -20,11 +19,10 @@ export const Login = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
   const { setAuthUser } = useAuthContext();
   const { configValues } = useConfigContext();
 
-  const loginSchema = getLoginSchema(t);
+  const loginSchema = getLoginSchema();
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,7 +42,7 @@ export const Login = () => {
       };
       const response = await axiosConfig.post("/auth/login", payload);
 
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Connexion réussie");
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
 
@@ -52,16 +50,16 @@ export const Login = () => {
       const redirect = params.get("redirect");
       navigate(redirect || "/");
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Identifiants invalides");
     } finally {
       setLoading(false);
     }
   }
 
   const benefits = [
-    { icon: Calendar, text: t("pages.login.benefit_reservations") },
-    { icon: UtensilsCrossed, text: t("pages.login.benefit_tables") },
-    { icon: Users, text: t("pages.login.benefit_clients") },
+    { icon: Calendar, text: "Gestion des réservations en temps réel" },
+    { icon: UtensilsCrossed, text: "Plan de salle interactif" },
+    { icon: Users, text: "Fichier clients centralisé" },
   ];
 
   return (
@@ -83,9 +81,11 @@ export const Login = () => {
               <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4">{t("pages.login.hero_title")}</h2>
+            <h2 className="text-3xl font-bold mb-4">{"Gérez votre restaurant en toute simplicité"}</h2>
 
-            <p className="text-white/80 text-lg mb-8">{t("pages.login.hero_subtitle", { appName: configValues["APP_NAME"] })}</p>
+            <p className="text-white/80 text-lg mb-8">
+              La plateforme tout-en-un pour simplifier la gestion de vos réservations et booster votre établissement.
+            </p>
 
             <div className="space-y-4">
               {benefits.map((benefit, index) => (
@@ -100,14 +100,17 @@ export const Login = () => {
 
             {/* Testimonial */}
             <div className="mt-12 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-              <p className="text-white/90 italic mb-4">"{t("pages.login.testimonial_text", { appName: configValues["APP_NAME"] })}"</p>
+              <p className="text-white/90 italic mb-4">
+                "{configValues["APP_NAME"]} a totalement transformé notre façon de travailler. C'est intuitif et nos clients apprécient la
+                simplicité."
+              </p>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-accent/30 flex items-center justify-center">
                   <span className="font-bold">MR</span>
                 </div>
                 <div>
-                  <div className="font-medium">{t("pages.login.testimonial_author")}</div>
-                  <div className="text-sm text-white/70">{t("pages.login.testimonial_role")}</div>
+                  <div className="font-medium">{"Marie Rousseau"}</div>
+                  <div className="text-sm text-white/70">{"Restaurant Le Petit Bistrot, Paris"}</div>
                 </div>
               </div>
             </div>
@@ -127,8 +130,8 @@ export const Login = () => {
           </Link>
 
           <div className="text-center mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{t("pages.login.welcome_back")}</h1>
-            <p className="text-muted-foreground">{t("pages.login.welcome_subtitle")}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{"Bon retour !"}</h1>
+            <p className="text-muted-foreground">{"Connectez-vous pour accéder à votre tableau de bord"}</p>
           </div>
 
           <Form {...loginForm}>
@@ -138,9 +141,9 @@ export const Login = () => {
                 name="loginName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.login.field")}</FormLabel>
+                    <FormLabel>{"Email"}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={t("pages.login.field_placeholder")} className="h-12" />
+                      <Input {...field} placeholder={"votre@email.com"} className="h-12" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -153,9 +156,9 @@ export const Login = () => {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel>{t("pages.login.password")}</FormLabel>
+                      <FormLabel>{"Mot de passe"}</FormLabel>
                       <Link to={`/forgot-password${location.search}`} className="text-sm text-primary hover:underline">
-                        {t("pages.login.forgot_password")}
+                        {"Mot de passe oublié ?"}
                       </Link>
                     </div>
                     <FormControl>
@@ -167,24 +170,24 @@ export const Login = () => {
               />
 
               <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90" disabled={loading}>
-                {loading ? t("pages.login.logging_in") : t("pages.login.login_button")}
+                {loading ? "Connexion en cours..." : "Se connecter"}
               </Button>
 
               {import.meta.env.VITE_FIREBASE_API_KEY && (
                 <>
                   <div className="relative text-sm text-center after:border-border after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="relative z-10 px-3 bg-background text-muted-foreground">{t("pages.login.or_continue_with")}</span>
+                    <span className="relative z-10 px-3 bg-background text-muted-foreground">{"Ou continuer avec"}</span>
                   </div>
-                  <OAuth message="pages.login.login_button" />
+                  <OAuth message="Se connecter" />
                 </>
               )}
             </form>
           </Form>
 
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            {t("pages.login.no_account")}{" "}
+            {"Pas encore de compte ?"}{" "}
             <Link to={`/register${location.search}`} className="font-medium text-primary hover:underline">
-              {t("pages.login.sign_up")}
+              {"Créer un compte"}
             </Link>
           </div>
 
@@ -192,11 +195,11 @@ export const Login = () => {
           <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Check className="h-3 w-3 text-primary" />
-              <span>{t("pages.login.trust_secure")}</span>
+              <span>{"Connexion sécurisée"}</span>
             </div>
             <div className="flex items-center gap-1">
               <Check className="h-3 w-3 text-primary" />
-              <span>{t("pages.login.trust_gdpr")}</span>
+              <span>{"Conforme RGPD"}</span>
             </div>
           </div>
         </div>

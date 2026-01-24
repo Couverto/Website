@@ -2,7 +2,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WizardData } from "../types";
-import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { X, Search, Check, ChevronDown, Plus } from "lucide-react";
 import { useState } from "react";
@@ -36,7 +35,6 @@ const PRICES = [
 ];
 
 export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
-  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -59,7 +57,7 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
           <Label
             className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cuisineType ? "text-red-500" : ""}`}
           >
-            {t("create.steps.identity.cuisine_type")}
+            {"Type de cuisine"}
           </Label>
           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
             Multiple possible
@@ -86,9 +84,7 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
             </Badge>
           ))}
           {(!data.cuisineType || data.cuisineType.length === 0) && (
-            <p className="text-sm text-muted-foreground italic px-1 flex items-center h-8">
-              {t("create.steps.identity.placeholders.cuisine")}
-            </p>
+            <p className="text-sm text-muted-foreground italic px-1 flex items-center h-8">{"Sélectionner..."}</p>
           )}
         </div>
 
@@ -108,7 +104,7 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
                 className={`pl-11 pr-10 h-12 text-base transition-all ${
                   errors?.cuisineType ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"
                 }`}
-                placeholder={t("create.steps.identity.placeholders.search_cuisine", "Select cuisines...")}
+                placeholder={"Rechercher des cuisines..."}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -147,14 +143,12 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
                     }}
                     className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-xl hover:bg-primary/5 hover:text-primary transition-all group text-left mb-0.5"
                   >
-                    <span className="font-medium">
-                      {t("create.steps.identity.add_custom", "Add")} "{search}"
-                    </span>
+                    <span className="font-medium">Ajouter "{search}"</span>
                     <Plus className="h-4 w-4" />
                   </button>
                 ) : filteredCuisines.length === 0 ? (
                   <div className="py-8 text-center text-sm text-muted-foreground italic">
-                    {t("create.steps.identity.no_results", "Type to add a custom cuisine")}
+                    Rechercher pour ajouter une cuisine personnalisée
                   </div>
                 ) : (
                   filteredCuisines.map((cuisine) => (
@@ -195,7 +189,7 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
         <Label
           className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.priceRange ? "text-red-500" : ""}`}
         >
-          {t("create.steps.identity.price_range")}
+          {"Gamme de prix"}
         </Label>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {PRICES.map((price) => (
@@ -219,18 +213,26 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
                 <span
                   className={`text-sm font-bold transition-all duration-300 ${data.priceRange === price.value ? "text-primary/95" : "text-foreground/80 group-hover:text-foreground"}`}
                 >
-                  {t(`create.steps.identity.price_options.${price.id}`)}
+                  {price.id === "vlow"
+                    ? "Très abordable"
+                    : price.id === "low"
+                      ? "Abordable"
+                      : price.id === "medium"
+                        ? "Intermédiaire"
+                        : price.id === "high"
+                          ? "Chic"
+                          : "Luxueux"}
                 </span>
                 <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-tight">
                   {price.id === "vlow"
                     ? "Budget"
                     : price.id === "low"
-                      ? "Affordable"
+                      ? "Standard"
                       : price.id === "medium"
-                        ? "Standard"
+                        ? "Confort"
                         : price.id === "high"
                           ? "Premium"
-                          : "Luxury"}
+                          : "Prestige"}
                 </span>
               </div>
             </div>
@@ -244,14 +246,14 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
           htmlFor="shortDescription"
           className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.shortDescription ? "text-red-500" : ""}`}
         >
-          {t("create.steps.identity.short_description")}
+          {"Phrase d'accroche"}
         </Label>
         <div className="relative group">
           <Input
             id="shortDescription"
             value={data.shortDescription || ""}
             onChange={(e) => updateData({ shortDescription: e.target.value })}
-            placeholder={t("create.steps.identity.placeholders.short_desc")}
+            placeholder={"Une cuisine authentique au coeur de Paris..."}
             maxLength={100}
             className={`h-12 text-base transition-all ${errors?.shortDescription ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
           />
@@ -273,13 +275,13 @@ export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
           htmlFor="description"
           className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.description ? "text-red-500" : ""}`}
         >
-          {t("create.steps.identity.description")}
+          {"Description complète"}
         </Label>
         <Textarea
           id="description"
           value={data.description || ""}
           onChange={(e) => updateData({ description: e.target.value })}
-          placeholder={t("create.steps.identity.placeholders.desc")}
+          placeholder={"Racontez l'histoire de votre restaurant..."}
           className={`min-h-[160px] text-base leading-relaxed p-4 transition-all ${errors?.description ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
         />
         {errors?.description && (

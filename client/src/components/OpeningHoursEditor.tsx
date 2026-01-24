@@ -3,7 +3,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2, Clock, Moon, Sun } from "lucide-react";
-import { useTranslation } from "react-i18next";
+const dayLabels: Record<string, string> = {
+  monday: "Lundi",
+  tuesday: "Mardi",
+  wednesday: "Mercredi",
+  thursday: "Jeudi",
+  friday: "Vendredi",
+  saturday: "Samedi",
+  sunday: "Dimanche",
+};
 
 interface Period {
   open: string;
@@ -23,8 +31,6 @@ interface OpeningHoursEditorProps {
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 export const OpeningHoursEditor = ({ value = {}, onChange }: OpeningHoursEditorProps) => {
-  const { t } = useTranslation();
-
   // Initialize if empty
   const schedule = DAYS.reduce(
     (acc, day) => {
@@ -75,7 +81,7 @@ export const OpeningHoursEditor = ({ value = {}, onChange }: OpeningHoursEditorP
                 >
                   <Clock className="h-5 w-5" />
                 </div>
-                <Label className="font-bold capitalize text-base">{t(`pages.public_restaurant.days.${day}`)}</Label>
+                <Label className="font-bold capitalize text-base">{dayLabels[day]}</Label>
               </div>
 
               <div className="flex items-center gap-6 flex-1 justify-end">
@@ -83,7 +89,7 @@ export const OpeningHoursEditor = ({ value = {}, onChange }: OpeningHoursEditorP
                   <span
                     className={`text-[10px] font-black uppercase tracking-tighter ${schedule[day].isClosed ? "text-primary" : "text-muted-foreground"}`}
                   >
-                    {t("create.steps.details.closed", "Closed")}
+                    Fermé
                   </span>
                   <Switch
                     checked={!schedule[day].isClosed}
@@ -93,7 +99,7 @@ export const OpeningHoursEditor = ({ value = {}, onChange }: OpeningHoursEditorP
                   <span
                     className={`text-[10px] font-black uppercase tracking-tighter ${!schedule[day].isClosed ? "text-primary" : "text-muted-foreground"}`}
                   >
-                    {t("create.steps.details.open", "Open")}
+                    Ouvert
                   </span>
                 </div>
 
@@ -106,7 +112,7 @@ export const OpeningHoursEditor = ({ value = {}, onChange }: OpeningHoursEditorP
                     className="h-9 px-3 border-primary/20 hover:bg-primary/5 text-primary rounded-xl"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    {t("create.steps.details.add_slot", "Add Slot")}
+                    Ajouter un créneau
                   </Button>
                 )}
               </div>

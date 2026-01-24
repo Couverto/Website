@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ColorPicker from "@/components/customs/colorPicker";
@@ -39,7 +38,6 @@ const ColorGrid = ({
 );
 
 export const PaletteDesigner = ({ paletteValue, onPaletteChange }: PaletteDesignerProps) => {
-  const { t } = useTranslation();
   const [palette, setPalette] = useState<ThemePalette | null>(null);
 
   useEffect(() => {
@@ -84,12 +82,16 @@ export const PaletteDesigner = ({ paletteValue, onPaletteChange }: PaletteDesign
     <div className="space-y-6 mt-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h3 className="text-lg font-medium">{t("pages.admin.config_page.palette_title")}</h3>
-          <p className="text-sm text-muted-foreground">{t("pages.admin.config_page.palette_description")}</p>
+          <h3 className="text-lg font-medium">{"Palette de couleurs"}</h3>
+          <p className="text-sm text-muted-foreground">
+            {
+              "Personnalisez l'identité visuelle de votre application. Générez une palette harmonieuse ou ajustez chaque couleur individuellement."
+            }
+          </p>
         </div>
         <Button type="button" variant="outline" onClick={handleGenerate} className="flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
-          {t("pages.admin.config_page.generate_palette")}
+          {"Générer une palette"}
         </Button>
       </div>
 
@@ -99,10 +101,10 @@ export const PaletteDesigner = ({ paletteValue, onPaletteChange }: PaletteDesign
             <span className="text-sm font-medium">Customisation</span>
             <TabsList>
               <TabsTrigger value="light" className="min-w-[100px]">
-                {t("global.themes.light")}
+                {"Clair"}
               </TabsTrigger>
               <TabsTrigger value="dark" className="min-w-[100px]">
-                {t("global.themes.dark")}
+                {"Sombre"}
               </TabsTrigger>
             </TabsList>
           </div>

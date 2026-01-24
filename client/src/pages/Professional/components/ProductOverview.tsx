@@ -1,26 +1,26 @@
 import { Calendar, LayoutGrid, Users } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export const ProductOverview = () => {
-  const { t } = useTranslation();
-
   const features = [
     {
       icon: Calendar,
-      title: t("pages.landing.product_overview.reservations_title"),
-      description: t("pages.landing.product_overview.reservations_desc"),
+      title: "Réservations",
+      description:
+        "Gérez toutes vos réservations depuis une interface unique. Confirmations automatiques, rappels clients, et vue calendrier pour anticiper vos services.",
       image: "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?q=80&w=2000&auto=format&fit=crop", // Tablet/reservation management
     },
     {
       icon: LayoutGrid,
-      title: t("pages.landing.product_overview.floor_plan_title"),
-      description: t("pages.landing.product_overview.floor_plan_desc"),
+      title: "Plan de salle",
+      description:
+        "Visualisez l'occupation de vos tables en temps réel. Glissez-déposez pour réorganiser, voyez d'un coup d'œil les tables disponibles.",
       image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop", // Restaurant interior/layout
     },
     {
       icon: Users,
-      title: t("pages.landing.product_overview.clients_title"),
-      description: t("pages.landing.product_overview.clients_desc"),
+      title: "Fichier clients",
+      description:
+        "Centralisez les informations de vos clients réguliers. Notes, préférences, allergies - tout est accessible en un clic lors de la prise de réservation.",
       image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop", // Team/Client interaction
     },
   ];
@@ -30,10 +30,10 @@ export const ProductOverview = () => {
       <div className="container mx-auto max-w-8xl px-3 md:px-4">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">
-            {t("pages.landing.product_overview.title")}
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t("pages.landing.product_overview.subtitle")}</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">{"Un outil pensé pour le service"}</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {"Des écrans clairs et des actions rapides pour gérer votre restaurant efficacement."}
+          </p>
         </div>
 
         {/* Features */}

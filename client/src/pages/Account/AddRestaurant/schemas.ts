@@ -1,33 +1,29 @@
 import { z } from "zod";
-import { TFunction } from "i18next";
 
-export const getEssentialsSchema = (t: TFunction) =>
+export const getEssentialsSchema = () =>
   z.object({
-    name: z.string().min(2, t("components.booking.form.errors.missing_fields")),
-    address: z.string().min(5, t("components.booking.form.errors.missing_fields")),
-    city: z.string().min(2, t("components.booking.form.errors.missing_fields")),
-    phone: z.string().min(10, t("components.booking.form.errors.phone_required")),
-    email: z.string().email(t("components.booking.form.errors.email_invalid")),
+    name: z.string().min(2, "Veuillez remplir tous les champs obligatoires."),
+    address: z.string().min(5, "Veuillez remplir tous les champs obligatoires."),
+    city: z.string().min(2, "Veuillez remplir tous les champs obligatoires."),
+    phone: z.string().min(10, "Le numéro de téléphone est requis."),
+    email: z.string().email("Adresse email invalide."),
   });
 
-export const getIdentitySchema = (t: TFunction) =>
+export const getIdentitySchema = () =>
   z.object({
-    cuisineType: z.array(z.string()).min(1, t("components.booking.form.errors.missing_fields") || "Select at least one"),
+    cuisineType: z.array(z.string()).min(1, "Veuillez remplir tous les champs obligatoires."),
     priceRange: z.enum(["$", "$$", "$$$", "$$$$", "$$$$$"], {
-      required_error: t("components.booking.form.errors.missing_fields") || "Required",
+      required_error: "Veuillez remplir tous les champs obligatoires.",
     }),
     shortDescription: z.string().max(100).optional(),
-    description: z
-      .string()
-      .min(20, t("components.booking.form.errors.missing_fields") || "Too short")
-      .optional(),
+    description: z.string().min(20, "Veuillez remplir tous les champs obligatoires.").optional(),
   });
 
-export const getDetailsSchema = (t: TFunction) =>
+export const getDetailsSchema = () =>
   z.object({
     features: z.array(z.string()).optional(),
-    paymentMethods: z.array(z.string()).min(1, t("components.booking.form.errors.missing_fields") || "Required"),
-    capacity: z.number().min(1, t("components.booking.form.errors.guests_min")),
+    paymentMethods: z.array(z.string()).min(1, "Veuillez remplir tous les champs obligatoires."),
+    capacity: z.number().min(1, "Au moins 1 couvert requis."),
     socials: z
       .object({
         facebook: z.string().url().optional().or(z.literal("")),
@@ -38,26 +34,26 @@ export const getDetailsSchema = (t: TFunction) =>
     website: z.string().url().optional().or(z.literal("")),
   });
 
-export const getMenuSchema = (t: TFunction) =>
+export const getMenuSchema = () =>
   z.object({
     menu: z.array(z.string().url()).optional(),
   });
 
-export const getMediaSchema = (t: TFunction) =>
+export const getMediaSchema = () =>
   z.object({
     coverImage: z.string().url().optional().or(z.literal("")),
     images: z.array(z.string().url()).optional(),
   });
 
-export const getPaymentSchema = (t: TFunction) =>
+export const getPaymentSchema = () =>
   z.object({
-    cardHolder: z.string().min(3, t("components.booking.form.errors.name_required")),
-    cardNumber: z.string().regex(/^\d{16}$/, t("components.booking.form.errors.missing_fields") || "Invalid card"),
-    expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, t("components.booking.form.errors.date_invalid")),
-    cvc: z.string().regex(/^\d{3,4}$/, t("components.booking.form.errors.missing_fields") || "Invalid CVC"),
+    cardHolder: z.string().min(3, "Le nom est requis."),
+    cardNumber: z.string().regex(/^\d{16}$/, "Veuillez remplir tous les champs obligatoires."),
+    expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Date invalide."),
+    cvc: z.string().regex(/^\d{3,4}$/, "Veuillez remplir tous les champs obligatoires."),
   });
 
-export const getOpeningHoursSchema = (t: TFunction) =>
+export const getOpeningHoursSchema = () =>
   z.record(
     z.object({
       isClosed: z.boolean().default(false),
@@ -70,15 +66,15 @@ export const getOpeningHoursSchema = (t: TFunction) =>
     }),
   );
 
-export const getRestaurantWizardSchema = (t: TFunction) =>
+export const getRestaurantWizardSchema = () =>
   z.object({
-    ...getEssentialsSchema(t).shape,
-    ...getIdentitySchema(t).shape,
-    ...getDetailsSchema(t).shape,
-    ...getMenuSchema(t).shape,
-    ...getMediaSchema(t).shape,
-    ...getPaymentSchema(t).shape,
-    openingHours: getOpeningHoursSchema(t),
+    ...getEssentialsSchema().shape,
+    ...getIdentitySchema().shape,
+    ...getDetailsSchema().shape,
+    ...getMenuSchema().shape,
+    ...getMediaSchema().shape,
+    ...getPaymentSchema().shape,
+    openingHours: getOpeningHoursSchema(),
   });
 
 export type WizardData = z.infer<ReturnType<typeof getRestaurantWizardSchema>>;

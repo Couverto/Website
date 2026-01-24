@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const RestaurantBookings = () => {
-  const { t } = useTranslation();
   const { id } = useParams();
   const { socket } = useSocketContext();
   const [bookings, setBookings] = useState<BookingInterface[]>([]);
@@ -97,7 +95,7 @@ export const RestaurantBookings = () => {
         // Add visual indicator
         setNewBookingIds((prev) => new Set(prev).add(newBooking._id));
 
-        toast.info(t("pages.restaurant.bookings.new_booking_notification"));
+        toast.info("Nouvelle réservation reçue !");
       };
 
       socket.on("newBooking", handleNewBooking);
@@ -106,7 +104,7 @@ export const RestaurantBookings = () => {
         socket.off("newBooking", handleNewBooking);
       };
     }
-  }, [socket, id, t]);
+  }, [socket, id]);
 
   const updateStatus = async (bookingId: string, newStatus: string) => {
     try {
@@ -122,22 +120,22 @@ export const RestaurantBookings = () => {
         });
       }
 
-      toast.success(t("pages.restaurant.bookings.status_updated"));
+      toast.success("Statut mis à jour");
     } catch (error) {
-      toast.error(t("pages.restaurant.bookings.status_error"));
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t("pages.restaurant.bookings.title")}</h1>
-        <p className="text-muted-foreground">{t("pages.restaurant.bookings.subtitle")}</p>
+        <h1 className="text-3xl font-bold">{"Réservations"}</h1>
+        <p className="text-muted-foreground">{"Gérez toutes les réservations de votre restaurant"}</p>
       </div>
 
       <div className="bg-card rounded-md border p-4">
         <DataTable
-          columns={getColumns(updateStatus, (id) => setBookingToCancel(id), t, newBookingIds)}
+          columns={getColumns(updateStatus, (id) => setBookingToCancel(id), newBookingIds)}
           data={bookings}
           dataCount={count}
           fetchData={fetchWithState}
@@ -152,14 +150,11 @@ export const RestaurantBookings = () => {
       <AlertDialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("pages.restaurant.dashboard.cancel_confirm_title") || "Confirmer l'annulation ?"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("pages.restaurant.dashboard.cancel_confirm_desc") ||
-                "Cette action est irréversible. Le client recevra une notification d'annulation."}
-            </AlertDialogDescription>
+            <AlertDialogTitle>Confirmer l'annulation ?</AlertDialogTitle>
+            <AlertDialogDescription>Cette action est irréversible. Le client recevra une notification d'annulation.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={!bookingToCancel}>{t("global.buttons.back") || "Retour"}</AlertDialogCancel>
+            <AlertDialogCancel disabled={!bookingToCancel}>Retour</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700"
               onClick={() => {
@@ -169,7 +164,7 @@ export const RestaurantBookings = () => {
                 }
               }}
             >
-              {t("global.buttons.confirm_cancel") || "Confirmer l'annulation"}
+              Confirmer l'annulation
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

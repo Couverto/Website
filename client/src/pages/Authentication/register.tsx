@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/authContext";
 import { axiosConfig } from "@/config/axiosConfig";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,9 +21,8 @@ export const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setAuthUser } = useAuthContext();
-  const { t } = useTranslation();
 
-  const registerSchema = getRegisterSchema(t);
+  const registerSchema = getRegisterSchema((key: string) => key);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -42,23 +40,23 @@ export const Register = () => {
     try {
       setLoading(true);
       const response = await axiosConfig.post("/auth/register", values);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Inscription réussie");
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
       const params = new URLSearchParams(window.location.search);
       const redirect = params.get("redirect");
       navigate(redirect || "/");
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
   }
 
   const features = [
-    { icon: Star, text: t("pages.register.feature_1") },
-    { icon: Shield, text: t("pages.register.feature_2") },
-    { icon: Zap, text: t("pages.register.feature_3") },
+    { icon: Star, text: "Interface intuitive et facile à prendre en main" },
+    { icon: Shield, text: "Données sécurisées et conformes RGPD" },
+    { icon: Zap, text: "Support réactif et disponible" },
   ];
 
   return (
@@ -79,9 +77,11 @@ export const Register = () => {
               <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4">{t("pages.register.hero_title", { appName: configValues["APP_NAME"] })}</h2>
+            <h2 className="text-3xl font-bold mb-4">Rejoignez {configValues["APP_NAME"]}</h2>
 
-            <p className="text-white/80 text-lg mb-8">{t("pages.register.hero_subtitle")}</p>
+            <p className="text-white/80 text-lg mb-8">
+              {"Des milliers de restaurateurs nous font confiance pour gérer leurs réservations au quotidien."}
+            </p>
 
             <div className="space-y-4">
               {features.map((feature, index) => (
@@ -98,11 +98,11 @@ export const Register = () => {
             <div className="mt-12 grid grid-cols-2 gap-6">
               <div className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-sm">
                 <div className="text-3xl font-bold">500+</div>
-                <div className="text-sm text-white/70">{t("pages.register.stat_restaurants")}</div>
+                <div className="text-sm text-white/70">{"restaurants"}</div>
               </div>
               <div className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-sm">
                 <div className="text-3xl font-bold">50k+</div>
-                <div className="text-sm text-white/70">{t("pages.register.stat_reservations")}</div>
+                <div className="text-sm text-white/70">{"réservations gérées"}</div>
               </div>
             </div>
           </div>
@@ -121,8 +121,8 @@ export const Register = () => {
           </Link>
 
           <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{t("pages.register.title")}</h1>
-            <p className="text-muted-foreground">{t("pages.register.subtitle")}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{"Créer un compte"}</h1>
+            <p className="text-muted-foreground">{"Commencez à gérer votre restaurant dès maintenant"}</p>
           </div>
 
           <Form {...form}>
@@ -133,7 +133,7 @@ export const Register = () => {
                   name="forename"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.forename")}</FormLabel>
+                      <FormLabel>{"Prénom"}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Jean" className="h-11" />
                       </FormControl>
@@ -146,7 +146,7 @@ export const Register = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.name")}</FormLabel>
+                      <FormLabel>{"Nom"}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Dupont" className="h-11" />
                       </FormControl>
@@ -161,7 +161,7 @@ export const Register = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.register.username")}</FormLabel>
+                    <FormLabel>{"Nom d'utilisateur"}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="jeandupont" className="h-11" />
                     </FormControl>
@@ -175,7 +175,7 @@ export const Register = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.register.email")}</FormLabel>
+                    <FormLabel>{"Email"}</FormLabel>
                     <FormControl>
                       <Input {...field} type="email" placeholder="jean@restaurant.fr" className="h-11" />
                     </FormControl>
@@ -190,7 +190,7 @@ export const Register = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.password")}</FormLabel>
+                      <FormLabel>{"Mot de passe"}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} placeholder="••••••••" className="h-11" />
                       </FormControl>
@@ -203,7 +203,7 @@ export const Register = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.confirmPassword")}</FormLabel>
+                      <FormLabel>{"Confirmation"}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} placeholder="••••••••" className="h-11" />
                       </FormControl>
@@ -213,27 +213,29 @@ export const Register = () => {
                 />
               </div>
 
-              <div className="text-xs text-muted-foreground">{t("pages.register.terms_and_conditions")}</div>
+              <div className="text-xs text-muted-foreground">
+                {"En créant un compte, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité."}
+              </div>
 
               <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90" disabled={loading}>
-                {loading ? t("pages.register.registering") : t("pages.register.register")}
+                {loading ? "Création en cours..." : "Créer mon compte"}
               </Button>
 
               {import.meta.env.VITE_FIREBASE_API_KEY && (
                 <>
                   <div className="relative text-sm text-center after:border-border after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="relative z-10 px-3 bg-background text-muted-foreground">{t("pages.login.or_continue_with")}</span>
+                    <span className="relative z-10 px-3 bg-background text-muted-foreground">{"Ou continuer avec"}</span>
                   </div>
-                  <OAuth message="pages.register.register" />
+                  <OAuth message="Inscription" />
                 </>
               )}
             </form>
           </Form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            {t("pages.register.already_have_account")}{" "}
+            {"Déjà un compte ?"}{" "}
             <Link to={`/login${location.search}`} className="font-medium text-primary hover:underline">
-              {t("pages.register.login")}
+              {"Se connecter"}
             </Link>
           </div>
 
@@ -241,11 +243,11 @@ export const Register = () => {
           <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Check className="h-3 w-3 text-primary" />
-              <span>{t("pages.register.trust_free")}</span>
+              <span>{"Inscription gratuite"}</span>
             </div>
             <div className="flex items-center gap-1">
               <Check className="h-3 w-3 text-primary" />
-              <span>{t("pages.register.trust_no_card")}</span>
+              <span>{"Sans carte bancaire"}</span>
             </div>
           </div>
         </div>

@@ -42,7 +42,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
     const creator = await User.findById(req.userId);
     if (!creator) {
-      res.status(400).json({ error: "server.global.errors.no_such_user" });
+      res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
 
@@ -50,7 +50,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
     const existingRestaurant = await Restaurant.findOne({ slug });
     if (existingRestaurant) {
-      res.status(409).json({ error: "server.restaurants.errors.slug_taken" });
+      res.status(409).json({ error: "Ce slug est déjà utilisé" });
       return;
     }
 
@@ -71,7 +71,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ restaurant, message: "server.restaurants.messages.created" });
+    res.status(201).json({ restaurant, message: "Restaurant créé avec succès" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -95,7 +95,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
     );
 
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -105,7 +105,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ restaurant, message: "server.restaurants.messages.updated" });
+    res.status(200).json({ restaurant, message: "Restaurant mis à jour avec succès" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -120,7 +120,7 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
   try {
     const restaurant = await Restaurant.findByIdAndDelete(id);
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -130,7 +130,7 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "server.restaurants.messages.deleted" });
+    res.status(200).json({ message: "Restaurant supprimé" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -145,7 +145,7 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
   try {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -297,7 +297,7 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
   try {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -361,7 +361,7 @@ export const getPublicRestaurantById = async (req: Request, res: Response): Prom
     const restaurant = await Restaurant.findById(id).select("-collaborators -createdAt -updatedAt"); // Exclude internal/private fields
 
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -626,7 +626,7 @@ export const getCollaborators = async (req: Request, res: Response): Promise<voi
     const restaurant = await Restaurant.findById(id).populate("collaborators", "name forename email avatar username createdAt");
 
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -647,13 +647,13 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
   try {
     const user = await User.findById(userId);
     if (!user) {
-      res.status(404).json({ error: "server.global.errors.no_such_user" });
+      res.status(404).json({ error: "Utilisateur introuvable" });
       return;
     }
 
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -673,7 +673,7 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "server.restaurants.messages.collaborator_added" });
+    res.status(200).json({ message: "Collaborateur ajouté" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -689,7 +689,7 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
   try {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -702,7 +702,7 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
     const collaboratorIndex = restaurant.collaborators.findIndex((collab) => collab.toString() === collaboratorId);
 
     if (collaboratorIndex === -1) {
-      res.status(404).json({ error: "server.restaurants.errors.not_collaborator" });
+      res.status(404).json({ error: "Vous n'êtes pas collaborateur de ce restaurant" });
       return;
     }
 
@@ -715,7 +715,7 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "server.restaurants.messages.collaborator_removed" });
+    res.status(200).json({ message: "Collaborateur retiré" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -753,7 +753,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
     );
 
     if (!restaurant) {
-      res.status(404).json({ error: "server.global.errors.not_found" });
+      res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
 
@@ -763,7 +763,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ restaurant, message: "server.restaurants.messages.settings_updated" });
+    res.status(200).json({ restaurant, message: "Paramètres mis à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

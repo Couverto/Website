@@ -10,17 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plan } from "@/interfaces/Plan";
-import { useTranslation } from "react-i18next";
 import { getCreatePlanSchema, getDeletePlanSchema, getUpdatePlanSchema } from "@/lib/zod/schemas/admin/zod";
 import { PlanFormProps } from "@/interfaces/Components";
 
 export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
   const [loading, setLoading] = useState(false);
-  const { t } = useTranslation();
 
-  const createSchema = getCreatePlanSchema(t);
-  const updateSchema = getUpdatePlanSchema(t);
-  const deleteSchema = getDeletePlanSchema(t);
+  const createSchema = getCreatePlanSchema();
+  const updateSchema = getUpdatePlanSchema();
+  const deleteSchema = getDeletePlanSchema();
 
   const createForm = useForm<z.infer<typeof createSchema>>({
     resolver: zodResolver(createSchema),
@@ -69,12 +67,12 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       };
 
       const response = await axiosConfig.post("/plans", payload);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Plan créé");
       dialog(false);
       refresh();
       createForm.reset();
     } catch (error: any) {
-      toast.error(t(error.response?.data?.error || "server.global.errors.unknown"));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
@@ -94,12 +92,12 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       };
 
       const response = await axiosConfig.put(`/plans/${plan?._id}`, payload);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Plan mis à jour");
       dialog(false);
       refresh();
       updateForm.reset();
     } catch (error: any) {
-      toast.error(t(error.response?.data?.error || "server.global.errors.unknown"));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
@@ -110,16 +108,16 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       try {
         setLoading(true);
         const response = await axiosConfig.delete(`/plans/${plan?._id}`);
-        toast.success(t(response.data.message));
+        toast.success(response.data.message || "Plan supprimé");
         dialog(false);
         refresh();
       } catch (error: any) {
-        toast.error(t(error.response?.data?.error || "server.global.errors.unknown"));
+        toast.error(error.response?.data?.error || "Une erreur est survenue");
       } finally {
         setLoading(false);
       }
     } else {
-      toast.error(t("pages.admin.plans_page.form.errors.confirm_text_invalid"));
+      toast.error("Le texte de confirmation est incorrect");
     }
   };
 
@@ -130,7 +128,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("pages.admin.plans_page.form.name")}</FormLabel>
+            <FormLabel>{"Nom"}</FormLabel>
             <FormControl>
               <Input placeholder="Essential" {...field} />
             </FormControl>
@@ -143,7 +141,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("pages.admin.plans_page.form.description")}</FormLabel>
+            <FormLabel>{"Description"}</FormLabel>
             <FormControl>
               <Textarea placeholder="" {...field} />
             </FormControl>
@@ -157,7 +155,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
           name="price"
           render={({ field }) => (
             <FormItem className="flex-1">
-              <FormLabel>{t("pages.admin.plans_page.form.price")}</FormLabel>
+              <FormLabel>{"Prix"}</FormLabel>
               <FormControl>
                 <Input type="number" {...field} />
               </FormControl>
@@ -170,7 +168,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
           name="position"
           render={({ field }) => (
             <FormItem className="flex-1">
-              <FormLabel>{t("pages.admin.plans_page.form.position")}</FormLabel>
+              <FormLabel>{"Position"}</FormLabel>
               <FormControl>
                 <Input type="number" {...field} />
               </FormControl>
@@ -184,7 +182,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
         name="features"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("pages.admin.plans_page.form.features")}</FormLabel>
+            <FormLabel>{"Fonctionnalités (séparées par des virgules)"}</FormLabel>
             <FormControl>
               <Textarea placeholder="Feature 1, Feature 2" {...field} />
             </FormControl>
@@ -197,7 +195,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
         name="stripePriceId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("pages.admin.plans_page.form.stripePriceId")}</FormLabel>
+            <FormLabel>{"ID Stripe"}</FormLabel>
             <FormControl>
               <Input placeholder="price_..." {...field} />
             </FormControl>
@@ -214,7 +212,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
             <div className="space-y-1 leading-none">
-              <FormLabel>{t("pages.admin.plans_page.form.active")}</FormLabel>
+              <FormLabel>{"Actif"}</FormLabel>
             </div>
           </FormItem>
         )}
@@ -228,7 +226,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
         <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
           {renderFormFields(createForm)}
           <Button type="submit" disabled={loading} className="w-full">
-            {t("pages.admin.plans_page.form.save")}
+            {"Enregistrer"}
           </Button>
         </form>
       </Form>
@@ -241,7 +239,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
         <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="space-y-4">
           {renderFormFields(updateForm)}
           <Button type="submit" disabled={loading} className="w-full">
-            {t("pages.admin.plans_page.form.update")}
+            {"Mettre à jour"}
           </Button>
         </form>
       </Form>
@@ -257,16 +255,16 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
             name="confirmDelete"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.plans_page.form.confirm_delete_label")}</FormLabel>
+                <FormLabel>{'Tapez "DELETE" pour confirmer'}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t("pages.admin.plans_page.form.confirm_delete_placeholder")} {...field} />
+                  <Input placeholder={"DELETE"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" variant="destructive" disabled={loading}>
-            {t("pages.admin.plans_page.form.delete")}
+            {"Supprimer"}
           </Button>
         </form>
       </Form>

@@ -1,5 +1,4 @@
 import { useParams, useOutletContext, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,27 +87,26 @@ const PRICES = [
 ];
 
 const FEATURES_LIST = [
-  { id: "terrace", value: "terrace", icon: Umbrella },
-  { id: "wifi", value: "wifi", icon: Wifi },
-  { id: "accessible", value: "accessible", icon: Accessibility },
-  { id: "bar", value: "bar", icon: Beer },
-  { id: "air_conditioning", value: "air_conditioning", icon: Wind },
-  { id: "parking", value: "parking", icon: Car },
-  { id: "pets_allowed", value: "pets_allowed", icon: Dog },
+  { id: "terrace", value: "Terrasse", icon: Umbrella },
+  { id: "wifi", value: "Wifi", icon: Wifi },
+  { id: "accessible", value: "Accès PMR", icon: Accessibility },
+  { id: "bar", value: "Bar", icon: Beer },
+  { id: "air_conditioning", value: "Climatisation", icon: Wind },
+  { id: "parking", value: "Parking", icon: Car },
+  { id: "pets_allowed", value: "Animaux acceptés", icon: Dog },
 ];
 
 const PAYMENT_METHODS = [
-  { id: "card", value: "card", icon: CreditCard },
-  { id: "cash", value: "cash", icon: Banknote },
-  { id: "apple_pay", value: "apple_pay", icon: Smartphone },
-  { id: "google_pay", value: "google_pay", icon: Smartphone },
-  { id: "tickets_restaurant", value: "tickets_restaurant", icon: Ticket },
-  { id: "cheque", value: "cheque", icon: StickyNote },
-  { id: "ancv", value: "ancv", icon: Ticket },
+  { id: "card", value: "Carte Bancaire", icon: CreditCard },
+  { id: "cash", value: "Espèces", icon: Banknote },
+  { id: "apple_pay", value: "Apple Pay", icon: Smartphone },
+  { id: "google_pay", value: "Google Pay", icon: Smartphone },
+  { id: "tickets_restaurant", value: "Tickets Restaurant", icon: Ticket },
+  { id: "cheque", value: "Chèque", icon: StickyNote },
+  { id: "ancv", value: "Chèque-Vacances (ANCV)", icon: Ticket },
 ];
 
 export const RestaurantSettings = () => {
-  const { t } = useTranslation();
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -157,13 +155,9 @@ export const RestaurantSettings = () => {
     try {
       const response = await api.patch(`/restaurants/${id}/toggle-closed`);
       setIsClosed(response.data.restaurant.isClosed);
-      toast.success(
-        response.data.restaurant.isClosed
-          ? t("pages.restaurant.settings.restaurant_closed")
-          : t("pages.restaurant.settings.restaurant_reopened"),
-      );
+      toast.success(response.data.restaurant.isClosed ? "Restaurant fermé" : "Restaurant rouvert");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || t("pages.restaurant.settings.error"));
+      toast.error(error.response?.data?.error || "Erreur lors de l'enregistrement");
     } finally {
       setToggling(false);
     }
@@ -173,10 +167,10 @@ export const RestaurantSettings = () => {
     setDeleting(true);
     try {
       await api.delete(`/restaurants/${id}`);
-      toast.success(t("pages.restaurant.settings.restaurant_deleted"));
+      toast.success("Restaurant supprimé");
       navigate("/account/restaurants");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || t("pages.restaurant.settings.error"));
+      toast.error(error.response?.data?.error || "Erreur lors de l'enregistrement");
     } finally {
       setDeleting(false);
     }
@@ -186,9 +180,9 @@ export const RestaurantSettings = () => {
     setSaving(true);
     try {
       await api.put(`/restaurants/${id}/settings`, data);
-      toast.success(t("pages.restaurant.settings.saved"));
+      toast.success("Modifications enregistrées");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || t("pages.restaurant.settings.error"));
+      toast.error(error.response?.data?.error || "Erreur lors de l'enregistrement");
     } finally {
       setSaving(false);
     }
@@ -235,8 +229,8 @@ export const RestaurantSettings = () => {
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-20">
       <div>
-        <h1 className="text-3xl font-bold">{t("pages.restaurant.settings.title")}</h1>
-        <p className="text-muted-foreground">{t("pages.restaurant.settings.subtitle")}</p>
+        <h1 className="text-3xl font-bold">{"Paramètres"}</h1>
+        <p className="text-muted-foreground">{"Configurez les informations de votre restaurant"}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -245,22 +239,22 @@ export const RestaurantSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Info className="h-5 w-5" />
-              {t("pages.restaurant.settings.basic_info")}
+              {"Informations générales"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">{t("pages.restaurant.settings.name")}</Label>
+                <Label htmlFor="name">{"Nom du restaurant"}</Label>
                 <Input id="name" {...register("name")} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">{t("pages.restaurant.settings.phone")}</Label>
+                <Label htmlFor="phone">{"Téléphone"}</Label>
                 <Input id="phone" {...register("phone")} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="adress">{t("pages.restaurant.settings.address")}</Label>
+              <Label htmlFor="adress">{"Adresse"}</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input id="adress" {...register("adress")} placeholder="123 rue..." className="pl-10" />
@@ -268,7 +262,7 @@ export const RestaurantSettings = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">{t("pages.restaurant.settings.city")}</Label>
+                <Label htmlFor="city">{"Ville"}</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input id="city" {...register("city")} placeholder="Paris" className="pl-10" />
@@ -276,20 +270,20 @@ export const RestaurantSettings = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="shortDescription">{t("pages.restaurant.settings.short_description")}</Label>
+              <Label htmlFor="shortDescription">{"Slogan / Phrase d'accroche"}</Label>
               <Input id="shortDescription" {...register("shortDescription")} placeholder="Une cuisine authentique..." maxLength={100} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">{t("pages.restaurant.settings.description")}</Label>
+              <Label htmlFor="description">{"Description"}</Label>
               <Textarea id="description" {...register("description")} rows={4} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="website">{t("pages.restaurant.settings.website")}</Label>
+                <Label htmlFor="website">{"Site web"}</Label>
                 <Input id="website" {...register("website")} placeholder="https://" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="capacity">{t("pages.restaurant.settings.capacity")}</Label>
+                <Label htmlFor="capacity">{"Capacité"}</Label>
                 <Input id="capacity" type="number" {...register("capacity")} />
               </div>
             </div>
@@ -301,16 +295,16 @@ export const RestaurantSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Utensils className="h-5 w-5" />
-              Identity & Services
+              Identité & Services
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div className="flex justify-between items-end">
-                  <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Cuisine Type</Label>
+                  <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Type de Cuisine</Label>
                   <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
-                    Multiple possible
+                    Choix multiple
                   </span>
                 </div>
                 <Controller
@@ -336,7 +330,9 @@ export const RestaurantSettings = () => {
                           </Badge>
                         ))}
                         {(!field.value || field.value.length === 0) && (
-                          <p className="text-sm text-muted-foreground italic px-1 flex items-center h-8">Select cuisine types...</p>
+                          <p className="text-sm text-muted-foreground italic px-1 flex items-center h-8">
+                            Sélectionner les types de cuisine...
+                          </p>
                         )}
                       </div>
 
@@ -351,7 +347,7 @@ export const RestaurantSettings = () => {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
                             <Input
                               className="pl-11 pr-10 h-12 text-base border-muted-foreground/20 focus:border-primary shadow-sm transition-all"
-                              placeholder="Search cuisines..."
+                              placeholder="Rechercher des cuisines..."
                               value={cuisineSearch}
                               onChange={(e) => {
                                 setCuisineSearch(e.target.value);
@@ -391,14 +387,12 @@ export const RestaurantSettings = () => {
                                   }}
                                   className="w-full flex items-center justify-between px-3 py-3 text-sm rounded-xl hover:bg-primary/5 hover:text-primary transition-all group text-left mb-0.5"
                                 >
-                                  <span className="font-medium">
-                                    {t("create.steps.identity.add_custom", "Add")} "{cuisineSearch}"
-                                  </span>
+                                  <span className="font-medium">Ajouter "{cuisineSearch}"</span>
                                   <Plus className="h-4 w-4" />
                                 </button>
                               ) : CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).length === 0 ? (
                                 <div className="py-8 text-center text-sm text-muted-foreground italic">
-                                  {t("create.steps.identity.no_results", "Type to add a custom cuisine")}
+                                  Rechercher pour ajouter une cuisine personnalisée
                                 </div>
                               ) : (
                                 CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).map((cuisine) => (
@@ -442,7 +436,7 @@ export const RestaurantSettings = () => {
               </div>
 
               <div className="space-y-4">
-                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Price Range</Label>
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Gamme de prix</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                   <Controller
                     control={control}
@@ -471,7 +465,15 @@ export const RestaurantSettings = () => {
                             <span
                               className={`text-[10px] font-bold text-center transition-all duration-300 ${field.value === price.value ? "text-primary/95" : "text-muted-foreground"}`}
                             >
-                              {t(`create.steps.identity.price_options.${price.id}`)}
+                              {price.id === "vlow"
+                                ? "Économique"
+                                : price.id === "low"
+                                  ? "Abordable"
+                                  : price.id === "medium"
+                                    ? "Moyen"
+                                    : price.id === "high"
+                                      ? "Chic"
+                                      : "Luxe"}
                             </span>
                           </div>
                         ))}
@@ -484,9 +486,9 @@ export const RestaurantSettings = () => {
 
             <div className="space-y-4 pt-8 border-t">
               <div className="flex justify-between items-end">
-                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Features</Label>
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Équipements</Label>
                 <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
-                  Multiple possible
+                  Choix multiple
                 </span>
               </div>
               <Controller
@@ -523,7 +525,7 @@ export const RestaurantSettings = () => {
                           <span
                             className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}
                           >
-                            {t(`create.steps.details.options.${feature.id}`)}
+                            {feature.value}
                           </span>
                           {isSelected && (
                             <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm">
@@ -538,9 +540,9 @@ export const RestaurantSettings = () => {
               />
 
               <div className="flex justify-between items-end pt-4">
-                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Payment Methods</Label>
+                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Moyens de paiement</Label>
                 <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
-                  Multiple possible
+                  Choix multiple
                 </span>
               </div>
               <Controller
@@ -577,7 +579,7 @@ export const RestaurantSettings = () => {
                           <span
                             className={`text-xs font-bold text-center transition-all ${isSelected ? "text-primary" : "text-muted-foreground"}`}
                           >
-                            {t(`create.steps.details.payment_options.${method.id}`)}
+                            {method.value}
                           </span>
                           {isSelected && (
                             <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-0.5 shadow-sm">
@@ -594,7 +596,7 @@ export const RestaurantSettings = () => {
 
             <div className="space-y-4 pt-8 border-t">
               <Label className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                <Share2 className="h-4 w-4" /> Social Networks
+                <Share2 className="h-4 w-4" /> Réseaux sociaux
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="relative">
@@ -619,12 +621,12 @@ export const RestaurantSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5" />
-              {t("pages.restaurant.settings.images")}
+              {"Images"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="coverImage">{t("pages.restaurant.settings.cover_image")}</Label>
+              <Label htmlFor="coverImage">{"Image de couverture (URL)"}</Label>
               <div className="flex gap-4">
                 <Input id="coverImage" {...register("coverImage")} placeholder="https://example.com/image.jpg" />
                 {watch("coverImage") && (
@@ -636,10 +638,10 @@ export const RestaurantSettings = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Gallery</Label>
+              <Label>Galerie</Label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add image URL..."
+                  placeholder="Ajouter une URL d'image..."
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())}
@@ -671,7 +673,7 @@ export const RestaurantSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              {t("pages.restaurant.settings.menu")}
+              {"Menu"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -729,7 +731,7 @@ export const RestaurantSettings = () => {
               {(!watch("menu") || watch("menu")?.length === 0) && (
                 <div className="col-span-full py-8 text-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/5 flex flex-col items-center gap-2">
                   <FileText className="h-6 w-6 opacity-30" />
-                  <p className="text-sm">{t("pages.restaurant.settings.no_menu_links")}</p>
+                  <p className="text-sm">{"Aucun lien vers le menu"}</p>
                 </div>
               )}
             </div>
@@ -741,7 +743,7 @@ export const RestaurantSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              {t("pages.restaurant.settings.opening_hours")}
+              {"Horaires d'ouverture"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -758,19 +760,19 @@ export const RestaurantSettings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              {t("pages.restaurant.settings.danger_zone")}
+              {"Zone de danger"}
             </CardTitle>
-            <CardDescription>{t("pages.restaurant.settings.danger_zone_description")}</CardDescription>
+            <CardDescription>{"Actions irréversibles ou ayant un impact majeur sur votre restaurant"}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Close/Reopen Restaurant */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/20 bg-background">
               <div>
-                <h4 className="font-semibold">
-                  {isClosed ? t("pages.restaurant.settings.reopen_restaurant") : t("pages.restaurant.settings.close_restaurant")}
-                </h4>
+                <h4 className="font-semibold">{isClosed ? "Rouvrir le restaurant" : "Fermer le restaurant"}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {isClosed ? t("pages.restaurant.settings.reopen_description") : t("pages.restaurant.settings.close_description")}
+                  {isClosed
+                    ? "Réactive les réservations. Votre restaurant acceptera à nouveau les réservations."
+                    : "Bloque les nouvelles réservations. Votre restaurant reste visible mais les clients ne peuvent plus réserver."}
                 </p>
               </div>
               <AlertDialog>
@@ -782,25 +784,21 @@ export const RestaurantSettings = () => {
                     disabled={toggling}
                   >
                     {toggling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Power className="h-4 w-4 mr-2" />}
-                    {isClosed ? t("pages.restaurant.settings.reopen") : t("pages.restaurant.settings.close")}
+                    {isClosed ? "Rouvrir" : "Fermer"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {isClosed ? t("pages.restaurant.settings.confirm_reopen_title") : t("pages.restaurant.settings.confirm_close_title")}
-                    </AlertDialogTitle>
+                    <AlertDialogTitle>{isClosed ? "Rouvrir le restaurant ?" : "Fermer le restaurant ?"}</AlertDialogTitle>
                     <AlertDialogDescription>
                       {isClosed
-                        ? t("pages.restaurant.settings.confirm_reopen_description")
-                        : t("pages.restaurant.settings.confirm_close_description")}
+                        ? "Les clients pourront à nouveau effectuer des réservations."
+                        : "Les clients ne pourront plus effectuer de réservations. Vous pourrez rouvrir à tout moment."}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleToggleClosed}>
-                      {isClosed ? t("pages.restaurant.settings.reopen") : t("pages.restaurant.settings.close")}
-                    </AlertDialogAction>
+                    <AlertDialogCancel>{"Annuler"}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleToggleClosed}>{isClosed ? "Rouvrir" : "Fermer"}</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -809,25 +807,29 @@ export const RestaurantSettings = () => {
             {/* Delete Restaurant */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/20 bg-background">
               <div>
-                <h4 className="font-semibold text-destructive">{t("pages.restaurant.settings.delete_restaurant")}</h4>
-                <p className="text-sm text-muted-foreground">{t("pages.restaurant.settings.delete_description")}</p>
+                <h4 className="font-semibold text-destructive">{"Supprimer le restaurant"}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {"Cette action est irréversible. Toutes les données seront définitivement effacées."}
+                </p>
               </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button type="button" variant="destructive" disabled={deleting}>
                     {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                    {t("pages.restaurant.settings.delete")}
+                    {"Supprimer"}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>{t("pages.restaurant.settings.confirm_delete_title")}</AlertDialogTitle>
-                    <AlertDialogDescription>{t("pages.restaurant.settings.confirm_delete_description")}</AlertDialogDescription>
+                    <AlertDialogTitle>{"Supprimer définitivement ?"}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {"Cette action est irréversible. Toutes les réservations, données clients et paramètres seront perdus."}
+                    </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                    <AlertDialogCancel>{"Annuler"}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDeleteRestaurant} className="bg-destructive hover:bg-destructive/90">
-                      {t("pages.restaurant.settings.delete")}
+                      {"Supprimer"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -839,7 +841,7 @@ export const RestaurantSettings = () => {
         <div className="sticky bottom-4 flex justify-end">
           <Button type="submit" disabled={saving} size="lg" className="shadow-lg">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            {t("pages.restaurant.settings.save")}
+            {"Enregistrer les modifications"}
           </Button>
         </div>
       </form>

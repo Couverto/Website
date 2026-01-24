@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
-import { useTranslation } from "react-i18next";
 import { CreditCard, Calendar, Lock } from "lucide-react";
 import Cards from "react-credit-cards-2";
 import "react-credit-cards-2/dist/es/styles-compiled.css";
@@ -9,7 +8,6 @@ import { useState } from "react";
 import { StepProps } from "@/interfaces/Components";
 
 export const StepPayment = ({ data, updateData, errors }: StepProps) => {
-  const { t } = useTranslation();
   const [focus, setFocus] = useState<any>("");
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,12 +54,12 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
               htmlFor="cardHolder"
               className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cardHolder ? "text-red-500" : ""}`}
             >
-              {t("create.steps.payment.card_holder")}
+              {"Titulaire de la carte"}
             </Label>
             <Input
               id="cardHolder"
               name="name" // react-credit-cards-2 expects 'name' for focus
-              placeholder={t("create.steps.payment.card_holder_placeholder")}
+              placeholder={"NOM PRÉNOM"}
               className={`uppercase h-12 text-base transition-all ${errors?.cardHolder ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
               value={data.cardHolder || ""}
               onChange={(e) => updateData({ cardHolder: e.target.value.toUpperCase() })}
@@ -75,7 +73,7 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
               htmlFor="cardNumber"
               className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cardNumber ? "text-red-500" : ""}`}
             >
-              {t("create.steps.payment.card_number")}
+              {"Numéro de carte"}
             </Label>
             <div className="relative group">
               <CreditCard
@@ -100,7 +98,7 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
                 htmlFor="expiry"
                 className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.expiry ? "text-red-500" : ""}`}
               >
-                {t("create.steps.payment.expiry")}
+                {"Expiration"}
               </Label>
               <div className="relative group">
                 <Calendar
@@ -109,7 +107,7 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
                 <Input
                   id="expiry"
                   name="expiry"
-                  placeholder={t("create.steps.payment.expiry_placeholder")}
+                  placeholder={"MM/AA"}
                   className={`pl-10 h-12 text-base transition-all ${errors?.expiry ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
                   value={data.expiry || ""}
                   onChange={handleExpiryChange}
@@ -123,7 +121,7 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
                 htmlFor="cvc"
                 className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cvc ? "text-red-500" : ""}`}
               >
-                {t("create.steps.payment.cvc")}
+                {"CVC"}
               </Label>
               <div className="relative group">
                 <Lock
@@ -151,9 +149,9 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
             <Lock className="h-5 w-5 text-emerald-600" />
           </div>
           <div className="text-center space-y-1">
-            <p className="text-sm font-bold text-emerald-900 tracking-tight">{t("create.steps.payment.secure_text")}</p>
+            <p className="text-sm font-bold text-emerald-900 tracking-tight">{"Paiement sécurisé via Stripe (Simulation)"}</p>
             <p className="text-[10px] text-emerald-700/60 leading-relaxed font-medium uppercase tracking-widest">
-              {t("create.steps.payment.secure_text_detail")}
+              {"Chiffrement SSL 256 bits de niveau bancaire"}
             </p>
           </div>
         </div>

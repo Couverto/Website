@@ -1,25 +1,23 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { User, Utensils, Calendar } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export const AccountLayout = () => {
-  const { t } = useTranslation();
   const location = useLocation();
 
   const navItems = [
     {
-      title: t("pages.account_menu.profile"),
+      title: "Profil",
       href: "/account/profile",
       icon: User,
     },
     {
-      title: t("pages.account_menu.restaurants"),
+      title: "Mes Restaurants",
       href: "/account/restaurants",
       icon: Utensils,
     },
     {
-      title: t("pages.account_menu.bookings"),
+      title: "Mes Réservations",
       href: "/account/bookings",
       icon: Calendar,
     },

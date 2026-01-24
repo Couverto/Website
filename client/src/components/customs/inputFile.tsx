@@ -6,8 +6,6 @@ import { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
-
 interface InputFileProps {
   label?: string;
   buttonText?: string;
@@ -19,14 +17,13 @@ interface InputFileProps {
 
 export function InputFile({
   label,
-  buttonText = "choose_file",
+  buttonText = "Choisir un fichier",
   id = "picture",
   disabled = false,
   onChange,
   className = "",
 }: InputFileProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation();
 
   const handleClick = () => {
     if (!disabled) {
@@ -39,7 +36,7 @@ export function InputFile({
       {label && <Label htmlFor={id}>{label}</Label>}
       <div className="flex items-center gap-2">
         <Button type="button" onClick={handleClick} variant="outline" className="w-full" disabled={disabled}>
-          {t("components.inputFile." + `${buttonText}`)}
+          {buttonText}
         </Button>
         <Input ref={inputRef} id={id} type="file" className="hidden" onChange={onChange} disabled={disabled} />
       </div>

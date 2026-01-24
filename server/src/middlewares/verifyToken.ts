@@ -23,7 +23,7 @@ export const verifyToken = ({ role }: VerifyTokenOptions = {}) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      res.status(401).json({ error: "global.expired_session" });
+      res.status(401).json({ error: "Session expirée" });
       return;
     }
 
@@ -33,7 +33,7 @@ export const verifyToken = ({ role }: VerifyTokenOptions = {}) => {
 
       const user = await User.findOne({ _id: decoded.id });
       if (!user) {
-        res.status(400).json({ error: "No such user" });
+        res.status(400).json({ error: "Utilisateur introuvable" });
         return;
       }
 
@@ -45,14 +45,14 @@ export const verifyToken = ({ role }: VerifyTokenOptions = {}) => {
           userId: user._id,
           level: logLevels.ERROR,
         });
-        res.status(403).json({ error: "Access restricted" });
+        res.status(403).json({ error: "Accès retreint" });
         return;
       }
 
       next();
     } catch (err: any) {
       if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
-        res.status(403).json({ error: "Access Token is invalid" });
+        res.status(403).json({ error: "Jeton d'accès invalide" });
         return;
       }
       res.status(500).json({ error: err.message });

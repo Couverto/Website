@@ -1,29 +1,26 @@
 import { Calendar, ClipboardList, LayoutGrid, Zap } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export const ValueProposition = () => {
-  const { t } = useTranslation();
-
   const benefits = [
     {
       icon: Calendar,
-      title: t("pages.landing.value_proposition.benefit_1_title"),
-      description: t("pages.landing.value_proposition.benefit_1_desc"),
+      title: "Gestion des réservations en temps réel",
+      description: "Recevez et gérez vos réservations instantanément, depuis n'importe quel appareil.",
     },
     {
       icon: LayoutGrid,
-      title: t("pages.landing.value_proposition.benefit_2_title"),
-      description: t("pages.landing.value_proposition.benefit_2_desc"),
+      title: "Organisation simple des tables et services",
+      description: "Visualisez votre salle en un coup d'œil et gérez les affectations facilement.",
     },
     {
       icon: ClipboardList,
-      title: t("pages.landing.value_proposition.benefit_3_title"),
-      description: t("pages.landing.value_proposition.benefit_3_desc"),
+      title: "Données clients centralisées",
+      description: "Retrouvez l'historique et les préférences de vos clients en quelques clics.",
     },
     {
       icon: Zap,
-      title: t("pages.landing.value_proposition.benefit_4_title"),
-      description: t("pages.landing.value_proposition.benefit_4_desc"),
+      title: "Prise en main immédiate",
+      description: "Aucune formation nécessaire. Interface intuitive pensée pour le terrain.",
     },
   ];
 
@@ -33,9 +30,11 @@ export const ValueProposition = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">
-            {t("pages.landing.value_proposition.title")}
+            {"Tout ce dont vous avez besoin, rien de superflu"}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t("pages.landing.value_proposition.subtitle")}</p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {"Des fonctionnalités essentielles pensées pour le quotidien des restaurateurs indépendants."}
+          </p>
         </div>
 
         {/* Benefits Grid */}

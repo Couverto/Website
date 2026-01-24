@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UtensilsCrossed, Home } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 export const NotFound = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -19,21 +17,21 @@ export const NotFound = () => {
       <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-2 animate-in slide-in-from-bottom-4 duration-500 delay-100">404</h1>
 
       <h2 className="text-2xl font-bold tracking-tight mb-4 animate-in slide-in-from-bottom-4 duration-500 delay-200">
-        {t("pages.not_found.title")}
+        {"Page non trouvée"}
       </h2>
 
       <p className="text-muted-foreground max-w-[500px] mb-8 animate-in slide-in-from-bottom-4 duration-500 delay-300">
-        {t("pages.not_found.description")}
+        {"La page que vous recherchez n'existe pas."}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 animate-in slide-in-from-bottom-4 duration-500 delay-400">
         <Button onClick={() => navigate("/")} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
           <Home className="w-4 h-4" />
-          {t("pages.not_found.button")}
+          {"Retour à l'accueil"}
         </Button>
         <Button onClick={() => navigate(-1)} variant="outline" size="lg" className="gap-2">
           <ArrowLeft className="w-4 h-4" />
-          {t("global.buttons.cancel") || "Go Back"}
+          {"Annuler"}
         </Button>
       </div>
     </div>

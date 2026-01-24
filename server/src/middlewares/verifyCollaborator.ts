@@ -22,26 +22,26 @@ export const verifyCollaborator = () => {
         }
       }
       if (!restaurantId) {
-        res.status(400).json({ error: "server.restaurants.errors.missing_id" });
+        res.status(400).json({ error: "ID du restaurant manquant" });
         return;
       }
 
       if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
-        res.status(400).json({ error: "server.restaurants.errors.invalid_id" });
+        res.status(400).json({ error: "ID du restaurant invalide" });
         return;
       }
 
       const restaurant = await Restaurant.findById(restaurantId);
 
       if (!restaurant) {
-        res.status(404).json({ error: "server.global.errors.not_found" });
+        res.status(404).json({ error: "Ressource introuvable" });
         return;
       }
 
       const isCollaborator = restaurant.collaborators.some((collab) => collab.toString() === req.userId?.toString());
 
       if (!isCollaborator) {
-        res.status(403).json({ error: "server.restaurants.errors.not_collaborator" });
+        res.status(403).json({ error: "Vous n'êtes pas collaborateur de ce restaurant" });
         return;
       }
 

@@ -10,17 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Copy } from "lucide-react";
 import { UserInterface } from "@/interfaces/User";
-import { useTranslation } from "react-i18next";
 import { getCreateUserSchema, getDeleteUserSchema, getUpdateUserSchema } from "@/lib/zod/schemas/admin/zod";
 import { UserFormProps } from "@/interfaces/Components";
 
 export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
   const [loading, setLoading] = useState(false);
 
-  const { t } = useTranslation();
-  const createUserSchema = getCreateUserSchema(t);
-  const updateUserSchema = getUpdateUserSchema(t);
-  const deleteUserchema = getDeleteUserSchema(t);
+  const createUserSchema = getCreateUserSchema();
+  const updateUserSchema = getUpdateUserSchema();
+  const deleteUserchema = getDeleteUserSchema();
 
   const createForm = useForm<z.infer<typeof createUserSchema>>({
     resolver: zodResolver(createUserSchema),
@@ -57,12 +55,12 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     try {
       setLoading(true);
       const response = await axiosConfig.post("/users", values);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Utilisateur créé avec succès");
       dialog(false);
       refresh();
       createForm.reset();
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
@@ -72,12 +70,12 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     try {
       setLoading(true);
       const response = await axiosConfig.put(`/users/${user?._id}`, values);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Utilisateur mis à jour");
       dialog(false);
       refresh();
       updateForm.reset();
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
@@ -88,16 +86,16 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
       try {
         setLoading(true);
         const response = await axiosConfig.delete(`/users/${user?._id}`);
-        toast.success(t(response.data.message));
+        toast.success(response.data.message || "Utilisateur supprimé");
         dialog(false);
         refresh();
       } catch (error: any) {
-        toast.error(t(error.response.data.error));
+        toast.error(error.response?.data?.error || "Une erreur est survenue");
       } finally {
         setLoading(false);
       }
     } else {
-      toast.error(t("pages.admin.users_page.form.confirm_text_invalid"));
+      toast.error("Le texte de confirmation est incorrect");
     }
   };
 
@@ -105,11 +103,11 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     try {
       setLoading(true);
       const response = await axiosConfig.get(`/users/utils/generatePassword`);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Mot de passe généré");
       if (action === "update") updateForm.setValue("password", response.data.password);
       if (action === "create") createForm.setValue("password", response.data.password);
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setLoading(false);
     }
@@ -119,12 +117,12 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     const password = action === "update" ? updateForm.getValues("password") : createForm.getValues("password");
 
     if (!password) {
-      toast.error(t("pages.admin.users_page.form.no_password_yet"));
+      toast.error("Aucun mot de passe généré pour le moment");
       return;
     }
 
     navigator.clipboard.writeText(password ?? "");
-    toast.success(t("pages.admin.users_page.form.password_copied"));
+    toast.success("Mot de passe copié dans le presse-papiers");
   };
 
   if (action === "create") {
@@ -137,7 +135,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               name="forename"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>{t("pages.admin.users_page.form.forename")}</FormLabel>
+                  <FormLabel>{"Prénom"}</FormLabel>
                   <FormControl>
                     <Input placeholder="John" {...field} className="w-full" />
                   </FormControl>
@@ -150,7 +148,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>{t("pages.admin.users_page.form.name")}</FormLabel>
+                  <FormLabel>{"Nom"}</FormLabel>
                   <FormControl>
                     <Input placeholder="Doe" {...field} className="w-full" />
                   </FormControl>
@@ -164,7 +162,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.username")}</FormLabel>
+                <FormLabel>{"Nom d'utilisateur"}</FormLabel>
                 <FormControl>
                   <Input placeholder="john_doe" {...field} />
                 </FormControl>
@@ -177,7 +175,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.email")}</FormLabel>
+                <FormLabel>{"E-mail"}</FormLabel>
                 <FormControl>
                   <Input placeholder="john.doe@gmail.com" {...field} />
                 </FormControl>
@@ -190,15 +188,15 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.role")}</FormLabel>
+                <FormLabel>{"Rôle"}</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("pages.admin.users_page.form.select_role_placeholder")} />
+                      <SelectValue placeholder={"Sélectionnez un rôle pour le nouvel utilisateur"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">{t("pages.admin.users_page.form.user")}</SelectItem>
-                      <SelectItem value="admin">{t("pages.admin.users_page.form.admin")}</SelectItem>
+                      <SelectItem value="user">{"Utilisateur"}</SelectItem>
+                      <SelectItem value="admin">{"Administrateur"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>
@@ -211,7 +209,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="password"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>{t("pages.admin.users_page.form.password")}</FormLabel>
+                <FormLabel>{"Mot de passe"}</FormLabel>
                 <FormControl>
                   <div className="flex items-end justify-end w-full gap-4">
                     <Input type="password" placeholder="************" {...field} disabled />
@@ -221,12 +219,12 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
                         variant="outline"
                         onClick={copyGeneratedPassword}
                         disabled={loading}
-                        aria-label={t("pages.admin.users_page.form.copy_password")}
+                        aria-label={"Copier le mot de passe"}
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
                       <Button type="button" variant="outline" onClick={getRandomPassword} disabled={loading}>
-                        {t("pages.admin.users_page.form.generate_password")}
+                        {"Générer"}
                       </Button>
                     </div>
                   </div>
@@ -236,7 +234,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             )}
           />
           <Button type="submit" disabled={loading}>
-            {t("pages.admin.users_page.form.save")}
+            {"Enregistrer"}
           </Button>
         </form>
       </Form>
@@ -253,7 +251,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               name="forename"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>{t("pages.admin.users_page.form.forename")}</FormLabel>
+                  <FormLabel>{"Prénom"}</FormLabel>
                   <FormControl>
                     <Input placeholder="John" {...field} className="w-full" />
                   </FormControl>
@@ -266,7 +264,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>{t("pages.admin.users_page.form.name")}</FormLabel>
+                  <FormLabel>{"Nom"}</FormLabel>
                   <FormControl>
                     <Input placeholder="Doe" {...field} className="w-full" />
                   </FormControl>
@@ -280,7 +278,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.username")}</FormLabel>
+                <FormLabel>{"Nom d'utilisateur"}</FormLabel>
                 <FormControl>
                   <Input placeholder="john_doe" {...field} />
                 </FormControl>
@@ -293,7 +291,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.email")}</FormLabel>
+                <FormLabel>{"E-mail"}</FormLabel>
                 <FormControl>
                   <Input placeholder="john.doe@gmail.com" {...field} />
                 </FormControl>
@@ -306,15 +304,15 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.role")}</FormLabel>
+                <FormLabel>{"Rôle"}</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger>
-                      <SelectValue placeholder={t("pages.admin.users_page.form.select_role_placeholder")} />
+                      <SelectValue placeholder={"Sélectionnez un rôle pour le nouvel utilisateur"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">{t("pages.admin.users_page.form.user")}</SelectItem>
-                      <SelectItem value="admin">{t("pages.admin.users_page.form.admin")}</SelectItem>
+                      <SelectItem value="user">{"Utilisateur"}</SelectItem>
+                      <SelectItem value="admin">{"Administrateur"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>
@@ -328,7 +326,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               name="password"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>{t("pages.admin.users_page.form.password")}</FormLabel>
+                  <FormLabel>{"Mot de passe"}</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="************" {...field} disabled />
                   </FormControl>
@@ -342,17 +340,17 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
                 variant="outline"
                 onClick={copyGeneratedPassword}
                 disabled={loading}
-                aria-label={t("pages.admin.users_page.form.copy_password")}
+                aria-label={"Copier le mot de passe"}
               >
                 <Copy className="w-4 h-4" />
               </Button>
               <Button variant="outline" onClick={getRandomPassword} disabled={loading} type="button">
-                {t("pages.admin.users_page.form.generate_password")}
+                {"Générer"}
               </Button>
             </div>
           </div>
           <Button type="submit" disabled={loading}>
-            {t("pages.admin.users_page.form.update")}
+            {"Mettre à jour"}
           </Button>
         </form>
       </Form>
@@ -368,16 +366,16 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
             name="confirmDelete"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("pages.admin.users_page.form.confirm_delete_label")}</FormLabel>
+                <FormLabel>{'Tapez "DELETE" pour confirmer'}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t("pages.admin.users_page.form.confirm_delete_placeholder")} {...field} />
+                  <Input placeholder={"DELETE"} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" variant="destructive" disabled={loading}>
-            {t("pages.admin.users_page.form.delete")}
+            {"Supprimer"}
           </Button>
         </form>
       </Form>

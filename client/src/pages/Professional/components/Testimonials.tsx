@@ -1,38 +1,36 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const Testimonials = () => {
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const testimonials = [
     {
-      name: t("pages.landing.testimonials.testimonial_1_name"),
-      role: t("pages.landing.testimonials.testimonial_1_role"),
-      text: t("pages.landing.testimonials.testimonial_1_text", { appName }),
+      name: "Marie Rousseau",
+      role: "Le Petit Bistrot, Paris",
+      text: "Couverto a radicalement changé ma façon de gérer les services. C'est intuitif et mes clients adorent.",
       rating: 5,
     },
     {
-      name: t("pages.landing.testimonials.testimonial_2_name"),
-      role: t("pages.landing.testimonials.testimonial_2_role"),
-      text: t("pages.landing.testimonials.testimonial_2_text", { appName }),
+      name: "Jean-Pierre Martin",
+      role: "La Table du Chef, Lyon",
+      text: "La gestion du plan de salle est un vrai plus. Fini le stress des doubles réservations.",
       rating: 5,
     },
     {
-      name: t("pages.landing.testimonials.testimonial_3_name"),
-      role: t("pages.landing.testimonials.testimonial_3_role"),
-      text: t("pages.landing.testimonials.testimonial_3_text", { appName }),
+      name: "Sophie Bernard",
+      role: "Chez Sophie, Bordeaux",
+      text: "Le support est réactif et l'outil évolue constamment. Un indispensable.",
       rating: 5,
     },
     {
-      name: t("pages.landing.testimonials.testimonial_4_name"),
-      role: t("pages.landing.testimonials.testimonial_4_role"),
-      text: t("pages.landing.testimonials.testimonial_4_text", { appName }),
+      name: "Antoine Lefebvre",
+      role: "Le Comptoir, Marseille",
+      text: "Simple, efficace et à un prix très abordable. Je recommande sans hésiter.",
       rating: 4,
     },
   ];
@@ -58,8 +56,10 @@ export const Testimonials = () => {
       <div className="container mx-auto max-w-8xl px-3 md:px-4">
         {/* Section Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">{t("pages.landing.testimonials.title")}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t("pages.landing.testimonials.subtitle")}</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">{"Ce que disent nos clients"}</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {"Des centaines de restaurateurs nous font confiance au quotidien"}
+          </p>
         </div>
 
         {/* Testimonials Slider */}

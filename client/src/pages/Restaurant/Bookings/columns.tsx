@@ -8,12 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { BookingInterface } from "@/interfaces/Booking";
-import { TFunction } from "i18next";
 
 export const getColumns = (
   updateStatus: (id: string, status: string) => void,
   cancelBooking: (id: string) => void,
-  t: TFunction<"translation">,
   newBookingIds: Set<string>,
 ): ColumnDef<BookingInterface>[] => [
   // Customer column FIRST - shows user avatar if registered, otherwise initials
@@ -22,7 +20,7 @@ export const getColumns = (
     accessorFn: (row) => (row.user ? `${row.user.forename} ${row.user.name}` : row.customer.name),
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.bookings.customer")}
+        {"Client"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -53,6 +51,7 @@ export const getColumns = (
         </div>
       );
     },
+    meta: { label: "Client" },
   },
   // Phone column - separate because same user can book with different phones
   {
@@ -60,7 +59,7 @@ export const getColumns = (
     accessorFn: (row) => row.customer.phone,
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.bookings.phone")}
+        {"Téléphone"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -73,13 +72,14 @@ export const getColumns = (
         </span>
       );
     },
+    meta: { label: "Téléphone" },
   },
   // Date column - horizontal layout
   {
     accessorKey: "bookingDate",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.bookings.date")}
+        {"Date"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -113,12 +113,13 @@ export const getColumns = (
         </div>
       );
     },
+    meta: { label: "Date" },
   },
   {
     accessorKey: "guests",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.bookings.guests")}
+        {"Couverts"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -131,12 +132,13 @@ export const getColumns = (
         </span>
       );
     },
+    meta: { label: "Couverts" },
   },
   {
     accessorKey: "status",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {t("pages.restaurant.bookings.status")}
+        {"Statut"}
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -158,15 +160,16 @@ export const getColumns = (
 
       return (
         <Badge variant="secondary" className={cn("text-[10px] uppercase font-bold tracking-wider", colorClass)}>
-          {t(`pages.account.bookings_page.status.${status}`)}
+          {status === "PENDING" ? "En attente" : status === "CONFIRMED" ? "Confirmée" : status === "CANCELLED" ? "Annulée" : "Brouillon"}
         </Badge>
       );
     },
+    meta: { label: "Statut" },
   },
   {
     id: "actions",
     enableHiding: false,
-    header: t("pages.restaurant.bookings.actions"),
+    header: "Actions",
     cell: ({ row }) => {
       const booking = row.original;
 
@@ -182,13 +185,13 @@ export const getColumns = (
             {booking.status !== "CONFIRMED" && (
               <DropdownMenuItem onClick={() => updateStatus(booking._id, "CONFIRMED")}>
                 <Check className="h-4 w-4 mr-2 text-green-600" />
-                {t("global.buttons.confirm") || "Confirmer"}
+                Confirmer
               </DropdownMenuItem>
             )}
             {booking.status !== "CANCELLED" && (
               <DropdownMenuItem onClick={() => cancelBooking(booking._id)} className="text-destructive focus:text-destructive">
                 <X className="h-4 w-4 mr-2" />
-                {t("global.buttons.cancel") || "Annuler"}
+                Annuler
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

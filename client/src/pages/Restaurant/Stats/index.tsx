@@ -1,5 +1,4 @@
 import { useParams, useOutletContext } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useSocketContext } from "@/contexts/socketContext";
 
 export const RestaurantStats = () => {
-  const { t } = useTranslation();
   const { id } = useParams();
   const { socket } = useSocketContext();
   const [stats, setStats] = useState<StatsInterface | null>(null);
@@ -86,97 +84,93 @@ export const RestaurantStats = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t("pages.restaurant.dashboard.title_stats") || "Statistiques"}</h1>
-        <p className="text-muted-foreground">{t("pages.restaurant.dashboard.subtitle_stats") || "Analyse détaillée de votre activité"}</p>
+        <h1 className="text-3xl font-bold">Statistiques</h1>
+        <p className="text-muted-foreground">Analyse détaillée de votre activité</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.today_bookings")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{"Réservations aujourd'hui"}</CardTitle>
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.today.bookings || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.today.guests || 0} {t("pages.restaurant.dashboard.guests")}
+              {stats?.today.guests || 0} {"couvert(s)"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.week_bookings")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{"Réservations cette semaine"}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.week.bookings || 0}</div>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.this_week")}</p>
+            <p className="text-xs text-muted-foreground">{"Cette semaine"}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.month_bookings")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{"Réservations ce mois"}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.month.bookings || 0}</div>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.this_month")}</p>
+            <p className="text-xs text-muted-foreground">{"Ce mois-ci"}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.total_clients")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{"Clients uniques"}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalClients || 0}</div>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.unique_clients")}</p>
+            <p className="text-xs text-muted-foreground">{"Clients différents"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t("pages.restaurant.dashboard.cancellation_rate") || "Taux d'annulation"}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">{"Taux d'annulation"}</CardTitle>
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.cancellationRate ?? 0}%</div>
-            <p className="text-xs text-muted-foreground">
-              {t("pages.restaurant.dashboard.cancellation_rate_desc") || "Basé sur l'historique"}
-            </p>
+            <p className="text-xs text-muted-foreground">{"Basé sur l'historique"}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.avg_guests") || "Couverts moyens"}</CardTitle>
+            <CardTitle className="text-sm font-medium">Couverts moyens</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.averageGuests ?? 0}</div>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.per_booking") || "Par réservation"}</p>
+            <p className="text-xs text-muted-foreground">Par réservation</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.avg_lead_time") || "Anticipation"}</CardTitle>
+            <CardTitle className="text-sm font-medium">Anticipation</CardTitle>
             <Clock8 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{(stats?.averageLeadTime ?? 0).toFixed(1)}j</div>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.avg_lead_time_desc") || "Moyenne d'avance"}</p>
+            <p className="text-xs text-muted-foreground">Moyenne d'avance</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.busiest_day") || "Jour le plus actif"}</CardTitle>
+            <CardTitle className="text-sm font-medium">Jour le plus actif</CardTitle>
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -185,7 +179,7 @@ export const RestaurantStats = () => {
                 ? format(new Date().setDate(new Date().getDate() - new Date().getDay() + stats.busyDays[0].day), "EEEE", { locale: fr })
                 : "-"}
             </div>
-            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.most_bookings") || "Le plus de réservations"}</p>
+            <p className="text-xs text-muted-foreground">Le plus de réservations</p>
           </CardContent>
         </Card>
       </div>
@@ -196,9 +190,9 @@ export const RestaurantStats = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <BarChartIcon className="h-5 w-5 text-primary" />
-              <CardTitle>{t("pages.restaurant.dashboard.weekly_trend")}</CardTitle>
+              <CardTitle>{"Tendance hebdomadaire"}</CardTitle>
             </div>
-            <CardDescription>{t("pages.restaurant.dashboard.weekly_trend_desc")}</CardDescription>
+            <CardDescription>{"Nombre de réservations sur les 7 derniers jours"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[400px]">
@@ -222,9 +216,9 @@ export const RestaurantStats = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-primary" />
-              <CardTitle>{t("pages.restaurant.dashboard.guest_distribution")}</CardTitle>
+              <CardTitle>{"Taille des groupes"}</CardTitle>
             </div>
-            <CardDescription>{t("pages.restaurant.dashboard.guest_distribution_desc")}</CardDescription>
+            <CardDescription>{"Répartition par nombre de couverts"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[400px]">
@@ -241,7 +235,7 @@ export const RestaurantStats = () => {
                     align="center"
                     formatter={(value: string) => (
                       <span className="text-xs font-medium text-muted-foreground mr-2">
-                        {value} {t("pages.restaurant.dashboard.guests")}
+                        {value} {"couvert(s)"}
                       </span>
                     )}
                   />

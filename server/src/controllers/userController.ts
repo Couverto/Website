@@ -44,7 +44,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
   const userId = req.userId;
 
   if (!email || !username || !password || !name || !forename) {
-    res.status(400).json({ error: "server.global.errors.missing_fields" });
+    res.status(400).json({ error: "Champs requis manquants" });
     return;
   }
 
@@ -89,7 +89,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ user: userWithoutPassword, message: "server.users.messages.user_created" });
+    res.status(201).json({ user: userWithoutPassword, message: "Utilisateur créé" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -156,14 +156,14 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       { new: true },
     );
     if (!user) {
-      res.status(404).json({ error: "server.global.errors.no_such_user" });
+      res.status(404).json({ error: "Utilisateur introuvable" });
       return;
     }
 
     const userObj = user.toObject();
     const { password: _password, ...userWithoutPassword } = userObj;
 
-    res.status(200).json({ user: userWithoutPassword, message: "server.users.messages.user_updated" });
+    res.status(200).json({ user: userWithoutPassword, message: "Utilisateur mis à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -179,7 +179,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
   try {
     const user = await User.findOneAndDelete({ _id: id });
     if (!user) {
-      res.status(400).json({ error: "server.global.errors.no_such_user" });
+      res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
 
@@ -196,7 +196,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ user, message: "server.users.messages.user_deleted" });
+    res.status(200).json({ user, message: "Utilisateur supprimé" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -208,7 +208,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
  * @returns {Object} JSON response with generated password.
  */
 export const generateUserPassword = async (req: Request, res: Response): Promise<void> => {
-  res.status(200).json({ message: "pages.admin.users_page.form.password_generated", password: generateRandomPassword() });
+  res.status(200).json({ message: "Nouveau mot de passe généré", password: generateRandomPassword() });
 };
 
 /**
@@ -227,12 +227,12 @@ export const updatePassword = async (req: Request, res: Response): Promise<void>
   try {
     const user = await User.findById(id).select("+password");
     if (!user) {
-      res.status(400).json({ error: "server.global.errors.no_such_user" });
+      res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
 
     if (!currentPassword || !newPassword || !newPasswordConfirm) {
-      res.status(400).json({ error: "server.global.errors.missing_fields" });
+      res.status(400).json({ error: "Champs requis manquants" });
       return;
     }
 
@@ -263,7 +263,7 @@ export const updatePassword = async (req: Request, res: Response): Promise<void>
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "server.users.messages.password_updated" });
+    res.status(200).json({ message: "Mot de passe mis à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -281,7 +281,7 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
 
   try {
     if (!password) {
-      res.status(400).json({ error: "server.global.errors.missing_fields" });
+      res.status(400).json({ error: "Champs requis manquants" });
       return;
     }
 
@@ -309,7 +309,7 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
     await User.findByIdAndDelete(userId);
     res.clearCookie("__access__token");
 
-    res.status(200).json({ message: "server.users.messages.user_deleted" });
+    res.status(200).json({ message: "Utilisateur supprimé" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -21,30 +21,30 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const { name, forename, email, username, photoURL, password, confirmPassword } = req.body;
 
   if (!username || !email || !password || !confirmPassword || !name || !forename) {
-    res.status(422).json({ error: "server.global.errors.missing_fields" });
+    res.status(422).json({ error: "Champs requis manquants" });
     return;
   }
 
   if (!Constants.REGEX_PASSWORD.test(password)) {
-    res.status(400).json({ error: "server.auth.errors.regex" });
+    res.status(400).json({ error: "Format ne respectant pas les règles de sécurité" });
     return;
   }
 
   if (password !== confirmPassword) {
-    res.status(400).json({ error: "server.auth.errors.password_no_match" });
+    res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
     return;
   }
 
   try {
     const existingEmailUser = await User.findOne({ email: email.toLowerCase() });
     if (existingEmailUser) {
-      res.status(409).json({ error: "server.auth.errors.email_taken" });
+      res.status(409).json({ error: "Cet email est déjà utilisé" });
       return;
     }
 
     const existingUsernameUser = await User.findOne({ username: username.toLowerCase() });
     if (existingUsernameUser) {
-      res.status(409).json({ error: "server.auth.errors.username_taken" });
+      res.status(409).json({ error: "Ce nom d'utilisateur est déjà pris" });
       return;
     }
 
@@ -105,7 +105,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       console.error("Welcome email failed", emailErr);
     }
 
-    res.status(201).json({ user: userWithoutPassword, message: "server.auth.messages.register_success", accessToken });
+    res.status(201).json({ user: userWithoutPassword, message: "Inscription réussie", accessToken });
     return;
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -120,7 +120,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   const { username, password, email } = req.body;
 
   if (!password || (!username && !email)) {
-    res.status(422).json({ error: "server.global.errors.missing_fields" });
+    res.status(422).json({ error: "Champs requis manquants" });
     return;
   }
 
@@ -130,7 +130,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }).select("+password");
 
     if (!user) {
-      res.status(400).json({ error: "server.global.errors.no_such_user" });
+      res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
 
@@ -141,7 +141,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         userId: user._id,
         level: logLevels.ERROR,
       });
-      res.status(400).json({ error: "server.auth.errors.invalid_credentials" });
+      res.status(400).json({ error: "Identifiants invalides" });
       return;
     }
 
@@ -155,7 +155,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ user: userWithoutPassword, message: "server.auth.messages.login_success", accessToken });
+    res.status(201).json({ user: userWithoutPassword, message: "Connexion réussie", accessToken });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -173,7 +173,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       level: logLevels.INFO,
     });
   }
-  res.status(200).json({ message: "server.auth.messages.logout_success" });
+  res.status(200).json({ message: "Déconnexion réussie" });
 };
 
 /**
@@ -197,7 +197,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
   const { email } = req.body;
 
   if (!email) {
-    res.status(422).json({ error: "server.global.errors.missing_fields" });
+    res.status(422).json({ error: "Champs requis manquants" });
     return;
   }
 
@@ -216,7 +216,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ user, message: "server.auth.messages.login_success", accessToken });
+    res.status(201).json({ user, message: "Connexion réussie", accessToken });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -230,7 +230,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
   try {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      res.status(404).json({ error: "server.auth.errors.email_not_found" });
+      res.status(404).json({ error: "Email introuvable" });
       return;
     }
 
@@ -277,7 +277,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   const { password, confirmPassword } = req.body;
 
   if (password !== confirmPassword) {
-    res.status(400).json({ error: "server.auth.errors.password_no_match" });
+    res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
     return;
   }
 
@@ -290,7 +290,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     });
 
     if (!user) {
-      res.status(400).json({ error: "Invalid Reset Token" });
+      res.status(400).json({ error: "Jeton de réinitialisation invalide" });
       return;
     }
 

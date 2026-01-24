@@ -1,5 +1,4 @@
 import { Clock, ShieldCheck, Smartphone, Search, CalendarDays, PartyPopper, Users, Star } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -37,7 +36,6 @@ const FeatureCard = ({ title, description, icon, className, delay = 0 }: Feature
 );
 
 export const ValueProps = () => {
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
 
@@ -52,11 +50,11 @@ export const ValueProps = () => {
         {/* Section Header */}
         <div className="flex flex-col items-center text-center space-y-8 mb-24 max-w-4xl mx-auto">
           <Badge variant="outline" className="px-4 py-1.5 text-sm border-primary/20 bg-primary/5 text-primary rounded-full">
-            {t("pages.home.value_props.subtitle")}
+            {"La plateforme de réservation pensée pour vous simplifier la vie."}
           </Badge>
 
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-            {t("pages.home.value_props.title", { appName })}
+            Simplifiez vos réservations avec {appName}
           </h2>
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -77,9 +75,9 @@ export const ValueProps = () => {
               <div className="h-14 w-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-6">
                 <Clock className="h-7 w-7" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">{t("pages.home.features.realtime.title")}</h3>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">{"Confirmation immédiate"}</h3>
               <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                {t("pages.home.features.realtime.desc")}
+                {"Fini l'attente au téléphone, votre table est bloquée instantanément."}
                 <br className="hidden md:block" /> Plus d'attente, confirmation immédiate.
               </p>
               <div className="flex items-center gap-4">
@@ -102,8 +100,8 @@ export const ValueProps = () => {
 
           {/* Card 2: Secure (Top Right) */}
           <FeatureCard
-            title={t("pages.home.features.secure.title")}
-            description={t("pages.home.features.secure.desc")}
+            title={"100% Gratuit"}
+            description={"Pas de frais de réservation, payez directement au restaurant."}
             icon={<ShieldCheck className="h-6 w-6" />}
             delay={0.2}
             className="bg-orange-500/5 hover:bg-orange-500/10 border-orange-200/20"
@@ -111,8 +109,8 @@ export const ValueProps = () => {
 
           {/* Card 3: Mobile (Bottom Right) */}
           <FeatureCard
-            title={t("pages.home.features.mobile.title")}
-            description={t("pages.home.features.mobile.desc")}
+            title={"Accessible partout"}
+            description={"Réservez depuis votre mobile, où que vous soyez."}
             icon={<Smartphone className="h-6 w-6" />}
             delay={0.3}
             className="bg-purple-500/5 hover:bg-purple-500/10 border-purple-200/20"
@@ -129,9 +127,9 @@ export const ValueProps = () => {
               <h3 className="text-3xl md:text-4xl font-bold">Comment ça marche ?</h3>
               <div className="space-y-8">
                 {[
-                  { icon: Search, title: t("pages.home.how_it_works.step_1_title"), desc: t("pages.home.how_it_works.step_1_desc") },
-                  { icon: CalendarDays, title: t("pages.home.how_it_works.step_2_title"), desc: t("pages.home.how_it_works.step_2_desc") },
-                  { icon: PartyPopper, title: t("pages.home.how_it_works.step_3_title"), desc: t("pages.home.how_it_works.step_3_desc") },
+                  { icon: Search, title: "Trouver", desc: "Cherchez par lieu, date ou cuisine pour trouver le restaurant parfait." },
+                  { icon: CalendarDays, title: "Réserver", desc: "Choisissez votre heure et confirmez votre réservation instantanément." },
+                  { icon: PartyPopper, title: "Profiter", desc: "Recevez votre confirmation et profitez de votre repas !" },
                 ].map((step, i) => (
                   <div key={i} className="flex gap-6 group">
                     <div className="flex-shrink-0 h-12 w-12 rounded-full border border-white/20 flex items-center justify-center text-lg font-bold group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground transition-all">

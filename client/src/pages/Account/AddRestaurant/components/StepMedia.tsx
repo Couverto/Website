@@ -4,12 +4,10 @@ import { WizardData } from "../types";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { StepProps } from "@/interfaces/Components";
 
 export const StepMedia = ({ data, updateData, errors }: StepProps) => {
-  const { t } = useTranslation();
   const [newImageUrl, setNewImageUrl] = useState("");
 
   const addImage = () => {
@@ -31,7 +29,7 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
         <Label
           className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.coverImage ? "text-red-500" : ""}`}
         >
-          {t("create.steps.visuals.cover_image")}
+          {"Image de couverture"}
         </Label>
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -52,7 +50,9 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
             ) : (
               <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex gap-3 items-start">
                 <div className="h-2 w-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
-                <p className="text-xs text-blue-800 leading-relaxed font-medium">{t("create.steps.visuals.cover_help")}</p>
+                <p className="text-xs text-blue-800 leading-relaxed font-medium">
+                  {"L'image principale affichée sur les cartes et en-têtes."}
+                </p>
               </div>
             )}
           </div>
@@ -67,14 +67,14 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
                 />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <Badge className="bg-white/90 text-black border-none shadow-xl tracking-wider font-extrabold uppercase text-[10px]">
-                    {t("create.steps.visuals.preview_badge")}
+                    {"APERÇU"}
                   </Badge>
                 </div>
               </>
             ) : (
               <div className="flex flex-col items-center gap-2 opacity-30 group-hover:opacity-50 transition-opacity">
                 <ImageIcon className="h-10 w-10" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">{t("create.steps.visuals.no_cover_link")}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">{"Aucun lien d'image"}</span>
               </div>
             )}
           </div>
@@ -83,11 +83,9 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
 
       <div className="space-y-6 pt-8 border-t">
         <div className="flex justify-between items-end">
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("create.steps.visuals.gallery")}
-          </Label>
+          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{"Galerie photos"}</Label>
           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
-            {t("create.steps.visuals.gallery_hint")}
+            {"Jusqu'à 8 photos"}
           </span>
         </div>
 
@@ -95,7 +93,7 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
           <div className="relative flex-1 group">
             <Plus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
-              placeholder={t("create.steps.visuals.add_image") + "..."}
+              placeholder={"Ajouter une image" + "..."}
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addImage()}
@@ -140,8 +138,10 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
                 <ImageIcon className="h-8 w-8 opacity-20" />
               </div>
               <div className="space-y-1">
-                <p className="font-semibold text-foreground/80">{t("create.steps.visuals.no_images")}</p>
-                <p className="text-xs opacity-50 max-w-[200px] mx-auto leading-relaxed">{t("create.steps.visuals.empty_description")}</p>
+                <p className="font-semibold text-foreground/80">{"Aucune image ajoutée pour le moment."}</p>
+                <p className="text-xs opacity-50 max-w-[200px] mx-auto leading-relaxed">
+                  {"Les images permettent à votre restaurant de se démarquer. Ajoutez des liens vers vos photos."}
+                </p>
               </div>
             </div>
           )}

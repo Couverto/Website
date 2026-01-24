@@ -58,7 +58,7 @@ export const StepInfo = ({ data, updateData, onNext }: StepInfoProps) => {
             <FormItem>
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="A nice italian place..." {...field} />
+                <Textarea placeholder="Une belle pizzeria..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

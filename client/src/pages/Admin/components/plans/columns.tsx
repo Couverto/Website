@@ -10,31 +10,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { Plan } from "@/interfaces/Plan";
 
 export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog: (plan: Plan) => void): ColumnDef<Plan>[] => {
-  const { t } = useTranslation();
-
   return [
     {
       accessorKey: "name",
       header: ({ column }) => {
         return (
           <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            {t("pages.admin.plans_page.name")}
+            {"Nom"}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
+      meta: { label: "Nom" },
     },
     {
       accessorKey: "price",
       header: ({ column }) => {
         return (
           <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            {t("pages.admin.plans_page.price")}
+            {"Prix"}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -47,26 +44,29 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
         }).format(amount);
         return <div className="font-medium">{formatted}</div>;
       },
+      meta: { label: "Prix" },
     },
     {
       accessorKey: "active",
-      header: t("pages.admin.plans_page.active"),
-      cell: ({ row }) => (row.original.active ? "Yes" : "No"),
+      header: "Actif",
+      cell: ({ row }) => (row.original.active ? "Oui" : "Non"),
+      meta: { label: "Actif" },
     },
     {
       accessorKey: "position",
       header: ({ column }) => {
         return (
           <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            {t("pages.admin.plans_page.position")}
+            {"Position"}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
+      meta: { label: "Position" },
     },
     {
       id: "actions",
-      header: t("pages.admin.plans_page.actions"),
+      header: "Actions",
       enableHiding: false,
       cell: ({ row }) => {
         const plan = row.original;
@@ -80,13 +80,13 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t("pages.admin.plans_page.actions")}</DropdownMenuLabel>
+              <DropdownMenuLabel>{"Actions"}</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => openEditSheet(plan)} className="cursor-pointer">
-                {t("pages.admin.plans_page.actions_type.update")}
+                {"Modifier"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => openDeleteDialog(plan)} className="cursor-pointer text-destructive focus:text-destructive">
-                {t("pages.admin.plans_page.actions_type.delete")}
+                {"Supprimer"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

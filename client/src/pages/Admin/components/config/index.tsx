@@ -9,7 +9,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useTranslation } from "react-i18next";
 import { Loading } from "@/components/customs/loading";
 import { PaletteDesigner } from "./PaletteDesigner";
 import { Separator } from "@/components/ui/separator";
@@ -24,8 +23,6 @@ type ConfigurationFormValues = z.infer<typeof configurationFormSchema>;
 export const Config = () => {
   const { configValues, getConfigValue, updateConfigValues } = useConfigContext();
   const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const { t } = useTranslation();
 
   const form = useForm<ConfigurationFormValues>({
     resolver: zodResolver(configurationFormSchema),
@@ -51,9 +48,9 @@ export const Config = () => {
       const response = await axiosConfig.put("/config", { keys, config });
       updateConfigValues(config);
       form.reset({ ...configValues, ...config });
-      toast.success(t(`server.admin.messages.${response.data.message}`));
+      toast.success(response.data.message || "Configuration enregistrée avec succès");
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error("Erreur lors de l'enregistrement de la configuration");
     }
   };
 
@@ -64,13 +61,17 @@ export const Config = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">{t("pages.admin.config_page.title")}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{"Configuration"}</h2>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Général</CardTitle>
-          <CardDescription>{t("pages.admin.config_page.description")}</CardDescription>
+          <CardDescription>
+            {
+              "Cette page vous permet de configurer les paramètres de l'application. Assurez-vous d'enregistrer vos modifications avant de quitter cette page."
+            }
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -81,11 +82,13 @@ export const Config = () => {
                   name="APP_NAME"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.admin.config_page.app_name")}</FormLabel>
+                      <FormLabel>{"Nom de l'application"}</FormLabel>
                       <FormControl>
                         <Input placeholder="Couverto" {...field} />
                       </FormControl>
-                      <FormDescription>{t("pages.admin.config_page.app_name_description")}</FormDescription>
+                      <FormDescription>
+                        {"Saisissez le nom de votre application. Il sera affiché dans l'en-tête et à divers endroits de l'application."}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -115,7 +118,7 @@ export const Config = () => {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit">{t("global.buttons.save")}</Button>
+                <Button type="submit">{"Enregistrer"}</Button>
               </div>
             </form>
           </Form>

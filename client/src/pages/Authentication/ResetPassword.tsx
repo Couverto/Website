@@ -8,17 +8,16 @@ import { z } from "zod";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 import { ArrowLeft, Lock } from "lucide-react";
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "Les mots de passe ne correspondent pas",
     path: ["confirmPassword"],
   });
 
@@ -26,7 +25,6 @@ export const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const { resetToken } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
 
   const form = useForm<z.infer<typeof resetPasswordSchema>>({
@@ -41,10 +39,10 @@ export const ResetPassword = () => {
     try {
       setLoading(true);
       await axiosConfig.post(`/auth/reset-password/${resetToken}`, values);
-      toast.success("Password reset successfully. You can now login.");
+      toast.success("Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.");
       navigate("/login");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to reset password");
+      toast.error(error.response?.data?.error || "Une erreur est survenue lors de la réinitialisation.");
     } finally {
       setLoading(false);
     }
@@ -60,8 +58,8 @@ export const ResetPassword = () => {
             </div>
             <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Reset Password</h1>
-          <p className="text-muted-foreground mt-2">Enter your new password below.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Réinitialiser le mot de passe</h1>
+          <p className="text-muted-foreground mt-2">Entrez votre nouveau mot de passe ci-dessous.</p>
         </div>
 
         <Form {...form}>
@@ -71,7 +69,7 @@ export const ResetPassword = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("pages.login.password") || "New Password"}</FormLabel>
+                  <FormLabel>Nouveau mot de passe</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -88,7 +86,7 @@ export const ResetPassword = () => {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>Confirmer le mot de passe</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -101,7 +99,7 @@ export const ResetPassword = () => {
             />
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Resetting..." : "Reset Password"}
+              {loading ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
             </Button>
           </form>
         </Form>
@@ -109,7 +107,7 @@ export const ResetPassword = () => {
         <div className="text-center">
           <Link to="/login" className="text-sm text-muted-foreground hover:text-primary flex items-center justify-center gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Login
+            Retour à la connexion
           </Link>
         </div>
       </div>

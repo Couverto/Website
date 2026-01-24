@@ -3,12 +3,10 @@ import { axiosConfig } from "../config/axiosConfig";
 import { useAuthContext } from "../contexts/authContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 
 export const useLogout = () => {
   const [loading, setLoading] = useState(false);
 
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setAuthUser } = useAuthContext();
 
@@ -19,9 +17,9 @@ export const useLogout = () => {
       localStorage.removeItem("accessToken");
       setAuthUser(null);
       navigate("/");
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Déconnexion réussie");
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Erreur lors de la déconnexion");
     } finally {
       setLoading(false);
     }

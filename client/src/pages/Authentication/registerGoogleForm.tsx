@@ -2,7 +2,6 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getRegisterSchema } from "@/lib/zod/schemas/auth/zod";
 import { useAuthContext } from "@/contexts/authContext";
-import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
@@ -18,12 +17,11 @@ export const RegisterGoogleForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { setAuthUser } = useAuthContext();
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
   const [loading, setLoading] = useState(false);
 
   const userData = location.state;
-  const registerSchema = getRegisterSchema(t);
+  const registerSchema = getRegisterSchema();
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -60,7 +58,7 @@ export const RegisterGoogleForm = () => {
     try {
       setLoading(true);
       const response = await axiosConfig.post("/auth/register/", values);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message || "Inscription réussie");
       setAuthUser(response.data.user);
       localStorage.setItem("accessToken", response.data.accessToken);
 
@@ -68,16 +66,16 @@ export const RegisterGoogleForm = () => {
       const redirect = location.state?.redirect || params.get("redirect");
       navigate(redirect || "/");
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error || "Erreur lors de l'inscription");
     } finally {
       setLoading(false);
     }
   }
 
   const steps = [
-    { icon: Mail, text: t("pages.register_google.step_1"), done: true },
-    { icon: UserPlus, text: t("pages.register_google.step_2"), done: false },
-    { icon: Key, text: t("pages.register_google.step_3"), done: false },
+    { icon: Mail, text: "Connexion Google réussie", done: true },
+    { icon: UserPlus, text: "Complétez vos informations", done: false },
+    { icon: Key, text: "Créez un mot de passe", done: false },
   ];
 
   return (
@@ -98,9 +96,11 @@ export const RegisterGoogleForm = () => {
               <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4">{t("pages.register_google.hero_title", { appName: configValues["APP_NAME"] })}</h2>
+            <h2 className="text-3xl font-bold mb-4">Bienvenue sur {configValues["APP_NAME"]}</h2>
 
-            <p className="text-white/80 text-lg mb-8">{t("pages.register_google.hero_subtitle")}</p>
+            <p className="text-white/80 text-lg mb-8">
+              {"Votre compte Google est connecté. Créez un mot de passe pour sécuriser votre accès."}
+            </p>
 
             {/* Steps */}
             <div className="space-y-4">
@@ -165,8 +165,8 @@ export const RegisterGoogleForm = () => {
           </div>
 
           <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{t("pages.register_google.title")}</h1>
-            <p className="text-muted-foreground">{t("pages.register_google.subtitle")}</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{"Finaliser votre inscription"}</h1>
+            <p className="text-muted-foreground">{"Plus qu'une étape pour accéder à votre espace"}</p>
           </div>
 
           <Form {...form}>
@@ -177,7 +177,7 @@ export const RegisterGoogleForm = () => {
                   name="forename"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.forename")}</FormLabel>
+                      <FormLabel>{"Prénom"}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Jean" className="h-11" />
                       </FormControl>
@@ -190,7 +190,7 @@ export const RegisterGoogleForm = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.name")}</FormLabel>
+                      <FormLabel>{"Nom"}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Dupont" className="h-11" />
                       </FormControl>
@@ -205,7 +205,7 @@ export const RegisterGoogleForm = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.register.username")}</FormLabel>
+                    <FormLabel>{"Nom d'utilisateur"}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="jeandupont" className="h-11" />
                     </FormControl>
@@ -219,7 +219,7 @@ export const RegisterGoogleForm = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.register.email")}</FormLabel>
+                    <FormLabel>{"Email"}</FormLabel>
                     <FormControl>
                       <Input {...field} type="email" disabled className="h-11 bg-muted" />
                     </FormControl>
@@ -234,7 +234,7 @@ export const RegisterGoogleForm = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.password")}</FormLabel>
+                      <FormLabel>{"Mot de passe"}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} placeholder="••••••••" className="h-11" />
                       </FormControl>
@@ -247,7 +247,7 @@ export const RegisterGoogleForm = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("pages.register.confirmPassword")}</FormLabel>
+                      <FormLabel>{"Confirmation"}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} placeholder="••••••••" className="h-11" />
                       </FormControl>
@@ -257,18 +257,20 @@ export const RegisterGoogleForm = () => {
                 />
               </div>
 
-              <div className="text-xs text-muted-foreground">{t("pages.register.terms_and_conditions")}</div>
+              <div className="text-xs text-muted-foreground">
+                {"En créant un compte, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité."}
+              </div>
 
               <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90" disabled={loading}>
-                {loading ? t("pages.register.registering") : t("pages.register_google.complete_registration")}
+                {loading ? "Création en cours..." : "Finaliser mon inscription"}
               </Button>
             </form>
           </Form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            {t("pages.register.already_have_account")}{" "}
+            {"Déjà un compte ?"}{" "}
             <Link to="/login" className="font-medium text-primary hover:underline">
-              {t("pages.register.login")}
+              {"Se connecter"}
             </Link>
           </div>
 
@@ -276,11 +278,11 @@ export const RegisterGoogleForm = () => {
           <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Check className="h-3 w-3 text-primary" />
-              <span>{t("pages.login.trust_secure")}</span>
+              <span>{"Connexion sécurisée"}</span>
             </div>
             <div className="flex items-center gap-1">
               <Check className="h-3 w-3 text-primary" />
-              <span>{t("pages.login.trust_gdpr")}</span>
+              <span>{"Conforme RGPD"}</span>
             </div>
           </div>
         </div>

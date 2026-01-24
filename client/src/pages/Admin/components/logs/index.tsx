@@ -3,15 +3,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { getColumns } from "./columns";
 import { DataTable } from "@/components/customs/dataTable";
-import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Logs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [logCount, setLogCount] = useState(0);
-
-  const { t } = useTranslation();
 
   async function fetchAllLogs(page: number = 0, size: number = 10) {
     setLoading(true);
@@ -20,7 +17,7 @@ export const Logs = () => {
       setLogs(response.data.logs);
       setLogCount(response.data.count);
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error);
     } finally {
       setLoading(false);
     }
@@ -29,20 +26,20 @@ export const Logs = () => {
   async function deleteLog(logId: string) {
     try {
       const response = await axiosConfig.delete(`/logs/${logId}`);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message);
       fetchAllLogs();
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error);
     }
   }
 
   async function deleteAllLogs() {
     try {
       const response = await axiosConfig.delete(`/logs`);
-      toast.success(t(response.data.message));
+      toast.success(response.data.message);
       fetchAllLogs();
     } catch (error: any) {
-      toast.error(t(error.response.data.error));
+      toast.error(error.response?.data?.error);
     }
   }
 
@@ -59,11 +56,11 @@ export const Logs = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">{t("pages.admin.logs")}</CardTitle>
+          <CardTitle className="text-2xl font-bold">{"Logs"}</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
-            columns={getColumns(deleteLog, t)}
+            columns={getColumns(deleteLog)}
             data={logs}
             dataCount={logCount}
             fetchData={fetchAllLogs}

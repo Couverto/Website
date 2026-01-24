@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +22,6 @@ interface Client {
 }
 
 export const RestaurantClients = () => {
-  const { t } = useTranslation();
   const { id } = useParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,13 +82,13 @@ export const RestaurantClients = () => {
   // Dependency on fetchClients (which depends on search) ensures this runs when search changes.
 
   // Memoize columns
-  const columns = useMemo(() => getColumns(t), [t]);
+  const columns = useMemo(() => getColumns(), []);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t("pages.restaurant.clients.title")}</h1>
-        <p className="text-muted-foreground">{t("pages.restaurant.clients.subtitle")}</p>
+        <h1 className="text-3xl font-bold">{"Clients"}</h1>
+        <p className="text-muted-foreground">{"Retrouvez tous vos clients et leurs statistiques"}</p>
       </div>
 
       <div className="bg-card rounded-md border p-4">

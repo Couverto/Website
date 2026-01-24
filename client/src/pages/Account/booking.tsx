@@ -8,10 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import DatePicker, { registerLocale } from "react-datepicker";
 
-// Register locales
+// Register locale
 registerLocale("fr", fr);
-registerLocale("en-US", enUS);
-import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
@@ -33,7 +31,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import { format, startOfDay } from "date-fns";
-import { fr, enUS } from "date-fns/locale";
+import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<BookingStatus, string> = {
@@ -46,21 +44,19 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
 interface BookingCardProps {
   booking: BookingInterface;
   onCancel: () => void;
-
   onEdit: () => void;
-  t: (key: string, options?: any) => string;
   locale: any;
   isPast: boolean;
 }
 
-const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCardProps) => {
+const BookingCard = ({ booking, onCancel, onEdit, locale, isPast }: BookingCardProps) => {
   const restaurant = booking.restaurant;
   const bookingDate = new Date(booking.bookingDate);
 
   if (!restaurant) {
     return (
       <Card className="overflow-hidden p-6 text-center text-muted-foreground">
-        <div>{t("pages.account.bookings_page.restaurant_deleted")}</div>
+        <div>{"Restaurant supprimé"}</div>
       </Card>
     );
   }
@@ -80,7 +76,13 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
         </div>
         <div className="absolute top-3 left-3 z-20">
           <Badge className={cn("shadow-sm", STATUS_COLORS[booking.status])}>
-            {t(`pages.account.bookings_page.status.${booking.status}`)}
+            {booking.status === "PENDING"
+              ? "En attente"
+              : booking.status === "CONFIRMED"
+                ? "Confirmée"
+                : booking.status === "CANCELLED"
+                  ? "Annulée"
+                  : "Brouillon"}
           </Badge>
         </div>
 
@@ -116,14 +118,14 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
                     <DropdownMenuItem asChild>
                       <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
                         <Navigation className="w-4 h-4 mr-2" />
-                        {t("pages.account.bookings_page.actions.itinerary")}
+                        {"Y aller"}
                       </a>
                     </DropdownMenuItem>
                     {restaurant.website && (
                       <DropdownMenuItem asChild>
                         <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
                           <Globe className="w-4 h-4 mr-2" />
-                          {t("pages.account.bookings_page.actions.website")}
+                          {"Site web"}
                         </a>
                       </DropdownMenuItem>
                     )}
@@ -131,7 +133,7 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
                       <DropdownMenuItem asChild>
                         <a href={`tel:${restaurant.phone}`} className="cursor-pointer">
                           <Phone className="w-4 h-4 mr-2" />
-                          {t("pages.account.bookings_page.actions.call")}
+                          {"Appeler"}
                         </a>
                       </DropdownMenuItem>
                     )}
@@ -147,7 +149,7 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
                   <CalendarIcon className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-medium">{t("components.booking.form.date")}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{"Date"}</p>
                   <p className="text-sm font-semibold">{format(bookingDate, "PPP", { locale })}</p>
                 </div>
               </div>
@@ -156,7 +158,7 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
                   <Clock className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-medium">{t("components.booking.form.time")}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{"Heure"}</p>
                   <p className="text-sm font-semibold">{format(bookingDate, "HH:mm", { locale })}</p>
                 </div>
               </div>
@@ -165,15 +167,17 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
                   <Users className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground font-medium">{t("components.booking.form.guests")}</p>
-                  <p className="text-sm font-semibold">{t("pages.account.bookings_page.guests", { count: booking.guests })}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{"Couverts"}</p>
+                  <p className="text-sm font-semibold">
+                    {booking.guests} personne{booking.guests > 1 ? "s" : ""}
+                  </p>
                 </div>
               </div>
             </div>
 
             {booking.notes && (
               <div className="bg-amber-50 border-amber-100 border text-amber-900 px-4 py-3 rounded-lg text-sm mb-2">
-                <span className="font-semibold block mb-0.5">{t("components.booking.form.notes")}:</span>"{booking.notes}"
+                <span className="font-semibold block mb-0.5">{"Notes"}:</span>"{booking.notes}"
               </div>
             )}
           </div>
@@ -183,11 +187,11 @@ const BookingCard = ({ booking, onCancel, onEdit, t, locale, isPast }: BookingCa
             <div className="pt-4 border-t flex justify-end gap-3">
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <Pencil className="w-4 h-4 mr-2" />
-                {t("pages.account.bookings_page.update_booking")}
+                {"Modifier"}
               </Button>
               <Button variant="destructive" size="sm" onClick={onCancel}>
                 <X className="w-4 h-4 mr-2" />
-                {t("pages.account.bookings_page.cancel_booking")}
+                {"Annuler"}
               </Button>
             </div>
           )}
@@ -219,8 +223,7 @@ const BookingCardSkeleton = () => (
 );
 
 export const AccountBooking = () => {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language === "fr" ? fr : enUS;
+  const locale = fr;
 
   const [bookings, setBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
@@ -275,13 +278,13 @@ export const AccountBooking = () => {
         setTotalPages(data.totalPages);
         setCount(data.count);
       } catch (error: any) {
-        toast.error(t(error.response?.data?.error || "server.global.errors.not_found"));
+        toast.error(error.response?.data?.error || "Une erreur est survenue");
       } finally {
         setLoading(false);
         setLoadingMore(false);
       }
     },
-    [statusFilter, search, t],
+    [statusFilter, search],
   );
 
   useEffect(() => {
@@ -304,13 +307,12 @@ export const AccountBooking = () => {
     if (!selectedBooking) return;
     setActionLoading(true);
     try {
-      await axiosConfig.patch(`/bookings/${selectedBooking._id}/cancel`);
-      toast.success(t("server.bookings.messages.cancelled"));
+      toast.success("Réservation annulée avec succès");
       setCancelDialogOpen(false);
       setSelectedBooking(null);
       fetchBookings(0, false);
     } catch (error: any) {
-      toast.error(t(error.response?.data?.error || "server.global.errors.not_found"));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setActionLoading(false);
     }
@@ -338,7 +340,7 @@ export const AccountBooking = () => {
           return !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
         })()
       ) {
-        toast.error(t("components.booking.form.errors.closed_day"));
+        toast.error("Le restaurant est fermé ce jour-là");
         return;
       }
 
@@ -347,12 +349,12 @@ export const AccountBooking = () => {
         guests: editGuests,
       });
 
-      toast.success(t("server.bookings.messages.updated"));
+      toast.success("Réservation mise à jour avec succès");
       setEditDialogOpen(false);
       setSelectedBooking(null);
       fetchBookings(0, false);
     } catch (error: any) {
-      toast.error(t(error.response?.data?.error || "server.global.errors.not_found"));
+      toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
       setActionLoading(false);
     }
@@ -413,8 +415,8 @@ export const AccountBooking = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>{t("pages.account.bookings_page.title")}</CardTitle>
-          <CardDescription>{t("pages.account.bookings_page.description")}</CardDescription>
+          <CardTitle>{"Mes Réservations"}</CardTitle>
+          <CardDescription>{"Retrouvez et gérez toutes vos réservations"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
@@ -422,7 +424,7 @@ export const AccountBooking = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t("pages.account.bookings_page.search_placeholder")}
+                placeholder={"Rechercher par restaurant..."}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -433,10 +435,10 @@ export const AccountBooking = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{t("pages.account.bookings_page.filter_all")}</SelectItem>
-                <SelectItem value="PENDING">{t("pages.account.bookings_page.filter_pending")}</SelectItem>
-                <SelectItem value="CONFIRMED">{t("pages.account.bookings_page.filter_confirmed")}</SelectItem>
-                <SelectItem value="CANCELLED">{t("pages.account.bookings_page.filter_cancelled")}</SelectItem>
+                <SelectItem value="all">{"Toutes"}</SelectItem>
+                <SelectItem value="PENDING">{"En attente"}</SelectItem>
+                <SelectItem value="CONFIRMED">{"Confirmées"}</SelectItem>
+                <SelectItem value="CANCELLED">{"Annulées"}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" onClick={() => fetchBookings(0, false)} disabled={loading}>
@@ -453,7 +455,7 @@ export const AccountBooking = () => {
                 <BookingCardSkeleton />
               </>
             ) : bookings.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">{t("pages.account.bookings_page.no_bookings")}</div>
+              <div className="text-center py-12 text-muted-foreground">{"Aucune réservation trouvée"}</div>
             ) : (
               bookings.map((booking) => (
                 <BookingCard
@@ -461,7 +463,6 @@ export const AccountBooking = () => {
                   booking={booking}
                   onCancel={() => openCancelDialog(booking)}
                   onEdit={() => openEditDialog(booking)}
-                  t={t}
                   locale={locale}
                   isPast={isPastBooking(booking)}
                 />
@@ -474,7 +475,7 @@ export const AccountBooking = () => {
             <div className="flex justify-center pt-4">
               <Button variant="outline" onClick={handleLoadMore} disabled={loadingMore}>
                 {loadingMore ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                {t("pages.account.bookings_page.load_more")} ({count - bookings.length} {t("pages.account.bookings_page.remaining")})
+                {"Charger plus"} ({count - bookings.length} {"restantes"})
               </Button>
             </div>
           )}
@@ -485,16 +486,16 @@ export const AccountBooking = () => {
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("pages.account.bookings_page.cancel_confirm_title")}</DialogTitle>
-            <DialogDescription>{t("pages.account.bookings_page.cancel_confirm_description")}</DialogDescription>
+            <DialogTitle>{"Annuler cette réservation ?"}</DialogTitle>
+            <DialogDescription>{"Cette action ne peut pas être annulée. La réservation sera définitivement annulée."}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
-              {t("global.buttons.cancel")}
+              {"Annuler"}
             </Button>
             <Button variant="destructive" onClick={handleCancelBooking} disabled={actionLoading}>
               {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {t("pages.account.bookings_page.cancel_booking")}
+              {"Annuler"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -504,19 +505,19 @@ export const AccountBooking = () => {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("pages.account.bookings_page.update_booking")}</DialogTitle>
+            <DialogTitle>{"Modifier"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {/* Date picker */}
             <div className="space-y-2">
-              <Label>{t("components.booking.form.date")}</Label>
+              <Label>{"Date"}</Label>
               <div className="relative">
                 <DatePicker
                   preventOpenOnFocus
                   selected={editDate}
                   onChange={(date: Date | null) => setEditDate(date || undefined)}
-                  locale={i18n.language === "fr" ? "fr" : "en-US"}
-                  dateFormat={i18n.language === "fr" ? "dd/MM/yyyy" : "MM/dd/yyyy"}
+                  locale="fr"
+                  dateFormat="dd/MM/yyyy"
                   minDate={new Date()}
                   filterDate={(date) => {
                     if (!selectedBooking?.restaurant) return true;
@@ -528,7 +529,7 @@ export const AccountBooking = () => {
                     const isClosed = !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
                     return !isClosed;
                   }}
-                  placeholderText={t("components.booking.form.select_date")}
+                  placeholderText={"Choisir une date"}
                   className={cn(
                     "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                     !editDate && "text-muted-foreground",
@@ -541,18 +542,10 @@ export const AccountBooking = () => {
 
             {/* Time picker */}
             <div className="space-y-2">
-              <Label>{t("components.booking.form.time")}</Label>
+              <Label>{"Heure"}</Label>
               <Select value={editTime} onValueChange={setEditTime} disabled={loadingSlots || timeSlots.length === 0}>
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      loadingSlots
-                        ? t("common.loading")
-                        : timeSlots.length === 0
-                          ? t("components.booking.form.errors.closed_today")
-                          : undefined
-                    }
-                  />
+                  <SelectValue placeholder={loadingSlots ? "Chargement..." : timeSlots.length === 0 ? "Fermé ce jour" : undefined} />
                 </SelectTrigger>
                 <SelectContent>
                   {timeSlots.map((slot) => (
@@ -563,13 +556,13 @@ export const AccountBooking = () => {
                 </SelectContent>
               </Select>
               {timeSlots.length === 0 && editDate && (
-                <p className="text-sm text-destructive">{t("components.booking.form.errors.no_slots")}</p>
+                <p className="text-sm text-destructive">{"Aucun créneau disponible pour cette date"}</p>
               )}
             </div>
 
             {/* Guests */}
             <div className="space-y-2">
-              <Label>{t("components.booking.form.guests")}</Label>
+              <Label>{"Couverts"}</Label>
               <Select value={editGuests.toString()} onValueChange={(v) => setEditGuests(parseInt(v))}>
                 <SelectTrigger>
                   <SelectValue />
@@ -577,7 +570,7 @@ export const AccountBooking = () => {
                 <SelectContent>
                   {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
                     <SelectItem key={num} value={num.toString()}>
-                      {num} {num === 1 ? t("pages.home.search.person") : t("pages.home.search.people")}
+                      {num} {num === 1 ? "Personne" : "Personnes"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -586,7 +579,7 @@ export const AccountBooking = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              {t("global.buttons.cancel")}
+              {"Annuler"}
             </Button>
             <Button
               onClick={handleEditBooking}
@@ -606,7 +599,7 @@ export const AccountBooking = () => {
               }
             >
               {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {t("global.buttons.update")}
+              {"Mettre à jour"}
             </Button>
           </DialogFooter>
         </DialogContent>

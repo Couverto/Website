@@ -8,18 +8,16 @@ import { z } from "zod";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useConfigContext } from "@/contexts/configContext";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Adresse email invalide"),
 });
 
 export const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const { t } = useTranslation();
   const { configValues } = useConfigContext();
 
   const form = useForm<z.infer<typeof forgotPasswordSchema>>({
@@ -34,9 +32,9 @@ export const ForgotPassword = () => {
       setLoading(true);
       await axiosConfig.post("/auth/forgot-password", values);
       setEmailSent(true);
-      toast.success("Reset link sent to your email");
+      toast.success("Lien de réinitialisation envoyé à votre adresse email");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to send reset email");
+      toast.error(error.response?.data?.error || "Une erreur est survenue.");
     } finally {
       setLoading(false);
     }
@@ -52,8 +50,10 @@ export const ForgotPassword = () => {
             </div>
             <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">{t("pages.login.forgot_password")}</h1>
-          <p className="text-muted-foreground mt-2">Enter your email address and we'll send you a link to reset your password.</p>
+          <h1 className="text-2xl font-bold tracking-tight">{"Mot de passe oublié ?"}</h1>
+          <p className="text-muted-foreground mt-2">
+            Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+          </p>
         </div>
 
         {emailSent ? (
@@ -61,12 +61,13 @@ export const ForgotPassword = () => {
             <div className="mx-auto h-12 w-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <h3 className="text-lg font-medium text-green-900">Email Sent</h3>
+            <h3 className="text-lg font-medium text-green-900">E-mail envoyé</h3>
             <p className="text-green-700 text-sm">
-              Check your inbox for the reset link. If you don't receive it within a few minutes, check your spam folder.
+              Consultez votre boîte de réception pour le lien de réinitialisation. Si vous ne le recevez pas dans quelques minutes, vérifiez
+              votre dossier de spam.
             </p>
             <Button variant="outline" className="w-full mt-4" onClick={() => setEmailSent(false)}>
-              Try another email
+              Essayer un autre e-mail
             </Button>
           </div>
         ) : (
@@ -77,9 +78,9 @@ export const ForgotPassword = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("pages.login.field")}</FormLabel>
+                    <FormLabel>{"Email"}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="name@example.com" type="email" />
+                      <Input {...field} placeholder="nom@exemple.com" type="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -87,7 +88,7 @@ export const ForgotPassword = () => {
               />
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Link"}
+                {loading ? "Envoi..." : "Envoyer le lien de réinitialisation"}
               </Button>
             </form>
           </Form>
@@ -96,7 +97,7 @@ export const ForgotPassword = () => {
         <div className="text-center">
           <Link to="/login" className="text-sm text-muted-foreground hover:text-primary flex items-center justify-center gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to Login
+            Retour à la connexion
           </Link>
         </div>
       </div>

@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,6 @@ import { useAuthContext } from "@/contexts/authContext";
 import { InvitationInfo } from "@/interfaces/Components";
 
 export const JoinRestaurant = () => {
-  const { t } = useTranslation();
   const { token } = useParams();
   const navigate = useNavigate();
   const { authUser } = useAuthContext();
@@ -86,12 +84,32 @@ export const JoinRestaurant = () => {
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
               <XCircle className="h-8 w-8 text-destructive" />
             </div>
-            <CardTitle>{t(`pages.join.errors.${error}_title`)}</CardTitle>
-            <CardDescription>{t(`pages.join.errors.${error}_description`)}</CardDescription>
+            <CardTitle>
+              {error === "not_found"
+                ? "Invitation introuvable"
+                : error === "expired"
+                  ? "Invitation expirée"
+                  : error === "already_used"
+                    ? "Invitation déjà utilisée"
+                    : error === "already_collaborator"
+                      ? "Déjà collaborateur"
+                      : "Erreur"}
+            </CardTitle>
+            <CardDescription>
+              {error === "not_found"
+                ? "Ce lien d'invitation ne semble pas exister ou a été supprimé."
+                : error === "expired"
+                  ? "Cette invitation a expiré. Veuillez demander un nouveau lien."
+                  : error === "already_used"
+                    ? "Cette invitation a déjà été utilisée."
+                    : error === "already_collaborator"
+                      ? "Vous faites déjà partie de l'équipe."
+                      : "Une erreur est survenue lors de l'accès à l'invitation."}
+            </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <Button onClick={() => navigate("/")} variant="outline">
-              {t("pages.join.back_home")}
+              {"Retour à l'accueil"}
             </Button>
           </CardContent>
         </Card>
@@ -107,11 +125,11 @@ export const JoinRestaurant = () => {
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
-            <CardTitle>{t("pages.join.success_title")}</CardTitle>
-            <CardDescription>{t("pages.join.success_description", { name: invitation?.restaurant.name })}</CardDescription>
+            <CardTitle>{"Bienvenue dans l'équipe !"}</CardTitle>
+            <CardDescription>Félicitations ! Vous avez rejoint l'équipe de {invitation?.restaurant.name}.</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => navigate(`/restaurant/${joinedRestaurantId}/dashboard`)}>{t("pages.join.go_to_dashboard")}</Button>
+            <Button onClick={() => navigate(`/restaurant/${joinedRestaurantId}/dashboard`)}>{"Aller au tableau de bord"}</Button>
           </CardContent>
         </Card>
       </div>
@@ -125,8 +143,8 @@ export const JoinRestaurant = () => {
           <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
             <Users className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle>{t("pages.join.title")}</CardTitle>
-          <CardDescription>{t("pages.join.description")}</CardDescription>
+          <CardTitle>{"Rejoindre une équipe"}</CardTitle>
+          <CardDescription>{"Vous avez été invité à collaborer sur un restaurant"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Restaurant Info */}
@@ -145,18 +163,16 @@ export const JoinRestaurant = () => {
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            {t("pages.join.invited_by", {
-              name: `${invitation?.createdBy.forename} ${invitation?.createdBy.name}`,
-            })}
+            Vous avez été invité par {invitation?.createdBy.forename} {invitation?.createdBy.name}
           </p>
 
           <div className="flex flex-col gap-2">
             <Button onClick={handleAccept} disabled={accepting} className="w-full">
               {accepting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {authUser ? t("pages.join.accept") : t("pages.join.login_to_accept")}
+              {authUser ? "Accepter l'invitation" : "Se connecter pour accepter"}
             </Button>
             <Button variant="outline" onClick={() => navigate("/")} className="w-full">
-              {t("pages.join.decline")}
+              {"Refuser"}
             </Button>
           </div>
         </CardContent>

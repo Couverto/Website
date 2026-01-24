@@ -4,7 +4,6 @@ import { getRegisterSchema } from "@/lib/zod/schemas/auth/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { OAuth } from "./oauth";
 import { useConfigContext } from "@/contexts/configContext";
@@ -28,8 +27,7 @@ export const RegisterForm = ({
   loading = false,
   oauth = false,
 }: RegisterFormProps) => {
-  const { t } = useTranslation();
-  const registerSchema = getRegisterSchema(t);
+  const registerSchema = getRegisterSchema();
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -61,7 +59,7 @@ export const RegisterForm = ({
       <div className="flex items-center self-center gap-2 text-2xl font-medium sm:text-4xl text-accent">{configValues["APP_NAME"]}</div>
       <div className="flex flex-col w-full max-w-2xl gap-6 bg-background p-4 md:p-8 sm:rounded-2xl sm:shadow">
         <div className="text-center">
-          <h1 className="text-xl md:text-2xl">{oauth ? t("pages.register.title") : t("pages.register.password_creation")}</h1>
+          <h1 className="text-xl md:text-2xl">{oauth ? "Créer un compte" : "Créer un mot de passe "}</h1>
         </div>
         <div className="flex flex-col items-center gap-6">
           <Form {...form}>
@@ -74,7 +72,7 @@ export const RegisterForm = ({
                     name={fieldName as any}
                     render={({ field }) => (
                       <FormItem className="w-full">
-                        <FormLabel>{t(`pages.register.${fieldName}`)}</FormLabel>
+                        <FormLabel>{fieldName === "forename" ? "Prénom" : "Nom"}</FormLabel>
                         <FormControl>
                           <Input {...field} disabled={disabledFields.includes(fieldName)} />
                         </FormControl>
@@ -92,12 +90,12 @@ export const RegisterForm = ({
                   name={fieldName as any}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t(`pages.register.${fieldName}`)}</FormLabel>
+                      <FormLabel>{fieldName === "username" ? "Nom d'utilisateur" : "Email"}</FormLabel>
                       <FormControl>
                         <Input {...field} disabled={disabledFields.includes(fieldName)} />
                       </FormControl>
-                      {fieldName === "username" && <FormDescription>{t("pages.register.username_description")}</FormDescription>}
-                      {fieldName === "email" && <FormDescription>{t("pages.register.email_description")}</FormDescription>}
+                      {fieldName === "username" && <FormDescription>{"Entrez votre nom d'utilisateur"}</FormDescription>}
+                      {fieldName === "email" && <FormDescription>{"Entrez votre email"}</FormDescription>}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -111,11 +109,13 @@ export const RegisterForm = ({
                   name={fieldName as any}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t(`pages.register.${fieldName}`)}</FormLabel>
+                      <FormLabel>{fieldName === "password" ? "Mot de passe" : "Confirmer le mot de passe"}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} disabled={disabledFields.includes(fieldName)} />
                       </FormControl>
-                      <FormDescription>{t(`pages.register.${fieldName}_description`)}</FormDescription>
+                      <FormDescription>
+                        {fieldName === "password" ? "Choisissez un mot de passe robuste" : "Veuillez confirmer votre mot de passe"}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -123,24 +123,24 @@ export const RegisterForm = ({
               ))}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {submitLabel || t("pages.register.register")}
+                {submitLabel || "Créer mon compte"}
               </Button>
 
               {import.meta.env.VITE_FIREBASE_API_KEY && oauth && (
                 <>
                   <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                    <span className="relative z-10 bg-background px-2 text-muted-foreground">{t("pages.login.or_continue_with")}</span>
+                    <span className="relative z-10 bg-background px-2 text-muted-foreground">{"Ou continuer avec"}</span>
                   </div>
-                  <OAuth message="pages.register.register" />
+                  <OAuth message="S'inscrire" />
                 </>
               )}
             </form>
           </Form>
           {oauth && (
             <div className="text-center text-sm md:text-base">
-              {t("pages.register.already_have_account")}{" "}
+              {"Déjà un compte ?"}{" "}
               <Link to="/login" className="underline underline-offset-4 text-accent">
-                {t("pages.register.login")}
+                {"Se connecter"}
               </Link>
             </div>
           )}
