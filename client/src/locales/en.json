@@ -913,7 +913,10 @@
         "search_placeholder": "Search by name or email...",
         "no_results": "No users found",
         "added": "Collaborator added",
-        "already_collaborator": "This user is already a collaborator"
+        "already_collaborator": "This user is already a collaborator",
+        "copy_id": "Copy ID",
+        "copy_id_success": "ID copied to clipboard",
+        "remove": "Remove"
       },
       "dashboard": {
         "title": "Dashboard",
@@ -982,7 +985,8 @@
         "showing": "{{count}} booking(s)",
         "previous": "Previous",
         "next": "Next",
-        "new_booking_notification": "New booking received!"
+        "new_booking_notification": "New booking received!",
+        "phone": "Phone"
       },
       "clients": {
         "title": "Clients",
@@ -1000,7 +1004,8 @@
         "first_visit": "First visit",
         "registered": "App User",
         "previous": "Previous",
-        "next": "Next"
+        "next": "Next",
+        "user": "User"
       },
       "settings": {
         "title": "Settings",
@@ -1174,15 +1179,31 @@
     "dataTable": {
       "no_data": "No data available",
       "columns": "Columns",
+      "toggle_columns": "Toggle columns",
       "columns_list": {
         "user": "User",
         "level": "Level",
         "message": "Message",
-        "createdAt": "Date",
+        "createdAt": "Date added",
         "username": "Username",
         "email": "Email",
         "role": "Role",
-        "auth_type": "Authentication Type"
+        "auth_type": "Authentication Type",
+        "name": "Name",
+        "contact": "Contact",
+        "totalBookings": "Visits",
+        "totalGuests": "Total guests",
+        "lastVisit": "Last visit",
+        "firstVisit": "First visit",
+        "actions": "Actions",
+        "customer": "Customer",
+        "status": "Status",
+        "guests": "Guests",
+        "date": "Date",
+        "time": "Time",
+        "notes": "Notes",
+        "bookingDate": "Booking date",
+        "phone": "Phone"
       },
       "create_entity": "Create a new entity",
       "delete_entity": "Delete all entities",
@@ -1202,7 +1223,7 @@
         "last": "Last",
         "next": "Next",
         "previous": "Previous",
-        "per_page": "per page",
+        "per_page": "Per page",
         "all": "All"
       }
     }

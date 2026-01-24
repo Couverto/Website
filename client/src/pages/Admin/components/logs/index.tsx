@@ -56,7 +56,8 @@ export const Logs = () => {
 
   return (
     <div>
-      <div className="container px-4 mx-auto">
+      <div className="container p-4 mx-auto bg-card rounded-md">
+        <h2 className="text-3xl font-bold tracking-tight mb-4">{t("pages.admin.logs")}</h2>
         <DataTable
           columns={getColumns(deleteLog, t)}
           data={logs}

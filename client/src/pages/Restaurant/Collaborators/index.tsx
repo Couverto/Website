@@ -25,6 +25,8 @@ import { fr } from "date-fns/locale";
 import { UserPlus, Link as LinkIcon, Copy, Trash2, Loader2, Users, Clock, Check, Search, Plus } from "lucide-react";
 import { toast } from "sonner";
 import debounce from "lodash.debounce";
+import { DataTable } from "@/components/customs/dataTable";
+import { getColumns as getCollaboratorColumns } from "./columns";
 
 interface Collaborator {
   _id: string;
@@ -72,11 +74,25 @@ export const RestaurantCollaborators = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState<string | null>(null);
 
+  // Client-side pagination for collaborators
+  const [paginatedCollaborators, setPaginatedCollaborators] = useState<Collaborator[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Delete confirmation state
+  const [collaboratorToDelete, setCollaboratorToDelete] = useState<Collaborator | null>(null);
+
   useEffect(() => {
     if (id) {
       fetchData();
     }
   }, [id]);
+
+  useEffect(() => {
+    const start = pageIndex * pageSize;
+    const end = start + pageSize;
+    setPaginatedCollaborators(collaborators.slice(start, end));
+  }, [collaborators, pageIndex, pageSize]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -93,6 +109,28 @@ export const RestaurantCollaborators = () => {
       setLoading(false);
     }
   };
+
+  const handlePageChange = (pIndex: number, pSize: number) => {
+    setPageIndex(pIndex);
+    setPageSize(pSize);
+  };
+
+  // Callback for DataTable actions (like Admin dashboard)
+  const handleCallback = (action: string, data: any) => {
+    switch (action) {
+      case "delete":
+        const collab = collaborators.find((c) => c._id === data);
+        if (collab) setCollaboratorToDelete(collab);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // ... (keep search logic: debouncedSearch, useEffect, addCollaborator) ...
+  // ... (keep invite logic: createInviteLink, copyLink, deleteInvitation, removeCollaborator) ...
+
+  // Re-implementing functions to ensure scope access (simplification for Replace)
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
@@ -210,6 +248,7 @@ export const RestaurantCollaborators = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
+            {/* ... (Keep Dialog Content same as before) ... */}
             <DialogHeader>
               <DialogTitle>{t("pages.restaurant.collaborators.add_title")}</DialogTitle>
               <DialogDescription>{t("pages.restaurant.collaborators.add_description")}</DialogDescription>
@@ -320,87 +359,18 @@ export const RestaurantCollaborators = () => {
         </Dialog>
       </div>
 
-      {/* Current Collaborators */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            {t("pages.restaurant.collaborators.current")} ({collaborators.length})
-          </CardTitle>
-          <CardDescription>{t("pages.restaurant.collaborators.current_desc")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {collaborators.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">{t("pages.restaurant.collaborators.no_collaborators")}</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("pages.restaurant.collaborators.user")}</TableHead>
-                  <TableHead>{t("pages.restaurant.collaborators.email")}</TableHead>
-                  <TableHead>{t("pages.restaurant.collaborators.joined")}</TableHead>
-                  <TableHead className="w-20">{t("pages.restaurant.collaborators.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {collaborators.map((collab) => (
-                  <TableRow key={collab._id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={collab.avatar} />
-                          <AvatarFallback>
-                            {collab.forename?.charAt(0)}
-                            {collab.name?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">
-                            {collab.forename} {collab.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">@{collab.username}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{collab.email}</TableCell>
-                    <TableCell>{format(new Date(collab.createdAt), "dd MMM yyyy", { locale: fr })}</TableCell>
-                    <TableCell>
-                      {collaborators.length > 1 && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{t("pages.restaurant.collaborators.remove_title")}</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {t("pages.restaurant.collaborators.remove_description", {
-                                  name: `${collab.forename} ${collab.name}`,
-                                })}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{t("global.buttons.cancel")}</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => removeCollaborator(collab._id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                {t("global.buttons.delete")}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Current Collaborators DataTable */}
+      <div className="bg-card rounded-md border p-4">
+        <DataTable
+          columns={getCollaboratorColumns(handleCallback, t, collaborators.length)}
+          data={paginatedCollaborators}
+          dataCount={collaborators.length}
+          fetchData={handlePageChange}
+          isLoading={loading}
+          callback={handleCallback}
+          searchElement="name"
+        />
+      </div>
 
       {/* Pending Invitations */}
       <Card>
@@ -449,6 +419,34 @@ export const RestaurantCollaborators = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!collaboratorToDelete} onOpenChange={(open) => !open && setCollaboratorToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("pages.restaurant.collaborators.remove_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("pages.restaurant.collaborators.remove_description", {
+                name: collaboratorToDelete ? `${collaboratorToDelete.forename} ${collaboratorToDelete.name}` : "",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("global.buttons.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (collaboratorToDelete) {
+                  removeCollaborator(collaboratorToDelete._id);
+                  setCollaboratorToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("global.buttons.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

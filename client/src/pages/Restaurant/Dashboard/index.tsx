@@ -228,7 +228,7 @@ export const RestaurantDashboard = () => {
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link to={`/restaurant/${id}/bookings`}>
-                {t("pages.restaurant.dashboard.view_all") || "Voir tout"}
+                {t("pages.restaurant.dashboard.view_all")}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </Button>

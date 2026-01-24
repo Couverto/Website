@@ -59,7 +59,7 @@ export const AdminPlans = () => {
 
   return (
     <>
-      <div className="container px-4 mx-auto">
+      <div className="container p-4 mx-auto bg-card rounded-md">
         <h2 className="text-3xl font-bold tracking-tight mb-4">{t("pages.admin.plans_page.plans")}</h2>
         <DataTable<Plan, any>
           columns={columns}

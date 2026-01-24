@@ -16,18 +16,18 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EllipsisVertical, Plus, RefreshCw, Trash } from "lucide-react";
-import { Input } from "../ui/input";
-import { DialogHeader, DialogFooter, Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, RefreshCw, Search, Settings2, Trash } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
+import { Separator } from "../ui/separator";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   callback: (action: string, data: any) => void;
   searchElement: string;
   actions?: string[];
+  onSearch?: (query: string) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -49,6 +50,7 @@ export function DataTable<TData, TValue>({
   callback,
   searchElement,
   actions = [],
+  onSearch,
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -58,6 +60,7 @@ export function DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: 10,
   });
+  const [isSearching, setIsSearching] = useState(false);
 
   const { t } = useTranslation();
 
@@ -85,147 +88,138 @@ export function DataTable<TData, TValue>({
     pageCount: Math.ceil(dataCount / pagination.pageSize),
   });
 
+  // Handle search with debounce - must be after table is defined
+  useEffect(() => {
+    if (onSearch) {
+      const query = (table.getColumn(searchElement)?.getFilterValue() as string) ?? "";
+      // Show searching state immediately when typing
+      if (query) setIsSearching(true);
+      const timeoutId = setTimeout(() => {
+        onSearch(query);
+        setIsSearching(false);
+        // Reset to page 0 when search changes
+        if (pagination.pageIndex !== 0) {
+          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+        }
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [columnFilters, searchElement, onSearch]);
+
   return (
-    <div className="space-y-6">
-      {/* Premium Search & Controls Header */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-6 border border-zinc-200/60 dark:border-zinc-800/60 rounded-[2rem] bg-white dark:bg-zinc-900/50 shadow-sm backdrop-blur-sm">
-        <div className="flex flex-1 items-center gap-4">
-          <div className="relative flex-1 max-w-sm group">
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t(`components.dataTable.filters.${searchElement}`)}
+              placeholder={t(`components.dataTable.filters.${searchElement}`) || "Filter..."}
               value={(table.getColumn(searchElement)?.getFilterValue() as string) ?? ""}
               onChange={(event) => table.getColumn(searchElement)?.setFilterValue(event.target.value)}
-              className="h-12 pl-4 pr-10 bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-bold shadow-inner focus:ring-4 focus:ring-primary/10 transition-all cursor-text"
+              className="h-9 w-full pl-9 bg-background"
             />
-            {isLoading && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <RefreshCw className="w-4 h-4 animate-spin text-primary opacity-50" />
-              </div>
-            )}
           </div>
-
-          <div className="hidden lg:flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-12 px-6 rounded-2xl border-zinc-200 dark:border-zinc-800 text-xs font-black uppercase tracking-widest hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer"
-                >
-                  {t("components.dataTable.columns")}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 rounded-2xl p-2 shadow-2xl">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      className="rounded-xl text-xs font-bold uppercase tracking-tight p-3"
-                    >
-                      {t(`components.dataTable.columns_list.${column.id}`)}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fetchData(pagination.pageIndex, pagination.pageSize)}
-              disabled={isLoading}
-              className="h-12 w-12 rounded-2xl border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all cursor-pointer"
-            >
-              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+          {/* Create Button (Mobile/Compact) */}
+          {actions.includes("create") && (
+            <Button size="sm" className="sm:hidden h-9 w-9 p-0" onClick={() => callback("create", null)}>
+              <Plus className="h-4 w-4" />
             </Button>
-          </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           {actions.includes("create") && (
-            <Button
-              onClick={() => callback("create", null)}
-              className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t("components.dataTable.create_entity")}
+            <Button size="sm" className="hidden sm:flex h-9 gap-1" onClick={() => callback("create", null)}>
+              <Plus className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">{t("components.dataTable.create_entity")}</span>
             </Button>
           )}
 
-          {actions.some((a) => a !== "create") && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="h-12 w-12 rounded-2xl border-zinc-200 dark:border-zinc-800 cursor-pointer">
-                  <EllipsisVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2">
-                {actions.includes("deleteAll") && (
-                  <DropdownMenuItem
-                    className="flex gap-4 p-3 rounded-xl text-destructive font-bold uppercase text-[10px] tracking-widest cursor-pointer"
-                    onClick={() => setOpenModal(true)}
-                  >
-                    <Trash className="w-4 h-4" />
-                    <span>{t("components.dataTable.delete_entity")}</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 ml-auto sm:ml-0 bg-transparent">
+                <Settings2 className="h-3.5 w-3.5 mr-2" />
+                {t("components.dataTable.columns")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>{t("components.dataTable.toggle_columns")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((column) => typeof column.accessorFn !== "undefined" && column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    >
+                      {t(`components.dataTable.columns_list.${column.id}`) || column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {actions.includes("deleteAll") && (
+            <Button variant="destructive" size="sm" className="h-9 w-9 p-0" onClick={() => setOpenModal(true)}>
+              <Trash className="h-4 w-4" />
+            </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 p-0"
+            onClick={() => fetchData(pagination.pageIndex, pagination.pageSize)}
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+          </Button>
         </div>
       </div>
 
-      <div className="overflow-hidden">
+      {/* Table */}
+      <div className="rounded-md border bg-card">
         <Table>
-          <TableHeader className="bg-zinc-50/50 dark:bg-zinc-950/30">
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-transparent">
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="h-12 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 text-left"
-                  >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <>
-                {Array.from({ length: table.getState().pagination.pageSize }).map((_, idx) => (
-                  <TableRow key={`loading-row-${idx}`} className="border-zinc-50 dark:border-zinc-900 border-b">
-                    {table.getAllLeafColumns().map((column) => (
-                      <TableCell key={column.id} className="p-5">
-                        <div className="h-8 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </>
-            ) : table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="group border-b border-zinc-50 dark:border-zinc-900 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/50 transition-all"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="p-5 text-sm font-bold tracking-tight text-zinc-600 dark:text-zinc-300">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            {isLoading || isSearching ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  {columns.map((col, j) => (
+                    <TableCell key={j}>
+                      <div className="h-4 w-24 bg-muted/50 rounded animate-pulse" />
                     </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="hover:bg-muted/50">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-64 text-center">
-                  <div className="flex flex-col items-center gap-2 opacity-20">
-                    <span className="text-4xl text-primary drop-shadow-lg">📂</span>
-                    <div className="text-xs font-black uppercase tracking-[0.3em]">{t("components.dataTable.no_data")}</div>
-                  </div>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  {t("components.dataTable.no_data")}
                 </TableCell>
               </TableRow>
             )}
@@ -233,115 +227,89 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Premium Pagination Footer */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 bg-zinc-50/50 dark:bg-zinc-950/20 border-t border-zinc-100 dark:border-zinc-800/50">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Statistiques</span>
-          <p className="text-xs font-bold tracking-tight opacity-70">
-            {t("components.dataTable.footer.page")} {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1} • {dataCount}{" "}
-            {t("components.dataTable.footer.total")}
-          </p>
+      {/* Pagination */}
+      <div className="flex items-center justify-between px-2">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {t("components.dataTable.footer.page")} {pagination.pageIndex + 1} / {table.getPageCount() || 1} • {dataCount}{" "}
+          {t("components.dataTable.footer.total")}
         </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex items-center gap-1.5 p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-2xl">
+        <div className="flex items-center space-x-6 lg:space-x-8">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">{t("components.dataTable.footer.per_page")}</p>
+            <Select
+              value={`${pagination.pageSize}`}
+              onValueChange={(value) => {
+                setPagination((prev) => ({ ...prev, pageSize: Number(value), pageIndex: 0 }));
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={pagination.pageSize} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={`${pageSize}`}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+                <SelectItem value={`${dataCount}`}>{t("components.dataTable.footer.all")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="h-4 w-[1px] bg-border" />
+          <div className="flex items-center space-x-2">
             <Button
-              variant="ghost"
-              size="sm"
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex"
               onClick={() => setPagination((prev) => ({ ...prev, pageIndex: 0 }))}
-              disabled={pagination.pageIndex === 0}
-              className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+              disabled={!table.getCanPreviousPage()}
             >
-              {t("components.dataTable.footer.first")}
+              <span className="sr-only">Go to first page</span>
+              <ChevronsLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              className="h-8 w-8 p-0"
               onClick={() => setPagination((prev) => ({ ...prev, pageIndex: prev.pageIndex - 1 }))}
-              disabled={pagination.pageIndex === 0}
-              className="h-9 w-9 rounded-xl transition-all cursor-pointer"
+              disabled={!table.getCanPreviousPage()}
             >
-              <ChevronRight className="w-3 h-3 rotate-180" />
+              <span className="sr-only">Go to previous page</span>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              className="h-8 w-8 p-0"
               onClick={() => setPagination((prev) => ({ ...prev, pageIndex: prev.pageIndex + 1 }))}
-              disabled={(pagination.pageIndex + 1) * pagination.pageSize >= dataCount}
-              className="h-9 w-9 rounded-xl transition-all cursor-pointer"
+              disabled={!table.getCanNextPage()}
             >
-              <ChevronRight className="w-3 h-3" />
+              <span className="sr-only">Go to next page</span>
+              <ChevronRight className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setPagination((prev) => ({
-                  ...prev,
-                  pageIndex: Math.floor((dataCount - 1) / pagination.pageSize),
-                }))
-              }
-              disabled={(pagination.pageIndex + 1) * pagination.pageSize >= dataCount}
-              className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+              variant="outline"
+              className="hidden h-8 w-8 p-0 lg:flex"
+              onClick={() => setPagination((prev) => ({ ...prev, pageIndex: table.getPageCount() - 1 }))}
+              disabled={!table.getCanNextPage()}
             >
-              {t("components.dataTable.footer.last")}
+              <span className="sr-only">Go to last page</span>
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
-
-          <Select
-            value={String(table.getState().pagination.pageSize)}
-            onValueChange={(value) => {
-              setPagination((prev) => ({
-                ...prev,
-                pageSize: value === "all" ? dataCount : Number(value),
-                pageIndex: 0,
-              }));
-            }}
-          >
-            <SelectTrigger className="h-11 w-36 bg-zinc-100 dark:bg-zinc-950 border-none rounded-2xl font-bold text-xs focus:ring-4 focus:ring-primary/10 shadow-inner transition-all cursor-pointer">
-              <SelectValue>
-                {table.getState().pagination.pageSize === dataCount
-                  ? t("components.dataTable.footer.all")
-                  : `${table.getState().pagination.pageSize} / page`}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl p-2 shadow-2xl">
-              {[10, 25, 50].map((size) => (
-                <SelectItem key={size} value={String(size)} className="rounded-xl text-xs font-bold p-3">
-                  {size} / page
-                </SelectItem>
-              ))}
-              <SelectItem value="all" className="rounded-xl text-xs font-bold p-3">
-                {t("components.dataTable.footer.all")}
-              </SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
       {openModal && (
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-8 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/5 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
-            <DialogHeader className="gap-2 relative z-10">
-              <DialogTitle className="text-2xl font-black italic tracking-tighter uppercase">
-                {t("components.dataTable.delete_title")}
-              </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-muted-foreground">
-                {t("components.dataTable.delete_description")}
-              </DialogDescription>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("components.dataTable.delete_title")}</DialogTitle>
+              <DialogDescription>{t("components.dataTable.delete_description")}</DialogDescription>
             </DialogHeader>
-            <DialogFooter className="mt-8 gap-3 sm:justify-center relative z-10">
-              <Button
-                variant="outline"
-                onClick={() => setOpenModal(false)}
-                className="h-12 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest border-zinc-200 dark:border-zinc-800 transition-all cursor-pointer"
-              >
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenModal(false)}>
                 {t("global.buttons.cancel")}
               </Button>
               <Button
                 variant="destructive"
-                className="h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-destructive/20 transition-all cursor-pointer"
                 onClick={() => {
                   callback("deleteAll", null);
                   setOpenModal(false);

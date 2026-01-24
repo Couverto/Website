@@ -904,7 +904,10 @@
         "search_placeholder": "Rechercher par nom ou email...",
         "no_results": "Aucun utilisateur trouvé",
         "added": "Collaborateur ajouté",
-        "already_collaborator": "Cet utilisateur est déjà collaborateur"
+        "already_collaborator": "Cet utilisateur est déjà collaborateur",
+        "copy_id": "Copier l'ID",
+        "copy_id_success": "ID copié dans le presse-papiers",
+        "remove": "Retirer"
       },
       "dashboard": {
         "title": "Tableau de bord",
@@ -973,7 +976,8 @@
         "showing": "{{count}} réservation(s)",
         "previous": "Précédent",
         "next": "Suivant",
-        "new_booking_notification": "Nouvelle réservation reçue !"
+        "new_booking_notification": "Nouvelle réservation reçue !",
+        "phone": "Téléphone"
       },
       "clients": {
         "title": "Clients",
@@ -991,7 +995,8 @@
         "first_visit": "Première visite",
         "registered": "Utilisateur App",
         "previous": "Précédent",
-        "next": "Suivant"
+        "next": "Suivant",
+        "user": "Utilisateur"
       },
       "settings": {
         "title": "Paramètres",
@@ -1165,15 +1170,31 @@
     "dataTable": {
       "no_data": "Aucune donnée disponible",
       "columns": "Colonnes",
+      "toggle_columns": "Afficher/Masquer les colonnes",
       "columns_list": {
         "user": "Utilisateur",
         "level": "Niveau",
         "message": "Message",
-        "createdAt": "Date",
+        "createdAt": "Date d'ajout",
         "username": "Nom d'utilisateur",
         "email": "Email",
         "role": "Rôle",
-        "auth_type": "Type d'authentification"
+        "auth_type": "Type d'authentification",
+        "name": "Nom",
+        "contact": "Contact",
+        "totalBookings": "Visites",
+        "totalGuests": "Total couverts",
+        "lastVisit": "Dernière visite",
+        "firstVisit": "Première visite",
+        "actions": "Actions",
+        "customer": "Client",
+        "status": "Statut",
+        "guests": "Couverts",
+        "date": "Date",
+        "time": "Heure",
+        "notes": "Notes",
+        "bookingDate": "Date de réservation",
+        "phone": "Téléphone"
       },
       "create_entity": "Créer une nouvelle entité",
       "delete_entity": "Supprimer toutes les entités",
@@ -1193,7 +1214,7 @@
         "last": "Dernière",
         "next": "Suivant",
         "previous": "Précédent",
-        "per_page": "par page",
+        "per_page": "Par page",
         "all": "Tout"
       }
     }

@@ -20,7 +20,7 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
   {
     accessorKey: "level",
     header: ({ column }) => (
-      <Button variant="ghost" className="font-bold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("pages.admin.log_page.level")}
         <ArrowUpDown className="w-4 h-4 ml-2" />
       </Button>
@@ -55,7 +55,7 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
   {
     accessorKey: "message",
     header: ({ column }) => (
-      <Button variant="ghost" className="font-bold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("pages.admin.log_page.message")}
         <ArrowUpDown className="w-4 h-4 ml-2" />
       </Button>
@@ -65,7 +65,7 @@ export const getColumns = (deleteLog: (id: string) => void, t: TFunction<"transl
   {
     accessorKey: "createdAt",
     header: ({ column }) => (
-      <Button variant="ghost" className="font-bold" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+      <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("pages.admin.log_page.date")}
         <ArrowUpDown className="w-4 h-4 ml-2" />
       </Button>

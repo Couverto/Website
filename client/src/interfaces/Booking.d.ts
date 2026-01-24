@@ -19,6 +19,13 @@ export interface BookingInterface {
     phone: string;
     email?: string;
   };
+  user?: {
+    _id: string;
+    name: string;
+    forename: string;
+    email: string;
+    avatar?: string;
+  };
   notes?: string;
   createdAt: string;
   updatedAt: string;

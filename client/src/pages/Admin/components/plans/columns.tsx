@@ -22,7 +22,7 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
       accessorKey: "name",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             {t("pages.admin.plans_page.name")}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -33,7 +33,7 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
       accessorKey: "price",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             {t("pages.admin.plans_page.price")}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -57,7 +57,7 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
       accessorKey: "position",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
             {t("pages.admin.plans_page.position")}
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
