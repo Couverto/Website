@@ -247,66 +247,107 @@ export const RestaurantDashboard = () => {
                 </p>
               </div>
             ) : (
-              recentBookings.map((booking) => (
-                <div
-                  key={booking._id}
-                  className={cn(
-                    "flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-muted/30 transition-colors relative",
-                    newBookingIds.has(booking._id) && "bg-primary/5",
-                  )}
-                >
-                  {newBookingIds.has(booking._id) && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" title="Nouveau" />}
+              recentBookings.map((booking) => {
+                const isPending = booking.status === "PENDING";
+                const isConfirmed = booking.status === "CONFIRMED";
+                const isCancelled = booking.status === "CANCELLED";
 
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="bg-muted rounded-lg p-2 text-center min-w-[3.5rem]">
-                      <div className="text-sm font-bold">{format(new Date(booking.bookingDate), "dd MMM", { locale: fr })}</div>
-                      <div className="text-xs text-muted-foreground">{format(new Date(booking.bookingDate), "HH:mm")}</div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold truncate">{booking.customer.name}</span>
-                        <Badge variant="outline" className={cn("text-[10px] h-4 px-1 uppercase font-bold", getStatusColor(booking.status))}>
-                          {t(`pages.account.bookings_page.status.${booking.status}`)}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 mt-0.5">
-                        <span className="flex items-center">
-                          <Users className="h-3 w-3 mr-1" />
-                          {booking.guests} {t("pages.restaurant.dashboard.guests")}
+                return (
+                  <div
+                    key={booking._id}
+                    className={cn(
+                      "group flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-muted/30 transition-all border-l-4",
+                      newBookingIds.has(booking._id) ? "bg-primary/5 border-l-primary" : "border-l-transparent",
+                      isPending && "border-l-yellow-500",
+                      isConfirmed && "border-l-green-500",
+                      isCancelled && "border-l-red-500 opacity-60",
+                    )}
+                  >
+                    <div className="flex items-start gap-4 flex-1">
+                      {/* Date & Time Box */}
+                      <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-2 min-w-[4.5rem] border">
+                        <span className="text-xs font-medium uppercase text-muted-foreground">
+                          {format(new Date(booking.bookingDate), "MMM", { locale: fr })}
                         </span>
-                        {booking.customer.phone && <span className="flex items-center">{booking.customer.phone}</span>}
+                        <span className="text-2xl font-bold leading-none">{format(new Date(booking.bookingDate), "dd")}</span>
+                        <span className="text-sm font-semibold text-primary mt-1">{format(new Date(booking.bookingDate), "HH:mm")}</span>
+                      </div>
+
+                      {/* Main Info */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={cn("font-bold text-lg truncate", isCancelled && "line-through")}>{booking.customer.name}</span>
+                          <Badge
+                            variant="secondary"
+                            className={cn("text-[10px] h-5 px-1.5 uppercase tracking-wider font-bold", getStatusColor(booking.status))}
+                          >
+                            {t(`pages.account.bookings_page.status.${booking.status}`)}
+                          </Badge>
+                          {booking.notes && (
+                            <div className="relative group/note">
+                              <Info className="h-4 w-4 text-orange-400 cursor-help" />
+                              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/note:block px-2 py-1 text-xs text-white bg-black rounded whitespace-nowrap z-10">
+                                {booking.notes}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5 text-foreground font-medium bg-muted/30 px-2 py-0.5 rounded-full">
+                            <Users className="h-3.5 w-3.5" />
+                            {booking.guests} {t("pages.restaurant.dashboard.guests")}
+                          </span>
+                          {booking.customer.phone && (
+                            <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                              {booking.customer.phone}
+                            </span>
+                          )}
+                          {booking.customer.email && (
+                            <span className="flex items-center gap-1.5 hover:text-foreground transition-colors truncate max-w-[200px]">
+                              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                              {booking.customer.email}
+                            </span>
+                          )}
+                        </div>
+
+                        {booking.notes ? (
+                          <p className="text-xs text-orange-600/80 italic truncate max-w-[400px]">Note: "{booking.notes}"</p>
+                        ) : (
+                          <p className="text-xs text-orange-600/80 italic truncate max-w-[400px]">Aucune note</p>
+                        )}
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 sm:self-center">
-                    {booking.status === "PENDING" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-9 px-3 text-green-600 hover:text-green-700 hover:bg-green-50"
-                        onClick={() => updateStatus(booking._id, "CONFIRMED")}
-                      >
-                        <Check className="h-4 w-4 mr-2" />
-                        {t("global.buttons.confirm") || "Confirmer"}
-                      </Button>
-                    )}
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 sm:self-center shrink-0">
+                      {isPending && (
+                        <Button
+                          size="sm"
+                          className="h-9 bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                          onClick={() => updateStatus(booking._id, "CONFIRMED")}
+                        >
+                          <Check className="h-4 w-4 mr-1.5" />
+                          {t("global.buttons.confirm") || "Confirmer"}
+                        </Button>
+                      )}
 
-                    {booking.status !== "CANCELLED" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-9 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setBookingToCancel(booking._id)}
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        {t("global.buttons.cancel") || "Annuler"}
-                      </Button>
-                    )}
+                      {!isCancelled && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-9 px-3 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                          onClick={() => setBookingToCancel(booking._id)}
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">{t("global.buttons.cancel") || "Annuler"}</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>
