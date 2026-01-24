@@ -3,7 +3,7 @@ import { z } from "zod";
 export const getEssentialsSchema = () =>
   z.object({
     name: z.string().min(2, "Veuillez remplir tous les champs obligatoires."),
-    address: z.string().min(5, "Veuillez remplir tous les champs obligatoires."),
+    adress: z.string().min(5, "Veuillez remplir tous les champs obligatoires."),
     city: z.string().min(2, "Veuillez remplir tous les champs obligatoires."),
     phone: z.string().min(10, "Le numéro de téléphone est requis."),
     email: z.string().email("Adresse email invalide."),
@@ -50,7 +50,7 @@ export const getPaymentSchema = () =>
     cardHolder: z.string().min(3, "Le nom est requis."),
     cardNumber: z.string().regex(/^\d{16}$/, "Veuillez remplir tous les champs obligatoires."),
     expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Date invalide."),
-    cvc: z.string().regex(/^\d{3,4}$/, "Veuillez remplir tous les champs obligatoires."),
+    cvc: z.string().regex(/^\d{3}$/, "Le CVC doit contenir 3 chiffres."),
   });
 
 export const getOpeningHoursSchema = () =>

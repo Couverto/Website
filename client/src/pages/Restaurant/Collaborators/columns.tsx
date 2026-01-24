@@ -42,6 +42,7 @@ export const getColumns = (
   callback: (action: string, data: any) => void,
   count: number,
   currentUserRole?: string,
+  adminCount?: number,
 ): ColumnDef<Collaborator>[] => [
   {
     id: "name",
@@ -103,7 +104,8 @@ export const getColumns = (
       const config = roleConfig[collab.restaurantRole] || roleConfig.employee;
       const Icon = config.icon;
 
-      const isDisabled = collab.restaurantRole === "admin" && currentUserRole !== "admin";
+      const isDisabled =
+        (collab.restaurantRole === "admin" && currentUserRole !== "admin") || (collab.restaurantRole === "admin" && adminCount === 1);
 
       return (
         <Select
@@ -174,15 +176,17 @@ export const getColumns = (
               <Copy className="w-4 h-4 text-muted-foreground" />
               {"Copier l'ID"}
             </DropdownMenuItem>
-            {count > 1 && !(collab.restaurantRole === "admin" && currentUserRole !== "admin") && (
-              <DropdownMenuItem
-                className="flex gap-2 text-destructive focus:text-destructive"
-                onClick={() => callback("delete", collab._id)}
-              >
-                <Trash2 className="w-4 h-4" />
-                {"Retirer"}
-              </DropdownMenuItem>
-            )}
+            {count > 1 &&
+              !(collab.restaurantRole === "admin" && currentUserRole !== "admin") &&
+              !(collab.restaurantRole === "admin" && adminCount === 1) && (
+                <DropdownMenuItem
+                  className="flex gap-2 text-destructive focus:text-destructive"
+                  onClick={() => callback("delete", collab._id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {"Retirer"}
+                </DropdownMenuItem>
+              )}
           </DropdownMenuContent>
         </DropdownMenu>
       );

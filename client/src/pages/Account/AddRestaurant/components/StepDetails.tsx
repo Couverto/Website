@@ -198,6 +198,22 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
           </div>
           {errors?.capacity && <p className="text-xs font-medium text-red-500 px-1">{errors.capacity}</p>}
         </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="website" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            {"Site web"}
+          </Label>
+          <div className="relative group">
+            <Input
+              id="website"
+              type="url"
+              value={data.website || ""}
+              onChange={(e) => updateData({ website: e.target.value })}
+              placeholder="https://www.votrerestaurant.fr"
+              className="h-12 text-base transition-all border-muted-foreground/20 focus:border-primary shadow-sm"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6 pt-8 border-t">

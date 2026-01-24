@@ -63,26 +63,26 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
 
       <div className="space-y-3">
         <Label
-          htmlFor="address"
-          className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.address ? "text-red-500" : ""}`}
+          htmlFor="adress"
+          className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.adress ? "text-red-500" : ""}`}
         >
           {"Adresse"}
         </Label>
         <div className="relative group">
           <MapPin
-            className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.address ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
+            className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.adress ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
           />
           <Input
-            id="address"
-            value={data.address}
-            onChange={(e) => updateData({ address: e.target.value })}
+            id="adress"
+            value={data.adress}
+            onChange={(e) => updateData({ adress: e.target.value })}
             placeholder={"123 Avenue des Champs-Elysées"}
-            className={`pl-10 h-12 text-base transition-all ${errors?.address ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
+            className={`pl-10 h-12 text-base transition-all ${errors?.adress ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
           />
         </div>
-        {errors?.address && (
+        {errors?.adress && (
           <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
-            <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.address}
+            <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.adress}
           </p>
         )}
       </div>
@@ -109,6 +109,30 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
         {errors?.city && (
           <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
             <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.city}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <Label
+          htmlFor="email"
+          className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.email ? "text-red-500" : ""}`}
+        >
+          {"Email de contact"}
+        </Label>
+        <div className="relative group">
+          <Input
+            id="email"
+            type="email"
+            value={data.email}
+            onChange={(e) => updateData({ email: e.target.value })}
+            placeholder={"contact@legourmet.fr"}
+            className={`h-12 text-base transition-all ${errors?.email ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
+          />
+        </div>
+        {errors?.email && (
+          <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
+            <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.email}
           </p>
         )}
       </div>

@@ -124,11 +124,29 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
 export const deleteRestaurant = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
-    const restaurant = await Restaurant.findByIdAndDelete(id);
+    const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
     }
+
+    // Protection: If last admin but others still exist, block deletion
+    const adminCount = await User.countDocuments({
+      restaurant: id,
+      restaurantRole: restaurantRoles.ADMIN,
+    });
+
+    if (adminCount <= 1 && restaurant.collaborators.length > 1) {
+      res.status(400).json({
+        error: "Vous ne pouvez pas supprimer le restaurant alors qu'il reste d'autres collaborateurs. Retirez-les d'abord.",
+      });
+      return;
+    }
+
+    await Restaurant.findByIdAndDelete(id);
+
+    // Also clear restaurant info for the last user (the current admin)
+    await User.updateOne({ _id: req.userId }, { $set: { restaurantRole: null, restaurant: null } });
 
     createLog({
       message: `Restaurant '${restaurant.name}' deleted successfully`,
@@ -750,6 +768,18 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    // Admin Persistence: Cannot remove the last Administrator
+    if (user.restaurantRole === restaurantRoles.ADMIN) {
+      const adminCount = await User.countDocuments({
+        restaurant: id,
+        restaurantRole: restaurantRoles.ADMIN,
+      });
+      if (adminCount <= 1) {
+        res.status(400).json({ error: "Un restaurant doit avoir au moins un administrateur" });
+        return;
+      }
+    }
+
     restaurant.collaborators.splice(collaboratorIndex, 1);
     await restaurant.save();
     if (user) {
@@ -794,7 +824,8 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
  */
 export const updateRestaurantSettings = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { name, description, phone, website, coverImage, images, menu, openingHours, cuisineType, priceRange } = req.body;
+  const { name, description, phone, email, adress, city, website, coverImage, images, menu, openingHours, cuisineType, priceRange } =
+    req.body;
 
   try {
     const restaurant = await Restaurant.findByIdAndUpdate(
@@ -803,6 +834,9 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(phone && { phone }),
+        ...(email && { email }),
+        ...(adress && { adress }),
+        ...(city && { city }),
         ...(website !== undefined && { website }),
         ...(coverImage !== undefined && { coverImage }),
         ...(images && { images }),
@@ -872,6 +906,18 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
     if (user.restaurantRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
       res.status(403).json({ error: "Vous ne pouvez pas modifier le rôle d'un administrateur" });
       return;
+    }
+
+    // Admin Persistence: Cannot downgrade the last Administrator
+    if (user.restaurantRole === restaurantRoles.ADMIN && role !== restaurantRoles.ADMIN) {
+      const adminCount = await User.countDocuments({
+        restaurant: id,
+        restaurantRole: restaurantRoles.ADMIN,
+      });
+      if (adminCount <= 1) {
+        res.status(400).json({ error: "Un restaurant doit avoir au moins un administrateur" });
+        return;
+      }
     }
 
     user.restaurantRole = role;

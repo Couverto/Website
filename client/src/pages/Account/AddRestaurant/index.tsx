@@ -17,7 +17,7 @@ import { getEssentialsSchema, getIdentitySchema, getDetailsSchema, getMenuSchema
 
 const INITIAL_DATA: WizardData = {
   name: "",
-  address: "",
+  adress: "",
   city: "",
   phone: "",
   email: "",

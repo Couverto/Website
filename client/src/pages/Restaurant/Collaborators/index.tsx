@@ -412,15 +412,20 @@ export const RestaurantCollaborators = () => {
 
       {/* Current Collaborators DataTable */}
       <div className="bg-card rounded-md border p-4">
-        <DataTable
-          columns={getCollaboratorColumns(handleCallback, collaborators.length, authUser?.restaurantRole)}
-          data={paginatedCollaborators}
-          dataCount={collaborators.length}
-          fetchData={handlePageChange}
-          isLoading={loading}
-          callback={handleCallback}
-          searchElement="name"
-        />
+        {(() => {
+          const adminCount = collaborators.filter((c) => c.restaurantRole === "admin").length;
+          return (
+            <DataTable
+              columns={getCollaboratorColumns(handleCallback, collaborators.length, authUser?.restaurantRole, adminCount)}
+              data={paginatedCollaborators}
+              dataCount={collaborators.length}
+              fetchData={handlePageChange}
+              isLoading={loading}
+              callback={handleCallback}
+              searchElement="name"
+            />
+          );
+        })()}
       </div>
 
       {/* Pending Invitations */}

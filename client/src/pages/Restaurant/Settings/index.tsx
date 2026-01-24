@@ -254,6 +254,11 @@ export const RestaurantSettings = () => {
               </div>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="email">{"Email de contact"}</Label>
+              <Input id="email" type="email" {...register("email")} placeholder="contact@restaurant.fr" />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="adress">{"Adresse"}</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

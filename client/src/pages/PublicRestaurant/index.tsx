@@ -16,12 +16,13 @@ interface PublicRestaurant {
   adress?: string;
   city?: string;
   phone?: string;
+  email?: string;
   website?: string;
   coverImage?: string;
   images?: string[];
   cuisineType?: string[];
   priceRange?: string;
-  openingHours?: Record<string, string>;
+  openingHours?: Record<string, { isClosed: boolean; periods: { open: string; close: string }[] }>;
   menu?: string[];
   rating?: number;
   features?: string[];
@@ -388,30 +389,34 @@ export const PublicRestaurant = () => {
                       <div className="text-sm text-muted-foreground whitespace-pre-wrap">
                         {restaurant.openingHours && Object.keys(restaurant.openingHours).length > 0 ? (
                           <div className="space-y-1 mt-1">
-                            {Object.entries(restaurant.openingHours).map(([day, schedule]: [string, any]) => (
-                              <div key={day} className="flex justify-between gap-4">
-                                <span className="capitalize w-24">
-                                  {day === "MO"
-                                    ? "Lundi"
-                                    : day === "TU"
-                                      ? "Mardi"
-                                      : day === "WE"
-                                        ? "Mercredi"
-                                        : day === "TH"
-                                          ? "Jeudi"
-                                          : day === "FR"
-                                            ? "Vendredi"
-                                            : day === "SA"
-                                              ? "Samedi"
-                                              : "Dimanche"}
-                                </span>
-                                <span className={`${schedule?.isClosed ? "text-destructive font-medium" : ""}`}>
-                                  {schedule?.isClosed
-                                    ? "Fermé"
-                                    : schedule?.periods?.map((p: any) => `${p.open} - ${p.close}`).join(", ") || "-"}
-                                </span>
-                              </div>
-                            ))}
+                            {Object.entries(restaurant.openingHours).map(([day, schedule]: [string, any]) => {
+                              const dayMap: Record<string, string> = {
+                                monday: "Lundi",
+                                tuesday: "Mardi",
+                                wednesday: "Mercredi",
+                                thursday: "Jeudi",
+                                friday: "Vendredi",
+                                saturday: "Samedi",
+                                sunday: "Dimanche",
+                                MO: "Lundi",
+                                TU: "Mardi",
+                                WE: "Mercredi",
+                                TH: "Jeudi",
+                                FR: "Vendredi",
+                                SA: "Samedi",
+                                SU: "Dimanche",
+                              };
+                              return (
+                                <div key={day} className="flex justify-between gap-4">
+                                  <span className="capitalize w-24">{dayMap[day] || day}</span>
+                                  <span className={`${schedule?.isClosed ? "text-destructive font-medium" : ""}`}>
+                                    {schedule?.isClosed
+                                      ? "Fermé"
+                                      : schedule?.periods?.map((p: any) => `${p.open} - ${p.close}`).join(", ") || "-"}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           "Non spécifié"

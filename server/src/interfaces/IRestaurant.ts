@@ -8,7 +8,9 @@ export interface IRestaurant extends Document {
   adress: string;
   city: string;
   phone: string;
+  email?: string;
   website?: string;
+
   coverImage?: string;
   images: string[];
   menu: string[];

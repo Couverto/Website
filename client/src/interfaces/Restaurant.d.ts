@@ -6,7 +6,9 @@ export interface RestaurantInterface {
   adress: string;
   city: string;
   phone: string;
+  email?: string;
   website?: string;
+
   coverImage?: string;
   images: string[];
   menu: string[];
