@@ -44,6 +44,8 @@ import {
   Trash2,
   AlertTriangle,
   Music2,
+  MapPin,
+  FileText,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -131,6 +133,7 @@ export const RestaurantSettings = () => {
   });
 
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [newMenuUrl, setNewMenuUrl] = useState("");
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -206,6 +209,21 @@ export const RestaurantSettings = () => {
     setValue("images", updated);
   };
 
+  const addMenu = () => {
+    if (newMenuUrl) {
+      const current = watch("menu") || [];
+      setValue("menu", [...current, newMenuUrl]);
+      setNewMenuUrl("");
+    }
+  };
+
+  const removeMenu = (index: number) => {
+    const current = watch("menu") || [];
+    const updated = [...current];
+    updated.splice(index, 1);
+    setValue("menu", updated);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -239,6 +257,22 @@ export const RestaurantSettings = () => {
               <div className="space-y-2">
                 <Label htmlFor="phone">{t("pages.restaurant.settings.phone")}</Label>
                 <Input id="phone" {...register("phone")} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="adress">{t("pages.restaurant.settings.address")}</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="adress" {...register("adress")} placeholder="123 rue..." className="pl-10" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">{t("pages.restaurant.settings.city")}</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="city" {...register("city")} placeholder="Paris" className="pl-10" />
+                </div>
               </div>
             </div>
             <div className="space-y-2">
@@ -628,6 +662,63 @@ export const RestaurantSettings = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Menu */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {t("pages.restaurant.settings.menu")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="https://example.com/menu.pdf"
+                  value={newMenuUrl}
+                  onChange={(e) => setNewMenuUrl(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addMenu())}
+                  className="pl-10"
+                />
+              </div>
+              <Button type="button" size="icon" onClick={addMenu}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid gap-3">
+              {watch("menu")?.map((url: string, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 bg-muted/30 border rounded-xl group hover:border-primary/30 transition-all"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <FileText className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium truncate max-w-[300px]">{url}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={() => removeMenu(idx)}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {(!watch("menu") || watch("menu")?.length === 0) && (
+                <div className="py-8 text-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/5 flex flex-col items-center gap-2">
+                  <FileText className="h-6 w-6 opacity-30" />
+                  <p className="text-sm">{t("pages.restaurant.settings.no_menu_links")}</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

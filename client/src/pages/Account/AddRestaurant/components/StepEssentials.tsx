@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
 import { useTranslation } from "react-i18next";
-import { MapPin, Phone, Mail, Store } from "lucide-react";
+import { MapPin, Phone, Store } from "lucide-react";
 import { StepProps } from "@/interfaces/Components";
 
 export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
@@ -90,58 +90,30 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-3">
-          <Label
-            htmlFor="city"
-            className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.city ? "text-red-500" : ""}`}
-          >
-            {t("create.steps.essentials.city")}
-          </Label>
-          <div className="relative group">
-            <MapPin
-              className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.city ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-            />
-            <Input
-              id="city"
-              value={data.city}
-              onChange={(e) => updateData({ city: e.target.value })}
-              placeholder={t("create.steps.essentials.placeholders.city")}
-              className={`pl-10 h-12 text-base transition-all ${errors?.city ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-            />
-          </div>
-          {errors?.city && (
-            <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
-              <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.city}
-            </p>
-          )}
+      <div className="space-y-3">
+        <Label
+          htmlFor="city"
+          className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.city ? "text-red-500" : ""}`}
+        >
+          {t("create.steps.essentials.city")}
+        </Label>
+        <div className="relative group">
+          <MapPin
+            className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.city ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
+          />
+          <Input
+            id="city"
+            value={data.city}
+            onChange={(e) => updateData({ city: e.target.value })}
+            placeholder={t("create.steps.essentials.placeholders.city")}
+            className={`pl-10 h-12 text-base transition-all ${errors?.city ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
+          />
         </div>
-        <div className="space-y-3">
-          <Label
-            htmlFor="email"
-            className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.email ? "text-red-500" : ""}`}
-          >
-            {t("create.steps.essentials.email")}
-          </Label>
-          <div className="relative group">
-            <Mail
-              className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.email ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-            />
-            <Input
-              id="email"
-              type="email"
-              value={data.email || ""}
-              onChange={(e) => updateData({ email: e.target.value })}
-              placeholder={t("create.steps.essentials.placeholders.email")}
-              className={`pl-10 h-12 text-base transition-all ${errors?.email ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-            />
-          </div>
-          {errors?.email && (
-            <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
-              <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.email}
-            </p>
-          )}
-        </div>
+        {errors?.city && (
+          <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
+            <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.city}
+          </p>
+        )}
       </div>
     </div>
   );
