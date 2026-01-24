@@ -36,6 +36,7 @@ interface PublicRestaurant {
   };
   isOpenNow?: boolean;
   isClosed?: boolean;
+  reviews?: string[];
 }
 
 export const PublicRestaurant = () => {
@@ -216,7 +217,9 @@ export const PublicRestaurant = () => {
               <TabsList className="mb-8">
                 <TabsTrigger value="overview">{t("pages.public_restaurant.tabs.overview")}</TabsTrigger>
                 <TabsTrigger value="menu">{t("pages.public_restaurant.tabs.menu")}</TabsTrigger>
-                <TabsTrigger value="reviews">{t("pages.public_restaurant.tabs.reviews")}</TabsTrigger>
+                {restaurant.reviews && restaurant.reviews.length > 0 && (
+                  <TabsTrigger value="reviews">{t("pages.public_restaurant.tabs.reviews")}</TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="overview" className="space-y-8">
