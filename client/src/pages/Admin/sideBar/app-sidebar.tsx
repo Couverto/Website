@@ -61,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props} className="border-r border-zinc-200/50 dark:border-zinc-800/50 transition-all duration-300">
-      <SidebarHeader onClick={() => navigate("/")} className="p-4 group-data-[state=collapsed]:p-0 transition-all">
+      <SidebarHeader onClick={() => navigate("/")} className="p-4 group-data-[state=collapsed]:p-0 transition-all hover:cursor-pointer">
         <div className="flex items-center gap-2 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:h-16 transition-all">
           <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
             <span className="text-lg font-bold">{configValues["APP_NAME"].charAt(0)}</span>

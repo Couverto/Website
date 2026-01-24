@@ -81,6 +81,17 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
     res.status(201).json({ restaurant, message: "Restaurant créé avec succès" });
   } catch (err: any) {
+    // Handle duplicate key errors with user-friendly messages
+    if (err.code === 11000) {
+      if (err.keyPattern?.adress) {
+        res.status(409).json({ error: "Cette adresse est déjà utilisée par un autre restaurant" });
+        return;
+      }
+      if (err.keyPattern?.slug) {
+        res.status(409).json({ error: "Ce slug est déjà utilisé" });
+        return;
+      }
+    }
     res.status(500).json({ error: err.message });
   }
 };

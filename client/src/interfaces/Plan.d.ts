@@ -4,7 +4,6 @@ export interface Plan {
   description?: string;
   price: number;
   features: string[];
-  stripePriceId?: string;
   active: boolean;
   position: number;
   createdAt: string;

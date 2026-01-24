@@ -81,7 +81,7 @@ export const Navbar = () => {
       path: "/pro",
       icon: ChefHat,
       auth: false,
-      hideIfAuth: true, // Hide if logged in (assuming logged in might be pro)
+      hideIfAuth: false, // Hide if logged in (assuming logged in might be pro)
     },
   ];
 

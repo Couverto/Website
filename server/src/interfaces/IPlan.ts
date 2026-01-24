@@ -5,7 +5,6 @@ export interface IPlan extends Document {
   description?: string;
   price: number;
   features: string[];
-  stripePriceId?: string;
   active: boolean;
   position: number;
   createdAt: Date;

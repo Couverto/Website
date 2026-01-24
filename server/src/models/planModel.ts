@@ -7,7 +7,6 @@ const PlanSchema = new Schema<IPlan>(
     description: { type: String },
     price: { type: Number, required: true },
     features: { type: [String], default: [] },
-    stripePriceId: { type: String },
     active: { type: Boolean, default: true },
     position: { type: Number, default: 0 },
   },

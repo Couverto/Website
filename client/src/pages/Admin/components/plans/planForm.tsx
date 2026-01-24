@@ -27,7 +27,6 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       description: "",
       price: 0,
       features: "",
-      stripePriceId: "",
       active: true,
       position: 0,
     },
@@ -40,7 +39,6 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       description: plan?.description || "",
       price: plan?.price,
       features: plan?.features.join(", "),
-      stripePriceId: plan?.stripePriceId || "",
       active: plan?.active,
       position: plan?.position,
     },
@@ -185,19 +183,6 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
             <FormLabel>{"Fonctionnalités (séparées par des virgules)"}</FormLabel>
             <FormControl>
               <Textarea placeholder="Feature 1, Feature 2" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
-        name="stripePriceId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{"ID Stripe"}</FormLabel>
-            <FormControl>
-              <Input placeholder="price_..." {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

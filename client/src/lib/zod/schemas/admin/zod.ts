@@ -101,7 +101,6 @@ export const getCreatePlanSchema = () => {
     description: z.string().optional(),
     price: z.coerce.number().min(0, { message: "Le prix est requis" }),
     features: z.string().optional(),
-    stripePriceId: z.string().optional(),
     active: z.boolean(),
     position: z.coerce.number(),
   });
@@ -113,7 +112,6 @@ export const getUpdatePlanSchema = () => {
     description: z.string().optional(),
     price: z.coerce.number().min(0, { message: "Le prix est requis" }),
     features: z.string().optional(),
-    stripePriceId: z.string().optional(),
     active: z.boolean(),
     position: z.coerce.number(),
   });
