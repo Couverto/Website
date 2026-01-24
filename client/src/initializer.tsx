@@ -3,6 +3,8 @@ import { useConfigContext } from "./contexts/configContext.js";
 import { Loading } from "./components/customs/loading.js";
 import { ThemePalette, defaultPalette } from "./lib/colorUtils.js";
 
+import { DynamicFavicon } from "./components/DynamicFavicon.js";
+
 export function AppInitializer({ children }: { children: React.ReactNode }) {
   const { getConfigValue } = useConfigContext();
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
@@ -75,18 +77,26 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
 
       if (values["APP_NAME"]) {
         document.title = values["APP_NAME"];
-        setConfigValues(values);
       }
 
+      // Determine effective accent color for Favicon
+      let effectiveAccent = values["ACCENT_COLOR"];
+      if (!effectiveAccent || effectiveAccent === "__NOT_FOUND__") {
+        effectiveAccent = palette.light.primary;
+      }
+      values["EFFECTIVE_ACCENT_COLOR"] = effectiveAccent;
+
+      setConfigValues(values);
       setReady(true);
     }
 
     fetchConfig();
   }, [getConfigValue]);
 
-  if (!ready) {
-    return <Loading />;
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      <DynamicFavicon color={configValues["EFFECTIVE_ACCENT_COLOR"]} appName={configValues["APP_NAME"]} />
+      {ready ? children : <Loading />}
+    </>
+  );
 }
