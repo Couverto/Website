@@ -14,6 +14,7 @@ const UserSchema = new Schema<IUser>(
     restaurant: { type: Schema.Types.ObjectId, ref: "Restaurant", default: null },
     avatar: { type: String, default: "" },
     phone: { type: String, default: "" },
+    restaurantRole: { type: String, default: null },
     auth_type: { type: String, default: authTypes.LOCAL },
     resetPasswordToken: String,
     resetPasswordExpire: Date,

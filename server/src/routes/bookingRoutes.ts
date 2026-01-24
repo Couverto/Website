@@ -58,6 +58,8 @@ bookingRouter.patch("/:id/cancel", verifyToken(), cancelBooking);
  */
 bookingRouter.post("/manual", verifyToken(), createManualBooking);
 
+import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
+
 // =====================
 // Restaurant Collaborator Routes
 // =====================
@@ -67,18 +69,33 @@ bookingRouter.post("/manual", verifyToken(), createManualBooking);
  * @desc Get all bookings for a restaurant
  * @access Private (Collaborator)
  */
-bookingRouter.get("/restaurant/:id", verifyToken(), verifyCollaborator(), getRestaurantBookings);
+bookingRouter.get(
+  "/restaurant/:id",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  getRestaurantBookings,
+);
 
 /**
  * @route GET /api/bookings/restaurant/:id/clients
  * @desc Get all unique clients for a restaurant
  * @access Private (Collaborator)
  */
-bookingRouter.get("/restaurant/:id/clients", verifyToken(), verifyCollaborator(), getRestaurantClients);
+bookingRouter.get(
+  "/restaurant/:id/clients",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  getRestaurantClients,
+);
 
 /**
  * @route PATCH /api/bookings/restaurant/:id/:bookingId/status
  * @desc Update a booking status
  * @access Private (Collaborator)
  */
-bookingRouter.patch("/restaurant/:id/:bookingId/status", verifyToken(), verifyCollaborator(), updateBookingStatus);
+bookingRouter.patch(
+  "/restaurant/:id/:bookingId/status",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  updateBookingStatus,
+);

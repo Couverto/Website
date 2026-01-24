@@ -11,6 +11,7 @@ export interface IUser extends Document {
   restaurant: mongoose.Types.ObjectId;
   avatar: string;
   phone: string;
+  restaurantRole: string;
   auth_type: string;
   fullname?: string; // virtual
   resetPasswordToken?: string;

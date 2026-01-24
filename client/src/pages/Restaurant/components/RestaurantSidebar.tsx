@@ -33,38 +33,48 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
   const { authUser } = useAuthContext();
   const { state } = useSidebar();
 
+  const role = authUser?.restaurantRole || "employee";
+
   const navItems = [
     {
       title: "Tableau de bord",
       url: `/restaurant/${id}/dashboard`,
       icon: LayoutDashboard,
+      roles: ["admin", "manager", "employee"],
     },
     {
       title: "Réservations",
       url: `/restaurant/${id}/bookings`,
       icon: CalendarDays,
+      roles: ["admin", "manager", "employee"],
     },
     {
       title: "Clients",
       url: `/restaurant/${id}/clients`,
       icon: Users,
+      roles: ["admin", "manager"],
     },
     {
       title: "Collaborateurs",
       url: `/restaurant/${id}/collaborators`,
       icon: UserPlus,
+      roles: ["admin", "manager"],
     },
     {
       title: "Statistiques",
       url: `/restaurant/${id}/stats`,
       icon: BarChart3,
+      roles: ["admin"],
     },
     {
       title: "Paramètres",
       url: `/restaurant/${id}/settings`,
       icon: Settings,
+      roles: ["admin"],
     },
   ];
+
+  const filteredNavItems = navItems.filter((item) => item.roles.includes(role));
 
   const { pathname } = useLocation();
   const isActive = (path: string) => pathname.startsWith(path);
@@ -102,7 +112,7 @@ export const RestaurantSidebar = ({ restaurant }: RestaurantSidebarProps) => {
           <SidebarGroupLabel>{"Navigation"}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const active = isActive(item.url);
                 return (
                   <SidebarMenuItem key={item.url}>

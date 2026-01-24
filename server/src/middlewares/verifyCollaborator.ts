@@ -5,11 +5,11 @@ import mongoose from "mongoose";
 import { userRoles } from "../utils/enums/userRoles.js";
 
 /**
- * Middleware to verify that the authenticated user is a collaborator of the restaurant.
+ * Middleware to verify that the authenticated user is a collaborator of the restaurant and has the required role.
  * Must be used after verifyToken middleware.
  * Expects :id or :restaurantId in route params.
  */
-export const verifyCollaborator = () => {
+export const verifyCollaborator = (allowedRoles?: string[]) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const restaurantId = req.params.id || req.params.restaurantId;
 
@@ -21,6 +21,7 @@ export const verifyCollaborator = () => {
           return;
         }
       }
+
       if (!restaurantId) {
         res.status(400).json({ error: "ID du restaurant manquant" });
         return;
@@ -32,20 +33,35 @@ export const verifyCollaborator = () => {
       }
 
       const restaurant = await Restaurant.findById(restaurantId);
-
       if (!restaurant) {
         res.status(404).json({ error: "Ressource introuvable" });
         return;
       }
 
       const isCollaborator = restaurant.collaborators.some((collab) => collab.toString() === req.userId?.toString());
-
       if (!isCollaborator) {
         res.status(403).json({ error: "Vous n'êtes pas collaborateur de ce restaurant" });
         return;
       }
 
+      const user = await User.findById(req.userId);
+      if (!user) {
+        res.status(404).json({ error: "Utilisateur introuvable" });
+        return;
+      }
+
+      // Check if user has required role
+      if (allowedRoles && allowedRoles.length > 0) {
+        const userRole = user.restaurantRole || "employee";
+        if (!allowedRoles.includes(userRole)) {
+          res.status(403).json({ error: "Vous n'avez pas les permissions nécessaires pour effectuer cette action" });
+          return;
+        }
+      }
+
       req.restaurant = restaurant;
+      req.restaurantRole = user.restaurantRole;
+
       next();
     } catch (err: any) {
       res.status(500).json({ error: err.message });

@@ -15,6 +15,7 @@ import {
   getPublicRestaurantById,
   toggleRestaurantClosed,
   getRestaurantSlots,
+  updateCollaboratorRole,
 } from "../controllers/restaurantController.js";
 import {
   createInvitation,
@@ -26,6 +27,7 @@ import {
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 import { userRoles } from "../utils/enums/userRoles.js";
+import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 
 export const restaurantRouter = express.Router();
 
@@ -41,23 +43,69 @@ restaurantRouter.get("/my", verifyToken(), getMyRestaurants);
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);
 restaurantRouter.post("/", verifyToken(), createRestaurant);
 restaurantRouter.put("/:id", verifyToken({ role: userRoles.ADMIN }), updateRestaurant);
-restaurantRouter.delete("/:id", verifyToken(), verifyCollaborator(), deleteRestaurant);
+restaurantRouter.delete("/:id", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), deleteRestaurant);
 
 // Collaborator routes (requires being a collaborator of the restaurant)
-restaurantRouter.get("/:id/details", verifyToken(), verifyCollaborator(), getRestaurantById);
-restaurantRouter.get("/:id/stats", verifyToken(), verifyCollaborator(), getRestaurantStats);
-restaurantRouter.put("/:id/settings", verifyToken(), verifyCollaborator(), updateRestaurantSettings);
-restaurantRouter.patch("/:id/toggle-closed", verifyToken(), verifyCollaborator(), toggleRestaurantClosed);
+restaurantRouter.get(
+  "/:id/details",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  getRestaurantById,
+);
+restaurantRouter.get("/:id/stats", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), getRestaurantStats);
+restaurantRouter.put("/:id/settings", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), updateRestaurantSettings);
+restaurantRouter.patch(
+  "/:id/toggle-closed",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  toggleRestaurantClosed,
+);
 
 // Collaborator management
-restaurantRouter.get("/:id/collaborators", verifyToken(), verifyCollaborator(), getCollaborators);
-restaurantRouter.post("/:id/collaborators", verifyToken(), verifyCollaborator(), addCollaborator);
-restaurantRouter.delete("/:id/collaborators/:collaboratorId", verifyToken(), verifyCollaborator(), removeCollaborator);
+restaurantRouter.get(
+  "/:id/collaborators",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  getCollaborators,
+);
+restaurantRouter.post(
+  "/:id/collaborators",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  addCollaborator,
+);
+restaurantRouter.patch(
+  "/:id/collaborators/:collaboratorId/role",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN]),
+  updateCollaboratorRole,
+);
+restaurantRouter.delete(
+  "/:id/collaborators/:collaboratorId",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  removeCollaborator,
+);
 
 // Invitation routes
-restaurantRouter.post("/:id/invitations", verifyToken(), verifyCollaborator(), createInvitation);
-restaurantRouter.get("/:id/invitations", verifyToken(), verifyCollaborator(), getInvitations);
-restaurantRouter.delete("/:id/invitations/:invitationId", verifyToken(), verifyCollaborator(), deleteInvitation);
+restaurantRouter.post(
+  "/:id/invitations",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  createInvitation,
+);
+restaurantRouter.get(
+  "/:id/invitations",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  getInvitations,
+);
+restaurantRouter.delete(
+  "/:id/invitations/:invitationId",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  deleteInvitation,
+);
 
 // Public invitation routes
 restaurantRouter.get("/invitations/:token", getInvitationInfo);

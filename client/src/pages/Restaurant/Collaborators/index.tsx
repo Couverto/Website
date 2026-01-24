@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import debounce from "lodash.debounce";
 import { DataTable } from "@/components/customs/dataTable";
 import { getColumns as getCollaboratorColumns } from "./columns";
+import { useAuthContext } from "@/contexts/authContext";
 
 interface Collaborator {
   _id: string;
@@ -34,6 +35,7 @@ interface Collaborator {
   email: string;
   username: string;
   avatar?: string;
+  restaurantRole: string;
   createdAt: string;
 }
 
@@ -59,6 +61,7 @@ interface SearchUser {
 
 export const RestaurantCollaborators = () => {
   const { id } = useParams();
+  const { authUser } = useAuthContext();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,15 +116,27 @@ export const RestaurantCollaborators = () => {
     setPageSize(pSize);
   };
 
-  // Callback for DataTable actions (like Admin dashboard)
   const handleCallback = (action: string, data: any) => {
     switch (action) {
       case "delete":
         const collab = collaborators.find((c) => c._id === data);
         if (collab) setCollaboratorToDelete(collab);
         break;
+      case "updateRole":
+        updateCollaboratorRole(data.collaboratorId, data.role);
+        break;
       default:
         break;
+    }
+  };
+
+  const updateCollaboratorRole = async (collaboratorId: string, role: string) => {
+    try {
+      await api.patch(`/restaurants/${id}/collaborators/${collaboratorId}/role`, { role });
+      toast.success("Rôle mis à jour");
+      fetchData();
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour du rôle");
     }
   };
 
@@ -398,7 +413,7 @@ export const RestaurantCollaborators = () => {
       {/* Current Collaborators DataTable */}
       <div className="bg-card rounded-md border p-4">
         <DataTable
-          columns={getCollaboratorColumns(handleCallback, collaborators.length)}
+          columns={getCollaboratorColumns(handleCallback, collaborators.length, authUser?.restaurantRole)}
           data={paginatedCollaborators}
           dataCount={collaborators.length}
           fetchData={handlePageChange}

@@ -35,6 +35,7 @@ import { RestaurantStats } from "@/pages/Restaurant/Stats";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/PublicRestaurants";
+import { RestaurantRoleProtectedRoute } from "./RestaurantRoleProtectedRoute";
 
 export const Router = () => {
   return (
@@ -121,10 +122,38 @@ export const Router = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<RestaurantDashboard />} />
           <Route path="bookings" element={<RestaurantBookings />} />
-          <Route path="clients" element={<RestaurantClients />} />
-          <Route path="collaborators" element={<RestaurantCollaborators />} />
-          <Route path="stats" element={<RestaurantStats />} />
-          <Route path="settings" element={<RestaurantSettings />} />
+          <Route
+            path="clients"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin", "manager"]}>
+                <RestaurantClients />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="collaborators"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin", "manager"]}>
+                <RestaurantCollaborators />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="stats"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin"]}>
+                <RestaurantStats />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin"]}>
+                <RestaurantSettings />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
         </Route>
         {/* Auth Routes */}
         <Route

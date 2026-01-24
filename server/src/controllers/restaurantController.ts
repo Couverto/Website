@@ -4,7 +4,10 @@ import { User } from "../models/userModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { userRoles } from "../utils/enums/userRoles.js";
+import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 import { getPaginationParams } from "../utils/pagination.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import { collaboratorEmailTemplate } from "../templates/collaboratorEmail.js";
 
 /**
  * @function getRestaurants
@@ -45,6 +48,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
+
+    creator.restaurantRole = restaurantRoles.ADMIN;
+    await creator.save();
 
     collaborators.push(creator._id);
 
@@ -623,7 +629,10 @@ export const getCollaborators = async (req: Request, res: Response): Promise<voi
   const { id } = req.params;
 
   try {
-    const restaurant = await Restaurant.findById(id).populate("collaborators", "name forename email avatar username createdAt");
+    const restaurant = await Restaurant.findById(id).populate(
+      "collaborators",
+      "name forename email avatar username restaurantRole createdAt",
+    );
 
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
@@ -667,6 +676,29 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
     restaurant.collaborators.push(userId);
     await restaurant.save();
 
+    user.restaurantRole = restaurantRoles.EMPLOYEE;
+    user.restaurant = restaurant._id as any;
+    await user.save();
+
+    // Send email notification
+    try {
+      if (user.email) {
+        const htmlContent = collaboratorEmailTemplate({
+          name: user.forename,
+          restaurantName: restaurant.name,
+          role: restaurantRoles.EMPLOYEE,
+          action: "added",
+        });
+        await sendEmail({
+          email: user.email,
+          subject: `Invitation à collaborer - ${restaurant.name}`,
+          message: htmlContent,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Collaborator added email failed", emailErr);
+    }
+
     createLog({
       message: `User ${user.username} added as collaborator to ${restaurant.name}`,
       userId: req.userId,
@@ -706,8 +738,43 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    const user = await User.findById(collaboratorId);
+    if (!user) {
+      res.status(404).json({ error: "Utilisateur introuvable" });
+      return;
+    }
+
+    // Protection: Managers cannot remove Administrators
+    if (user.restaurantRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
+      res.status(403).json({ error: "Vous ne pouvez pas retirer un administrateur" });
+      return;
+    }
+
     restaurant.collaborators.splice(collaboratorIndex, 1);
     await restaurant.save();
+    if (user) {
+      user.restaurantRole = null as any;
+      user.restaurant = null as any;
+      await user.save();
+
+      // Send email notification
+      try {
+        if (user.email) {
+          const htmlContent = collaboratorEmailTemplate({
+            name: user.forename,
+            restaurantName: restaurant.name,
+            action: "removed",
+          });
+          await sendEmail({
+            email: user.email,
+            subject: `Fin de collaboration - ${restaurant.name}`,
+            message: htmlContent,
+          });
+        }
+      } catch (emailErr) {
+        console.error("Collaborator removed email failed", emailErr);
+      }
+    }
 
     createLog({
       message: `Collaborator removed from ${restaurant.name}`,
@@ -764,6 +831,59 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
     });
 
     res.status(200).json({ restaurant, message: "Paramètres mis à jour" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function updateCollaboratorRole
+ * @description Updates the role of a collaborator in a restaurant.
+ */
+export const updateCollaboratorRole = async (req: Request, res: Response): Promise<void> => {
+  const { id, collaboratorId } = req.params;
+  const { role } = req.body;
+
+  if (!Object.values(restaurantRoles).includes(role)) {
+    res.status(400).json({ error: "Rôle invalide" });
+    return;
+  }
+
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    const isCollaborator = restaurant.collaborators.some((collab) => collab.toString() === collaboratorId);
+    if (!isCollaborator) {
+      res.status(404).json({ error: "Utilisateur n'est pas collaborateur de ce restaurant" });
+      return;
+    }
+
+    const user = await User.findById(collaboratorId);
+    if (!user) {
+      res.status(404).json({ error: "Utilisateur introuvable" });
+      return;
+    }
+
+    // Protection: Managers cannot change the role of an Administrator
+    if (user.restaurantRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
+      res.status(403).json({ error: "Vous ne pouvez pas modifier le rôle d'un administrateur" });
+      return;
+    }
+
+    user.restaurantRole = role;
+    await user.save();
+
+    createLog({
+      message: `Role of collaborator ${user.username} updated to ${role} in ${restaurant.name}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ message: "Rôle mis à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

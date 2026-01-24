@@ -8,6 +8,7 @@ declare global {
     export interface Request {
       userId: Types.ObjectId;
       restaurant?: IRestaurant;
+      restaurantRole?: string;
     }
   }
 }

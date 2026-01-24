@@ -7,6 +7,7 @@ export interface UserInterface {
   email: string;
   password?: string;
   phone?: string;
+  restaurantRole?: string;
   role: string;
   createdAt: Date;
   updatedAt?: Date;
