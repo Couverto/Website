@@ -1171,6 +1171,7 @@
         "success_title": "Booking Confirmed!",
         "success_description": "We look forward to seeing you.",
         "success_message": "Your booking has been successfully created. You will receive a confirmation shortly.",
+        "view_bookings": "View Bookings",
         "close": "Close"
       }
     },

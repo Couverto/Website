@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { User } from "../models/userModel.js";
 import { authTypes } from "../utils/enums/authTypes.js";
+import { welcomeEmailTemplate } from "../templates/welcomeEmail.js";
+import { resetPasswordTemplate } from "../templates/resetPasswordEmail.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { generateAccessToken } from "../utils/generateAccessToken.js";
@@ -88,6 +90,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     const { password: _password, ...userWithoutPassword } = user.toObject();
+
+    // Send Welcome Email
+    try {
+      if (user.email) {
+        const htmlContent = welcomeEmailTemplate({ name: user.forename });
+        await sendEmail({
+          email: user.email,
+          subject: "Bienvenue sur Couverto !",
+          message: htmlContent,
+        });
+      }
+    } catch (emailErr) {
+      console.error("Welcome email failed", emailErr);
+    }
 
     res.status(201).json({ user: userWithoutPassword, message: "server.auth.messages.register_success", accessToken });
     return;
@@ -231,18 +247,13 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const clientUrl = process.env.CORS_ORIGIN;
     const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
-    const message = `
-      <h1>${"Password Reset Request"}</h1>
-      <p>You have requested a password reset</p>
-      <p>Please go to this link to reset your password:</p>
-      <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
-    `;
+    const htmlContent = resetPasswordTemplate({ url: resetUrl });
 
     try {
       await sendEmail({
         email: user.email,
-        subject: "Password Reset Request",
-        message,
+        subject: "Réinitialisation de mot de passe",
+        message: htmlContent,
       });
 
       res.status(200).json({ success: true, data: "Email sent" });

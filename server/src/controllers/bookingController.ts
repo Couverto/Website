@@ -8,6 +8,9 @@ import { logLevels } from "../utils/enums/logLevels.js";
 import { getIO } from "../sockets/socket.js";
 import { getDay } from "date-fns";
 import { getPaginationParams } from "../utils/pagination.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import { bookingConfirmationTemplate } from "../templates/bookingConfirmationEmail.js";
+import { bookingCancellationTemplate } from "../templates/bookingCancellationEmail.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -134,7 +137,43 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       console.error("Socket emit failed", error);
     }
 
-    // TODO: Send confirmation email/SMS (out of scope for now, but good placeholder)
+    // Send confirmation email
+    try {
+      if (customer.email) {
+        const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const timeStr = new Date(bookingDate).toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const statusSubject = newBooking.status === bookingStatus.CONFIRMED ? "Confirmée" : "En attente";
+        const isConfirmed = newBooking.status === bookingStatus.CONFIRMED;
+
+        const htmlContent = bookingConfirmationTemplate({
+          customerName: customer.name,
+          restaurantName: restaurantExists.name,
+          date: dateStr,
+          time: timeStr,
+          guests: guests,
+          status: statusSubject,
+          isConfirmed: isConfirmed,
+          address: restaurantExists.adress, // Assuming 'adress' property exists
+        });
+
+        await sendEmail({
+          email: customer.email,
+          subject: `Réservation ${statusSubject} - ${restaurantExists.name}`,
+          message: htmlContent,
+        });
+      }
+    } catch (mailError) {
+      console.error("Booking confirmation email failed", mailError);
+    }
 
     createLog({
       message: `Booking created for restaurant ${restaurant} by ${customer.name}`,
@@ -532,6 +571,34 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
 
     booking.status = status;
     await booking.save();
+
+    // Send Cancellation Email if status is CANCELLED (Restaurant initiated)
+    if (status === bookingStatus.CANCELLED) {
+      try {
+        const restaurantDoc = await Restaurant.findById(id).select("name");
+        const customerEmail = booking.customer?.email;
+
+        if (customerEmail && restaurantDoc) {
+          const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR");
+          const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+          const htmlContent = bookingCancellationTemplate({
+            customerName: booking.customer.name,
+            restaurantName: restaurantDoc.name,
+            date: dateStr,
+            time: timeStr,
+          });
+
+          await sendEmail({
+            email: customerEmail,
+            subject: `Réservation Annulée - ${restaurantDoc.name}`,
+            message: htmlContent,
+          });
+        }
+      } catch (mailError) {
+        console.error("Booking cancellation email failed", mailError);
+      }
+    }
 
     // Emit real-time event to restaurant room
     try {

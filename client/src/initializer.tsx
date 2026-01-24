@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useConfigContext } from "./contexts/configContext.js";
 import { Loading } from "./components/customs/loading.js";
-import { ThemePalette, defaultPalette } from "./lib/colorUtils.js";
+import { ThemePalette, defaultPalette, getContrastColor } from "./lib/colorUtils.js";
 
 import { DynamicFavicon } from "./components/DynamicFavicon.js";
 
@@ -26,12 +26,17 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
           console.error("Failed to parse COLOR_PALETTE", e);
         }
       } else if (values["ACCENT_COLOR"] && values["ACCENT_COLOR"] !== "__NOT_FOUND__") {
-        // Fallback or Migration: If only ACCENT_COLOR exists, we could ideally generate it,
-        // but for now let's just apply the accent color as before or stick to default.
+        // Fallback or Migration: If only ACCENT_COLOR exists
         const accent = values["ACCENT_COLOR"];
+        const contrast = getContrastColor(accent);
+
         document.documentElement.style.setProperty("--accent", accent);
         document.documentElement.style.setProperty("--primary", accent);
         document.documentElement.style.setProperty("--ring", accent);
+
+        // Ensure readability
+        document.documentElement.style.setProperty("--primary-foreground", contrast);
+        document.documentElement.style.setProperty("--accent-foreground", contrast);
       }
 
       // Apply the full palette
