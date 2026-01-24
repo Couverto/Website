@@ -523,6 +523,68 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
     // Total unique clients
     const uniqueClients = await Booking.distinct("customer.phone", { restaurant: id });
 
+    // Guest Distribution
+    const guestDistribution = await Booking.aggregate([
+      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } },
+      {
+        $project: {
+          range: {
+            $switch: {
+              branches: [
+                { case: { $lte: ["$guests", 2] }, then: "1-2" },
+                { case: { $lte: ["$guests", 4] }, then: "3-4" },
+                { case: { $lte: ["$guests", 6] }, then: "5-6" },
+              ],
+              default: "7+",
+            },
+          },
+        },
+      },
+      { $group: { _id: "$range", count: { $sum: 1 } } },
+    ]).then((res) => res.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}));
+
+    // Cancellation Rate
+    const totalBookingsAllTime = await Booking.countDocuments({
+      restaurant: id,
+      status: { $ne: bookingStatus.DRAFT },
+    });
+    const cancelledBookingsAllTime = await Booking.countDocuments({
+      restaurant: id,
+      status: bookingStatus.CANCELLED,
+    });
+    const cancellationRate = totalBookingsAllTime > 0 ? (cancelledBookingsAllTime / totalBookingsAllTime) * 100 : 0;
+
+    // Average Guests
+    const averageGuestsResult = await Booking.aggregate([
+      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } },
+      { $group: { _id: null, avg: { $avg: "$guests" } } },
+    ]);
+    const averageGuests = averageGuestsResult[0]?.avg || 0;
+
+    // Average Lead Time
+    const leadTimeResult = await Booking.aggregate([
+      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } },
+      {
+        $project: {
+          leadTime: { $subtract: ["$bookingDate", "$createdAt"] },
+        },
+      },
+      { $group: { _id: null, avgLeadTime: { $avg: "$leadTime" } } },
+    ]);
+    const averageLeadTime = leadTimeResult[0]?.avgLeadTime ? leadTimeResult[0].avgLeadTime / (1000 * 60 * 60 * 24) : 0;
+
+    // Busiest Days
+    const busyDays = await Booking.aggregate([
+      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } },
+      {
+        $group: {
+          _id: { $dayOfWeek: "$bookingDate" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
     res.status(200).json({
       stats: {
         today: {
@@ -539,24 +601,12 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
         dailyStats: dailyStats.map((d) => ({ date: d._id, count: d.count })),
         hourlyStats: hourlyStats.map((h) => ({ hour: h._id, count: h.count })),
         statusBreakdown: statusBreakdown.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
-        guestDistribution: await Booking.aggregate([
-          { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } },
-          {
-            $project: {
-              range: {
-                $switch: {
-                  branches: [
-                    { case: { $lte: ["$guests", 2] }, then: "1-2" },
-                    { case: { $lte: ["$guests", 4] }, then: "3-4" },
-                    { case: { $lte: ["$guests", 6] }, then: "5-6" },
-                  ],
-                  default: "7+",
-                },
-              },
-            },
-          },
-          { $group: { _id: "$range", count: { $sum: 1 } } },
-        ]).then((res) => res.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {})),
+        guestDistribution,
+
+        cancellationRate: parseFloat(cancellationRate.toFixed(1)),
+        averageGuests: parseFloat(averageGuests.toFixed(1)),
+        averageLeadTime: parseFloat(averageLeadTime.toFixed(1)),
+        busyDays: busyDays.map((d) => ({ day: d._id, count: d.count })),
       },
       upcomingBookings,
     });

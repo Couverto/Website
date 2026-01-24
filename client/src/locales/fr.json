@@ -943,7 +943,15 @@
         "week_summary": "Cette semaine",
         "total_week_bookings": "Réservations cette semaine",
         "cancel_confirm_title": "Confirmer l'annulation ?",
-        "cancel_confirm_desc": "Cette action est irréversible. Le client recevra une notification d'annulation."
+        "cancel_confirm_desc": "Cette action est irréversible. Le client recevra une notification d'annulation.",
+        "cancellation_rate": "Taux d'annulation",
+        "cancellation_rate_desc": "Basé sur l'historique",
+        "avg_guests": "Couverts moyens",
+        "per_booking": "Par réservation",
+        "avg_lead_time": "Anticipation",
+        "avg_lead_time_desc": "Moyenne d'avance",
+        "busiest_day": "Jour le plus actif",
+        "most_bookings": "Le plus de réservations"
       },
       "bookings": {
         "title": "Réservations",

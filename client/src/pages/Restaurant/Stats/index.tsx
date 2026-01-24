@@ -3,7 +3,17 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, TrendingUp, Clock, PieChart as PieChartIcon, BarChart as BarChartIcon } from "lucide-react";
+import {
+  CalendarDays,
+  Users,
+  TrendingUp,
+  Clock,
+  PieChart as PieChartIcon,
+  BarChart as BarChartIcon,
+  Percent,
+  CalendarCheck,
+  Clock8,
+} from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,6 +116,57 @@ export const RestaurantStats = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalClients || 0}</div>
             <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.unique_clients")}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("pages.restaurant.dashboard.cancellation_rate") || "Taux d'annulation"}
+            </CardTitle>
+            <Percent className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.cancellationRate ?? 0}%</div>
+            <p className="text-xs text-muted-foreground">
+              {t("pages.restaurant.dashboard.cancellation_rate_desc") || "Basé sur l'historique"}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.avg_guests") || "Couverts moyens"}</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.averageGuests ?? 0}</div>
+            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.per_booking") || "Par réservation"}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.avg_lead_time") || "Anticipation"}</CardTitle>
+            <Clock8 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{(stats?.averageLeadTime ?? 0).toFixed(1)}j</div>
+            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.avg_lead_time_desc") || "Moyenne d'avance"}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">{t("pages.restaurant.dashboard.busiest_day") || "Jour le plus actif"}</CardTitle>
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.busyDays && stats.busyDays.length > 0
+                ? format(new Date().setDate(new Date().getDate() - new Date().getDay() + stats.busyDays[0].day), "EEEE", { locale: fr })
+                : "-"}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("pages.restaurant.dashboard.most_bookings") || "Le plus de réservations"}</p>
           </CardContent>
         </Card>
       </div>

@@ -46,4 +46,8 @@ export interface RestaurantStats {
   hourlyStats: { hour: number; count: number }[];
   statusBreakdown: Record<string, number>;
   guestDistribution: Record<string, number>;
+  cancellationRate: number;
+  averageGuests: number;
+  averageLeadTime: number;
+  busyDays: { day: number; count: number }[];
 }

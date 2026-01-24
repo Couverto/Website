@@ -952,7 +952,15 @@
         "week_summary": "This week",
         "total_week_bookings": "Bookings this week",
         "cancel_confirm_title": "Cancel this booking?",
-        "cancel_confirm_desc": "This action cannot be undone. The client will receive a cancellation notification."
+        "cancel_confirm_desc": "This action cannot be undone. The client will receive a cancellation notification.",
+        "cancellation_rate": "Cancellation Rate",
+        "cancellation_rate_desc": "Based on history",
+        "avg_guests": "Average Guests",
+        "per_booking": "Per booking",
+        "avg_lead_time": "Lead Time",
+        "avg_lead_time_desc": "Days in advance",
+        "busiest_day": "Busiest Day",
+        "most_bookings": "Most bookings"
       },
       "bookings": {
         "title": "Bookings",
