@@ -7,6 +7,7 @@ import { axiosConfig } from "@/config/axiosConfig";
 import { Plan } from "@/interfaces/Plan";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PlanForm } from "./planForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const AdminPlans = () => {
   const { t } = useTranslation();
@@ -59,22 +60,28 @@ export const AdminPlans = () => {
 
   return (
     <>
-      <div className="container p-4 mx-auto bg-card rounded-md">
-        <h2 className="text-3xl font-bold tracking-tight mb-4">{t("pages.admin.plans_page.plans")}</h2>
-        <DataTable<Plan, any>
-          columns={columns}
-          data={plans}
-          dataCount={dataCount}
-          fetchData={fetchPlans}
-          searchElement="name"
-          isLoading={loading}
-          actions={["create"]}
-          callback={(action) => {
-            if (action === "create") {
-              openCreateDialog();
-            }
-          }}
-        />
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">{t("pages.admin.plans_page.plans")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable<Plan, any>
+              columns={columns}
+              data={plans}
+              dataCount={dataCount}
+              fetchData={fetchPlans}
+              searchElement="name"
+              isLoading={loading}
+              actions={["create"]}
+              callback={(action) => {
+                if (action === "create") {
+                  openCreateDialog();
+                }
+              }}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

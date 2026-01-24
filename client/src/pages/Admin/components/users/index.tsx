@@ -7,6 +7,7 @@ import { UserForm } from "./userForm";
 import { UserInterface } from "@/interfaces/User";
 import { DataTable } from "@/components/customs/dataTable";
 import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Users = () => {
   const [users, setUsers] = useState<UserInterface[]>([]);
@@ -53,20 +54,24 @@ export const Users = () => {
   }
 
   return (
-    <div>
-      <div className="container p-4 mx-auto bg-card rounded-md">
-        <h2 className="text-3xl font-bold tracking-tight mb-4">{t("pages.admin.users")}</h2>
-        <DataTable
-          columns={getColumns(callback, t)}
-          data={users}
-          dataCount={userCount}
-          fetchData={fetchUsers}
-          isLoading={loading}
-          callback={callback}
-          searchElement="user"
-          actions={["create"]}
-        />
-      </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">{t("pages.admin.users")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={getColumns(callback, t)}
+            data={users}
+            dataCount={userCount}
+            fetchData={fetchUsers}
+            isLoading={loading}
+            callback={callback}
+            searchElement="user"
+            actions={["create"]}
+          />
+        </CardContent>
+      </Card>
       {openDialog && (
         <Dialog open={openDialog} onOpenChange={() => setOpenDialog(false)}>
           <DialogContent className="sm:max-w-[625px]">

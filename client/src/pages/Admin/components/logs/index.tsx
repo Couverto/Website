@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { getColumns } from "./columns";
 import { DataTable } from "@/components/customs/dataTable";
 import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Logs = () => {
   const [logs, setLogs] = useState([]);
@@ -55,20 +56,24 @@ export const Logs = () => {
   }
 
   return (
-    <div>
-      <div className="container p-4 mx-auto bg-card rounded-md">
-        <h2 className="text-3xl font-bold tracking-tight mb-4">{t("pages.admin.logs")}</h2>
-        <DataTable
-          columns={getColumns(deleteLog, t)}
-          data={logs}
-          dataCount={logCount}
-          fetchData={fetchAllLogs}
-          isLoading={loading}
-          callback={callback}
-          searchElement="message"
-          actions={["deleteAll"]}
-        />
-      </div>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">{t("pages.admin.logs")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={getColumns(deleteLog, t)}
+            data={logs}
+            dataCount={logCount}
+            fetchData={fetchAllLogs}
+            isLoading={loading}
+            callback={callback}
+            searchElement="message"
+            actions={["deleteAll"]}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

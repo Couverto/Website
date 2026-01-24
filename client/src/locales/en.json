@@ -1182,8 +1182,16 @@
       "saturation": "Saturation",
       "lightness": "Lightness"
     },
+    "sidebar": {
+      "main_navigation": "Main Navigation"
+    },
     "dataTable": {
       "no_data": "No data available",
+      "filters": {
+        "user": "Filter by user...",
+        "message": "Filter by message...",
+        "name": "Filter by name..."
+      },
       "columns": "Columns",
       "toggle_columns": "Toggle columns",
       "columns_list": {

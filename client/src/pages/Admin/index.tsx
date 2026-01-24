@@ -24,8 +24,8 @@ export const Index = () => {
               <Breadcrumb>
                 <BreadcrumbList className="gap-1 sm:gap-2">
                   <BreadcrumbItem>
-                    <Link to="/admin/dashboard" className="text-zinc-400 hover:text-primary transition-colors cursor-pointer">
-                      <LayoutDashboard className="w-4 h-4" />
+                    <Link to="/admin/dashboard" className="transition-colors hover:text-foreground">
+                      Admin
                     </Link>
                   </BreadcrumbItem>
                   {pathSegments.map((segment, index) => {
@@ -38,19 +38,12 @@ export const Index = () => {
 
                     return (
                       <React.Fragment key={href}>
-                        <BreadcrumbSeparator className="opacity-20">
-                          <ChevronRight className="w-3 h-3" />
-                        </BreadcrumbSeparator>
+                        <BreadcrumbSeparator />
                         <BreadcrumbItem>
                           {isLast ? (
-                            <BreadcrumbPage className="font-bold tracking-tight text-zinc-900 dark:text-zinc-100 italic">
-                              {t(`pages.admin.${segment}`)}
-                            </BreadcrumbPage>
+                            <BreadcrumbPage>{t(`pages.admin.${segment}`)}</BreadcrumbPage>
                           ) : (
-                            <Link
-                              to={href}
-                              className="text-xs sm:text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors uppercase tracking-widest cursor-pointer"
-                            >
+                            <Link to={href} className="transition-colors hover:text-foreground">
                               {t(`pages.admin.${segment}`)}
                             </Link>
                           )}

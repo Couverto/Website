@@ -1173,8 +1173,16 @@
       "saturation": "Saturation",
       "lightness": "Luminosité"
     },
+    "sidebar": {
+      "main_navigation": "Navigation Principale"
+    },
     "dataTable": {
       "no_data": "Aucune donnée disponible",
+      "filters": {
+        "user": "Filtrer par utilisateur...",
+        "message": "Filtrer par message...",
+        "name": "Filtrer par nom..."
+      },
       "columns": "Colonnes",
       "toggle_columns": "Afficher/Masquer les colonnes",
       "columns_list": {

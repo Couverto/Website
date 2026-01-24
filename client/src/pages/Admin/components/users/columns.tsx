@@ -90,12 +90,29 @@ export const getColumns = (callback: (action: string, data: any) => void, t: TFu
         <ArrowUpDown className="w-3 h-3 ml-2" />
       </Button>
     ),
-    cell: ({ row }) => (
-      <Badge variant="outline" className="gap-1 font-normal text-muted-foreground">
-        <Key className="h-3 w-3" />
-        {(row.getValue("auth_type") as string).replace(/^./, (c) => c.toUpperCase())}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const type = row.getValue("auth_type") as string;
+      const isGoogle = type === "google";
+
+      return (
+        <Badge
+          variant="outline"
+          className={`gap-1.5 font-medium border-0 px-2.5 py-0.5 ${
+            isGoogle
+              ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 hover:bg-blue-100"
+              : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200"
+          }`}
+        >
+          {isGoogle ? (
+            // Simple G text or maybe a colored dot
+            <span className="font-bold text-blue-600 dark:text-blue-400">G</span>
+          ) : (
+            <Key className="h-3 w-3 opacity-70" />
+          )}
+          {type === "google" ? "Google" : "Email & Mot de passe"}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "createdAt",

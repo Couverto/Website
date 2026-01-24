@@ -65,19 +65,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props} className="border-r border-zinc-200/50 dark:border-zinc-800/50 transition-all duration-300">
       <SidebarHeader onClick={() => navigate("/")} className="p-4 group-data-[state=collapsed]:p-0 transition-all">
-        <div className="flex items-center group-data-[state=expanded]:gap-3 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:h-16 transition-all">
-          <div className="h-10 w-10 min-w-10 group-data-[state=collapsed]:h-9 group-data-[state=collapsed]:w-9 group-data-[state=collapsed]:min-w-9 rounded-2xl group-data-[state=collapsed]:rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 cursor-pointer">
-            <span className="text-primary-foreground font-black text-xl group-data-[state=collapsed]:text-sm italic tracking-tighter">
-              {configValues["APP_NAME"].charAt(0)}
-            </span>
+        <div className="flex items-center gap-2 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:h-16 transition-all">
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
+            <span className="text-lg font-bold">{configValues["APP_NAME"].charAt(0)}</span>
           </div>
           <div className="flex flex-col overflow-hidden transition-all group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
-            <span className="font-black text-xl tracking-tighter leading-none italic uppercase whitespace-nowrap">
-              {configValues["APP_NAME"]}
-            </span>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-50 whitespace-nowrap">
-              Administration
-            </span>
+            <span className="font-semibold tracking-tight whitespace-nowrap">{configValues["APP_NAME"]}</span>
           </div>
         </div>
       </SidebarHeader>

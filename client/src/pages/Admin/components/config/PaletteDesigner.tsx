@@ -23,13 +23,10 @@ const ColorGrid = ({
 }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {Object.entries(palette[theme]).map(([key, color]) => (
-      <div
-        key={key}
-        className="flex items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-900 shadow-sm transition-all hover:border-primary/20"
-      >
+      <div key={key} className="flex items-center justify-between p-3 border rounded-lg bg-background">
         <div className="flex flex-col">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{key.replace("-", " ")}</span>
-          <span className="text-xs font-mono font-bold tracking-tight">{color.toUpperCase()}</span>
+          <span className="text-xs font-medium text-muted-foreground capitalize mb-1">{key.replace("-", " ")}</span>
+          <span className="text-xs font-mono">{color.toUpperCase()}</span>
         </div>
         <ColorPicker
           value={color as string}
@@ -81,65 +78,40 @@ export const PaletteDesigner = ({ paletteValue, onPaletteChange }: PaletteDesign
 
   if (!palette) return null;
 
+  if (!palette) return null;
+
   return (
-    <div className="space-y-8 mt-12">
-      {/* Premium Header Section */}
-      <div className="relative p-8 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] bg-zinc-50 dark:bg-zinc-900/50 shadow-sm group">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
-
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-xl">
-                <Palette className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-2xl font-black tracking-tighter">{t("pages.admin.config_page.palette_title")}</h3>
-            </div>
-            <p className="text-sm text-muted-foreground font-medium max-w-sm leading-relaxed">
-              {t("pages.admin.config_page.palette_description")}
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-            <Button
-              type="button"
-              onClick={handleGenerate}
-              className="group h-12 px-6 flex items-center gap-2 bg-primary text-primary-foreground shadow-2xl shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all rounded-2xl active:scale-95 font-bold"
-            >
-              <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-              {t("pages.admin.config_page.generate_palette")}
-              <Wand2 className="w-3 h-3 opacity-50" />
-            </Button>
-          </div>
+    <div className="space-y-6 mt-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">{t("pages.admin.config_page.palette_title")}</h3>
+          <p className="text-sm text-muted-foreground">{t("pages.admin.config_page.palette_description")}</p>
         </div>
+        <Button type="button" variant="outline" onClick={handleGenerate} className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          {t("pages.admin.config_page.generate_palette")}
+        </Button>
       </div>
 
-      {/* Editor Section */}
-      <div className="border border-zinc-200 dark:border-zinc-800 rounded-[2rem] bg-white dark:bg-transparent">
+      <div className="border rounded-md">
         <Tabs defaultValue="light" className="w-full">
-          <div className="px-8 py-5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Customisation fine</h4>
-            <TabsList className="bg-zinc-200/50 dark:bg-zinc-800/50 p-1 h-9 rounded-xl">
-              <TabsTrigger
-                value="light"
-                className="px-6 text-[10px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 shadow-sm transition-all"
-              >
+          <div className="px-4 py-3 border-b bg-muted/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <span className="text-sm font-medium">Customisation</span>
+            <TabsList>
+              <TabsTrigger value="light" className="min-w-[100px]">
                 {t("global.themes.light")}
               </TabsTrigger>
-              <TabsTrigger
-                value="dark"
-                className="px-6 text-[10px] font-black uppercase tracking-widest rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-900 shadow-sm transition-all"
-              >
+              <TabsTrigger value="dark" className="min-w-[100px]">
                 {t("global.themes.dark")}
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <div className="p-8">
-            <TabsContent value="light" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="p-4 md:p-6">
+            <TabsContent value="light" className="mt-0 space-y-4">
               <ColorGrid theme="light" palette={palette} onUpdateColor={updateColor} />
             </TabsContent>
-            <TabsContent value="dark" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <TabsContent value="dark" className="mt-0 space-y-4">
               <ColorGrid theme="dark" palette={palette} onUpdateColor={updateColor} />
             </TabsContent>
           </div>

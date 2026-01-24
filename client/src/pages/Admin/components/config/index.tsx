@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useConfigContext } from "@/contexts/configContext";
@@ -11,8 +11,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useTranslation } from "react-i18next";
 import { Loading } from "@/components/customs/loading";
-import ColorPicker from "@/components/customs/colorPicker";
 import { PaletteDesigner } from "./PaletteDesigner";
+import { Separator } from "@/components/ui/separator";
 
 const configurationFormSchema = z.object({
   APP_NAME: z.string().trim(),
@@ -62,67 +62,65 @@ export const Config = () => {
   }
 
   return (
-    <div>
-      <div className="container px-4 mx-auto">
-        <Card className="p-6 rounded-lg shadow-lg">
-          <CardTitle className="mb-2 text-2xl font-semibold">{t("pages.admin.config_page.title")}</CardTitle>
-          <CardDescription className="mb-6">{t("pages.admin.config_page.description")}</CardDescription>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">{t("pages.admin.config_page.title")}</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Général</CardTitle>
+          <CardDescription>{t("pages.admin.config_page.description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="relative overflow-hidden p-8 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] bg-zinc-50 dark:bg-zinc-900/50 shadow-sm group">
-                <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -ml-32 -mt-32 blur-3xl opacity-50" />
-
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="APP_NAME"
                   render={({ field }) => (
-                    <FormItem className="relative z-10 space-y-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/10 rounded-xl">
-                              <span className="text-xl">✍️</span>
-                            </div>
-                            <h3 className="text-2xl font-black tracking-tighter">{t("pages.admin.config_page.app_name")}</h3>
-                          </div>
-                          <p className="text-sm text-muted-foreground font-medium max-w-sm leading-relaxed">
-                            {t("pages.admin.config_page.app_name_description")}
-                          </p>
-                        </div>
-
-                        <FormControl>
-                          <Input
-                            placeholder={t("pages.admin.config_page.app_name")}
-                            {...field}
-                            className="h-14 md:w-80 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 text-lg font-bold shadow-inner focus:ring-4 focus:ring-primary/10 transition-all"
-                          />
-                        </FormControl>
-                      </div>
+                    <FormItem>
+                      <FormLabel>{t("pages.admin.config_page.app_name")}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Couverto" {...field} />
+                      </FormControl>
+                      <FormDescription>{t("pages.admin.config_page.app_name_description")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="COLOR_PALETTE"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <PaletteDesigner paletteValue={field.value || ""} onPaletteChange={field.onChange} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Separator />
+
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-medium">Apparence</h3>
+                  <p className="text-sm text-muted-foreground">Personnalisez les couleurs de l'application.</p>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="COLOR_PALETTE"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <PaletteDesigner paletteValue={field.value || ""} onPaletteChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <div className="flex justify-end">
                 <Button type="submit">{t("global.buttons.save")}</Button>
               </div>
             </form>
           </Form>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
