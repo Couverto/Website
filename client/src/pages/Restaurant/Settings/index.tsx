@@ -690,31 +690,44 @@ export const RestaurantSettings = () => {
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="grid gap-3">
-              {watch("menu")?.map((url: string, idx: number) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3 bg-muted/30 border rounded-xl group hover:border-primary/30 transition-all"
-                >
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <FileText className="h-4 w-4 text-primary" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+              {watch("menu")?.map((url: string, idx: number) => {
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                return (
+                  <div key={idx} className="relative group aspect-[3/4] bg-muted rounded-xl overflow-hidden border">
+                    {isImage ? (
+                      <img src={url} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Menu" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center gap-2">
+                        <FileText className="h-8 w-8 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground break-all px-2 line-clamp-3">{url.split("/").pop()}</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => removeMenu(idx)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => window.open(url, "_blank")}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <span className="text-sm font-medium truncate max-w-[300px]">{url}</span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    type="button"
-                    onClick={() => removeMenu(idx)}
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
               {(!watch("menu") || watch("menu")?.length === 0) && (
-                <div className="py-8 text-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/5 flex flex-col items-center gap-2">
+                <div className="col-span-full py-8 text-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/5 flex flex-col items-center gap-2">
                   <FileText className="h-6 w-6 opacity-30" />
                   <p className="text-sm">{t("pages.restaurant.settings.no_menu_links")}</p>
                 </div>
