@@ -890,6 +890,7 @@
         "page_subtitle": "Manage your restaurant team access",
         "invite": "Invite",
         "link_created": "Invitation link created",
+        "link_created_copied": "Invitation link created and copied!",
         "link_ready": "Link ready to share",
         "invitation_deleted": "Invitation deleted",
         "cannot_remove_last": "Cannot remove the last collaborator",

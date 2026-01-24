@@ -99,12 +99,14 @@ export function NavUser({ user }: { user: UserInterface | null }) {
                   <User className="w-4 h-4" />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
-                {t("navbar.dashboard")}
-                <DropdownMenuShortcut>
-                  <Wrench className="w-4 h-4" />
-                </DropdownMenuShortcut>
-              </DropdownMenuItem>
+              {user.role === "admin" && (
+                <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
+                  {t("navbar.dashboard")}
+                  <DropdownMenuShortcut>
+                    <Wrench className="w-4 h-4" />
+                  </DropdownMenuShortcut>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>

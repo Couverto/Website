@@ -59,16 +59,11 @@ export const RestaurantDashboard = () => {
   }, [id, fetchStats]);
 
   // Socket Logic
+  // Socket Logic
   useEffect(() => {
     if (socket && id) {
-      socket.emit("joinRestaurant", id);
-
       const handleNewBooking = (newBooking: BookingInterface) => {
-        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-        audio.play().catch((e) => console.error("Audio play failed", e));
-
         setNewBookingIds((prev) => new Set(prev).add(newBooking._id));
-        toast.info(t("pages.restaurant.bookings.new_booking_notification"));
         fetchStats();
       };
 
@@ -84,7 +79,7 @@ export const RestaurantDashboard = () => {
         socket.off("updateBooking", handleUpdateBooking);
       };
     }
-  }, [socket, id, fetchStats, t]);
+  }, [socket, id, fetchStats]);
 
   const updateStatus = async (bookingId: string, newStatus: string) => {
     try {

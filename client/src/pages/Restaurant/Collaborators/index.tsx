@@ -184,9 +184,11 @@ export const RestaurantCollaborators = () => {
     try {
       const response = await api.post(`/restaurants/${id}/invitations`);
       const link = `${window.location.origin}/join/${response.data.invitation.token}`;
-      setNewInviteLink(link);
+      navigator.clipboard.writeText(link);
       await fetchData();
-      toast.success(t("pages.restaurant.collaborators.link_created"));
+      toast.success(t("pages.restaurant.collaborators.link_created_copied"));
+      setIsInviteDialogOpen(false);
+      setNewInviteLink(null);
     } catch (error) {
       toast.error(t("pages.restaurant.collaborators.link_error"));
     } finally {
@@ -247,88 +249,119 @@ export const RestaurantCollaborators = () => {
               {t("pages.restaurant.collaborators.invite")}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
-            {/* ... (Keep Dialog Content same as before) ... */}
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{t("pages.restaurant.collaborators.add_title")}</DialogTitle>
-              <DialogDescription>{t("pages.restaurant.collaborators.add_description")}</DialogDescription>
+              <DialogTitle className="text-xl">{t("pages.restaurant.collaborators.add_title")}</DialogTitle>
+              <DialogDescription className="text-base">{t("pages.restaurant.collaborators.add_description")}</DialogDescription>
             </DialogHeader>
-            <Tabs defaultValue="search" className="mt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="search">
+            <Tabs defaultValue="search" className="mt-4 w-full">
+              <TabsList className="grid w-full grid-cols-2 p-1 h-11 bg-muted/50">
+                <TabsTrigger value="search" className="data-[state=active]:bg-background data-[state=active]:shadow-sm h-9">
                   <Search className="h-4 w-4 mr-2" />
                   {t("pages.restaurant.collaborators.search_user")}
                 </TabsTrigger>
-                <TabsTrigger value="link">
+                <TabsTrigger value="link" className="data-[state=active]:bg-background data-[state=active]:shadow-sm h-9">
                   <LinkIcon className="h-4 w-4 mr-2" />
                   {t("pages.restaurant.collaborators.invite_link")}
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="search" className="space-y-4 mt-4">
+              <TabsContent value="search" className="space-y-4 mt-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder={t("pages.restaurant.collaborators.search_placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-11 text-base"
+                    autoFocus
                   />
                 </div>
                 {isSearching && (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
                 )}
                 {!isSearching && searchResults.length > 0 && (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                     {searchResults.map((user) => (
                       <div
                         key={user._id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors"
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-all group"
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
+                          <Avatar className="h-10 w-10 border">
                             <AvatarImage src={user.avatar} />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
                               {user.forename?.charAt(0)}
                               {user.name?.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-semibold text-sm">
                               {user.forename} {user.name}
                             </p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
-                        <Button size="sm" onClick={() => addCollaborator(user._id)} disabled={isAddingUser === user._id}>
-                          {isAddingUser === user._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        <Button
+                          size="sm"
+                          onClick={() => addCollaborator(user._id)}
+                          disabled={isAddingUser === user._id}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          {isAddingUser === user._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-1.5" />
+                              {t("global.buttons.add") || "Ajouter"}
+                            </>
+                          )}
                         </Button>
                       </div>
                     ))}
                   </div>
                 )}
                 {!isSearching && searchQuery.length >= 2 && searchResults.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">{t("pages.restaurant.collaborators.no_results")}</p>
+                  <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                    <Users className="h-8 w-8 mb-2 opacity-20" />
+                    <p>{t("pages.restaurant.collaborators.no_results")}</p>
+                  </div>
+                )}
+                {!isSearching && searchQuery.length < 2 && (
+                  <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground opacity-50">
+                    <Search className="h-8 w-8 mb-2 opacity-20" />
+                    <p className="text-sm">Commencez à taper pour rechercher un utilisateur</p>
+                  </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="link" className="space-y-4 mt-4">
-                <Button onClick={createInviteLink} disabled={isCreatingInvite} className="w-full">
-                  {isCreatingInvite ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LinkIcon className="h-4 w-4 mr-2" />}
-                  {isCreatingInvite ? t("pages.restaurant.collaborators.creating_link") : t("pages.restaurant.collaborators.create_link")}
-                </Button>
-                {newInviteLink && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
+              <TabsContent value="link" className="space-y-6 mt-6">
+                <div className="text-center space-y-2">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <LinkIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-medium text-lg">Inviter par lien</h3>
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                    Créez un lien unique que vous pouvez envoyer à votre futur collaborateur. Ce lien expirera dans 24 heures.
+                  </p>
+                </div>
+
+                {!newInviteLink ? (
+                  <Button onClick={createInviteLink} disabled={isCreatingInvite} className="w-full h-11 text-base">
+                    {isCreatingInvite ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <LinkIcon className="h-4 w-4 mr-2" />}
+                    {isCreatingInvite ? t("pages.restaurant.collaborators.creating_link") : t("pages.restaurant.collaborators.create_link")}
+                  </Button>
+                ) : (
+                  <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
+                    <p className="text-sm font-medium text-green-600 flex items-center gap-2">
+                      <Check className="h-4 w-4" />
                       {t("pages.restaurant.collaborators.link_ready")}
                     </p>
                     <div className="flex gap-2">
-                      <Input value={newInviteLink} readOnly className="font-mono text-xs" />
+                      <Input value={newInviteLink} readOnly className="font-mono text-xs h-10 bg-background" />
                       <Button
-                        variant="outline"
                         size="icon"
                         onClick={() => {
                           navigator.clipboard.writeText(newInviteLink);
@@ -338,11 +371,14 @@ export const RestaurantCollaborators = () => {
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
+                    <Button variant="ghost" size="sm" className="w-full text-xs h-8" onClick={() => setNewInviteLink(null)}>
+                      Générer un nouveau lien
+                    </Button>
                   </div>
                 )}
               </TabsContent>
             </Tabs>
-            <DialogFooter>
+            <DialogFooter className="md:justify-end border-t pt-4 mt-4">
               <Button
                 variant="outline"
                 onClick={() => {

@@ -20,10 +20,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RestaurantStats as StatsInterface } from "@/interfaces/Restaurant";
 import { RestaurantContext } from "@/interfaces/Components";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { useSocketContext } from "@/contexts/socketContext";
 
 export const RestaurantStats = () => {
   const { t } = useTranslation();
   const { id } = useParams();
+  const { socket } = useSocketContext();
   const [stats, setStats] = useState<StatsInterface | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +45,23 @@ export const RestaurantStats = () => {
       fetchStats();
     }
   }, [id, fetchStats]);
+
+  // Socket Logic for Real-time Stats
+  useEffect(() => {
+    if (socket && id) {
+      const handleRefresh = () => {
+        fetchStats();
+      };
+
+      socket.on("newBooking", handleRefresh);
+      socket.on("updateBooking", handleRefresh);
+
+      return () => {
+        socket.off("newBooking", handleRefresh);
+        socket.off("updateBooking", handleRefresh);
+      };
+    }
+  }, [socket, id, fetchStats]);
 
   const GUEST_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"];
   const guestPieData = stats?.guestDistribution ? Object.entries(stats.guestDistribution).map(([name, value]) => ({ name, value })) : [];

@@ -2,7 +2,7 @@ import * as React from "react";
 import { LayoutDashboard, Users, FileText, Settings, Utensils, House, Paperclip, DollarSign } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
+import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/contexts/authContext";
 import { LanguageChanger } from "@/components/Navbar/languageChanger";

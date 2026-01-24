@@ -1,10 +1,16 @@
 import { Outlet, useParams, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { RestaurantSidebar } from "./components/RestaurantSidebar";
+import { RestaurantBreadcrumb } from "./components/RestaurantBreadcrumb";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Loader2 } from "lucide-react";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
+import { useSocketContext } from "@/contexts/socketContext";
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { BookingInterface } from "@/interfaces/Booking";
+import { Separator } from "@/components/ui/separator";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -12,6 +18,9 @@ export const RestaurantLayout = () => {
   const [restaurant, setRestaurant] = useState<RestaurantInterface | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { t } = useTranslation();
+  const { socket } = useSocketContext();
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -33,6 +42,25 @@ export const RestaurantLayout = () => {
       fetchRestaurant();
     }
   }, [id]);
+
+  // Global Socket Logic (Notifications & Room Join)
+  useEffect(() => {
+    if (socket && id) {
+      socket.emit("joinRestaurant", id);
+
+      const handleNewBooking = (newBooking: BookingInterface) => {
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
+        audio.play().catch((e) => console.error("Audio play failed", e));
+        toast.info(t("pages.restaurant.bookings.new_booking_notification"));
+      };
+
+      socket.on("newBooking", handleNewBooking);
+
+      return () => {
+        socket.off("newBooking", handleNewBooking);
+      };
+    }
+  }, [socket, id, t]);
 
   if (loading) {
     return (
@@ -61,10 +89,14 @@ export const RestaurantLayout = () => {
       <div className="flex min-h-screen w-full">
         <RestaurantSidebar restaurant={restaurant || undefined} />
         <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            <div className="lg:hidden mb-4">
+          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
+            <div className="flex items-center gap-2">
               <SidebarTrigger />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <RestaurantBreadcrumb restaurant={restaurant} />
             </div>
+          </header>
+          <div className="p-6">
             <Outlet context={{ restaurant }} />
           </div>
         </main>

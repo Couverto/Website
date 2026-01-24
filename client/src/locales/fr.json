@@ -881,6 +881,7 @@
         "page_subtitle": "Gérez l'équipe qui a accès à ce restaurant",
         "invite": "Inviter",
         "link_created": "Lien d'invitation créé",
+        "link_created_copied": "Lien d'invitation créé et copié !",
         "link_ready": "Lien prêt à être partagé",
         "invitation_deleted": "Invitation supprimée",
         "cannot_remove_last": "Impossible de retirer le dernier collaborateur",
@@ -1161,6 +1162,7 @@
         "success_title": "Réservation Confirmée !",
         "success_description": "Au plaisir de vous recevoir.",
         "success_message": "Votre réservation a été créée avec succès. Vous recevrez une confirmation sous peu.",
+        "view_bookings": "Voir mes réservations",
         "close": "Fermer"
       }
     },
@@ -1238,7 +1240,8 @@
       "today": "Aujourd'hui",
       "back": "Retour",
       "confirm_cancel": "Confirmer l'annulation",
-      "confirm": "Confirmer"
+      "confirm": "Confirmer",
+      "add": "Ajouter"
     },
     "expired_session": "Votre session a expiré, veuillez vous reconnecter."
   },
