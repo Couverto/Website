@@ -24,6 +24,7 @@ export const RestaurantBreadcrumb = ({ restaurant }: RestaurantBreadcrumbProps) 
     if (pathname.includes("/clients")) return "Clients";
     if (pathname.includes("/collaborators")) return "Collaborateurs";
     if (pathname.includes("/stats")) return "Statistiques";
+    if (pathname.includes("/plan")) return "Abonnement";
     if (pathname.includes("/settings")) return "Paramètres";
     return "";
   };

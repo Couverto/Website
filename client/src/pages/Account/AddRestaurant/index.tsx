@@ -4,6 +4,7 @@ import { StepIdentity } from "./components/StepIdentity";
 import { StepDetails } from "./components/StepDetails";
 import { StepMedia } from "./components/StepMedia";
 import { StepMenu } from "./components/StepMenu";
+import { StepPlan } from "./components/StepPlan";
 import { StepPayment } from "./components/StepPayment";
 import { WizardPreview } from "./components/WizardPreview";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +14,15 @@ import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WizardData } from "./types";
-import { getEssentialsSchema, getIdentitySchema, getDetailsSchema, getMenuSchema, getMediaSchema, getPaymentSchema } from "./schemas";
+import {
+  getEssentialsSchema,
+  getIdentitySchema,
+  getDetailsSchema,
+  getMenuSchema,
+  getMediaSchema,
+  getPlanSchema,
+  getPaymentSchema,
+} from "./schemas";
 
 const INITIAL_DATA: WizardData = {
   name: "",
@@ -22,7 +31,7 @@ const INITIAL_DATA: WizardData = {
   phone: "",
   email: "",
   cuisineType: [],
-  priceRange: "$" as const, // Default valid value
+  priceRange: "$" as const,
   description: "",
   shortDescription: "",
   features: [],
@@ -36,6 +45,7 @@ const INITIAL_DATA: WizardData = {
     instagram: "",
     tiktok: "",
   },
+  planId: "",
   cardHolder: "",
   cardNumber: "",
   expiry: "",
@@ -79,6 +89,9 @@ export const AddRestaurantWizard = () => {
         schema = getMediaSchema();
         break;
       case 6:
+        schema = getPlanSchema();
+        break;
+      case 7:
         schema = getPaymentSchema();
         break;
       default:
@@ -100,7 +113,7 @@ export const AddRestaurantWizard = () => {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      setStep((prev: number) => Math.min(prev + 1, 6));
+      setStep((prev: number) => Math.min(prev + 1, 7));
       window.scrollTo(0, 0);
     }
   };
@@ -137,7 +150,8 @@ export const AddRestaurantWizard = () => {
     { id: 3, key: "details", label: "Détails" },
     { id: 4, key: "menu", label: "Menu" },
     { id: 5, key: "visuals", label: "Visuels" },
-    { id: 6, key: "payment", label: "Paiement" },
+    { id: 6, key: "plan", label: "Abonnement" },
+    { id: 7, key: "payment", label: "Paiement" },
   ];
 
   return (
@@ -216,7 +230,8 @@ export const AddRestaurantWizard = () => {
                 {step === 3 && <StepDetails data={formData} updateData={updateFormData} errors={errors} />}
                 {step === 4 && <StepMenu data={formData} updateData={updateFormData} errors={errors} />}
                 {step === 5 && <StepMedia data={formData} updateData={updateFormData} errors={errors} />}
-                {step === 6 && <StepPayment data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 6 && <StepPlan data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 7 && <StepPayment data={formData} updateData={updateFormData} errors={errors} />}
               </div>
 
               <div className="flex justify-between items-center mt-12 pt-8 border-t">
@@ -230,7 +245,7 @@ export const AddRestaurantWizard = () => {
                   {"Précédent"}
                 </Button>
 
-                {step < 6 ? (
+                {step < 7 ? (
                   <Button
                     onClick={nextStep}
                     className="gap-2 px-8 h-11 text-base font-medium shadow-lg hover:shadow-primary/20 transition-all"

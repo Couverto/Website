@@ -45,6 +45,11 @@ export const getMediaSchema = () =>
     images: z.array(z.string().url()).optional(),
   });
 
+export const getPlanSchema = () =>
+  z.object({
+    planId: z.string().min(1, "Veuillez sélectionner un plan."),
+  });
+
 export const getPaymentSchema = () =>
   z.object({
     cardHolder: z.string().min(3, "Le nom est requis."),
@@ -73,6 +78,7 @@ export const getRestaurantWizardSchema = () =>
     ...getDetailsSchema().shape,
     ...getMenuSchema().shape,
     ...getMediaSchema().shape,
+    ...getPlanSchema().shape,
     ...getPaymentSchema().shape,
     openingHours: getOpeningHoursSchema(),
   });

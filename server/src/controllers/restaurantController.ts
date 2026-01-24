@@ -40,7 +40,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
  */
 export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, slug, address, city, phone, website, ...otherFields } = req.body;
+    const { name, slug, address, city, phone, website, planId, ...otherFields } = req.body;
     const collaborators = [];
 
     const creator = await User.findById(req.userId);
@@ -61,6 +61,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     const collaboratorRoles = new Map<string, string>();
     collaboratorRoles.set(creator._id.toString(), restaurantRoles.ADMIN);
 
+    // Set subscription end date if plan is provided
+    const subscriptionEndDate = planId ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null;
+
     const restaurant = await Restaurant.create({
       name,
       slug,
@@ -70,6 +73,10 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       website,
       collaborators,
       collaboratorRoles,
+      plan: planId || null,
+      subscriptionStatus: planId ? "active" : "none",
+      autoRenew: true,
+      subscriptionEndDate,
       ...otherFields,
     });
 
@@ -187,6 +194,15 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
     // Verify user is a collaborator
     if (!restaurant.collaborators.some((c) => c.toString() === req.userId?.toString())) {
       res.status(403).json({ error: "server.global.errors.forbidden" });
+      return;
+    }
+
+    // Prevent reopening if no active plan
+    if (restaurant.isClosed && !restaurant.plan) {
+      res.status(400).json({
+        error: "Vous devez souscrire à un abonnement pour ouvrir votre restaurant.",
+        requiresPlan: true,
+      });
       return;
     }
 

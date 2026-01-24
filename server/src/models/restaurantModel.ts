@@ -52,6 +52,26 @@ const RestaurantSchema = new Schema<IRestaurant>(
       of: String,
       default: new Map(),
     },
+
+    // Subscription fields
+    plan: {
+      type: Schema.Types.ObjectId,
+      ref: "Plan",
+      default: null,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ["active", "cancelled", "expired", "none"],
+      default: "none",
+    },
+    autoRenew: {
+      type: Boolean,
+      default: true,
+    },
+    subscriptionEndDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

@@ -32,6 +32,7 @@ import { RestaurantClients } from "@/pages/Restaurant/Clients";
 import { RestaurantSettings } from "@/pages/Restaurant/Settings";
 import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
 import { RestaurantStats } from "@/pages/Restaurant/Stats";
+import { RestaurantPlan } from "@/pages/Restaurant/Plan";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/PublicRestaurants";
@@ -151,6 +152,14 @@ export const Router = () => {
             element={
               <RestaurantRoleProtectedRoute roles={["admin"]}>
                 <RestaurantSettings />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="plan"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin"]}>
+                <RestaurantPlan />
               </RestaurantRoleProtectedRoute>
             }
           />

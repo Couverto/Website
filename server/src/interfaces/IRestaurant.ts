@@ -37,6 +37,13 @@ export interface IRestaurant extends Document {
   isClosed: boolean;
   collaborators: Array<mongoose.Types.ObjectId>;
   collaboratorRoles: Map<string, string>;
+
+  // Subscription fields
+  plan?: mongoose.Types.ObjectId;
+  subscriptionStatus: "active" | "cancelled" | "expired" | "none";
+  autoRenew: boolean;
+  subscriptionEndDate?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }

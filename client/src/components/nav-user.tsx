@@ -1,4 +1,4 @@
-import { ChevronRight, House, LogOut, User, Wrench } from "lucide-react";
+import { Calendar, ChevronRight, ForkKnife, House, LogOut, User, Wrench } from "lucide-react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -95,6 +95,18 @@ export function NavUser({ user }: { user: UserInterface | null }) {
                 {"Mon compte"}
                 <DropdownMenuShortcut>
                   <User className="w-4 h-4" />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/account/restaurants")}>
+                {"Mes restaurants"}
+                <DropdownMenuShortcut>
+                  <ForkKnife className="w-4 h-4" />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 hover:cursor-pointer" onClick={() => navigate("/account/bookings")}>
+                {"Mes réservations"}
+                <DropdownMenuShortcut>
+                  <Calendar className="w-4 h-4" />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
               {user.role === "admin" && (
