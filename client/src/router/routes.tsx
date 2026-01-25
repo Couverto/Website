@@ -19,6 +19,9 @@ import { Dashboard } from "../pages/Admin/components/dashboard";
 import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
 import { Config } from "@/pages/Admin/components/config";
+import { AdminRestaurants } from "@/pages/Admin/components/restaurants";
+import { AdminRestaurantStats } from "@/pages/Admin/components/restaurants/restaurantStats";
+import { AdminRestaurantForm } from "@/pages/Admin/components/restaurants/restaurantForm";
 import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
 import { ForgotPassword } from "@/pages/Authentication/ForgotPassword";
 import { ResetPassword } from "@/pages/Authentication/ResetPassword";
@@ -233,6 +236,9 @@ export const Router = () => {
           <Route path="plans" element={<AdminPlans />} />
           <Route path="logs" element={<AdminLogs />} />
           <Route path="settings" element={<Config />} />
+          <Route path="restaurants" element={<AdminRestaurants />} />
+          <Route path="restaurants/:id/stats" element={<AdminRestaurantStats />} />
+          <Route path="restaurants/:id/edit" element={<AdminRestaurantForm />} />
         </Route>
       </Route>
 

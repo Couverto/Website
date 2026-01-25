@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star, Utensils, MoreHorizontal } from "lucide-react";
+import { MapPin, Star, Utensils, MoreHorizontal, Clock as ClockIcon } from "lucide-react";
 import { WizardData } from "../types";
 import { PreviewProps } from "@/interfaces/Components";
 
@@ -107,6 +107,47 @@ export const WizardPreview = ({ data }: PreviewProps) => {
             </div>
             Dispo. aujourd'hui
           </div>
+
+          {/* Opening Hours Preview */}
+          {data.openingHours && Object.keys(data.openingHours).length > 0 && (
+            <div className="mt-4 p-4 rounded-2xl bg-muted/30 border border-muted-foreground/5 space-y-2">
+              <div className="flex items-center gap-2">
+                <ClockIcon className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Horaires</span>
+              </div>
+              <div className="max-h-[120px] overflow-y-auto pr-2 custom-scrollbar space-y-1.5 shadow-inner rounded-lg">
+                {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => {
+                  const schedule = (data.openingHours as any)?.[day];
+                  if (!schedule) return null;
+                  const dayNames: Record<string, string> = {
+                    monday: "Lun",
+                    tuesday: "Mar",
+                    wednesday: "Mer",
+                    thursday: "Jeu",
+                    friday: "Ven",
+                    saturday: "Sam",
+                    sunday: "Dim",
+                  };
+                  return (
+                    <div key={day} className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-muted-foreground w-8">{dayNames[day]}</span>
+                      {schedule.isClosed ? (
+                        <span className="text-red-500/70 font-medium italic">Fermé</span>
+                      ) : (
+                        <div className="flex flex-col items-end">
+                          {schedule.periods?.map((p: any, i: number) => (
+                            <span key={i} className="font-semibold text-foreground/80">
+                              {p.open}-{p.close}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
 
         <CardFooter className="p-6 pt-0">

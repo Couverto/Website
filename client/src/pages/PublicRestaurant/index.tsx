@@ -101,14 +101,14 @@ export const PublicRestaurant = () => {
       <Button
         variant="outline"
         size="icon"
-        className="fixed top-20 left-4 z-50 bg-background/80 backdrop-blur-sm border-none shadow-md hover:bg-background"
+        className="fixed top-20 left-4 z-50 hidden md:inline-flex bg-background/80 backdrop-blur-sm border-none shadow-md hover:bg-background"
         onClick={() => navigate(-1)}
       >
         <ChevronLeft className="h-6 w-6" />
       </Button>
 
       {/* Hero Section */}
-      <div className="relative h-[40vh] md:h-[50vh] w-full">
+      <div className="relative h-[50vh] md:h-[50vh] w-full">
         {restaurant.coverImage ? (
           <img src={restaurant.coverImage} alt={restaurant.name} className="w-full h-full object-cover" />
         ) : (
@@ -116,12 +116,12 @@ export const PublicRestaurant = () => {
             <span className="text-4xl font-bold text-muted-foreground">{restaurant.name}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="hidden md:flex flex-wrap items-center gap-2 mb-4">
                 {Array.isArray(restaurant.cuisineType) && restaurant.cuisineType.length > 0 ? (
                   <>
                     {restaurant.cuisineType.slice(0, 3).map((cuisine, idx) => (
@@ -143,8 +143,8 @@ export const PublicRestaurant = () => {
                   </Badge>
                 )}
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">{restaurant.name}</h1>
-              <div className="flex items-center gap-4 text-muted-foreground">
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 drop-shadow-sm">{restaurant.name}</h1>
+              <div className="hidden md:flex items-center gap-4 text-muted-foreground">
                 <a
                   href={googleMapsUrl}
                   target="_blank"
@@ -173,7 +173,7 @@ export const PublicRestaurant = () => {
                   <span className="font-medium text-foreground">{restaurant.rating || "NEW"}</span>
                 </div>
               </div>
-              <div>
+              <div className="hidden md:block mt-4">
                 {restaurant.isClosed ? (
                   <Badge variant="destructive" className="mt-4 text-sm py-1 px-3 bg-red-600 hover:bg-red-700">
                     {"Restaurant fermé"}
@@ -190,19 +190,79 @@ export const PublicRestaurant = () => {
                 )}
               </div>
             </div>
-            <Button
-              size="lg"
-              className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all"
-              onClick={() => setIsBookingOpen(true)}
-              disabled={restaurant.isClosed}
-            >
-              {restaurant.isClosed ? "Restaurant fermé" : "Réserver une table"}
-            </Button>
+            <div className="hidden md:block w-full md:w-auto">
+              <Button
+                size="lg"
+                className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all h-12 md:h-11"
+                onClick={() => setIsBookingOpen(true)}
+                disabled={restaurant.isClosed}
+              >
+                {restaurant.isClosed ? "Restaurant fermé" : "Réserver une table"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 mt-12">
+      {/* Mobile Info Section */}
+      <div className="md:hidden container mx-auto px-4 mt-6 space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {Array.isArray(restaurant.cuisineType) && restaurant.cuisineType.length > 0 ? (
+            <>
+              {restaurant.cuisineType.map((cuisine, idx) => (
+                <Badge key={idx} variant="secondary" className="px-3 py-1 text-xs">
+                  {cuisine}
+                </Badge>
+              ))}
+            </>
+          ) : (
+            <Badge variant="secondary">{restaurant.cuisineType || "Cuisine"}</Badge>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-3 text-sm text-muted-foreground border-b pb-4">
+          <a href={googleMapsUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            <span className="underline decoration-dotted underline-offset-4">{restaurant.city}</span>
+          </a>
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-primary" />
+            <span>
+              {restaurant.priceRange === "$"
+                ? "Très abordable"
+                : restaurant.priceRange === "$$"
+                  ? "Abordable"
+                  : restaurant.priceRange === "$$$"
+                    ? "Prix moyen"
+                    : restaurant.priceRange === "$$$$"
+                      ? "Haut de gamme"
+                      : "Luxe"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-yellow-500">
+            <Star className="h-4 w-4 fill-current" />
+            <span className="font-medium text-foreground">{restaurant.rating || "NEW"}</span>
+          </div>
+          <div className="mt-1">
+            {restaurant.isClosed ? (
+              <Badge variant="destructive" className="bg-red-600 text-[10px] py-0 px-2">
+                {"Restaurant fermé"}
+              </Badge>
+            ) : (
+              restaurant.isOpenNow !== undefined && (
+                <Badge
+                  variant={restaurant.isOpenNow ? "default" : "destructive"}
+                  className={`text-[10px] py-0 px-2 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                >
+                  {restaurant.isOpenNow ? "Ouvert maintenant" : "Fermé actuellement"}
+                </Badge>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 mt-8 md:mt-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Main Content */}
           <div className="lg:col-span-2">

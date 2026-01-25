@@ -223,18 +223,24 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Protection: If last admin but others still exist, block deletion
-    // Count admins from collaboratorRoles Map
-    let adminCount = 0;
-    restaurant.collaboratorRoles.forEach((role) => {
-      if (role === restaurantRoles.ADMIN) adminCount++;
-    });
+    // PROTECTION BYPASS for Global Admins
+    const user = await User.findById(req.userId);
+    const isGlobalAdmin = user?.role === userRoles.ADMIN;
 
-    if (adminCount <= 1 && restaurant.collaborators.length > 1) {
-      res.status(400).json({
-        error: "Vous ne pouvez pas supprimer le restaurant alors qu'il reste d'autres collaborateurs. Retirez-les d'abord.",
+    if (!isGlobalAdmin) {
+      // Protection: If last admin but others still exist, block deletion
+      // Count admins from collaboratorRoles Map
+      let adminCount = 0;
+      restaurant.collaboratorRoles.forEach((role) => {
+        if (role === restaurantRoles.ADMIN) adminCount++;
       });
-      return;
+
+      if (adminCount <= 1 && restaurant.collaborators.length > 1) {
+        res.status(400).json({
+          error: "Vous ne pouvez pas supprimer le restaurant alors qu'il reste d'autres collaborateurs. Retirez-les d'abord.",
+        });
+        return;
+      }
     }
 
     await Restaurant.findByIdAndDelete(id);
