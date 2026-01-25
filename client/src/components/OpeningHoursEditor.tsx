@@ -124,7 +124,7 @@ export const OpeningHoursEditor = ({ value = {}, onChange }: OpeningHoursEditorP
                   {schedule[day].periods.map((period, idx) => (
                     <div
                       key={idx}
-                      className="group/slot relative flex items-center gap-3 p-3 rounded-2xl bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-primary/[0.02] transition-all duration-300 animate-in slide-in-from-left-2 duration-300"
+                      className="group/slot relative flex items-center gap-3 p-3 rounded-2xl bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-primary/[0.02] transition-all duration-300 animate-in slide-in-from-left-2"
                     >
                       <div className="flex-1 flex items-center gap-2">
                         <div className="relative flex-1">

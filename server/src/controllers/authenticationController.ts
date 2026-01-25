@@ -26,7 +26,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 
   if (!Constants.REGEX_PASSWORD.test(password)) {
-    res.status(400).json({ error: "Format ne respectant pas les règles de sécurité" });
+    res.status(400).json({
+      error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial",
+    });
     return;
   }
 
