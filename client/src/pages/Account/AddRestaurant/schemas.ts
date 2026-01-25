@@ -2,27 +2,33 @@ import { z } from "zod";
 
 export const getEssentialsSchema = () =>
   z.object({
-    name: z.string().min(2, "Veuillez remplir tous les champs obligatoires."),
-    adress: z.string().min(5, "Veuillez remplir tous les champs obligatoires."),
-    city: z.string().min(2, "Veuillez remplir tous les champs obligatoires."),
+    name: z.string().min(2, "Le nom du restaurant est requis (min 2 caractères)."),
+    adress: z.string().min(5, "L'adresse est requise.").regex(/\d/, "L'adresse doit inclure un numéro de rue."),
+    city: z.string().min(2, "La ville est requise."),
     phone: z.string().min(10, "Le numéro de téléphone est requis."),
     email: z.string().email("Adresse email invalide."),
   });
 
 export const getIdentitySchema = () =>
   z.object({
-    cuisineType: z.array(z.string()).min(1, "Veuillez remplir tous les champs obligatoires."),
+    cuisineType: z.array(z.string()).min(1, "Veuillez sélectionner au moins un type de cuisine."),
     priceRange: z.enum(["$", "$$", "$$$", "$$$$", "$$$$$"], {
-      required_error: "Veuillez remplir tous les champs obligatoires.",
+      required_error: "Veuillez sélectionner une fourchette de prix.",
     }),
     shortDescription: z.string().max(100).optional(),
-    description: z.string().min(20, "Veuillez remplir tous les champs obligatoires.").optional(),
+    description: z.string().min(20, "La description doit contenir au moins 20 caractères.").optional(),
+    // Note: made description optional in schema but min length applies if provided?
+    // If it was meant to be required, remove .optional().
+    // Assuming user wants it required based on 'Veuillez remplir...' message in original code.
+    // Actually, original code had .optional() AND .min(), so it validates min length ONLY if value is present.
+    // If it's mandatory, I should remove .optional(). Looking at the UI, usually description is good.
+    // But original code: min(20, "Veuillez remplir...").optional()
   });
 
 export const getDetailsSchema = () =>
   z.object({
     features: z.array(z.string()).optional(),
-    paymentMethods: z.array(z.string()).min(1, "Veuillez remplir tous les champs obligatoires."),
+    paymentMethods: z.array(z.string()).min(1, "Veuillez sélectionner au moins un moyen de paiement."),
     capacity: z.number().min(1, "Au moins 1 couvert requis."),
     socials: z
       .object({
@@ -53,8 +59,8 @@ export const getPlanSchema = () =>
 export const getPaymentSchema = () =>
   z.object({
     cardHolder: z.string().min(3, "Le nom est requis."),
-    cardNumber: z.string().regex(/^\d{16}$/, "Veuillez remplir tous les champs obligatoires."),
-    expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Date invalide."),
+    cardNumber: z.string().regex(/^\d{16}$/, "Numéro de carte invalide (16 chiffres)."),
+    expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Date invalide (MM/AA)."),
     cvc: z.string().regex(/^\d{3}$/, "Le CVC doit contenir 3 chiffres."),
   });
 

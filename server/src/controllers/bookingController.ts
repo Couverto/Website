@@ -81,6 +81,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     // Check for auto-confirmation based on capacity
     // Default status is PENDING
     // logic: if capacity is set (>0) and (current bookings count + new guests) <= capacity, then CONFIRMED
+    // If capacity exceeded, REJECT the booking
 
     if (restaurantExists.capacity && restaurantExists.capacity > 0) {
       const bookingTime = new Date(bookingDate).getTime();
@@ -119,9 +120,23 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         }
       }
 
-      if (currentHeadCount + Number(guests) <= restaurantExists.capacity) {
-        bookingData.status = bookingStatus.CONFIRMED;
+      const availableSpots = restaurantExists.capacity - currentHeadCount;
+
+      // REJECT if not enough capacity
+      if (currentHeadCount + Number(guests) > restaurantExists.capacity) {
+        res.status(400).json({
+          error:
+            availableSpots <= 0
+              ? "Ce créneau est complet. Veuillez choisir un autre horaire."
+              : `Il ne reste que ${availableSpots} place(s) disponible(s) pour ce créneau.`,
+          availableSpots,
+          isFull: availableSpots <= 0,
+        });
+        return;
       }
+
+      // Auto-confirm if within capacity
+      bookingData.status = bookingStatus.CONFIRMED;
     }
 
     const newBooking = await Booking.create(bookingData);
@@ -372,8 +387,50 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
   try {
     const { restaurant, bookingDate, guests, customer, notes } = req.body;
 
-    // Use req.userId to check if user has rights to create manual booking for this restaurant
-    // For simplicity, we assume the route middleware handles role check or we check it here.
+    // Check restaurant existence and capacity
+    const restaurantExists = await Restaurant.findById(restaurant);
+    if (!restaurantExists) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    // Capacity check for manual bookings too
+    if (restaurantExists.capacity && restaurantExists.capacity > 0) {
+      const bookingTime = new Date(bookingDate).getTime();
+      const twoHours = 2 * 60 * 60 * 1000;
+      const startTime = new Date(bookingTime - twoHours);
+      const endTime = new Date(bookingTime + twoHours);
+
+      const existingBookings = await Booking.find({
+        restaurant: restaurant,
+        bookingDate: { $gte: startTime, $lte: endTime },
+        status: { $in: [bookingStatus.CONFIRMED, bookingStatus.PENDING] },
+      });
+
+      const newStart = bookingTime;
+      const newEnd = bookingTime + twoHours;
+      let currentHeadCount = 0;
+
+      for (const booking of existingBookings) {
+        const bStart = new Date(booking.bookingDate).getTime();
+        const bEnd = bStart + twoHours;
+        if (bStart < newEnd && bEnd > newStart) {
+          currentHeadCount += booking.guests;
+        }
+      }
+
+      const availableSpots = restaurantExists.capacity - currentHeadCount;
+
+      if (currentHeadCount + Number(guests) > restaurantExists.capacity) {
+        res.status(400).json({
+          error:
+            availableSpots <= 0 ? "Ce créneau est complet." : `Il ne reste que ${availableSpots} place(s) disponible(s) pour ce créneau.`,
+          availableSpots,
+          isFull: availableSpots <= 0,
+        });
+        return;
+      }
+    }
 
     const newBooking = await Booking.create({
       restaurant,

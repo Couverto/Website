@@ -57,15 +57,27 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
     restaurant.plan = plan._id as any;
     restaurant.subscriptionStatus = "active";
     restaurant.subscriptionEndDate = subscriptionEndDate;
+    restaurant.autoRenew = true; // defaulting to autoRenew true on new payment
+
+    // Feature: Auto-Reopen if restaurant was closed due to cancelled plan
+    const wasClosed = restaurant.isClosed;
+    if (wasClosed) {
+      restaurant.isClosed = false;
+    }
+
     await restaurant.save();
 
     createLog({
-      message: `Payment of ${payment.amount}€ recorded for restaurant ${restaurant.name}`,
+      message: `Payment of ${payment.amount}€ recorded for restaurant ${restaurant.name} - ${wasClosed ? "Reopened" : "Renewed"}`,
       userId: req.userId,
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ payment, message: "Paiement enregistré" });
+    res.status(201).json({
+      payment,
+      message: "Paiement enregistré",
+      reopened: wasClosed,
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

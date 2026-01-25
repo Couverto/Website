@@ -50,7 +50,57 @@ const INITIAL_DATA: WizardData = {
   cardNumber: "",
   expiry: "",
   cvc: "",
-  openingHours: {},
+  openingHours: {
+    monday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+    tuesday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+    wednesday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+    thursday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+    friday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+    saturday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+    sunday: {
+      isClosed: false,
+      periods: [
+        { open: "12:00", close: "14:00" },
+        { open: "19:00", close: "22:00" },
+      ],
+    },
+  },
 };
 
 export const AddRestaurantWizard = () => {

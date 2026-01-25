@@ -106,13 +106,18 @@ export const RestaurantPlan = () => {
     setUpdating(true);
     try {
       // Create payment for the new plan
-      await api.post("/payments", {
+      const response = await api.post("/payments", {
         restaurantId: id,
         planId: selectedPlan,
         amount: newPlan.price,
         paymentMethod: "card",
       });
-      toast.success(`Plan changé vers ${newPlan.name} - Paiement de ${newPlan.price}€ effectué`);
+
+      if (response.data.reopened) {
+        toast.success(`Abonnement renouvelé - Votre restaurant est à nouveau ouvert ! 🎉`);
+      } else {
+        toast.success(`Plan changé vers ${newPlan.name} - Paiement de ${newPlan.price}€ effectué`);
+      }
       setChangePlanOpen(false);
       fetchData();
     } catch (error) {
