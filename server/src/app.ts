@@ -23,3 +23,15 @@ app.use(cors(corsOptions));
 
 // Register main application routes
 app.use(router);
+
+setInterval(
+  async () => {
+    try {
+      const res = await fetch(process.env.SELF_URL + "/api/ping");
+      console.log(`Self-ping status: ${res.status}`);
+    } catch (err) {
+      console.error("Self-ping failed:", err);
+    }
+  },
+  14 * 60 * 1000,
+);
