@@ -8,7 +8,7 @@ import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { collaboratorEmailTemplate } from "../templates/collaboratorEmail.js";
-import { deleteFile, deleteDirectory } from "../utils/fileUploadUtils.js";
+import { deleteFile } from "../utils/fileUploadUtils.js";
 
 /**
  * @function getRestaurants
@@ -126,23 +126,23 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Handle Cover Image
     // Handle Cover Image: Delete old if changed
-    if (req.body.coverImage && req.body.coverImage !== currentRestaurant.coverImage) {
+    if (req.body.coverImage !== undefined && req.body.coverImage !== currentRestaurant.coverImage) {
       if (currentRestaurant.coverImage) {
-        deleteFile(currentRestaurant.coverImage);
+        await deleteFile(currentRestaurant.coverImage);
       }
     }
 
     // Handle Arrays (Images, Menu)
-    const processImageArray = (field: "images" | "menu") => {
+    const processImageArray = async (field: "images" | "menu") => {
       if (req.body[field]) {
         const newImages: string[] = req.body[field];
+        const oldImages: string[] = (currentRestaurant[field] as string[]) || [];
 
         if (field === "images" && newImages.length > 8) {
           // CLEANUP ON ERROR: Delete the newly added images since we reject them
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          newlyAdded.forEach((img) => deleteFile(img));
+          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
 
           throw new Error("La galerie ne peut contenir que 8 images maximum");
         }
@@ -150,12 +150,10 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
         if (field === "menu" && newImages.length > 8) {
           // CLEANUP ON ERROR
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          newlyAdded.forEach((img) => deleteFile(img));
+          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
 
           throw new Error("Le menu ne peut contenir que 8 pages maximum");
         }
-
-        const oldImages: string[] = currentRestaurant[field] || [];
 
         // Identify deleted images (in old but not in new list)
         const deletedImages = oldImages.filter((img) => !newImages.includes(img));
@@ -167,14 +165,12 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
           deletedImages,
         });
 
-        deletedImages.forEach((img) => deleteFile(img));
-
-        // Note: New images are already in their final location, so we just save the URLs
+        await Promise.all(deletedImages.map((img) => deleteFile(img)));
       }
     };
 
-    processImageArray("images");
-    processImageArray("menu");
+    await processImageArray("images");
+    await processImageArray("menu");
 
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,
@@ -248,13 +244,13 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     // cleanup all files for this restaurant
     // Since we use shared folders, we must delete files individually
     if (restaurant.coverImage) {
-      deleteFile(restaurant.coverImage);
+      await deleteFile(restaurant.coverImage);
     }
     if (restaurant.images && restaurant.images.length > 0) {
-      restaurant.images.forEach((img) => deleteFile(img));
+      await Promise.all(restaurant.images.map((img) => deleteFile(img)));
     }
     if (restaurant.menu && restaurant.menu.length > 0) {
-      restaurant.menu.forEach((img) => deleteFile(img));
+      await Promise.all(restaurant.menu.map((img) => deleteFile(img)));
     }
 
     createLog({
@@ -978,23 +974,23 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
     }
 
     // Handle Cover Image: Delete old if changed
-    if (coverImage && coverImage !== currentRestaurant.coverImage) {
+    if (coverImage !== undefined && coverImage !== currentRestaurant.coverImage) {
       if (currentRestaurant.coverImage) {
-        deleteFile(currentRestaurant.coverImage);
+        await deleteFile(currentRestaurant.coverImage);
       }
     }
 
     // Handle Arrays (Images, Menu)
-    const processImageArray = (field: "images" | "menu") => {
+    const processImageArray = async (field: "images" | "menu") => {
       if (req.body[field]) {
         const newImages: string[] = req.body[field];
-        const oldImages: string[] = currentRestaurant[field] || [];
+        const oldImages: string[] = (currentRestaurant[field] as string[]) || [];
 
         // Validation: Gallery Limit
         if (field === "images" && newImages.length > 8) {
           // CLEANUP ON ERROR: Delete the newly added images since we reject them
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          newlyAdded.forEach((img) => deleteFile(img));
+          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
 
           throw new Error("La galerie ne peut contenir que 8 images maximum");
         }
@@ -1003,7 +999,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         if (field === "menu" && newImages.length > 8) {
           // CLEANUP ON ERROR
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          newlyAdded.forEach((img) => deleteFile(img));
+          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
 
           throw new Error("Le menu ne peut contenir que 8 pages maximum");
         }
@@ -1017,12 +1013,12 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
           deletedCount: deletedImages.length,
         });
 
-        deletedImages.forEach((img) => deleteFile(img));
+        await Promise.all(deletedImages.map((img) => deleteFile(img)));
       }
     };
 
-    processImageArray("images");
-    processImageArray("menu");
+    await processImageArray("images");
+    await processImageArray("menu");
 
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,

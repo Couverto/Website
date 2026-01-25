@@ -1,15 +1,18 @@
 import express, { Router } from "express";
 import { verifyToken } from "../middlewares/verifyToken.js";
-import {
-  uploadConfig,
-  uploadTempConfig,
-  uploadCoverConfig,
-  uploadGalleryConfig,
-  uploadMenuConfig,
-} from "../configuration/storageConfig.js";
 import { updateUserAvatar, uploadImage } from "../controllers/uploadController.js";
+import { uploadConfig } from "../configuration/storageConfig.js";
 
 export const uploadRouter: Router = express.Router();
+
+/**
+ * Middleware to set the target Firebase folder in req.body.
+ */
+const setFolder = (folder: string) => (req: any, res: any, next: any) => {
+  req.body = req.body || {};
+  req.body.folder = folder;
+  next();
+};
 
 /**
  * @route POST /avatar/:id
@@ -22,26 +25,24 @@ uploadRouter.post("/avatar/:id", verifyToken(), uploadConfig.single("avatar"), u
 
 /**
  * @route POST /image
- * @description Uploads an image to a temporary folder.
- * @middleware verifyToken() - Ensures the user is authenticated.
- * @middleware uploadTempConfig.single("image") - Handles single file upload.
+ * @description Uploads an image to a temporary folder in Firebase.
  */
-uploadRouter.post("/image", verifyToken(), uploadTempConfig.single("image"), uploadImage);
+uploadRouter.post("/image", verifyToken(), uploadConfig.single("image"), setFolder("temp"), uploadImage);
 
 /**
  * @route POST /restaurants/cover
  * @description Uploads a restaurant cover image.
  */
-uploadRouter.post("/restaurants/cover", verifyToken(), uploadCoverConfig.single("image"), uploadImage);
+uploadRouter.post("/restaurants/cover", verifyToken(), uploadConfig.single("image"), setFolder("restaurants/coverImages"), uploadImage);
 
 /**
  * @route POST /restaurants/gallery
  * @description Uploads a restaurant gallery image.
  */
-uploadRouter.post("/restaurants/gallery", verifyToken(), uploadGalleryConfig.single("image"), uploadImage);
+uploadRouter.post("/restaurants/gallery", verifyToken(), uploadConfig.single("image"), setFolder("restaurants/galleries"), uploadImage);
 
 /**
  * @route POST /restaurants/menu
  * @description Uploads a restaurant menu image.
  */
-uploadRouter.post("/restaurants/menu", verifyToken(), uploadMenuConfig.single("image"), uploadImage);
+uploadRouter.post("/restaurants/menu", verifyToken(), uploadConfig.single("image"), setFolder("restaurants/menus"), uploadImage);

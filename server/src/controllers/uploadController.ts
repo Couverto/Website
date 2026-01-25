@@ -1,71 +1,90 @@
-import { Request, Response } from "express";
-import fs from "fs";
-import path from "path";
 import { User } from "../models/userModel.js";
 import { Constants } from "../constants/constants.js";
+import { bucket } from "../lib/firebase.js";
 
 /**
- * @function updateUserAvatar
- * @description Updates the avatar of a user by uploading a new file, validating the file type and size,
- * and replacing the old avatar if it exists.
- * @param {string} req.params.id - The ID of the user whose avatar is being updated.
- * @param {Object} req.file - The uploaded file containing the user's new avatar.
- * @returns {Object} JSON response with success or error message.
+ * Helper to upload a buffer to Firebase Storage and return the public URL.
  */
-export const updateUserAvatar = async (req: Request, res: Response): Promise<void> => {
+const uploadToFirebase = async (file: Express.Multer.File, folder: string, customFilename?: string): Promise<string> => {
+  let extension = file.mimetype.split("/")[1];
+  if (extension.includes("+")) extension = extension.split("+")[0];
+
+  const filename = customFilename || `${Date.now()}_${Math.round(Math.random() * 1e9)}.${extension}`;
+  const fullPath = `${folder}/${filename}`;
+
+  const blob = bucket.file(fullPath);
+  await blob.save(file.buffer, {
+    metadata: {
+      contentType: file.mimetype,
+    },
+    public: true,
+  });
+
+  return `https://storage.googleapis.com/${bucket.name}/${fullPath}`;
+};
+
+export const updateUserAvatar = async (req, res) => {
   try {
-    const userId = req.params.id as string;
+    const userId = req.params.id;
     const user = await User.findById(userId);
 
     if (!user) {
-      res.status(400).json({ error: "Utilisateur introuvable" });
-      return;
+      return res.status(404).json({ error: "Utilisateur introuvable" });
     }
 
     if (!req.file) {
-      res.status(400).json({ error: "Aucun fichier fourni" });
-      return;
+      return res.status(400).json({ error: "Aucun fichier fourni" });
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"];
     if (!allowedTypes.includes(req.file.mimetype)) {
-      res.status(400).json({ error: "Type de fichier invalide" });
-      return;
+      return res.status(400).json({ error: "Type de fichier invalide" });
     }
 
     if (req.file.size > Constants.AVATAR_MAX_SIZE) {
-      res.status(400).json({ error: `server.upload.errors.limit` });
-      return;
+      return res.status(400).json({
+        error: `Taille maximale de fichier dépassée (${Constants.AVATAR_MAX_SIZE / 1024} KB)`,
+      });
     }
 
-    if (user.avatar) {
-      const oldAvatarPath = path.join(process.cwd(), "uploads", "users", "avatars", path.basename(user.avatar));
-      if (fs.existsSync(oldAvatarPath)) {
-        fs.unlinkSync(oldAvatarPath);
+    // Delete old avatar if it exists in Firebase
+    if (user.avatar && user.avatar.includes("storage.googleapis.com")) {
+      try {
+        const oldFileUrl = new URL(user.avatar);
+        const oldPath = decodeURIComponent(oldFileUrl.pathname.split("/").slice(2).join("/"));
+        await bucket
+          .file(oldPath)
+          .delete()
+          .catch(() => {});
+      } catch (err) {
+        console.warn("Failed to parse or delete old avatar:", err);
       }
     }
 
-    const newAvatarUrl = `${req.protocol}://${req.get("host")}/uploads/users/avatars/${req.file.filename}`;
+    let extension = req.file.mimetype.split("/")[1];
+    if (extension.includes("+")) extension = extension.split("+")[0];
+    const customFilename = `${userId}_${Date.now()}.${extension}`;
 
-    user.avatar = newAvatarUrl;
+    const publicUrl = await uploadToFirebase(req.file, "avatars", customFilename);
+
+    user.avatar = publicUrl;
     await user.save();
 
     res.status(200).json({
-      message: "Avatar mis à jour",
+      message: "Avatar mis à jour avec succès",
       user,
     });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Une erreur inattendue est survenue lors de l'upload" });
   }
 };
 
 /**
  * @function uploadImage
- * @description Uploads an image to a temporary folder and returns its URL.
- * @param {Object} req.file - The uploaded file.
- * @returns {Object} JSON response with the file URL.
+ * @description Uploads an image to Firebase Storage and returns its URL.
  */
-export const uploadImage = async (req: Request, res: Response): Promise<void> => {
+export const uploadImage = async (req, res): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ error: "Aucun fichier fourni" });
@@ -74,41 +93,20 @@ export const uploadImage = async (req: Request, res: Response): Promise<void> =>
 
     const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"];
     if (!allowedTypes.includes(req.file.mimetype)) {
-      // Remove the file if it was uploaded but is invalid
-      fs.unlinkSync(req.file.path);
       res.status(400).json({ error: "Type de fichier invalide" });
       return;
     }
 
-    // Construct URL based on where the file was saved
-    // We can infer the folder from req.file.destination or just inspect it
-    const destination = req.file.destination;
-    let urlPath = "";
-
-    if (destination.includes("temp")) {
-      urlPath = "uploads/temp";
-    } else if (destination.includes("coverImages")) {
-      urlPath = "uploads/restaurants/coverImages";
-    } else if (destination.includes("galleries")) {
-      urlPath = "uploads/restaurants/galleries";
-    } else if (destination.includes("menus")) {
-      urlPath = "uploads/restaurants/menus";
-    } else {
-      // Fallback
-      urlPath = "uploads/temp";
-    }
-
-    const fileUrl = `${req.protocol}://${req.get("host")}/${urlPath}/${req.file.filename}`;
+    // Determine folder from req.body or fallback to temp
+    const folder = req.body.folder || "temp";
+    const publicUrl = await uploadToFirebase(req.file, folder);
 
     res.status(200).json({
       message: "Image uploadée avec succès",
-      url: fileUrl,
-      filename: req.file.filename,
+      url: publicUrl,
     });
   } catch (err: any) {
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
