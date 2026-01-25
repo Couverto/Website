@@ -58,3 +58,57 @@ export const updateUserAvatar = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function uploadImage
+ * @description Uploads an image to a temporary folder and returns its URL.
+ * @param {Object} req.file - The uploaded file.
+ * @returns {Object} JSON response with the file URL.
+ */
+export const uploadImage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "Aucun fichier fourni" });
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      // Remove the file if it was uploaded but is invalid
+      fs.unlinkSync(req.file.path);
+      res.status(400).json({ error: "Type de fichier invalide" });
+      return;
+    }
+
+    // Construct URL based on where the file was saved
+    // We can infer the folder from req.file.destination or just inspect it
+    const destination = req.file.destination;
+    let urlPath = "";
+
+    if (destination.includes("temp")) {
+      urlPath = "uploads/temp";
+    } else if (destination.includes("coverImages")) {
+      urlPath = "uploads/restaurants/coverImages";
+    } else if (destination.includes("galleries")) {
+      urlPath = "uploads/restaurants/galleries";
+    } else if (destination.includes("menus")) {
+      urlPath = "uploads/restaurants/menus";
+    } else {
+      // Fallback
+      urlPath = "uploads/temp";
+    }
+
+    const fileUrl = `${req.protocol}://${req.get("host")}/${urlPath}/${req.file.filename}`;
+
+    res.status(200).json({
+      message: "Image uploadée avec succès",
+      url: fileUrl,
+      filename: req.file.filename,
+    });
+  } catch (err: any) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ error: err.message });
+  }
+};

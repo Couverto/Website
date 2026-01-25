@@ -5,6 +5,8 @@ import { Plus, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { StepProps } from "@/interfaces/Components";
+import { ImageUpload } from "@/components/ImageUpload";
+import { MediaInput } from "@/components/MediaInput";
 
 export const StepMenu = ({ data, updateData, errors }: StepProps) => {
   const [newMenuUrl, setNewMenuUrl] = useState("");
@@ -26,28 +28,41 @@ export const StepMenu = ({ data, updateData, errors }: StepProps) => {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-6">
         <div className="space-y-4">
-          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex justify-between items-end">
             {"Ajouter un lien vers votre menu (PDF/Image)"}
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+              Max 8 pages
+            </span>
           </Label>
-          <div className="flex gap-3">
-            <div className="relative flex-1 group">
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                placeholder="https://example.com/menu.pdf"
-                value={newMenuUrl}
-                onChange={(e) => setNewMenuUrl(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addMenu()}
-                className="pl-10 h-12 border-muted-foreground/20 focus:border-primary transition-all shadow-sm"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4 p-4 border rounded-2xl bg-muted/5">
+              <h4 className="font-medium text-sm">Ajouter un menu ou une carte</h4>
+              <MediaInput
+                onFileChange={(url) => {
+                  if (url) updateData({ menu: [...(data.menu || []), url] });
+                }}
+                onUrlChange={(url) => setNewMenuUrl(url)}
+                onUrlSubmit={addMenu}
+                urlValue={newMenuUrl}
+                placeholder="Menu (PDF ou Image)"
+                endpoint="/uploads/restaurants/menu"
               />
+              <div className="p-3 bg-muted/30 rounded-xl border border-muted-foreground/10 text-xs text-muted-foreground mt-2">
+                <p>Formats acceptés: Images (JPG, PNG). Pour les PDF, entrez le lien direct dans l'onglet URL.</p>
+              </div>
             </div>
-            <Button
-              onClick={addMenu}
-              type="button"
-              size="icon"
-              className="h-12 w-12 rounded-xl shadow-lg hover:shadow-primary/20 transition-all shrink-0"
-            >
-              <Plus className="h-5 w-5" />
-            </Button>
+
+            <div className="space-y-4 p-4 border rounded-2xl bg-muted/5 flex flex-col justify-center items-center text-center">
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-medium text-sm mb-1">Menus Digitalisés</h4>
+                <p className="text-xs text-muted-foreground max-w-xs">
+                  Facilitez la vie de vos clients en mettant votre carte en ligne. Modifiable à tout moment.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

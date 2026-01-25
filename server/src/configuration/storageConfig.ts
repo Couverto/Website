@@ -8,11 +8,30 @@ interface MulterRequest extends Request {
 }
 
 // Configuration for Multer to handle file uploads
-const storageConfig = multer.diskStorage({
+// Configuration for Multer to handle file uploads
+const storageConfig = (dest: string) =>
+  multer.diskStorage({
+    destination: (req: MulterRequest, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+      // Ensure directory exists (optional, but good practice if not guaranteed)
+      // For now assuming the directory exists or is created elsewhere, typically 'uploads' folders are pre-created or we can add fs.mkdirSync
+      cb(null, dest);
+    },
+
+    filename: (req: MulterRequest, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+      const extension = path.extname(file.originalname);
+      // For temp files, we just need a unique name. For avatars, we kept the userId pattern.
+      // let's stick to unique generic names for temp to avoid confusion.
+      const uniqueSuffix = Date.now() + "_" + Math.round(Math.random() * 1e9);
+      cb(null, `file_${uniqueSuffix}${extension}`);
+    },
+  });
+
+// Specific config for avatars (keeping backward compatibility logic if needed, or refactoring)
+// The original code used userId in filename.
+const avatarStorageConfig = multer.diskStorage({
   destination: (req: MulterRequest, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     cb(null, "./uploads/users/avatars");
   },
-
   filename: (req: MulterRequest, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     const extension = path.extname(file.originalname);
     const userIdPart = req.userId;
@@ -20,7 +39,22 @@ const storageConfig = multer.diskStorage({
   },
 });
 
-// Middleware Multer to handle file uploads
 export const uploadConfig = multer({
-  storage: storageConfig,
+  storage: avatarStorageConfig,
+});
+
+export const uploadTempConfig = multer({
+  storage: storageConfig("./uploads/temp"),
+});
+
+export const uploadCoverConfig = multer({
+  storage: storageConfig("./uploads/restaurants/coverImages"),
+});
+
+export const uploadGalleryConfig = multer({
+  storage: storageConfig("./uploads/restaurants/galleries"),
+});
+
+export const uploadMenuConfig = multer({
+  storage: storageConfig("./uploads/restaurants/menus"),
 });

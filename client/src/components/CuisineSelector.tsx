@@ -6,23 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { CuisineSelectorProps } from "@/interfaces/Components";
-
-export const CUISINES = [
-  "Française",
-  "Italienne",
-  "Japonaise",
-  "Chinoise",
-  "Indienne",
-  "Mexicaine",
-  "Américaine",
-  "Méditerranéenne",
-  "Végétarienne",
-  "Vegan",
-  "Bistrot",
-  "Gastronomique",
-  "Fast Food",
-  "Brasserie",
-];
+import { CUISINES } from "@/constants/restaurantResources";
 
 export const CuisineSelector = ({ value = [], onChange, className, variant = "default" }: CuisineSelectorProps) => {
   const [open, setOpen] = useState(false);

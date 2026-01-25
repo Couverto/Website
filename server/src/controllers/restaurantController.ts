@@ -8,6 +8,7 @@ import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { collaboratorEmailTemplate } from "../templates/collaboratorEmail.js";
+import { deleteFile, deleteDirectory } from "../utils/fileUploadUtils.js";
 
 /**
  * @function getRestaurants
@@ -64,7 +65,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     // Set subscription end date if plan is provided
     const subscriptionEndDate = planId ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null;
 
-    const restaurant = await Restaurant.create({
+    const restaurant = new Restaurant({
       name,
       slug,
       adress: address, // Note: model uses 'adress' (typo in model but keeping consistency)
@@ -77,8 +78,15 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       subscriptionStatus: planId ? "active" : "none",
       autoRenew: true,
       subscriptionEndDate,
+      isClosed: true,
       ...otherFields,
     });
+
+    const restaurantId = restaurant._id.toString();
+
+    // Process images: No need to move files, they are already uploaded to final destination
+
+    await restaurant.save();
 
     createLog({
       message: `Restaurant '${name}' created successfully`,
@@ -111,6 +119,63 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
   const { id } = req.params;
 
   try {
+    const currentRestaurant = await Restaurant.findById(id);
+
+    if (!currentRestaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    // Handle Cover Image
+    // Handle Cover Image: Delete old if changed
+    if (req.body.coverImage && req.body.coverImage !== currentRestaurant.coverImage) {
+      if (currentRestaurant.coverImage) {
+        deleteFile(currentRestaurant.coverImage);
+      }
+    }
+
+    // Handle Arrays (Images, Menu)
+    const processImageArray = (field: "images" | "menu") => {
+      if (req.body[field]) {
+        const newImages: string[] = req.body[field];
+
+        if (field === "images" && newImages.length > 8) {
+          // CLEANUP ON ERROR: Delete the newly added images since we reject them
+          const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
+          newlyAdded.forEach((img) => deleteFile(img));
+
+          throw new Error("La galerie ne peut contenir que 8 images maximum");
+        }
+
+        if (field === "menu" && newImages.length > 8) {
+          // CLEANUP ON ERROR
+          const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
+          newlyAdded.forEach((img) => deleteFile(img));
+
+          throw new Error("Le menu ne peut contenir que 8 pages maximum");
+        }
+
+        const oldImages: string[] = currentRestaurant[field] || [];
+
+        // Identify deleted images (in old but not in new list)
+        const deletedImages = oldImages.filter((img) => !newImages.includes(img));
+
+        console.log(`[processImageArray] Field: ${field}`, {
+          newCount: newImages.length,
+          oldCount: oldImages.length,
+          deletedCount: deletedImages.length,
+          deletedImages,
+        });
+
+        deletedImages.forEach((img) => deleteFile(img));
+
+        // Note: New images are already in their final location, so we just save the URLs
+      }
+    };
+
+    processImageArray("images");
+    processImageArray("menu");
+
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,
       {
@@ -133,6 +198,14 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json({ restaurant, message: "Restaurant mis à jour avec succès" });
   } catch (err: any) {
+    if (err.message === "La galerie ne peut contenir que 8 images maximum") {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err.message === "Le menu ne peut contenir que 8 pages maximum") {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -165,6 +238,18 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     }
 
     await Restaurant.findByIdAndDelete(id);
+
+    // cleanup all files for this restaurant
+    // Since we use shared folders, we must delete files individually
+    if (restaurant.coverImage) {
+      deleteFile(restaurant.coverImage);
+    }
+    if (restaurant.images && restaurant.images.length > 0) {
+      restaurant.images.forEach((img) => deleteFile(img));
+    }
+    if (restaurant.menu && restaurant.menu.length > 0) {
+      restaurant.menu.forEach((img) => deleteFile(img));
+    }
 
     createLog({
       message: `Restaurant '${restaurant.name}' deleted successfully`,
@@ -204,6 +289,26 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
         requiresPlan: true,
       });
       return;
+    }
+
+    // If we are trying to OPEN the restaurant, check for required fields
+    if (restaurant.isClosed) {
+      const missingFields = [];
+      if (!restaurant.name) missingFields.push("Nom");
+      if (!restaurant.adress) missingFields.push("Adresse");
+      if (!restaurant.phone) missingFields.push("Téléphone");
+      if (!restaurant.coverImage) missingFields.push("Image de couverture");
+      if (!restaurant.images || restaurant.images.length === 0) missingFields.push("Galerie photos (au moins 1)");
+
+      // Check menu (either text or file based, assuming array)
+      if (!restaurant.menu || restaurant.menu.length === 0) missingFields.push("Menu (au moins 1 page)");
+
+      if (missingFields.length > 0) {
+        res.status(400).json({
+          error: `Impossible d'ouvrir le restaurant. Informations manquantes : ${missingFields.join(", ")}`,
+        });
+        return;
+      }
     }
 
     restaurant.isClosed = !restaurant.isClosed;
@@ -856,10 +961,63 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
  */
 export const updateRestaurantSettings = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { name, description, phone, email, adress, city, website, coverImage, images, menu, openingHours, cuisineType, priceRange } =
-    req.body;
+  // Note: We use req.body directly for array processing to ensure we catch field presence
+  const { name, description, phone, email, adress, city, website, coverImage, openingHours, cuisineType, priceRange } = req.body;
 
   try {
+    const currentRestaurant = await Restaurant.findById(id);
+    if (!currentRestaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    // Handle Cover Image: Delete old if changed
+    if (coverImage && coverImage !== currentRestaurant.coverImage) {
+      if (currentRestaurant.coverImage) {
+        deleteFile(currentRestaurant.coverImage);
+      }
+    }
+
+    // Handle Arrays (Images, Menu)
+    const processImageArray = (field: "images" | "menu") => {
+      if (req.body[field]) {
+        const newImages: string[] = req.body[field];
+        const oldImages: string[] = currentRestaurant[field] || [];
+
+        // Validation: Gallery Limit
+        if (field === "images" && newImages.length > 8) {
+          // CLEANUP ON ERROR: Delete the newly added images since we reject them
+          const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
+          newlyAdded.forEach((img) => deleteFile(img));
+
+          throw new Error("La galerie ne peut contenir que 8 images maximum");
+        }
+
+        // Validation: Menu Limit
+        if (field === "menu" && newImages.length > 8) {
+          // CLEANUP ON ERROR
+          const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
+          newlyAdded.forEach((img) => deleteFile(img));
+
+          throw new Error("Le menu ne peut contenir que 8 pages maximum");
+        }
+
+        // Identify deleted images (in old but not in new list)
+        const deletedImages = oldImages.filter((img) => !newImages.includes(img));
+
+        console.log(`[updateRestaurantSettings] Field: ${field}`, {
+          newCount: newImages.length,
+          oldCount: oldImages.length,
+          deletedCount: deletedImages.length,
+        });
+
+        deletedImages.forEach((img) => deleteFile(img));
+      }
+    };
+
+    processImageArray("images");
+    processImageArray("menu");
+
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,
       {
@@ -871,8 +1029,8 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(city && { city }),
         ...(website !== undefined && { website }),
         ...(coverImage !== undefined && { coverImage }),
-        ...(images && { images }),
-        ...(menu && { menu }),
+        ...(req.body.images && { images: req.body.images }), // Use req.body for arrays
+        ...(req.body.menu && { menu: req.body.menu }), // Use req.body for arrays
         ...(openingHours && { openingHours }),
         ...(cuisineType && { cuisineType }),
         ...(priceRange && { priceRange }),
@@ -898,6 +1056,14 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
 
     res.status(200).json({ restaurant, message: "Paramètres mis à jour" });
   } catch (err: any) {
+    if (err.message === "La galerie ne peut contenir que 8 images maximum") {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err.message === "Le menu ne peut contenir que 8 pages maximum") {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     res.status(500).json({ error: err.message });
   }
 };

@@ -1,4 +1,4 @@
-import { useParams, useOutletContext, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +13,6 @@ import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 import {
   Loader2,
   Save,
-  ImageIcon,
   Clock,
   Utensils,
   Info,
@@ -44,7 +41,8 @@ import {
   AlertTriangle,
   Music2,
   MapPin,
-  FileText,
+  Code,
+  Files,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -58,53 +56,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { CUISINES, PRICES, FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantResources";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
-
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-const CUISINES = [
-  "Française",
-  "Italienne",
-  "Japonaise",
-  "Chinoise",
-  "Indienne",
-  "Mexicaine",
-  "Américaine",
-  "Méditerranéenne",
-  "Végétarienne",
-  "Vegan",
-  "Bistrot",
-  "Gastronomique",
-  "Fast Food",
-  "Brasserie",
-];
-
-const PRICES = [
-  { id: "vlow", value: "$" },
-  { id: "low", value: "$$" },
-  { id: "medium", value: "$$$" },
-  { id: "high", value: "$$$$" },
-  { id: "vhigh", value: "$$$$$" },
-];
-
-const FEATURES_LIST = [
-  { id: "terrace", value: "Terrasse", icon: Umbrella },
-  { id: "wifi", value: "Wifi", icon: Wifi },
-  { id: "accessible", value: "Accès PMR", icon: Accessibility },
-  { id: "bar", value: "Bar", icon: Beer },
-  { id: "air_conditioning", value: "Climatisation", icon: Wind },
-  { id: "parking", value: "Parking", icon: Car },
-  { id: "pets_allowed", value: "Animaux acceptés", icon: Dog },
-];
-
-const PAYMENT_METHODS = [
-  { id: "card", value: "Carte Bancaire", icon: CreditCard },
-  { id: "cash", value: "Espèces", icon: Banknote },
-  { id: "apple_pay", value: "Apple Pay", icon: Smartphone },
-  { id: "google_pay", value: "Google Pay", icon: Smartphone },
-  { id: "tickets_restaurant", value: "Tickets Restaurant", icon: Ticket },
-  { id: "cheque", value: "Chèque", icon: StickyNote },
-  { id: "ancv", value: "Chèque-Vacances (ANCV)", icon: Ticket },
-];
 
 export const RestaurantSettings = () => {
   const { id } = useParams();
@@ -130,19 +83,16 @@ export const RestaurantSettings = () => {
     },
   });
 
-  const [newImageUrl, setNewImageUrl] = useState("");
-  const [newMenuUrl, setNewMenuUrl] = useState("");
+  const { refreshRestaurant } = useOutletContext<{ refreshRestaurant: () => void }>();
 
   useEffect(() => {
     const fetchRestaurant = async () => {
-      if (isFetched.current) return;
       try {
         const response = await api.get(`/restaurants/${id}/details`);
         reset(response.data.restaurant);
-        setIsClosed(response.data.restaurant.isClosed || false);
-        isFetched.current = true;
+        setIsClosed(response.data.restaurant.isClosed);
       } catch (error) {
-        console.error("Failed to fetch restaurant", error);
+        toast.error("Erreur lors du chargement des données");
       } finally {
         setLoading(false);
       }
@@ -156,6 +106,7 @@ export const RestaurantSettings = () => {
       const response = await api.patch(`/restaurants/${id}/toggle-closed`);
       setIsClosed(response.data.restaurant.isClosed);
       toast.success(response.data.restaurant.isClosed ? "Restaurant fermé" : "Restaurant rouvert");
+      refreshRestaurant(); // Call parent refresh
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Erreur lors de l'enregistrement");
     } finally {
@@ -186,36 +137,6 @@ export const RestaurantSettings = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const addImage = () => {
-    if (newImageUrl) {
-      const current = watch("images") || [];
-      setValue("images", [...current, newImageUrl]);
-      setNewImageUrl("");
-    }
-  };
-
-  const removeImage = (index: number) => {
-    const current = watch("images") || [];
-    const updated = [...current];
-    updated.splice(index, 1);
-    setValue("images", updated);
-  };
-
-  const addMenu = () => {
-    if (newMenuUrl) {
-      const current = watch("menu") || [];
-      setValue("menu", [...current, newMenuUrl]);
-      setNewMenuUrl("");
-    }
-  };
-
-  const removeMenu = (index: number) => {
-    const current = watch("menu") || [];
-    const updated = [...current];
-    updated.splice(index, 1);
-    setValue("menu", updated);
   };
 
   if (loading) {
@@ -621,128 +542,6 @@ export const RestaurantSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Images */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5" />
-              {"Images"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="coverImage">{"Image de couverture (URL)"}</Label>
-              <div className="flex gap-4">
-                <Input id="coverImage" {...register("coverImage")} placeholder="https://example.com/image.jpg" />
-                {watch("coverImage") && (
-                  <div className="w-20 h-10 rounded overflow-hidden">
-                    <img src={watch("coverImage")} className="w-full h-full object-cover" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Galerie</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Ajouter une URL d'image..."
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())}
-                />
-                <Button type="button" size="icon" onClick={addImage}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                {watch("images")?.map((img: string, idx: number) => (
-                  <div key={idx} className="relative group aspect-video bg-muted rounded overflow-hidden">
-                    <img src={img} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(idx)}
-                      className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Menu */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {"Menu"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="https://example.com/menu.pdf"
-                  value={newMenuUrl}
-                  onChange={(e) => setNewMenuUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addMenu())}
-                  className="pl-10"
-                />
-              </div>
-              <Button type="button" size="icon" onClick={addMenu}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-              {watch("menu")?.map((url: string, idx: number) => {
-                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                return (
-                  <div key={idx} className="relative group aspect-[3/4] bg-muted rounded-xl overflow-hidden border">
-                    {isImage ? (
-                      <img src={url} className="w-full h-full object-cover transition-transform group-hover:scale-105" alt="Menu" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center gap-2">
-                        <FileText className="h-8 w-8 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground break-all px-2 line-clamp-3">{url.split("/").pop()}</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="h-8 w-8 rounded-full"
-                        onClick={() => removeMenu(idx)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="icon"
-                        className="h-8 w-8 rounded-full"
-                        onClick={() => window.open(url, "_blank")}
-                      >
-                        <Share2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-              {(!watch("menu") || watch("menu")?.length === 0) && (
-                <div className="col-span-full py-8 text-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/5 flex flex-col items-center gap-2">
-                  <FileText className="h-6 w-6 opacity-30" />
-                  <p className="text-sm">{"Aucun lien vers le menu"}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Opening Hours */}
         <Card>
           <CardHeader>
@@ -757,6 +556,46 @@ export const RestaurantSettings = () => {
               name="openingHours"
               render={({ field }) => <OpeningHoursEditor value={field.value} onChange={field.onChange} />}
             />
+          </CardContent>
+        </Card>
+
+        {/* Widget Integration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Code className="h-5 w-5" />
+              {"Intégration"}
+            </CardTitle>
+            <CardDescription>{"Copiez ce code pour ajouter un bouton de réservation sur votre site web personnel"}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="relative">
+              <div className="absolute top-2 right-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    const code = `<a href="${window.location.origin}/restaurants/infos/${id}" target="_blank" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">Réserver sur Couverto</a>`;
+                    navigator.clipboard.writeText(code);
+                    toast.success("Code copié dans le presse-papier");
+                  }}
+                >
+                  <Files className="h-4 w-4 mr-2" />
+                  Copier
+                </Button>
+              </div>
+              <pre className="p-4 rounded-lg bg-muted font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
+                <code>{`<a href="${window.location.origin}/restaurants/infos/${id}" 
+                  target="_blank" 
+                  style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">
+                  Réserver sur Couverto
+                      </a>`}</code>
+              </pre>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {"Ce code affichera un bouton 'Réserver sur Couverto' qui redirigera vos clients vers votre page de réservation."}
+            </p>
           </CardContent>
         </Card>
 

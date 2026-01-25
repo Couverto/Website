@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { BookingInterface } from "@/interfaces/Booking";
 import { Separator } from "@/components/ui/separator";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { Badge } from "@/components/ui/badge";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -22,23 +23,23 @@ export const RestaurantLayout = () => {
 
   const { socket } = useSocketContext();
 
-  useEffect(() => {
-    const fetchRestaurant = async () => {
-      try {
-        const response = await api.get(`/restaurants/${id}/details`);
-        setRestaurant(response.data.restaurant);
-        setUserRole(response.data.userRole || "employee");
-      } catch (err: any) {
-        if (err.response?.status === 403) {
-          setError("not_collaborator");
-        } else {
-          setError("not_found");
-        }
-      } finally {
-        setLoading(false);
+  const fetchRestaurant = async () => {
+    try {
+      const response = await api.get(`/restaurants/${id}/details`);
+      setRestaurant(response.data.restaurant);
+      setUserRole(response.data.userRole || "employee");
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setError("not_collaborator");
+      } else {
+        setError("not_found");
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     if (id) {
       fetchRestaurant();
     }
@@ -96,6 +97,11 @@ export const RestaurantLayout = () => {
                 <SidebarTrigger />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <RestaurantBreadcrumb restaurant={restaurant} />
+                {restaurant && (
+                  <Badge variant={restaurant.isClosed ? "destructive" : "secondary"} className="ml-2">
+                    {restaurant.isClosed ? "FERMÉ" : "OUVERT"}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <ThemeChanger />
@@ -103,7 +109,7 @@ export const RestaurantLayout = () => {
             </div>
           </header>
           <div className="p-6">
-            <Outlet context={{ restaurant, userRole }} />
+            <Outlet context={{ restaurant, userRole, refreshRestaurant: fetchRestaurant }} />
           </div>
         </main>
       </div>

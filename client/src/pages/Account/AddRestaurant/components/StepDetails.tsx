@@ -26,25 +26,7 @@ import {
 import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 import { StepProps } from "@/interfaces/Components";
 
-const FEATURES_LIST = [
-  { id: "terrace", value: "Terrasse", icon: Umbrella },
-  { id: "wifi", value: "Wifi", icon: Wifi },
-  { id: "accessible", value: "Accès PMR", icon: Accessibility },
-  { id: "bar", value: "Bar", icon: Beer },
-  { id: "air_conditioning", value: "Climatisation", icon: Wind },
-  { id: "parking", value: "Parking", icon: Car },
-  { id: "pets_allowed", value: "Animaux acceptés", icon: Dog },
-];
-
-const PAYMENT_METHODS = [
-  { id: "card", value: "Carte Bancaire", icon: CreditCard },
-  { id: "cash", value: "Espèces", icon: Banknote },
-  { id: "apple_pay", value: "Apple Pay", icon: Smartphone },
-  { id: "google_pay", value: "Google Pay", icon: Smartphone },
-  { id: "tickets_restaurant", value: "Tickets Restaurant", icon: Ticket },
-  { id: "cheque", value: "Chèque", icon: StickyNote },
-  { id: "ancv", value: "Chèque-Vacances (ANCV)", icon: Ticket },
-];
+import { FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantResources";
 
 export const StepDetails = ({ data, updateData, errors }: StepProps) => {
   const handleFeatureToggle = (featureValue: string) => {

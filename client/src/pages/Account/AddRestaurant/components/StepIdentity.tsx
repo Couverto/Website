@@ -9,30 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { StepProps } from "@/interfaces/Components";
 
-const CUISINES = [
-  "Française",
-  "Italienne",
-  "Japonaise",
-  "Chinoise",
-  "Indienne",
-  "Mexicaine",
-  "Américaine",
-  "Méditerranéenne",
-  "Végétarienne",
-  "Vegan",
-  "Bistrot",
-  "Gastronomique",
-  "Fast Food",
-  "Brasserie",
-];
-
-const PRICES = [
-  { id: "vlow", value: "$" },
-  { id: "low", value: "$$" },
-  { id: "medium", value: "$$$" },
-  { id: "high", value: "$$$$" },
-  { id: "vhigh", value: "$$$$$" },
-];
+import { CUISINES, PRICES } from "@/constants/restaurantResources";
 
 export const StepIdentity = ({ data, updateData, errors }: StepProps) => {
   const [search, setSearch] = useState("");

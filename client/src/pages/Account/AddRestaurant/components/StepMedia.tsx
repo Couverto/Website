@@ -6,6 +6,8 @@ import { Plus, X, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { StepProps } from "@/interfaces/Components";
+import { ImageUpload } from "@/components/ImageUpload";
+import { MediaInput } from "@/components/MediaInput";
 
 export const StepMedia = ({ data, updateData, errors }: StepProps) => {
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -34,49 +36,14 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
           <div className="flex-1 w-full space-y-4">
-            <div className="relative group">
-              <ImageIcon
-                className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.coverImage ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-              />
-              <Input
-                placeholder="https://example.com/cover.jpg"
-                value={(data.coverImage as string) || ""}
-                onChange={(e) => updateData({ coverImage: e.target.value })}
-                className={`pl-10 h-12 text-base transition-all ${errors?.coverImage ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-              />
-            </div>
-            {errors?.coverImage ? (
-              <p className="text-xs font-medium text-red-500">{errors.coverImage}</p>
-            ) : (
-              <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl flex gap-3 items-start">
-                <div className="h-2 w-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
-                <p className="text-xs text-blue-800 leading-relaxed font-medium">
-                  {"L'image principale affichée sur les cartes et en-têtes."}
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="w-full md:w-64 aspect-[16/10] bg-muted/30 rounded-2xl overflow-hidden border-2 border-dashed border-muted-foreground/20 flex items-center justify-center relative group shadow-inner">
-            {data.coverImage ? (
-              <>
-                <img
-                  src={data.coverImage as string}
-                  alt="Cover Preview"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Badge className="bg-white/90 text-black border-none shadow-xl tracking-wider font-extrabold uppercase text-[10px]">
-                    {"APERÇU"}
-                  </Badge>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-2 opacity-30 group-hover:opacity-50 transition-opacity">
-                <ImageIcon className="h-10 w-10" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">{"Aucun lien d'image"}</span>
-              </div>
-            )}
+            <MediaInput
+              onFileChange={(url) => updateData({ coverImage: url })}
+              onUrlChange={(url) => updateData({ coverImage: url })}
+              urlValue={(data.coverImage as string) || ""}
+              placeholder="Image de couverture"
+              aspectRatio="wide"
+              endpoint="/uploads/restaurants/cover"
+            />
           </div>
         </div>
       </div>
@@ -89,25 +56,35 @@ export const StepMedia = ({ data, updateData, errors }: StepProps) => {
           </span>
         </div>
 
-        <div className="flex gap-3">
-          <div className="relative flex-1 group">
-            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder={"Ajouter une image" + "..."}
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addImage()}
-              className="pl-10 h-12 border-muted-foreground/20 focus:border-primary transition-all shadow-sm"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4 p-4 border rounded-2xl bg-muted/5">
+            <h4 className="font-medium text-sm">Ajouter une photo</h4>
+            <MediaInput
+              onFileChange={(url) => {
+                if (url) updateData({ images: [...(data.images || []), url] });
+              }}
+              onUrlChange={(url) => setNewImageUrl(url)}
+              onUrlSubmit={addImage}
+              urlValue={newImageUrl}
+              placeholder="Photo de la galerie"
+              endpoint="/uploads/restaurants/gallery"
             />
+            <div className="p-3 bg-muted/30 rounded-xl border border-muted-foreground/10 text-xs text-muted-foreground">
+              <p>Jusqu'à 8 images. Formats JPG, PNG, WEBP.</p>
+            </div>
           </div>
-          <Button
-            onClick={addImage}
-            type="button"
-            size="icon"
-            className="h-12 w-12 rounded-xl shadow-lg hover:shadow-primary/20 transition-all shrink-0"
-          >
-            <Plus className="h-5 w-5" />
-          </Button>
+          <div className="space-y-4 p-4 border rounded-2xl bg-muted/5 flex flex-col justify-center items-center text-center">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+              <ImageIcon className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h4 className="font-medium text-sm mb-1">Conseil Pro</h4>
+              <p className="text-xs text-muted-foreground max-w-xs">
+                Les restaurants avec de belles photos reçoivent jusqu'à 2x plus de réservations. Mettez en avant vos plats signatures et
+                l'ambiance de la salle.
+              </p>
+            </div>
+          </div>
         </div>
         {errors?.images && <p className="text-xs font-medium text-red-500 px-1 animate-in slide-in-from-top-1 mt-2">{errors.images}</p>}
 

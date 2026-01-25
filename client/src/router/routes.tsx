@@ -37,6 +37,7 @@ import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/PublicRestaurants";
 import { RestaurantRoleProtectedRoute } from "./RestaurantRoleProtectedRoute";
+import { RestaurantGallery } from "@/pages/Restaurant/Gallery";
 
 export const Router = () => {
   return (
@@ -160,6 +161,14 @@ export const Router = () => {
             element={
               <RestaurantRoleProtectedRoute roles={["admin"]}>
                 <RestaurantPlan />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="gallery"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin", "manager"]}>
+                <RestaurantGallery />
               </RestaurantRoleProtectedRoute>
             }
           />

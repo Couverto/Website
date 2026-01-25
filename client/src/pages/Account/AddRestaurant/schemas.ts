@@ -26,9 +26,9 @@ export const getDetailsSchema = () =>
     capacity: z.number().min(1, "Au moins 1 couvert requis."),
     socials: z
       .object({
-        facebook: z.string().url().optional().or(z.literal("")),
-        instagram: z.string().url().optional().or(z.literal("")),
-        tiktok: z.string().url().optional().or(z.literal("")),
+        facebook: z.string().url("URL Facebook invalide").optional().or(z.literal("")),
+        instagram: z.string().url("URL Instagram invalide").optional().or(z.literal("")),
+        tiktok: z.string().url("URL Tiktok invalide").optional().or(z.literal("")),
       })
       .optional(),
     website: z.string().url().optional().or(z.literal("")),
@@ -41,8 +41,8 @@ export const getMenuSchema = () =>
 
 export const getMediaSchema = () =>
   z.object({
-    coverImage: z.string().url("L'image de couverture est requise."),
-    images: z.array(z.string().url()).min(1, "Veuillez ajouter au moins une image dans la galerie."),
+    coverImage: z.string().optional(),
+    images: z.array(z.string()).optional(),
   });
 
 export const getPlanSchema = () =>

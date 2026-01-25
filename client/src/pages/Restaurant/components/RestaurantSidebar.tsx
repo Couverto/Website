@@ -1,5 +1,5 @@
 import { NavLink, useParams, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft, BarChart3, CreditCard } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft, BarChart3, CreditCard, ImageIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +24,7 @@ interface RestaurantSidebarProps {
     _id: string;
     name: string;
     coverImage?: string;
+    isClosed?: boolean;
   };
   userRole?: string;
 }
@@ -59,6 +60,12 @@ export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: Restaur
       title: "Collaborateurs",
       url: `/restaurant/${id}/collaborators`,
       icon: UserPlus,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Galerie",
+      url: `/restaurant/${id}/gallery`,
+      icon: ImageIcon,
       roles: ["admin", "manager"],
     },
     {
@@ -149,6 +156,16 @@ export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: Restaur
 
       <SidebarFooter className="p-4 group-data-[state=collapsed]:p-2 flex flex-col gap-4 bg-zinc-50/50 dark:bg-zinc-900/10 border-t border-zinc-100 dark:border-zinc-900/50 backdrop-blur-sm transition-all">
         <div className="flex flex-col items-center gap-2">
+          {restaurant && (
+            <div className="w-full flex justify-center group-data-[state=collapsed]:hidden pb-2">
+              <div
+                className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border ${restaurant.isClosed ? "bg-red-100 text-red-700 border-red-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${restaurant.isClosed ? "bg-red-500" : "bg-emerald-500"}`} />
+                {restaurant.isClosed ? "Fermé au public" : "Ouvert au public"}
+              </div>
+            </div>
+          )}
           <NavUser user={authUser} />
         </div>
       </SidebarFooter>
