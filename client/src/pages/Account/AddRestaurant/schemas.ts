@@ -16,13 +16,7 @@ export const getIdentitySchema = () =>
       required_error: "Veuillez sélectionner une fourchette de prix.",
     }),
     shortDescription: z.string().max(100).optional(),
-    description: z.string().min(20, "La description doit contenir au moins 20 caractères.").optional(),
-    // Note: made description optional in schema but min length applies if provided?
-    // If it was meant to be required, remove .optional().
-    // Assuming user wants it required based on 'Veuillez remplir...' message in original code.
-    // Actually, original code had .optional() AND .min(), so it validates min length ONLY if value is present.
-    // If it's mandatory, I should remove .optional(). Looking at the UI, usually description is good.
-    // But original code: min(20, "Veuillez remplir...").optional()
+    description: z.string().min(20, "La description doit contenir au moins 20 caractères."),
   });
 
 export const getDetailsSchema = () =>
@@ -47,8 +41,8 @@ export const getMenuSchema = () =>
 
 export const getMediaSchema = () =>
   z.object({
-    coverImage: z.string().url().optional().or(z.literal("")),
-    images: z.array(z.string().url()).optional(),
+    coverImage: z.string().url("L'image de couverture est requise."),
+    images: z.array(z.string().url()).min(1, "Veuillez ajouter au moins une image dans la galerie."),
   });
 
 export const getPlanSchema = () =>
