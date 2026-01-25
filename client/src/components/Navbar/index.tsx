@@ -18,6 +18,7 @@ import {
 import { useLogout } from "@/hooks/useLogout";
 import { AvatarWithStatusCell } from "@/components/customs/avatarStatusCell";
 import { useConfigContext } from "../../contexts/configContext";
+import { useIsMobile } from "@/hooks/useMobile";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,14 +57,6 @@ export const Navbar = () => {
       translationKey: "Accueil",
       path: "/",
       icon: House,
-      auth: false, // Visible to everyone or irrelevant
-      hideIfAuth: false,
-    },
-    {
-      label: "About",
-      translationKey: "A propos",
-      path: "/about",
-      icon: Users,
       auth: false,
       hideIfAuth: false,
     },
@@ -81,7 +74,23 @@ export const Navbar = () => {
       path: "/pro",
       icon: ChefHat,
       auth: false,
-      hideIfAuth: false, // Hide if logged in (assuming logged in might be pro)
+      hideIfAuth: false,
+    },
+    {
+      label: "About",
+      translationKey: "A propos",
+      path: "/about",
+      icon: Users,
+      auth: false,
+      hideIfAuth: false,
+    },
+    {
+      label: "Contact",
+      translationKey: "Contact",
+      path: "/contact",
+      icon: Users,
+      auth: false,
+      hideIfAuth: false,
     },
   ];
 
@@ -109,6 +118,8 @@ export const Navbar = () => {
     },
   ];
 
+  const isMobile = useIsMobile();
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 pointer-events-none">
@@ -133,11 +144,7 @@ export const Navbar = () => {
             <div className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground shadow-lg group-hover:scale-110 transition-transform duration-300">
               <Utensils className="h-5 w-5" />
             </div>
-            <span
-              className={cn("text-xl font-bold tracking-tight transition-opacity", scrolled ? "opacity-100" : "opacity-0 md:opacity-100")}
-            >
-              {configValues["APP_NAME"]}
-            </span>
+            <span className={cn("text-xl font-bold tracking-tight")}>{configValues["APP_NAME"]}</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -207,9 +214,9 @@ export const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) : isMobile ? null : (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" asChild className="hidden md:flex rounded-full hover:bg-primary/5">
+                <Button variant="ghost" asChild className="hidden md:flex rounded-full hover:bg-accent">
                   <Link to="/login">{"Se connecter"}</Link>
                 </Button>
                 <Button asChild className="rounded-full shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5">

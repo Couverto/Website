@@ -97,11 +97,6 @@ export const RestaurantLayout = () => {
                 <SidebarTrigger />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <RestaurantBreadcrumb restaurant={restaurant} />
-                {restaurant && (
-                  <Badge variant={restaurant.isClosed ? "destructive" : "secondary"} className="ml-2">
-                    {restaurant.isClosed ? "FERMÉ" : "OUVERT"}
-                  </Badge>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 <ThemeChanger />

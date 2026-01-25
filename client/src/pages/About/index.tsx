@@ -4,17 +4,37 @@ import { Badge } from "@/components/ui/badge";
 import { useConfigContext } from "@/contexts/configContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { axiosConfig } from "@/config/axiosConfig";
 
 export const About = () => {
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
   const navigate = useNavigate();
+  const [realStats, setRealStats] = useState({
+    restaurants: 0,
+    users: 0,
+    bookings: 0,
+    cities: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await axiosConfig.get("/restaurants/public/stats");
+        setRealStats(data);
+      } catch (error) {
+        console.error("Failed to fetch stats", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const stats = [
-    { label: "Restaurants Partenaires", value: "500+" },
-    { label: "Utilisateurs Actifs", value: "50k+" },
-    { label: "Réservations / mois", value: "120k" },
-    { label: "Villes", value: "15" },
+    { label: "Restaurants Partenaires", value: realStats.restaurants.toString() },
+    { label: "Utilisateurs Actifs", value: realStats.users.toString() },
+    { label: "Réservations", value: realStats.bookings.toString() },
+    { label: "Villes", value: realStats.cities.toString() },
   ];
 
   const values = [
@@ -61,9 +81,9 @@ export const About = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pt-20">
+    <div className="min-h-screen bg-background pt-12 md:pt-20">
       {/* Story Section */}
-      <section className="py-24">
+      <section className="py-12 md:py-24">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
             {/* Left Column: Text */}
@@ -88,26 +108,28 @@ export const About = () => {
             </div>
 
             {/* Right Column: Stats Card */}
-            <div className="bg-card border shadow-xl rounded-3xl p-8 overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                <TrendingUp className="h-48 w-48" />
+            <div className="bg-card border shadow-xl rounded-2xl md:rounded-3xl p-4 md:p-8 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 md:p-8 opacity-5 pointer-events-none">
+                <TrendingUp className="h-24 md:h-48 w-24 md:w-48" />
               </div>
 
-              <div className="text-center mb-8 space-y-4 relative z-10">
-                <Badge variant="secondary" className="px-4 py-1.5 text-sm font-medium rounded-full">
+              <div className="text-center mb-4 md:mb-8 space-y-2 md:space-y-4 relative z-10">
+                <Badge variant="secondary" className="px-3 md:px-4 py-1 md:py-1.5 text-xs md:text-sm font-medium rounded-full">
                   {"Notre Impact"}
                 </Badge>
-                <h2 className="text-2xl font-bold tracking-tight">{"Des chiffres qui donnent faim"}</h2>
+                <h2 className="text-lg md:text-2xl font-bold tracking-tight">{"Des chiffres qui donnent faim"}</h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 relative z-10">
                 {stats.map((stat, i) => (
                   <div
                     key={i}
-                    className="text-center p-4 rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/50 transition-colors duration-300"
+                    className="text-center p-3 md:p-4 rounded-lg md:rounded-xl bg-background/50 backdrop-blur-sm border border-border/50 hover:border-primary/50 transition-colors duration-300"
                   >
-                    <div className="text-3xl font-black text-primary mb-1 tracking-tight">{stat.value}</div>
-                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{stat.label}</div>
+                    <div className="text-xl md:text-3xl font-black text-primary mb-0.5 md:mb-1 tracking-tight">{stat.value}</div>
+                    <div className="text-[9px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
+                      {stat.label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -142,14 +164,14 @@ export const About = () => {
       {/* Team Section */}
       <section className="py-24 bg-muted/30">
         <div className="container px-4 md:px-6 mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 text-primary font-bold tracking-wide uppercase text-sm">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 text-center md:text-left">
+            <div className="space-y-4 w-full md:w-auto">
+              <div className="inline-flex items-center gap-2 text-primary font-bold tracking-wide uppercase text-sm justify-center md:justify-start w-full md:w-auto">
                 <Users className="h-4 w-4" /> {"L'Équipe"}
               </div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">{"Les fondateurs"}</h2>
             </div>
-            <p className="text-muted-foreground text-lg max-w-md text-right md:text-left">
+            <p className="text-muted-foreground text-lg max-w-md md:text-left mx-auto md:mx-0">
               {"Deux profils complémentaires unis par la même ambition."}
             </p>
           </div>

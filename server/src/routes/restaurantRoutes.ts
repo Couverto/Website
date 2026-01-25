@@ -24,6 +24,7 @@ import {
   getInvitationInfo,
   acceptInvitation,
 } from "../controllers/invitationController.js";
+import { getPublicStats } from "../controllers/dashboardController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 import { userRoles } from "../utils/enums/userRoles.js";
@@ -33,6 +34,7 @@ export const restaurantRouter = express.Router();
 
 // Public routes
 restaurantRouter.get("/public", getPublicRestaurants);
+restaurantRouter.get("/public/stats", getPublicStats);
 restaurantRouter.get("/public/:id", getPublicRestaurantById);
 restaurantRouter.get("/public/:id/slots", getRestaurantSlots);
 

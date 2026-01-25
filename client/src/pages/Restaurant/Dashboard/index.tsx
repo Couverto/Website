@@ -134,7 +134,7 @@ export const RestaurantDashboard = () => {
           <h1 className="text-3xl font-bold">{"Tableau de bord"}</h1>
           <p className="text-muted-foreground">{"Vue d'ensemble de votre restaurant"}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {context?.restaurant && (
             <Button variant="outline" asChild>
               <Link to={`/restaurants/infos/${context.restaurant._id}`} target="_blank">

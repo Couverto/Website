@@ -70,11 +70,11 @@ export const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-12">
+    <div className="min-h-screen bg-background pt-12 pb-12">
       <div className="container mx-auto px-4 max-w-6xl h-full">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 min-h-[calc(100vh-10rem)] items-center">
           {/* Left Column: Visuals & Info */}
-          <div className="space-y-8 order-2 lg:order-1">
+          <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">{"Contactez-nous"}</h1>
               <p className="text-xl text-muted-foreground">
@@ -110,7 +110,7 @@ export const Contact = () => {
           </div>
 
           {/* Right Column: Form */}
-          <div className="order-1 lg:order-2">
+          <div>
             <Card className="border-border/50 shadow-2xl bg-card/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>{"Envoyez-nous un message"}</CardTitle>

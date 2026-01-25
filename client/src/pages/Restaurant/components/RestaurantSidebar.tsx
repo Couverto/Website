@@ -1,5 +1,5 @@
-import { NavLink, useParams, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, ChevronLeft, BarChart3, CreditCard, ImageIcon } from "lucide-react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, BarChart3, CreditCard, ImageIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,11 +13,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { NavUser } from "@/components/nav-user";
 import { useAuthContext } from "@/contexts/authContext";
-import { ThemeChanger } from "@/components/Navbar/themeChanger";
-import { Separator } from "@/components/ui/separator";
 
 interface RestaurantSidebarProps {
   restaurant?: {

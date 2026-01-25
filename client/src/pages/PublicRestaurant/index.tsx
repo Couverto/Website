@@ -495,6 +495,18 @@ export const PublicRestaurant = () => {
           </div>
         </div>
       </div>
+      {/* Mobile Sticky Booking Bar */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t md:hidden z-40 animate-in slide-in-from-bottom-full duration-500 safe-area-bottom">
+        <Button
+          size="lg"
+          className="w-full shadow-lg font-bold text-lg h-12"
+          onClick={() => setIsBookingOpen(true)}
+          disabled={restaurant.isClosed}
+        >
+          {restaurant.isClosed ? "Fermé" : "Réserver une table"}
+        </Button>
+      </div>
+
       {/* Type assertion needed because PublicRestaurant interface might differ slightly from RestaurantInterface expected by BookingDialog */}
       <BookingDialog
         open={isBookingOpen}

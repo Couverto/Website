@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface FeatureCardProps {
   title: string;
@@ -38,6 +40,7 @@ const FeatureCard = ({ title, description, icon, className, delay = 0 }: Feature
 export const ValueProps = () => {
   const { configValues } = useConfigContext();
   const appName = configValues["APP_NAME"];
+  const navigate = useNavigate();
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden">
@@ -49,7 +52,10 @@ export const ValueProps = () => {
       <div className="container px-4 md:px-6 mx-auto">
         {/* Section Header */}
         <div className="flex flex-col items-center text-center space-y-8 mb-24 max-w-4xl mx-auto">
-          <Badge variant="outline" className="px-4 py-1.5 text-sm border-primary/20 bg-primary/5 text-primary rounded-full">
+          <Badge
+            variant="outline"
+            className="px-4 py-1.5 text-sm border-primary/20 bg-primary/5 text-primary rounded-full text-balance text-center h-auto whitespace-normal"
+          >
             {"La plateforme de réservation pensée pour vous simplifier la vie."}
           </Badge>
 
@@ -118,11 +124,11 @@ export const ValueProps = () => {
         </div>
 
         {/* Unified "How It Works" Section with Stats */}
-        <div className="rounded-[2.5rem] bg-foreground text-background p-8 md:p-16 relative overflow-hidden">
+        <div className="rounded-[2.5rem] bg-foreground text-background p-6 md:p-16 relative overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat opacity-5" />
 
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="space-y-8">
               <h3 className="text-3xl md:text-4xl font-bold">Comment ça marche ?</h3>
               <div className="space-y-8">
@@ -145,7 +151,7 @@ export const ValueProps = () => {
             </div>
 
             {/* Right Side Visual/Stats */}
-            <div className="relative h-full min-h-[400px] rounded-3xl bg-white/5 border border-white/10 p-8 md:p-12 flex flex-col justify-between backdrop-blur-sm">
+            <div className="relative h-full min-h-[400px] rounded-3xl bg-white/5 border border-white/10 p-6 md:p-12 flex flex-col justify-between backdrop-blur-sm">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-yellow-400">
                   <Star className="fill-current h-5 w-5" />
@@ -154,11 +160,14 @@ export const ValueProps = () => {
                   <Star className="fill-current h-5 w-5" />
                   <Star className="fill-current h-5 w-5" />
                 </div>
-                <blockquote className="text-2xl font-medium leading-relaxed">
+                <blockquote className="text-xl md:text-2xl font-medium leading-relaxed">
                   "L'expérience de réservation la plus fluide que j'ai jamais eue. Simplement génial."
                 </blockquote>
                 <div className="pt-4 flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-full bg-white/20" />
+                  <Avatar className="h-10 w-10 border-2 border-white/20">
+                    <AvatarImage src="/images/reviews/sophie_martin.png" alt="Sophie Martin" className="object-cover" />
+                    <AvatarFallback>SM</AvatarFallback>
+                  </Avatar>
                   <div>
                     <div className="font-bold">Sophie Martin</div>
                     <div className="text-sm text-white/50">Food Blogger</div>
@@ -166,12 +175,17 @@ export const ValueProps = () => {
                 </div>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-white/10 flex justify-between items-center">
+              <div className="mt-8 pt-8 border-t border-white/10 flex flex-col sm:flex-row gap-4 justify-between items-center text-center sm:text-left">
                 <div>
                   <div className="text-3xl font-bold">98%</div>
                   <div className="text-sm text-white/50">Satisfaction client</div>
                 </div>
-                <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold px-8">Réserver maintenant</Button>
+                <Button
+                  className="w-full sm:w-auto rounded-full bg-white text-black hover:bg-white/90 font-bold px-8"
+                  onClick={() => navigate("/restaurants")}
+                >
+                  Réserver maintenant
+                </Button>
               </div>
             </div>
           </div>

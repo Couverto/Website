@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, UtensilsCrossed } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const CallToAction = () => {
   return (
@@ -25,19 +26,23 @@ export const CallToAction = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 w-full max-w-md mx-auto">
-            <Button
-              size="lg"
-              className="h-14 px-8 text-lg font-bold rounded-full shadow-lg hover:scale-105 transition-transform bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
-            >
-              {"Trouver une table maintenant"}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-14 px-8 text-lg font-bold rounded-full border-2 bg-transparent border-background/20 text-background hover:bg-background hover:text-foreground w-full sm:w-auto"
-            >
-              En savoir plus <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <Link to="/restaurants" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="h-14 px-8 text-lg font-bold rounded-full shadow-lg hover:scale-105 transition-transform bg-primary text-primary-foreground hover:bg-primary/90 w-full"
+              >
+                {"Trouver une table maintenant"}
+              </Button>
+            </Link>
+            <Link to="/about" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 text-lg font-bold rounded-full border-2 bg-transparent border-background/20 text-background hover:bg-background hover:text-foreground w-full"
+              >
+                En savoir plus <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </div>
 
           <p className="text-sm text-background/40">Pas de carte de crédit requise • Annulation gratuite</p>

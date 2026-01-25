@@ -47,11 +47,11 @@ export const Hero = () => {
       </div>
 
       <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-10 pt-32 animate-in fade-in zoom-in duration-700">
-        <div className="space-y-4 max-w-4xl">
-          <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg">
+        <div className="space-y-4 max-w-4xl px-4">
+          <h1 className="text-3xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg text-balance">
             {"Réservez une table simplement."}
           </h1>
-          <p className="mx-auto max-w-[700px] text-lg sm:text-xl md:text-2xl text-white/95 font-medium drop-shadow-md">
+          <p className="mx-auto max-w-[700px] text-base sm:text-xl md:text-2xl text-white/95 font-medium drop-shadow-md text-balance">
             {"Découvrez les meilleurs restaurants autour de vous en quelques clics."}
           </p>
         </div>
@@ -116,8 +116,8 @@ export const Hero = () => {
           </Button>
         </div>
 
-        <div className="flex gap-4 pt-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full">
+        <div className="flex flex-wrap justify-center gap-4 pt-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full whitespace-nowrap">
             <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
             Confirmation instantanée
           </div>

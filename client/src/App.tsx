@@ -3,6 +3,7 @@ import { useAuthContext } from "./contexts/authContext.js";
 import { Loading } from "./components/customs/loading.js";
 import "./styles/index.css";
 import { useAxiosInterceptor } from "./hooks/useAxiosInterceptors.js";
+import { ScrollToTop } from "./components/ScrollToTop.js";
 
 function App() {
   const { loading } = useAuthContext();
@@ -12,7 +13,12 @@ function App() {
     return <Loading />;
   }
 
-  return <Router />;
+  return (
+    <>
+      <ScrollToTop />
+      <Router />
+    </>
+  );
 }
 
 export default App;

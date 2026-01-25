@@ -68,8 +68,27 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
       },
       system: {
         totalLogs,
-        errorLogsLast24h: errorLogs24h,
       },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getPublicStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const [totalUsers, totalRestaurants, totalBookings, totalCities] = await Promise.all([
+      User.countDocuments(),
+      Restaurant.countDocuments(),
+      Booking.countDocuments(),
+      Restaurant.distinct("address.city"),
+    ]);
+
+    res.status(200).json({
+      users: totalUsers,
+      restaurants: totalRestaurants,
+      bookings: totalBookings,
+      cities: totalCities.length,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
