@@ -119,7 +119,7 @@ export const Dashboard = () => {
           value={stats.system.errorLogsLast24h > 0 ? "Attention" : "Sain"}
           icon={Activity}
           trend={stats.system.errorLogsLast24h > 0 ? "down" : "up"}
-          trendValue={`${stats.system.errorLogsLast24h} erreurs`}
+          trendValue={`${stats.system.errorLogsLast24h == undefined ? 0 : stats.system.errorLogsLast24h} erreurs`}
           description="dernières 24h"
         />
       </div>

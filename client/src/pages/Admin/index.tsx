@@ -12,7 +12,6 @@ const segmentLabels: Record<string, string> = {
   configs: "Configurations",
   logs: "Logs",
 };
-import { LayoutDashboard, ChevronRight } from "lucide-react";
 
 export const Index = () => {
   const location = useLocation();

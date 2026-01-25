@@ -70,7 +70,7 @@ export const RestaurantCollaborators = () => {
   const { userRole } = useOutletContext<RestaurantContext>();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isCreatingInvite, setIsCreatingInvite] = useState(false);
   const [newInviteLink, setNewInviteLink] = useState<string | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
@@ -91,7 +91,7 @@ export const RestaurantCollaborators = () => {
 
   useEffect(() => {
     if (id) {
-      fetchData();
+      fetchAllData();
     }
   }, [id]);
 
@@ -101,7 +101,8 @@ export const RestaurantCollaborators = () => {
     setPaginatedCollaborators(collaborators.slice(start, end));
   }, [collaborators, pageIndex, pageSize]);
 
-  const fetchData = async () => {
+  const fetchAllData = useCallback(async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const [collabRes, inviteRes] = await Promise.all([
@@ -115,12 +116,19 @@ export const RestaurantCollaborators = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, loading]);
 
-  const handlePageChange = (pIndex: number, pSize: number) => {
-    setPageIndex(pIndex);
-    setPageSize(pSize);
-  };
+  const handlePageChange = useCallback(
+    (pIndex: number, pSize: number) => {
+      if (pIndex === pageIndex && pSize === pageSize) {
+        fetchAllData();
+      } else {
+        setPageIndex(pIndex);
+        setPageSize(pSize);
+      }
+    },
+    [pageIndex, pageSize, fetchAllData],
+  );
 
   const handleCallback = (action: string, data: any) => {
     switch (action) {
@@ -140,7 +148,7 @@ export const RestaurantCollaborators = () => {
     try {
       await api.patch(`/restaurants/${id}/collaborators/${collaboratorId}/role`, { role });
       toast.success("Rôle mis à jour");
-      fetchData();
+      fetchAllData();
     } catch (error) {
       toast.error("Erreur lors de la mise à jour du rôle");
     }
@@ -182,7 +190,7 @@ export const RestaurantCollaborators = () => {
     setIsAddingUser(userId);
     try {
       await api.post(`/restaurants/${id}/collaborators`, { userId });
-      await fetchData();
+      await fetchAllData();
       setSearchQuery("");
       setSearchResults([]);
       toast.success("Collaborateur ajouté");
@@ -204,7 +212,7 @@ export const RestaurantCollaborators = () => {
       const response = await api.post(`/restaurants/${id}/invitations`);
       const link = `${window.location.origin}/join/${response.data.invitation.token}`;
       navigator.clipboard.writeText(link);
-      await fetchData();
+      await fetchAllData();
       toast.success("Lien d'invitation créé et copié !");
       setIsInviteDialogOpen(false);
       setNewInviteLink(null);
@@ -234,7 +242,7 @@ export const RestaurantCollaborators = () => {
   const removeCollaborator = async (collaboratorId: string) => {
     try {
       await api.delete(`/restaurants/${id}/collaborators/${collaboratorId}`);
-      setCollaborators((prev) => prev.filter((c) => c._id !== collaboratorId));
+      await fetchAllData();
       toast.success("Collaborateur retiré");
     } catch (error: any) {
       const errorKey = error.response?.data?.error;
@@ -245,14 +253,6 @@ export const RestaurantCollaborators = () => {
       }
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
