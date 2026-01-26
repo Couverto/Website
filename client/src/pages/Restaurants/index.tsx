@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { CuisineSelector } from "@/components/CuisineSelector";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { fr, enUS } from "date-fns/locale";
+import { PriceIndicator } from "@/components/customs/PriceIndicator";
 
 // Register locales
 registerLocale("fr", fr);
@@ -160,11 +161,21 @@ export const PublicRestaurants = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les prix</SelectItem>
-                <SelectItem value="$">$ ({"10€ - 20€"})</SelectItem>
-                <SelectItem value="$$">$$ ({"20€ - 30€"})</SelectItem>
-                <SelectItem value="$$$">$$$ ({"30€ - 40€"})</SelectItem>
-                <SelectItem value="$$$$">$$$$ ({"40€ - 50€"})</SelectItem>
-                <SelectItem value="$$$$$">$$$$$ ({"50€+"})</SelectItem>
+                <SelectItem value="$">
+                  <PriceIndicator value="$" variant="compact" />
+                </SelectItem>
+                <SelectItem value="$$">
+                  <PriceIndicator value="$$" variant="compact" />
+                </SelectItem>
+                <SelectItem value="$$$">
+                  <PriceIndicator value="$$$" variant="compact" />
+                </SelectItem>
+                <SelectItem value="$$$$">
+                  <PriceIndicator value="$$$$" variant="compact" />
+                </SelectItem>
+                <SelectItem value="$$$$$">
+                  <PriceIndicator value="$$$$$" variant="compact" />
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

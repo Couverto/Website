@@ -18,11 +18,11 @@ export const CUISINES = [
 ];
 
 export const PRICES = [
-  { id: "vlow", value: "$" },
-  { id: "low", value: "$$" },
-  { id: "medium", value: "$$$" },
-  { id: "high", value: "$$$$" },
-  { id: "vhigh", value: "$$$$$" },
+  { id: "vlow", value: "$", range: "10€ - 20€", label: "Budget" },
+  { id: "low", value: "$$", range: "20€ - 30€", label: "Standard" },
+  { id: "medium", value: "$$$", range: "30€ - 40€", label: "Confort" },
+  { id: "high", value: "$$$$", range: "40€ - 50€", label: "Premium" },
+  { id: "vhigh", value: "$$$$$", range: "50€+", label: "Prestige" },
 ];
 
 export const FEATURES_LIST = [

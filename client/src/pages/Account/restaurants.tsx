@@ -4,13 +4,17 @@ import { axiosConfig } from "@/config/axiosConfig";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuthContext } from "@/contexts/authContext";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const AccountRestaurants = () => {
   const navigate = useNavigate();
+  const { authUser } = useAuthContext();
   const [restaurants, setRestaurants] = useState<RestaurantInterface[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isAdmin = authUser?.role === "admin";
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -34,7 +38,11 @@ export const AccountRestaurants = () => {
             <CardTitle>{"Mes Restaurants"}</CardTitle>
             <CardDescription>{"Gérez vos établissements ici."}</CardDescription>
           </div>
-          <Button onClick={() => navigate("/pro/create-restaurant")}>
+          <Button
+            onClick={() => navigate("/pro/create-restaurant")}
+            disabled={!isAdmin}
+            title={!isAdmin ? "Réservé aux administrateurs" : ""}
+          >
             <Plus className="mr-2 h-4 w-4" />
             {"Ajouter un restaurant"}
           </Button>
@@ -49,9 +57,11 @@ export const AccountRestaurants = () => {
           ) : restaurants.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground mb-4">Vous n'avez pas encore de restaurant.</p>
-              <Link to="/pro/create-restaurant">
-                <Button variant="outline">Créez votre premier établissement</Button>
-              </Link>
+              {isAdmin && (
+                <Link to="/pro/create-restaurant">
+                  <Button variant="outline">Créez votre premier établissement</Button>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

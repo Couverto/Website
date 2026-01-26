@@ -29,15 +29,15 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CUISINES, PRICES, FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantResources";
+import { PRICES, FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantResources";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
+import { PriceRangeControl } from "@/components/customs/PriceRangeControl";
+import { CuisineSelector } from "@/components/CuisineSelector";
 
 export const AdminRestaurantForm = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [cuisineSearch, setCuisineSearch] = useState("");
-  const [cuisineOpen, setCuisineOpen] = useState(false);
   const navigate = useNavigate();
 
   const { register, handleSubmit, control, reset, watch } = useForm<RestaurantInterface>({
@@ -178,97 +178,20 @@ export const AdminRestaurantForm = () => {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Type de Cuisine</Label>
                 <Controller
                   control={control}
                   name="cuisineType"
-                  render={({ field }: { field: any }) => (
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/20">
-                        {field.value?.map((cuisine: string) => (
-                          <Badge
-                            key={cuisine}
-                            variant="secondary"
-                            className="pl-3 pr-2 py-1.5 text-sm bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:border-primary/30 transition-all group"
-                          >
-                            {cuisine}
-                            <button
-                              type="button"
-                              onClick={() => field.onChange(field.value.filter((x: string) => x !== cuisine))}
-                              className="ml-2 p-0.5 rounded-full hover:bg-primary/40 transition-colors"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-
-                      <Popover open={cuisineOpen} onOpenChange={setCuisineOpen}>
-                        <PopoverTrigger asChild>
-                          <div className="relative group cursor-text">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              className="pl-11 pr-10 h-12 text-base"
-                              placeholder="Rechercher des cuisines..."
-                              value={cuisineSearch}
-                              onChange={(e) => setCuisineSearch(e.target.value)}
-                            />
-                            <ChevronDown
-                              className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 transition-transform ${cuisineOpen ? "rotate-180" : ""}`}
-                            />
-                          </div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                          <div className="max-h-[300px] overflow-y-auto p-1">
-                            {CUISINES.filter((c) => c.toLowerCase().includes(cuisineSearch.toLowerCase())).map((cuisine) => (
-                              <button
-                                key={cuisine}
-                                type="button"
-                                onClick={() => {
-                                  const current = field.value || [];
-                                  if (current.includes(cuisine)) {
-                                    field.onChange(current.filter((c: string) => c !== cuisine));
-                                  } else {
-                                    field.onChange([...current, cuisine]);
-                                  }
-                                }}
-                                className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-muted"
-                              >
-                                {cuisine}
-                                {field.value?.includes(cuisine) && <Check className="h-3 w-3 text-primary" />}
-                              </button>
-                            ))}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  )}
+                  render={({ field }) => <CuisineSelector value={field.value} onChange={field.onChange} />}
                 />
               </div>
 
               <div className="space-y-4">
                 <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Gamme de prix</Label>
-                <div className="grid grid-cols-5 gap-2">
-                  <Controller
-                    control={control}
-                    name="priceRange"
-                    render={({ field }: { field: any }) => (
-                      <>
-                        {PRICES.map((price) => (
-                          <div
-                            key={price.id}
-                            onClick={() => field.onChange(price.value)}
-                            className={`p-2 border-2 rounded-xl text-center cursor-pointer transition-all ${
-                              field.value === price.value ? "border-primary bg-primary/5 text-primary" : "border-muted"
-                            }`}
-                          >
-                            <span className="text-xs font-bold">{price.value}</span>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  />
-                </div>
+                <Controller
+                  control={control}
+                  name="priceRange"
+                  render={({ field }) => <PriceRangeControl value={field.value} onChange={field.onChange} />}
+                />
               </div>
             </div>
 

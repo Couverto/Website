@@ -84,12 +84,12 @@ export const StepPlan = ({ data, updateData, errors }: StepProps) => {
                   <span className="text-muted-foreground font-medium">/mois</span>
                 </div>
                 <ul className="space-y-3">
-                  {plan.features.map((feature, i) => (
+                  {plan.features?.map((feature: any, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div className="h-5 w-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-3 h-3 text-emerald-600" />
                       </div>
-                      <span className="text-sm text-muted-foreground">{feature}</span>
+                      <span className="text-sm text-muted-foreground">{feature.name}</span>
                     </li>
                   ))}
                 </ul>

@@ -27,7 +27,7 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
 
   const handleCVCChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 4) value = value.slice(0, 4);
+    if (value.length > 3) value = value.slice(0, 3);
     updateData({ cvc: value });
   };
 
@@ -136,7 +136,7 @@ export const StepPayment = ({ data, updateData, errors }: StepProps) => {
                   value={data.cvc || ""}
                   onChange={handleCVCChange}
                   onFocus={handleInputFocus}
-                  maxLength={4}
+                  maxLength={3}
                 />
               </div>
               {errors?.cvc && <p className="text-xs font-medium text-red-500 px-1">{errors.cvc}</p>}

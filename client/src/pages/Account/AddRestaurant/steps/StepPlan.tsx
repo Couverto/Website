@@ -84,10 +84,10 @@ export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) =>
             <CardContent>
               <div className="text-2xl font-bold mb-4">{plan.price}€</div>
               <ul className="space-y-2 text-sm">
-                {plan.features.map((feature, i) => (
+                {plan.features?.map((feature: any, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />
-                    {feature}
+                    {feature.name}
                   </li>
                 ))}
               </ul>

@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { BookingDialog } from "./Booking/BookingDialog";
 import { useState } from "react";
 import { RestaurantCardProps } from "@/interfaces/Components";
+import { PriceIndicator } from "@/components/customs/PriceIndicator";
 
 export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => {
   const navigate = useNavigate();
@@ -69,19 +70,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
           </div>
 
           <div className="absolute bottom-3 left-3 right-3 text-white">
-            {restaurant.priceRange && (
-              <Badge variant="outline" className="text-white border-white/40 bg-black/20 backdrop-blur-sm mb-2 hover:bg-black/40">
-                {restaurant.priceRange === "$"
-                  ? "Très abordable"
-                  : restaurant.priceRange === "$$"
-                    ? "Abordable"
-                    : restaurant.priceRange === "$$$"
-                      ? "Intermédiaire"
-                      : restaurant.priceRange === "$$$$"
-                        ? "Haut de gamme"
-                        : "Gastronomique"}
-              </Badge>
-            )}
+            {restaurant.priceRange && <PriceIndicator value={restaurant.priceRange} variant="compact" className="mb-2 backdrop-blur-sm" />}
             <h3 className="font-bold text-xl leading-tight text-white shadow-sm truncate">{restaurant.name}</h3>
             <div className="flex items-center gap-1 text-white/90 text-sm mt-1">
               <MapPin className="w-3.5 h-3.5" />

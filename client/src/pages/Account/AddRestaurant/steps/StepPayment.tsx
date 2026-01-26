@@ -123,7 +123,7 @@ export const StepPayment = ({ data, updateData, onSubmit, onBack, loading }: Ste
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                      <Input className="pl-10" placeholder="123" type="password" {...field} maxLength={4} />
+                      <Input className="pl-10" placeholder="123" type="password" {...field} maxLength={3} />
                     </div>
                   </FormControl>
                   <FormMessage />

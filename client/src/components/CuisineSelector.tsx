@@ -155,7 +155,7 @@ export const CuisineSelector = ({ value = [], onChange, className, variant = "de
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none" />
             <Input
               className="pl-11 pr-10 h-12 text-base border-muted-foreground/20 focus:border-primary shadow-sm transition-all"
-              placeholder="Rechercher des cuisines..."
+              placeholder="Rechercher ou ajouter des cuisines..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

@@ -109,7 +109,7 @@ export const WizardPreview = ({ data }: PreviewProps) => {
           </div>
 
           {/* Opening Hours Preview */}
-          {data.openingHours && Object.keys(data.openingHours).length > 0 && (
+          {/* {data.openingHours && Object.keys(data.openingHours).length > 0 && (
             <div className="mt-4 p-4 rounded-2xl bg-muted/30 border border-muted-foreground/5 space-y-2">
               <div className="flex items-center gap-2">
                 <ClockIcon className="w-3.5 h-3.5 text-primary" />
@@ -147,7 +147,7 @@ export const WizardPreview = ({ data }: PreviewProps) => {
                 })}
               </div>
             </div>
-          )}
+          )} */}
         </CardContent>
 
         <CardFooter className="p-6 pt-0">

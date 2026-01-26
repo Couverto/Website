@@ -139,6 +139,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (!user.password && user.auth_type === authTypes.GOOGLE) {
+      res.status(400).json({
+        error: "Cet email est associé à un compte Google. Aucun mot de passe n'a été défini pour ce compte.",
+      });
+      return;
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       createLog({
