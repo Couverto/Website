@@ -17,7 +17,7 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
         className="font-medium text-xs uppercase tracking-wider hover:text-primary"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        {"Nom"} <ArrowUpDown className="w-3 h-3 ml-2" />
+        {"Restaurant"} <ArrowUpDown className="w-3 h-3 ml-2" />
       </Button>
     ),
     cell: ({ row }) => {
@@ -38,7 +38,7 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
         </div>
       );
     },
-    meta: { label: "Nom" },
+    meta: { label: "Restaurant" },
   },
   {
     accessorKey: "city",
@@ -122,14 +122,15 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
   {
     id: "actions",
     enableHiding: false,
-    header: "",
+    header: "Actions",
+    meta: { label: "Actions" },
     cell: ({ row }) => {
       const restaurant = row.original;
 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted/50 hover:text-primary">
               <span className="sr-only">Open menu</span>
               <EllipsisVertical className="h-4 w-4" />
             </Button>

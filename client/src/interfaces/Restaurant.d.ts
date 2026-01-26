@@ -34,6 +34,7 @@ export interface RestaurantInterface {
   cuisineType: string[];
   priceRange: string;
   rating: number;
+  subscriptionStatus?: "active" | "cancelled" | "expired" | "none";
   collaborators: string[] | any[]; // IDs or Populated Users
   createdAt: string;
   updatedAt: string;

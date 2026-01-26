@@ -17,8 +17,13 @@ const roleSettings: Record<string, { icon: any; color: string; bg: string }> = {
 export const getColumns = (callback: (action: string, data: any) => void): ColumnDef<UserInterface>[] => [
   {
     id: "user",
+    header: ({ column }) => (
+      <Button variant="ghost" className="font-bold hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        {"Utilisateur"}
+        <ArrowUpDown className="w-4 h-4 ml-2" />
+      </Button>
+    ),
     accessorFn: (row) => `${row.name} ${row.forename} ${row.username}`,
-    header: "Utilisateur",
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -159,14 +164,15 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
   {
     id: "actions",
     enableHiding: false,
-    header: "",
+    header: "Actions",
+    meta: { label: "Actions" },
     cell: ({ row }) => {
       const user = row.original;
 
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted/50 hover:text-primary">
               <span className="sr-only">Open menu</span>
               <EllipsisVertical className="h-4 w-4" />
             </Button>

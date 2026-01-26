@@ -75,7 +75,7 @@ export const AdminRestaurants = () => {
             fetchData={fetchRestaurants}
             isLoading={loading}
             callback={callback}
-            searchElement="restaurant"
+            searchElement="name"
             actions={[]}
           />
         </CardContent>

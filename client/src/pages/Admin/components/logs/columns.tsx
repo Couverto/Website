@@ -89,8 +89,8 @@ export const getColumns = (deleteLog: (id: string) => void): ColumnDef<LogInterf
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-8 h-8 p-0">
-              <EllipsisVertical />
+            <Button variant="ghost" className="w-8 h-8 p-0 hover:bg-muted/50 hover:text-primary">
+              <EllipsisVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
