@@ -20,7 +20,7 @@ export const UpdatePasswordForm = ({ setOpen }: UpdatePasswordProps) => {
 
   const [loading, setLoading] = useState(false);
 
-  const updatePasswordSchema = getUpdatePasswordSchema();
+  const updatePasswordSchema = getUpdatePasswordSchema(authUser?.hasPassword);
   const updatePasswordForm = useForm<z.infer<typeof updatePasswordSchema>>({
     resolver: zodResolver(updatePasswordSchema),
     defaultValues: {
@@ -54,19 +54,21 @@ export const UpdatePasswordForm = ({ setOpen }: UpdatePasswordProps) => {
               {"Apportez des modifications à votre mot de passe ici. Cliquez sur enregistrer lorsque vous avez terminé."}
             </DialogDescription>
           </DialogHeader>
-          <FormField
-            control={updatePasswordForm.control}
-            name="currentPassword"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>{"Mot de passe actuel"}</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder={"********"} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {authUser?.hasPassword && (
+            <FormField
+              control={updatePasswordForm.control}
+              name="currentPassword"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>{"Mot de passe actuel"}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder={"********"} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={updatePasswordForm.control}
             name="newPassword"

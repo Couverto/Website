@@ -236,7 +236,7 @@ export const updatePassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = user.password ? await bcrypt.compare(currentPassword, user.password) : true;
     if (!isMatch) {
       res.status(400).json({ error: "server.users.errors.actual_password_incorrect" });
       return;
@@ -280,17 +280,18 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
   const { password } = req.body;
 
   try {
-    if (!password) {
-      res.status(400).json({ error: "Champs requis manquants" });
-      return;
-    }
-
     const user = await User.findById(userId).select("+password");
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      res.status(400).json({ error: "server.users.errors.password_incorrect" });
-      return;
+    if (user.password) {
+      if (!password) {
+        res.status(400).json({ error: "Le mot de passe est requis pour supprimer votre compte." });
+        return;
+      }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        res.status(400).json({ error: "server.users.errors.password_incorrect" });
+        return;
+      }
     }
 
     if (user.avatar) {

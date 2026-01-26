@@ -77,7 +77,7 @@ export const PublicRestaurants = () => {
     <div className="min-h-screen bg-background">
       {/* Banner Section */}
       <div className="relative h-[300px] md:h-[400px] flex items-center justify-center bg-muted overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop')] bg-cover bg-center">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop')] bg-cover bg-center blur-[2px] scale-105">
           <div className="absolute inset-0 bg-black/50" />
         </div>
 

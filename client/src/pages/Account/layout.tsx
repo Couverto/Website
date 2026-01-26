@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom";
-import { User, Utensils, Calendar } from "lucide-react";
+import { User, Utensils, Calendar, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const AccountLayout = () => {
@@ -20,6 +20,11 @@ export const AccountLayout = () => {
       title: "Mes Réservations",
       href: "/account/bookings",
       icon: Calendar,
+    },
+    {
+      title: "Préférences",
+      href: "/account/preferences",
+      icon: Settings2,
     },
   ];
 

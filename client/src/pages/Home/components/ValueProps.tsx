@@ -13,9 +13,10 @@ interface FeatureCardProps {
   icon: React.ReactNode;
   className?: string;
   delay?: number;
+  children?: React.ReactNode;
 }
 
-const FeatureCard = ({ title, description, icon, className, delay = 0 }: FeatureCardProps) => (
+const FeatureCard = ({ title, description, icon, className, delay = 0, children }: FeatureCardProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -30,7 +31,8 @@ const FeatureCard = ({ title, description, icon, className, delay = 0 }: Feature
       {icon}
     </div>
     <h3 className="mb-3 text-xl font-bold tracking-tight">{title}</h3>
-    <p className="text-muted-foreground leading-relaxed">{description}</p>
+    <p className="text-muted-foreground leading-relaxed mb-4">{description}</p>
+    {children}
 
     {/* Decorative background gradient */}
     <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-3xl transition-all duration-500 group-hover:bg-primary/10" />
@@ -70,39 +72,44 @@ export const ValueProps = () => {
 
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24 lg:mb-32">
-          {/* Card 1: Real-time (Large Left) */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="md:col-span-2 row-span-2 rounded-3xl border bg-gradient-to-br from-background to-muted/30 p-8 md:p-12 shadow-sm relative overflow-hidden group"
+          <FeatureCard
+            title={"Confirmation immédiate"}
+            description={"Fini l'attente au téléphone, votre table est bloquée instantanément. Plus d'attente, confirmation immédiate."}
+            icon={<Clock className="h-7 w-7" />}
+            className="md:col-span-2 row-span-2 bg-gradient-to-br from-background to-muted/30"
           >
-            <div className="relative z-10 max-w-lg">
-              <div className="h-14 w-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-6">
-                <Clock className="h-7 w-7" />
-              </div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">{"Confirmation immédiate"}</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                {"Fini l'attente au téléphone, votre table est bloquée instantanément."}
-                <br className="hidden md:block" /> Plus d'attente, confirmation immédiate.
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="h-10 w-10 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground"
-                    >
-                      <Users className="h-4 w-4" />
-                    </div>
-                  ))}
+            {/* Hero Image / Mockup - Panoramic Version */}
+            <div className="my-8 relative group/image">
+              <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full" />
+              <div className="relative rounded-2xl overflow-hidden border bg-background/50 shadow-xl transition-transform duration-500 group-hover/image:scale-[1.01]">
+                <img
+                  src="/images/illustrations/instant_confirmation_panoramic.png"
+                  alt="Confirmation immédiate"
+                  className="w-full h-32 md:h-48 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent flex items-bottom p-4">
+                  <div className="mt-auto flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse transition-all group-hover/image:scale-125 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Système en direct</span>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">+2000 réservations ce mois</span>
               </div>
             </div>
-            {/* Decorative Image/Pattern equivalent */}
-            <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-gradient-to-l from-blue-500/5 to-transparent hidden md:block" />
-          </motion.div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="h-10 w-10 rounded-full border-2 border-background bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground"
+                  >
+                    <Users className="h-4 w-4" />
+                  </div>
+                ))}
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">+2000 réservations ce mois</span>
+            </div>
+          </FeatureCard>
 
           {/* Card 2: Secure (Top Right) */}
           <FeatureCard

@@ -11,6 +11,7 @@ export interface IUser extends Document {
   avatar: string;
   phone: string;
   auth_type: string;
+  hasPassword?: boolean;
   fullname?: string; // virtual
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;

@@ -39,16 +39,7 @@ export function OAuth({ message }: OauthProps) {
         const redirect = params.get("redirect");
         navigate(redirect || "/");
       } catch (err: any) {
-        const errorMessage = err?.response?.data?.error;
-        if (errorMessage === "User not found, lets register !") {
-          const params = new URLSearchParams(window.location.search);
-          const redirect = params.get("redirect");
-          const targetUrl = redirect ? `/register/google?redirect=${encodeURIComponent(redirect)}` : "/register/google";
-
-          navigate(targetUrl, { state: { ...userData, redirect } });
-        } else {
-          toast.error(errorMessage || "Erreur d'authentification");
-        }
+        toast.error(err?.response?.data?.error || "Erreur d'authentification");
       }
     } catch (err: any) {
       toast.error("Erreur d'authentification");

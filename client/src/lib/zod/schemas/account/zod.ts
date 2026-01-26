@@ -21,10 +21,12 @@ export const getUpdateAccountSchema = () =>
     email: z.string().email({ message: "Adresse e-mail invalide." }),
   });
 
-export const getUpdatePasswordSchema = () =>
+export const getUpdatePasswordSchema = (hasPassword = true) =>
   z
     .object({
-      currentPassword: z.string().min(6, { message: "Le mot de passe actuel doit comporter au moins 6 caractères." }),
+      currentPassword: hasPassword
+        ? z.string().min(6, { message: "Le mot de passe actuel doit comporter au moins 6 caractères." })
+        : z.string().optional(),
       newPassword: z
         .string()
         .min(6, { message: "Le nouveau mot de passe doit comporter au moins 6 caractères." })
@@ -41,5 +43,5 @@ export const getDeleteAccountSchema = () =>
     checkApproval: z.boolean().refine((val) => val === true, {
       message: "Veuillez cocher la case pour confirmer la suppression de votre compte.",
     }),
-    password: z.string().min(6, { message: "Le mot de passe doit comporter au moins 6 caractères." }),
+    password: z.string().optional(),
   });

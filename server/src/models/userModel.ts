@@ -9,7 +9,7 @@ const UserSchema = new Schema<IUser>(
     forename: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     username: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, select: false },
+    password: { type: String, select: false },
     role: { type: String, default: userRoles.USER },
     avatar: { type: String, default: "" },
     phone: { type: String, default: "" },

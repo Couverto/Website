@@ -8,10 +8,11 @@ export interface UserInterface {
   password?: string;
   phone?: string;
   restaurantRole?: string;
-  role: string;
+  role: "user" | "admin";
   createdAt: Date;
   updatedAt?: Date;
   __v?: number;
-  avatar?: string;
+  avatar: string;
+  hasPassword?: boolean;
   auth_type: string;
 }

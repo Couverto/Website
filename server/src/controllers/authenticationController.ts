@@ -20,21 +20,23 @@ import { sendEmail } from "../utils/sendEmail.js";
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { name, forename, email, username, photoURL, password, confirmPassword } = req.body;
 
-  if (!username || !email || !password || !confirmPassword || !name || !forename) {
+  if (!username || !email || !name || !forename || (!photoURL && (!password || !confirmPassword))) {
     res.status(422).json({ error: "Champs requis manquants" });
     return;
   }
 
-  if (!Constants.REGEX_PASSWORD.test(password)) {
-    res.status(400).json({
-      error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial",
-    });
-    return;
-  }
+  if (!photoURL) {
+    if (!Constants.REGEX_PASSWORD.test(password)) {
+      res.status(400).json({
+        error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial",
+      });
+      return;
+    }
 
-  if (password !== confirmPassword) {
-    res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
-    return;
+    if (password !== confirmPassword) {
+      res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
+      return;
+    }
   }
 
   try {
@@ -50,7 +52,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
 
     const user = await User.create({
       email: email.toLowerCase(),
@@ -92,6 +94,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     const { password: _password, ...userWithoutPassword } = user.toObject();
+    const userWithHasPassword = { ...userWithoutPassword, hasPassword: !!user.password };
 
     // Send Welcome Email
     try {
@@ -107,7 +110,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       console.error("Welcome email failed", emailErr);
     }
 
-    res.status(201).json({ user: userWithoutPassword, message: "Inscription réussie", accessToken });
+    res.status(201).json({ user: userWithHasPassword, message: "Inscription réussie", accessToken });
     return;
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -150,6 +153,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const accessToken = generateAccessToken(user._id);
 
     const { password: _password, ...userWithoutPassword } = user.toObject();
+    const userWithHasPassword = { ...userWithoutPassword, hasPassword: !!user.password };
 
     createLog({
       message: `User ${user.username} logged in successfully`,
@@ -157,7 +161,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ user: userWithoutPassword, message: "Connexion réussie", accessToken });
+    res.status(201).json({ user: userWithHasPassword, message: "Connexion réussie", accessToken });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -185,8 +189,14 @@ export const getConnectedUser = async (req: Request, res: Response): Promise<voi
   const id = req.userId;
 
   try {
-    const user = await User.findById(id);
-    res.status(200).json(user);
+    const user = await User.findById(id).select("+password");
+    if (!user) {
+      res.status(404).json({ error: "Utilisateur introuvable" });
+      return;
+    }
+    const userObj = user.toObject();
+    const { password: _password, ...userWithoutPassword } = userObj;
+    res.status(200).json({ ...userWithoutPassword, hasPassword: !!user.password });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -196,7 +206,7 @@ export const getConnectedUser = async (req: Request, res: Response): Promise<voi
  * Signs in a user using Google OAuth.
  */
 export const signInWithGoogle = async (req: Request, res: Response): Promise<void> => {
-  const { email } = req.body;
+  const { email, name, photoURL } = req.body;
 
   if (!email) {
     res.status(422).json({ error: "Champs requis manquants" });
@@ -204,10 +214,32 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
   }
 
   try {
-    const user = await User.findOne({ email: email.toLowerCase() });
+    let user = await User.findOne({ email: email.toLowerCase() });
+
     if (!user) {
-      res.status(404).json({ error: "User not found, lets register !" });
-      return;
+      if (!name) {
+        res.status(400).json({ error: "Le nom est requis pour la création automatique du compte" });
+        return;
+      }
+
+      const forename = name.split(" ")[0] || "";
+      const lastName = name.split(" ").slice(1).join(" ") || "";
+      const username = name.replace(/\s+/g, "").toLowerCase() + Math.floor(Math.random() * 1000);
+
+      user = await User.create({
+        email: email.toLowerCase(),
+        username: username,
+        name: lastName || forename,
+        forename: forename,
+        auth_type: authTypes.GOOGLE,
+        avatar: photoURL || "",
+      });
+
+      createLog({
+        message: `New user ${user.username} registered automatically with Google`,
+        userId: user._id,
+        level: logLevels.INFO,
+      });
     }
 
     const accessToken = generateAccessToken(user._id);
@@ -218,7 +250,11 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(201).json({ user, message: "Connexion réussie", accessToken });
+    const userWithPasswordState = await User.findById(user._id).select("+password");
+    const userObj = user.toObject();
+    const userWithHasPassword = { ...userObj, hasPassword: !!userWithPasswordState?.password };
+
+    res.status(201).json({ user: userWithHasPassword, message: "Connexion réussie", accessToken });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

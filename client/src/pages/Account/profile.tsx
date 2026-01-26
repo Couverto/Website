@@ -198,19 +198,36 @@ export const AccountProfile = () => {
                 )}
               />
 
-              <FormItem>
-                <div className="flex flex-col w-full gap-2">
-                  <FormLabel>{"Mot de passe"}</FormLabel>
-                  <div className="flex items-center justify-between gap-4">
-                    <FormControl>
-                      <Input type="password" placeholder={"********"} disabled />
-                    </FormControl>
-                    <Button type="button" variant="outline" onClick={() => setOpenUpdatePasswordDialog(true)} disabled={updateLoading}>
-                      {"Changer le mot de passe"}
-                    </Button>
+              {authUser?.auth_type !== "google" && (
+                <FormItem>
+                  <div className="flex flex-col w-full gap-2">
+                    <FormLabel>{"Mot de passe"}</FormLabel>
+                    <div className="flex items-center justify-between gap-4">
+                      <FormControl>
+                        <Input type="password" placeholder={"********"} disabled />
+                      </FormControl>
+                      <Button type="button" variant="outline" onClick={() => setOpenUpdatePasswordDialog(true)} disabled={updateLoading}>
+                        {"Changer le mot de passe"}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </FormItem>
+                </FormItem>
+              )}
+              {authUser?.auth_type === "google" && authUser?.hasPassword && (
+                <FormItem>
+                  <div className="flex flex-col w-full gap-2">
+                    <FormLabel>{"Mot de passe"}</FormLabel>
+                    <div className="flex items-center justify-between gap-4">
+                      <FormControl>
+                        <Input type="password" placeholder={"********"} disabled />
+                      </FormControl>
+                      <Button type="button" variant="outline" onClick={() => setOpenUpdatePasswordDialog(true)} disabled={updateLoading}>
+                        {"Changer le mot de passe"}
+                      </Button>
+                    </div>
+                  </div>
+                </FormItem>
+              )}
 
               <CardFooter className="px-0">
                 <Button type="submit" disabled={updateLoading} className="w-full">

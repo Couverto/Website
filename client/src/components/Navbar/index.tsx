@@ -1,7 +1,21 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ThemeChanger } from "./themeChanger";
 import { Separator } from "../ui/separator";
-import { House, LogOut, Menu, User, Users, Wrench, X, Utensils, ChefHat, Calendar, LayoutDashboard, Plus } from "lucide-react";
+import {
+  House,
+  LogOut,
+  Menu,
+  User,
+  Users,
+  Wrench,
+  X,
+  Utensils,
+  ChefHat,
+  Calendar,
+  LayoutDashboard,
+  Plus,
+  Settings,
+  Settings2,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -76,14 +90,14 @@ export const Navbar = () => {
       auth: false,
       hideIfAuth: false,
     },
-    {
-      label: "About",
-      translationKey: "A propos",
-      path: "/about",
-      icon: Users,
-      auth: false,
-      hideIfAuth: false,
-    },
+    // {
+    //   label: "About",
+    //   translationKey: "A propos",
+    //   path: "/about",
+    //   icon: Users,
+    //   auth: false,
+    //   hideIfAuth: false,
+    // },
     {
       label: "Contact",
       translationKey: "Contact",
@@ -95,6 +109,13 @@ export const Navbar = () => {
   ];
 
   const userLinks = [
+    {
+      label: "My Account",
+      translationKey: "Mon compte",
+      path: "/account",
+      icon: User,
+      role: "user",
+    },
     {
       label: "My Bookings",
       translationKey: "Mes réservations",
@@ -108,6 +129,13 @@ export const Navbar = () => {
       path: "/account/restaurants",
       icon: ChefHat,
       role: "user", // Also accessible to users who want to be pros
+    },
+    {
+      label: "My Preferences",
+      translationKey: "Mes préférences",
+      path: "/account/preferences",
+      icon: Settings2,
+      role: "user",
     },
     {
       label: "Dashboard",
@@ -171,9 +199,7 @@ export const Navbar = () => {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2">
-              <ThemeChanger />
-            </div>
+            <div className="hidden md:flex items-center gap-2"></div>
 
             {authUser ? (
               <DropdownMenu>
@@ -194,18 +220,17 @@ export const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => navigate("/account")} className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>{"Mon compte"}</span>
-                    </DropdownMenuItem>
                     {userLinks
                       .filter((link) => !link.role || (link.role === "admin" ? authUser.role === "admin" : true))
-                      .map((link) => (
-                        <DropdownMenuItem key={link.path} className="cursor-pointer" onClick={() => navigate(link.path)}>
-                          <link.icon className="mr-2 h-4 w-4" />
-                          <span>{link.translationKey}</span>
-                        </DropdownMenuItem>
-                      ))}
+                      .map((link) => {
+                        const Icon = link.icon;
+                        return (
+                          <DropdownMenuItem key={link.path} className="cursor-pointer" onClick={() => navigate(link.path)}>
+                            <Icon className="mr-2 h-4 w-4" />
+                            <span>{link.translationKey}</span>
+                          </DropdownMenuItem>
+                        );
+                      })}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={() => logout()}>
@@ -287,19 +312,22 @@ export const Navbar = () => {
 
               {userLinks
                 .filter((link) => !link.role || (link.role === "admin" ? authUser.role === "admin" : true))
-                .map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-4 text-lg font-medium p-2 rounded-xl hover:bg-muted transition-colors"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                      <link.icon className="h-5 w-5" />
-                    </div>
-                    {link.translationKey}
-                  </Link>
-                ))}
+                .map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-4 text-lg font-medium p-2 rounded-xl hover:bg-muted transition-colors"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      {link.translationKey}
+                    </Link>
+                  );
+                })}
 
               <Button
                 variant="ghost"
@@ -329,10 +357,8 @@ export const Navbar = () => {
           )}
 
           <div className="mt-auto pt-8 flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Preferences</span>
-            <div className="flex gap-2">
-              <ThemeChanger />
-            </div>
+            <span className="text-sm font-medium text-muted-foreground">Couverto</span>
+            <div className="flex gap-2"></div>
           </div>
         </div>
       </div>

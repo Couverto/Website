@@ -29,16 +29,23 @@ export const getRegisterSchema = () =>
         .max(25, { message: "Le nom d'utilisateur doit comporter au maximum 25 caractères." })
         .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
       email: z.string().email({ message: "Veuillez entrer une adresse email valide." }),
-      password: z
-        .string()
-        .max(255, { message: "Le mot de passe doit comporter au maximum 255 caractères." })
-        .min(1, {
-          message:
-            "Le mot de passe doit contenir au moins 8 caractères, une lettre minuscule, une lettre majuscule, un chiffre et un caractère spécial.",
-        }),
-      confirmPassword: z.string(),
+      password: z.string().max(255, { message: "Le mot de passe doit comporter au maximum 255 caractères." }).optional(),
+      confirmPassword: z.string().optional(),
       photoURL: z.string().optional(),
     })
+    .refine(
+      (data) => {
+        if (!data.photoURL) {
+          return data.password && data.password.length >= 8;
+        }
+        return true;
+      },
+      {
+        message:
+          "Le mot de passe doit contenir au moins 8 caractères, une lettre minuscule, une lettre majuscule, un chiffre et un caractère spécial.",
+        path: ["password"],
+      },
+    )
     .refine((data) => data.password === data.confirmPassword, {
       message: "Les mots de passe ne correspondent pas.",
       path: ["confirmPassword"],

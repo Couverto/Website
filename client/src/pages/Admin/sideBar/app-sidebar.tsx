@@ -92,13 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter className="p-4 group-data-[state=collapsed]:p-2 flex flex-col gap-4 bg-zinc-50/50 dark:bg-zinc-900/10 border-t border-zinc-100 dark:border-zinc-900/50 backdrop-blur-sm transition-all">
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center justify-between w-full gap-2 px-1 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:px-0">
-            <ThemeChanger />
-            {state === "expanded" && <Separator orientation="vertical" className="h-4 w-[1px] opacity-20" />}
-          </div>
-          <NavUser user={authUser} />
-        </div>
+        <NavUser user={authUser} />
       </SidebarFooter>
     </Sidebar>
   );

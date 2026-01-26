@@ -5,6 +5,7 @@ import { AccountProfile } from "@/pages/Account/profile";
 import { AccountLayout } from "@/pages/Account/layout";
 import { AccountRestaurants } from "@/pages/Account/restaurants";
 import { AccountBooking } from "@/pages/Account/booking";
+import { AccountPreferences } from "@/pages/Account/preferences";
 
 import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Professional";
@@ -23,7 +24,6 @@ import { Config } from "@/pages/Admin/components/config";
 import { AdminRestaurants } from "@/pages/Admin/components/restaurants";
 import { AdminRestaurantStats } from "@/pages/Admin/components/restaurants/restaurantStats";
 import { AdminRestaurantForm } from "@/pages/Admin/components/restaurants/restaurantForm";
-import { RegisterGoogleForm } from "@/pages/Authentication/registerGoogleForm";
 import { ForgotPassword } from "@/pages/Authentication/ForgotPassword";
 import { ResetPassword } from "@/pages/Authentication/ResetPassword";
 import { Footer } from "@/components/Footer";
@@ -39,7 +39,7 @@ import { RestaurantStats } from "@/pages/Restaurant/Stats";
 import { RestaurantPlan } from "@/pages/Restaurant/Plan";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
-import { PublicRestaurants } from "@/pages/PublicRestaurants";
+import { PublicRestaurants } from "@/pages/Restaurants";
 import { RestaurantRoleProtectedRoute } from "./RestaurantRoleProtectedRoute";
 import { RestaurantGallery } from "@/pages/Restaurant/Gallery";
 
@@ -96,6 +96,7 @@ export const Router = () => {
           <Route path="profile" element={<AccountProfile />} />
           <Route path="restaurants" element={<AccountRestaurants />} />
           <Route path="bookings" element={<AccountBooking />} />
+          <Route path="preferences" element={<AccountPreferences />} />
         </Route>
 
         <Route
@@ -191,14 +192,6 @@ export const Router = () => {
           element={
             <ProtectedRoute authRequired={false}>
               <Register />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/register/google"
-          element={
-            <ProtectedRoute authRequired={false}>
-              <RegisterGoogleForm />
             </ProtectedRoute>
           }
         />

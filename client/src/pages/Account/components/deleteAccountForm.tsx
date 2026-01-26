@@ -18,7 +18,7 @@ interface DeleteAccountProps {
 }
 
 export const DeleteAccountForm = ({ setOpen }: DeleteAccountProps) => {
-  const { setAuthUser } = useAuthContext();
+  const { authUser, setAuthUser } = useAuthContext();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -78,19 +78,21 @@ export const DeleteAccountForm = ({ setOpen }: DeleteAccountProps) => {
             )}
           />
 
-          <FormField
-            control={deleteAccountForm.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>{"Mot de passe"}</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder={"********"} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {authUser?.hasPassword && (
+            <FormField
+              control={deleteAccountForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>{"Mot de passe"}</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder={"********"} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <DialogFooter>
             <Button disabled={loading} type="submit">
