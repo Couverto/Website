@@ -18,6 +18,7 @@ export const verifyCollaborator = (allowedRoles?: string[]) => {
       if (req.userId) {
         const user = await User.findById(req.userId);
         if (user && user.role === userRoles.ADMIN) {
+          req.restaurantRole = restaurantRoles.ADMIN;
           next();
           return;
         }

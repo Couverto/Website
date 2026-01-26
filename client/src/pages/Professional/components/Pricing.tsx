@@ -1,27 +1,30 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Plan } from "@/interfaces/Plan";
+import { Feature } from "@/interfaces/Feature";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Pricing = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [allFeatures, setAllFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosConfig.get("/plans/public");
-        setPlans(response.data.plans);
+        const [plansRes, featuresRes] = await Promise.all([axiosConfig.get("/plans/public"), axiosConfig.get("/features/public")]);
+        setPlans(plansRes.data.plans || []);
+        setAllFeatures(featuresRes.data.features || []);
       } catch (error) {
-        console.error("Error fetching plans", error);
+        console.error("Error fetching pricing data", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchPlans();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -57,32 +60,50 @@ export const Pricing = () => {
         {/* Pricing Cards */}
         <div className="grid gap-8 lg:grid-cols-3">
           {plans.map((plan) => (
-            <div key={plan._id} className={`relative rounded-2xl bg-background p-5 border border-border flex flex-col`}>
+            <div
+              key={plan._id}
+              className={`relative rounded-2xl bg-background p-6 border border-border flex flex-col shadow-sm hover:shadow-md transition-shadow`}
+            >
               {/* Plan Header */}
-              <div className="text-center mb-6 pt-2">
+              <div className="text-center mb-8 pb-4 border-b border-border/50">
                 <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                <p className="text-sm text-muted-foreground mb-6 min-h-[40px]">{plan.description}</p>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                  <span className="text-muted-foreground">€ / mois</span>
+                  <span className="text-5xl font-extrabold text-foreground">{plan.price}</span>
+                  <span className="text-muted-foreground font-medium">€ / mois</span>
                 </div>
               </div>
 
               {/* Features List */}
-              <ul className="space-y-2.5 mb-6 flex-1">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center mt-0.5 bg-accent/10">
-                      <Check className="h-3 w-3 text-accent" />
-                    </div>
-                    <span className="text-sm text-foreground">{feature}</span>
-                  </li>
-                ))}
+              <ul className="space-y-4 mb-8 flex-1">
+                {allFeatures?.map((feature) => {
+                  const isIncluded = plan.features?.some((f) => f._id === feature._id);
+                  return (
+                    <li
+                      key={feature._id}
+                      className={`flex items-start gap-3 ${isIncluded ? "text-foreground" : "text-muted-foreground/60"}`}
+                    >
+                      <div
+                        className={`flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center mt-0.5 ${isIncluded ? "bg-accent/10" : "bg-muted/50"}`}
+                      >
+                        {isIncluded ? <Check className="h-3 w-3 text-accent" /> : <Minus className="h-3 w-3 text-muted-foreground/40" />}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className={`text-sm font-medium ${!isIncluded && "line-through decoration-muted-foreground/20"}`}>
+                          {feature.name}
+                        </span>
+                        {isIncluded && feature.description && (
+                          <span className="text-xs text-muted-foreground mt-0.5">{feature.description}</span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
 
               {/* CTA */}
               <Link to="/register" className="block mt-auto">
-                <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
                   {"Choisir cette formule"}
                 </Button>
               </Link>
@@ -91,18 +112,18 @@ export const Pricing = () => {
         </div>
 
         {/* Trust badges */}
-        <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-muted-foreground">
+        <div className="flex flex-wrap justify-center gap-8 mt-16 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-accent" />
-            <span>{"Sans engagement"}</span>
+            <span className="font-medium">{"Sans engagement"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-accent" />
-            <span>{"Annulation à tout moment"}</span>
+            <span className="font-medium">{"Annulation à tout moment"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Check className="h-4 w-4 text-accent" />
-            <span>{"Paiement sécurisé"}</span>
+            <span className="font-medium">{"Paiement sécurisé"}</span>
           </div>
         </div>
       </div>

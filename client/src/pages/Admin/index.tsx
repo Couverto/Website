@@ -9,6 +9,7 @@ const segmentLabels: Record<string, string> = {
   users: "Utilisateurs",
   restaurants: "Restaurants",
   plans: "Abonnements",
+  features: "Fonctionnalités",
   configs: "Configurations",
   logs: "Logs",
 };

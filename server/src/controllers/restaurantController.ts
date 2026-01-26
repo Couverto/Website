@@ -890,9 +890,8 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
     }
 
     const collaboratorIndex = restaurant.collaborators.findIndex((collab) => collab.toString() === collaboratorId);
-
     if (collaboratorIndex === -1) {
-      res.status(404).json({ error: "Vous n'êtes pas collaborateur de ce restaurant" });
+      res.status(404).json({ error: "L'utilisateur n'est pas un collaborateur de ce restaurant" });
       return;
     }
 
@@ -905,7 +904,7 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
     // Get collaborator's role from restaurant
     const collaboratorRole = restaurant.collaboratorRoles.get(collaboratorId) || restaurantRoles.EMPLOYEE;
 
-    // Protection: Managers cannot remove Administrators
+    // Protection: Only Administrators (Restaurant or Global) can remove other Administrators
     if (collaboratorRole === restaurantRoles.ADMIN && req.restaurantRole !== restaurantRoles.ADMIN) {
       res.status(403).json({ error: "Vous ne pouvez pas retirer un administrateur" });
       return;

@@ -100,7 +100,7 @@ export const getCreatePlanSchema = () => {
     name: z.string().min(1, { message: "Le nom est requis" }),
     description: z.string().optional(),
     price: z.coerce.number().min(0, { message: "Le prix est requis" }),
-    features: z.string().optional(),
+    features: z.array(z.string()).default([]),
     active: z.boolean(),
     position: z.coerce.number(),
   });
@@ -111,13 +111,39 @@ export const getUpdatePlanSchema = () => {
     name: z.string().min(1, { message: "Le nom est requis" }),
     description: z.string().optional(),
     price: z.coerce.number().min(0, { message: "Le prix est requis" }),
-    features: z.string().optional(),
+    features: z.array(z.string()).default([]),
     active: z.boolean(),
     position: z.coerce.number(),
   });
 };
 
 export const getDeletePlanSchema = () => {
+  return z.object({
+    confirmDelete: z.string().min(1, {
+      message: 'Confirmez la suppression en tapant "DELETE".',
+    }),
+  });
+};
+
+export const getCreateFeatureSchema = () => {
+  return z.object({
+    name: z.string().min(1, { message: "Le nom est requis" }),
+    description: z.string().optional(),
+    active: z.boolean().default(true),
+    position: z.coerce.number().default(0),
+  });
+};
+
+export const getUpdateFeatureSchema = () => {
+  return z.object({
+    name: z.string().min(1, { message: "Le nom est requis" }),
+    description: z.string().optional(),
+    active: z.boolean(),
+    position: z.coerce.number(),
+  });
+};
+
+export const getDeleteFeatureSchema = () => {
   return z.object({
     confirmDelete: z.string().min(1, {
       message: 'Confirmez la suppression en tapant "DELETE".',

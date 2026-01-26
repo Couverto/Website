@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,61 +10,66 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plan } from "@/interfaces/Plan";
+import { Feature } from "@/interfaces/Feature";
 import { getCreatePlanSchema, getDeletePlanSchema, getUpdatePlanSchema } from "@/lib/zod/schemas/admin/zod";
 import { PlanFormProps } from "@/interfaces/Components";
+import { Badge } from "@/components/ui/badge";
 
 export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [availableFeatures, setAvailableFeatures] = useState<Feature[]>([]);
 
   const createSchema = getCreatePlanSchema();
   const updateSchema = getUpdatePlanSchema();
   const deleteSchema = getDeletePlanSchema();
 
-  const createForm = useForm<z.infer<typeof createSchema>>({
+  useEffect(() => {
+    const fetchFeatures = async () => {
+      try {
+        const response = await axiosConfig.get("/features");
+        setAvailableFeatures(response.data.features || []);
+      } catch (error) {
+        console.error("Error fetching features", error);
+      }
+    };
+    fetchFeatures();
+  }, []);
+
+  const createForm = useForm<any>({
     resolver: zodResolver(createSchema),
     defaultValues: {
       name: "",
       description: "",
       price: 0,
-      features: "",
+      features: [],
       active: true,
       position: 0,
     },
   });
 
-  const updateForm = useForm<z.infer<typeof updateSchema>>({
+  const updateForm = useForm<any>({
     resolver: zodResolver(updateSchema),
     defaultValues: {
       name: plan?.name,
       description: plan?.description || "",
       price: plan?.price,
-      features: plan?.features.join(", "),
+      features: plan?.features?.map((f) => f._id) || [],
       active: plan?.active,
       position: plan?.position,
     },
   });
 
-  const deleteForm = useForm<z.infer<typeof deleteSchema>>({
+  const deleteForm = useForm<any>({
     resolver: zodResolver(deleteSchema),
     defaultValues: {
       confirmDelete: "",
     },
   });
 
-  const onCreateSubmit: SubmitHandler<z.infer<typeof createSchema>> = async (values) => {
+  const onCreateSubmit: SubmitHandler<any> = async (values) => {
     try {
       setLoading(true);
-      const payload = {
-        ...values,
-        features: values.features
-          ? values.features
-              .split(",")
-              .map((f) => f.trim())
-              .filter((f) => f !== "")
-          : [],
-      };
-
-      const response = await axiosConfig.post("/plans", payload);
+      const response = await axiosConfig.post("/plans", values);
       toast.success(response.data.message || "Plan créé");
       dialog(false);
       refresh();
@@ -76,20 +81,10 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
     }
   };
 
-  const onUpdateSubmit: SubmitHandler<z.infer<typeof updateSchema>> = async (values) => {
+  const onUpdateSubmit: SubmitHandler<any> = async (values) => {
     try {
       setLoading(true);
-      const payload = {
-        ...values,
-        features: values.features
-          ? values.features
-              .split(",")
-              .map((f) => f.trim())
-              .filter((f) => f !== "")
-          : [],
-      };
-
-      const response = await axiosConfig.put(`/plans/${plan?._id}`, payload);
+      const response = await axiosConfig.put(`/plans/${plan?._id}`, values);
       toast.success(response.data.message || "Plan mis à jour");
       dialog(false);
       refresh();
@@ -101,7 +96,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
     }
   };
 
-  const onDeleteSubmit: SubmitHandler<z.infer<typeof deleteSchema>> = async (values) => {
+  const onDeleteSubmit: SubmitHandler<any> = async (values) => {
     if (values.confirmDelete.toUpperCase() === "DELETE") {
       try {
         setLoading(true);
@@ -178,12 +173,38 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       <FormField
         control={form.control}
         name="features"
-        render={({ field }) => (
+        render={() => (
           <FormItem>
-            <FormLabel>{"Fonctionnalités (séparées par des virgules)"}</FormLabel>
-            <FormControl>
-              <Textarea placeholder="Feature 1, Feature 2" {...field} />
-            </FormControl>
+            <div className="mb-4">
+              <FormLabel className="text-base">{"Fonctionnalités"}</FormLabel>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border rounded-md p-4 max-h-[200px] overflow-y-auto">
+              {availableFeatures?.map((feature) => (
+                <FormField
+                  key={feature._id}
+                  control={form.control}
+                  name="features"
+                  render={({ field }) => {
+                    return (
+                      <FormItem key={feature._id} className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(feature._id)}
+                            onCheckedChange={(checked) => {
+                              return checked
+                                ? field.onChange([...field.value, feature._id])
+                                : field.onChange(field.value?.filter((value: string) => value !== feature._id));
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">{feature.name}</FormLabel>
+                      </FormItem>
+                    );
+                  }}
+                />
+              ))}
+              {availableFeatures.length === 0 && <p className="text-sm text-muted-foreground italic">{"Aucune fonctionnalité définie"}</p>}
+            </div>
             <FormMessage />
           </FormItem>
         )}

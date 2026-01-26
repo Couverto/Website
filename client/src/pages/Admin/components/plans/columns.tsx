@@ -72,7 +72,7 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
           <div className="flex flex-wrap gap-1.5 max-w-[300px]">
             {displayedFeatures.map((feature, index) => (
               <Badge key={index} variant="outline" className="text-xs font-normal bg-primary/5 border-primary/20 text-primary">
-                {feature}
+                {feature.name}
               </Badge>
             ))}
             {remainingCount > 0 && (
@@ -87,7 +87,7 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
                     <div className="flex flex-col gap-1">
                       {features.slice(3).map((feature, index) => (
                         <span key={index} className="text-xs">
-                          {feature}
+                          {feature.name}
                         </span>
                       ))}
                     </div>

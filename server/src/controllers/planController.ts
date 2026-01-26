@@ -9,7 +9,7 @@ import { logLevels } from "../utils/enums/logLevels.js";
  */
 export const getPlans = async (req: Request, res: Response): Promise<void> => {
   try {
-    const plans = await Plan.find({ active: true }).sort({ position: 1 });
+    const plans = await Plan.find({ active: true }).sort({ position: 1 }).populate("features");
     res.status(200).json({ plans });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -25,7 +25,8 @@ export const getAllPlans = async (req: Request, res: Response): Promise<void> =>
     const plans = await Plan.find({ name: { $regex: name, $options: "i" } })
       .sort({ position: 1 })
       .skip(page * size)
-      .limit(size);
+      .limit(size)
+      .populate("features");
     const count = await Plan.countDocuments({ name: { $regex: name, $options: "i" } });
     res.status(200).json({ plans, count });
   } catch (err: any) {

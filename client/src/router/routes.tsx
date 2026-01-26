@@ -15,6 +15,7 @@ import { Index } from "@/pages/Admin";
 import { Logs as AdminLogs } from "../pages/Admin/components/logs";
 import { Users as AdminUsers } from "../pages/Admin/components/users";
 import { AdminPlans } from "../pages/Admin/components/plans";
+import { AdminFeatures } from "../pages/Admin/components/features";
 import { Dashboard } from "../pages/Admin/components/dashboard";
 import { Login } from "@/pages/Authentication/login";
 import { Register } from "@/pages/Authentication/register";
@@ -234,6 +235,7 @@ export const Router = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="plans" element={<AdminPlans />} />
+          <Route path="features" element={<AdminFeatures />} />
           <Route path="logs" element={<AdminLogs />} />
           <Route path="settings" element={<Config />} />
           <Route path="restaurants" element={<AdminRestaurants />} />
