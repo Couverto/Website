@@ -441,24 +441,8 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
     }
 
     restaurant.isClosed = !restaurant.isClosed;
-
-    // If CLOSED, also cancel Stripe subscription
-    if (restaurant.isClosed) {
-      if (restaurant.stripeSubscriptionId) {
-        try {
-          await stripeService.cancelSubscription(restaurant.stripeSubscriptionId);
-          console.log(`[Stripe] Subscription ${restaurant.stripeSubscriptionId} cancelled due to restaurant closure`);
-        } catch (stripeError: any) {
-          console.error(`[Stripe] Failed to cancel sub ${restaurant.stripeSubscriptionId}:`, stripeError.message);
-        }
-      }
-
-      // Reset plan data on closure
-      restaurant.subscriptionStatus = "cancelled";
-      restaurant.plan = null as any;
-      restaurant.stripeSubscriptionId = null as any;
-      restaurant.autoRenew = false;
-    }
+    // Note: Closing the restaurant does NOT cancel the subscription
+    // The subscription remains active and the user can reopen at any time
 
     await restaurant.save();
 
