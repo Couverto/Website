@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Copy } from "lucide-react";
+import { Copy, Upload } from "lucide-react";
 import { UserInterface } from "@/interfaces/User";
 import { getCreateUserSchema, getDeleteUserSchema, getUpdateUserSchema } from "@/lib/zod/schemas/admin/zod";
 import { UserFormProps } from "@/interfaces/Components";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
 
   const createUserSchema = getCreateUserSchema();
   const updateUserSchema = getUpdateUserSchema();
@@ -53,14 +56,46 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     },
   });
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadAvatar = async (userId: string) => {
+    if (!avatarFile) return;
+
+    const formData = new FormData();
+    formData.append("avatar", avatarFile);
+
+    await axiosConfig.post(`/uploads/avatar/${userId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  };
+
   const onCreateSubmit: SubmitHandler<z.infer<typeof createUserSchema>> = async (values) => {
     try {
       setLoading(true);
       const response = await axiosConfig.post("/users", values);
+
+      if (avatarFile && response.data.user?._id) {
+        await uploadAvatar(response.data.user._id);
+      }
+
       toast.success(response.data.message || "Utilisateur créé avec succès");
       dialog(false);
       refresh();
       createForm.reset();
+      setAvatarFile(null);
+      setAvatarPreview(null);
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
@@ -72,10 +107,16 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     try {
       setLoading(true);
       const response = await axiosConfig.put(`/users/${user?._id}`, values);
+
+      if (avatarFile && user?._id) {
+        await uploadAvatar(user._id);
+      }
+
       toast.success(response.data.message || "Utilisateur mis à jour");
       dialog(false);
       refresh();
       updateForm.reset();
+      setAvatarFile(null);
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
@@ -131,6 +172,27 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     return (
       <Form {...createForm}>
         <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-8">
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={avatarPreview || ""} />
+              <AvatarFallback>
+                {(createForm.watch("forename")?.charAt(0) || "") + (createForm.watch("name")?.charAt(0) || "") || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-2">
+              <Input type="file" id="avatar-upload" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2"
+                onClick={() => document.getElementById("avatar-upload")?.click()}
+              >
+                <Upload className="h-4 w-4" />
+                {"Changer l'avatar"}
+              </Button>
+            </div>
+          </div>
           <div className="flex items-center justify-center gap-6">
             <FormField
               control={createForm.control}
@@ -260,6 +322,27 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
     return (
       <Form {...updateForm}>
         <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="space-y-8">
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={avatarPreview || ""} />
+              <AvatarFallback>
+                {(updateForm.watch("forename")?.charAt(0) || "") + (updateForm.watch("name")?.charAt(0) || "") || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex items-center gap-2">
+              <Input type="file" id="avatar-upload-update" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-2"
+                onClick={() => document.getElementById("avatar-upload-update")?.click()}
+              >
+                <Upload className="h-4 w-4" />
+                {"Changer l'avatar"}
+              </Button>
+            </div>
+          </div>
           <div className="flex items-center justify-center gap-6">
             <FormField
               control={updateForm.control}
