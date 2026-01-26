@@ -30,6 +30,8 @@ import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 
+import { finalizePayment } from "../controllers/finalizePaymentController.js";
+
 export const restaurantRouter = express.Router();
 
 // Public routes
@@ -40,6 +42,7 @@ restaurantRouter.get("/public/:id/slots", getRestaurantSlots);
 
 // User routes (authenticated)
 restaurantRouter.get("/my", verifyToken(), getMyRestaurants);
+restaurantRouter.post("/finalize-payment", verifyToken(), finalizePayment);
 
 // Admin routes
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);

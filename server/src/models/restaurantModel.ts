@@ -4,7 +4,7 @@ import { IRestaurant } from "../interfaces/IRestaurant.js";
 const RestaurantSchema = new Schema<IRestaurant>(
   {
     name: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true },
     description: { type: String, required: false },
     adress: { type: String, required: true, unique: true },
     city: { type: String, required: true, trim: true },
@@ -61,7 +61,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     },
     subscriptionStatus: {
       type: String,
-      enum: ["active", "cancelled", "expired", "none"],
+      enum: ["active", "cancelled", "expired", "none", "pending_payment"],
       default: "none",
     },
     autoRenew: {
@@ -70,6 +70,14 @@ const RestaurantSchema = new Schema<IRestaurant>(
     },
     subscriptionEndDate: {
       type: Date,
+      default: null,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null,
+    },
+    stripeSubscriptionId: {
+      type: String,
       default: null,
     },
   },

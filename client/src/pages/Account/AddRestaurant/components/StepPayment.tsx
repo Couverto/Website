@@ -1,158 +1,47 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { WizardData } from "../types";
-import { CreditCard, Calendar, Lock } from "lucide-react";
-import Cards from "react-credit-cards-2";
-import "react-credit-cards-2/dist/es/styles-compiled.css";
-import { useState } from "react";
 import { StepProps } from "@/interfaces/Components";
+import { CreditCard, ShieldCheck, Zap } from "lucide-react";
 
 export const StepPayment = ({ data, updateData, errors }: StepProps) => {
-  const [focus, setFocus] = useState<any>("");
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 16) value = value.slice(0, 16);
-    updateData({ cardNumber: value });
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 4) value = value.slice(0, 4);
-    if (value.length >= 2) {
-      value = value.slice(0, 2) + "/" + value.slice(2);
-    }
-    updateData({ expiry: value });
-  };
-
-  const handleCVCChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 3) value = value.slice(0, 3);
-    updateData({ cvc: value });
-  };
-
-  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    setFocus(e.target.name);
-  };
-
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="max-w-md mx-auto space-y-8">
-        <div className="flex justify-center py-4">
-          <Cards
-            number={data.cardNumber || ""}
-            expiry={data.expiry || ""}
-            cvc={data.cvc || ""}
-            name={data.cardHolder || ""}
-            focused={focus}
-          />
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center space-y-4 mb-10">
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 mb-4">
+            <CreditCard className="h-10 w-10 text-primary" />
+          </div>
+          <h3 className="text-2xl font-bold tracking-tight">{"Paiement sécurisé via Stripe"}</h3>
+          <p className="text-muted-foreground text-lg max-w-lg mx-auto">
+            {"Vous allez être redirigé vers la plateforme sécurisée de Stripe pour finaliser votre abonnement."}
+          </p>
         </div>
 
-        <div className="space-y-6 pt-4">
-          <div className="space-y-3">
-            <Label
-              htmlFor="cardHolder"
-              className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cardHolder ? "text-red-500" : ""}`}
-            >
-              {"Titulaire de la carte"}
-            </Label>
-            <Input
-              id="cardHolder"
-              name="name" // react-credit-cards-2 expects 'name' for focus
-              placeholder={"NOM PRÉNOM"}
-              className={`uppercase h-12 text-base transition-all ${errors?.cardHolder ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-              value={data.cardHolder || ""}
-              onChange={(e) => updateData({ cardHolder: e.target.value.toUpperCase() })}
-              onFocus={handleInputFocus}
-            />
-            {errors?.cardHolder && <p className="text-xs font-medium text-red-500 px-1">{errors.cardHolder}</p>}
-          </div>
-
-          <div className="space-y-3">
-            <Label
-              htmlFor="cardNumber"
-              className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cardNumber ? "text-red-500" : ""}`}
-            >
-              {"Numéro de carte"}
-            </Label>
-            <div className="relative group">
-              <CreditCard
-                className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.cardNumber ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-              />
-              <Input
-                id="cardNumber"
-                name="number"
-                placeholder="0000 0000 0000 0000"
-                className={`pl-10 h-12 text-base transition-all ${errors?.cardNumber ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-                value={data.cardNumber || ""}
-                onChange={handleCardNumberChange}
-                onFocus={handleInputFocus}
-              />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <div className="flex gap-4 p-6 rounded-2xl border bg-card/50">
+            <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <ShieldCheck className="h-5 w-5 text-emerald-600" />
             </div>
-            {errors?.cardNumber && <p className="text-xs font-medium text-red-500 px-1">{errors.cardNumber}</p>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <Label
-                htmlFor="expiry"
-                className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.expiry ? "text-red-500" : ""}`}
-              >
-                {"Expiration"}
-              </Label>
-              <div className="relative group">
-                <Calendar
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.expiry ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-                />
-                <Input
-                  id="expiry"
-                  name="expiry"
-                  placeholder={"MM/AA"}
-                  className={`pl-10 h-12 text-base transition-all ${errors?.expiry ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-                  value={data.expiry || ""}
-                  onChange={handleExpiryChange}
-                  onFocus={handleInputFocus}
-                />
-              </div>
-              {errors?.expiry && <p className="text-xs font-medium text-red-500 px-1">{errors.expiry}</p>}
+            <div>
+              <h4 className="font-semibold mb-1">{"Sécurisé"}</h4>
+              <p className="text-sm text-muted-foreground">{"Vos données bancaires ne transitent jamais par nos serveurs."}</p>
             </div>
-            <div className="space-y-3">
-              <Label
-                htmlFor="cvc"
-                className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.cvc ? "text-red-500" : ""}`}
-              >
-                {"CVC"}
-              </Label>
-              <div className="relative group">
-                <Lock
-                  className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.cvc ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-                />
-                <Input
-                  id="cvc"
-                  name="cvc"
-                  placeholder="123"
-                  type="tel"
-                  className={`pl-10 h-12 text-base transition-all ${errors?.cvc ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-                  value={data.cvc || ""}
-                  onChange={handleCVCChange}
-                  onFocus={handleInputFocus}
-                  maxLength={3}
-                />
-              </div>
-              {errors?.cvc && <p className="text-xs font-medium text-red-500 px-1">{errors.cvc}</p>}
+          </div>
+          <div className="flex gap-4 p-6 rounded-2xl border bg-card/50">
+            <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+              <Zap className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold mb-1">{"Instantané"}</h4>
+              <p className="text-sm text-muted-foreground">{"Votre restaurant sera activé dès la confirmation du paiement."}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-6 bg-emerald-50/80 border border-emerald-100 rounded-2xl flex flex-col items-center gap-4 shadow-sm">
-          <div className="h-10 w-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-200 shadow-inner">
-            <Lock className="h-5 w-5 text-emerald-600" />
-          </div>
-          <div className="text-center space-y-1">
-            <p className="text-sm font-bold text-emerald-900 tracking-tight">{"Paiement sécurisé via Stripe (Simulation)"}</p>
-            <p className="text-[10px] text-emerald-700/60 leading-relaxed font-medium uppercase tracking-widest">
-              {"Chiffrement SSL 256 bits de niveau bancaire"}
-            </p>
+        <div className="p-6 bg-muted/30 rounded-2xl flex items-center justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-8" />
+          <div className="h-6 w-px bg-border" />
+          <div className="flex gap-2">
+            <div className="h-6 w-10 bg-white border rounded shadow-sm flex items-center justify-center font-bold text-[8px]">VISA</div>
+            <div className="h-6 w-10 bg-white border rounded shadow-sm flex items-center justify-center font-bold text-[8px]">MC</div>
           </div>
         </div>
       </div>

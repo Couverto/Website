@@ -9,6 +9,11 @@ import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { collaboratorEmailTemplate } from "../templates/collaboratorEmail.js";
 import { deleteFile } from "../utils/fileUploadUtils.js";
+import { Plan } from "../models/planModel.js";
+import { stripeService } from "../services/stripeService.js";
+import { PendingTransaction } from "../models/pendingTransactionModel.js";
+
+import { isRestaurantOpen, convertOpeningHoursToObject } from "../utils/restaurantUtils.js";
 
 /**
  * @function getRestaurants
@@ -62,34 +67,143 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     const collaboratorRoles = new Map<string, string>();
     collaboratorRoles.set(creator._id.toString(), restaurantRoles.ADMIN);
 
-    // Set subscription end date if plan is provided
-    const subscriptionEndDate = planId ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null;
+    // Set subscription end date if plan is provided (initial set to none/pending_payment)
+    const subscriptionEndDate = null;
 
+    // Check if plan exists and handle Stripe/Free flow
+    if (planId) {
+      const plan = await Plan.findById(planId);
+      if (!plan) {
+        res.status(404).json({ error: "Plan introuvable" });
+        return;
+      }
+
+      // If PAID plan: Handle Deferral flow
+      if (plan.price > 0) {
+        if (!plan.stripePriceId) {
+          res.status(400).json({
+            error: "Ce plan n'est pas encore configuré pour le paiement Stripe. Veuillez contacter un administrateur.",
+          });
+          return;
+        }
+
+        // Check for duplicates in main collection before redirecting
+        const slugExists = await Restaurant.findOne({ slug });
+        if (slugExists) {
+          res.status(409).json({ error: "Ce slug est déjà utilisé" });
+          return;
+        }
+
+        const addressExists = await Restaurant.findOne({ adress: address });
+        if (addressExists) {
+          res.status(409).json({ error: "cette adresse est déjà utilisée par un autre restaurant" });
+          return;
+        }
+
+        // Create Stripe Customer
+        const customer = await stripeService.createCustomer(creator.email, creator.name || creator.forename || creator.username);
+
+        // Store the payload in a PendingTransaction instead of creating the Restaurant
+        const pendingTransaction = new PendingTransaction({
+          userId: req.userId,
+          type: "RESTAURANT_CREATION",
+          payload: {
+            name,
+            slug,
+            adress: address,
+            city,
+            phone,
+            email: otherFields.email || creator.email,
+            website,
+            collaborators,
+            collaboratorRoles: Object.fromEntries(collaboratorRoles), // Maps need to be objects in Mixed fields
+            plan: planId,
+            stripeCustomerId: customer.id,
+            ...otherFields,
+          },
+        });
+
+        await pendingTransaction.save();
+
+        // Create Checkout Session
+        const stripeSession = await stripeService.createCheckoutSession(
+          customer.id,
+          plan.stripePriceId,
+          `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+          `${process.env.CORS_ORIGIN}/account/payment-cancel`,
+          {
+            transactionId: pendingTransaction._id.toString(),
+            planId: planId.toString(),
+          },
+        );
+
+        // Update transaction with session ID for tracking
+        pendingTransaction.stripeSessionId = stripeSession.id;
+        await pendingTransaction.save();
+
+        createLog({
+          message: `Restaurant creation initiated (pending payment) for '${name}'`,
+          userId: req.userId,
+          level: logLevels.INFO,
+        });
+
+        res.status(201).json({ url: stripeSession.url, message: "Redirection vers le paiement Stripe" });
+        return;
+      }
+
+      // If FREE plan: Activate immediately
+      const restaurant = new Restaurant({
+        name,
+        slug,
+        adress: address,
+        city,
+        phone,
+        email: otherFields.email || creator.email,
+        website,
+        collaborators,
+        collaboratorRoles,
+        plan: planId,
+        subscriptionStatus: "active",
+        autoRenew: true,
+        subscriptionEndDate: null, // No end date for free plans usually, or set a trial period
+        isClosed: true,
+        ...otherFields,
+      });
+
+      await restaurant.save();
+
+      createLog({
+        message: `Restaurant '${name}' created (Free plan activated)`,
+        userId: req.userId,
+        level: logLevels.INFO,
+      });
+
+      res.status(201).json({ restaurant, message: "Restaurant créé avec succès (Offre Gratuite)" });
+      return;
+    }
+
+    // Default Fallback (No planId provided)
     const restaurant = new Restaurant({
       name,
       slug,
-      adress: address, // Note: model uses 'adress' (typo in model but keeping consistency)
+      adress: address,
       city,
       phone,
       website,
       collaborators,
       collaboratorRoles,
-      plan: planId || null,
-      subscriptionStatus: planId ? "active" : "none",
+      plan: null,
+      subscriptionStatus: "none",
       autoRenew: true,
       subscriptionEndDate,
       isClosed: true,
       ...otherFields,
     });
 
-    const restaurantId = restaurant._id.toString();
-
-    // Process images: No need to move files, they are already uploaded to final destination
-
     await restaurant.save();
 
     createLog({
-      message: `Restaurant '${name}' created successfully`,
+      message: `Restaurant '${name}' created successfully (without plan)`,
       userId: req.userId,
       level: logLevels.INFO,
     });
@@ -239,6 +353,16 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
       }
     }
 
+    // Cancel Stripe subscription before deleting
+    if (restaurant.stripeSubscriptionId) {
+      try {
+        await stripeService.cancelSubscription(restaurant.stripeSubscriptionId);
+        console.log(`[Stripe] Subscription ${restaurant.stripeSubscriptionId} cancelled during restaurant deletion`);
+      } catch (stripeError: any) {
+        console.error(`[Stripe] Failed to cancel sub ${restaurant.stripeSubscriptionId}:`, stripeError.message);
+      }
+    }
+
     await Restaurant.findByIdAndDelete(id);
 
     // cleanup all files for this restaurant
@@ -314,6 +438,25 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
     }
 
     restaurant.isClosed = !restaurant.isClosed;
+
+    // If CLOSED, also cancel Stripe subscription
+    if (restaurant.isClosed) {
+      if (restaurant.stripeSubscriptionId) {
+        try {
+          await stripeService.cancelSubscription(restaurant.stripeSubscriptionId);
+          console.log(`[Stripe] Subscription ${restaurant.stripeSubscriptionId} cancelled due to restaurant closure`);
+        } catch (stripeError: any) {
+          console.error(`[Stripe] Failed to cancel sub ${restaurant.stripeSubscriptionId}:`, stripeError.message);
+        }
+      }
+
+      // Reset plan data on closure
+      restaurant.subscriptionStatus = "cancelled";
+      restaurant.plan = null as any;
+      restaurant.stripeSubscriptionId = null as any;
+      restaurant.autoRenew = false;
+    }
+
     await restaurant.save();
 
     createLog({
@@ -331,43 +474,7 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
   }
 };
 
-/**
- * @function isRestaurantOpen
- * @description Helper to determine if a restaurant is currently open.
- */
-const isRestaurantOpen = (openingHours: any) => {
-  if (!openingHours) return false;
-
-  const now = new Date();
-  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const currentDay = dayNames[now.getDay()];
-  const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-
-  // Handle Mongoose Map or plain object
-  const daySchedule = openingHours.get ? openingHours.get(currentDay) : openingHours[currentDay];
-
-  if (!daySchedule || daySchedule.isClosed || !daySchedule.periods || daySchedule.periods.length === 0) return false;
-
-  return daySchedule.periods.some((period: { open: string; close: string }) => {
-    return currentTime >= period.open && currentTime <= period.close;
-  });
-};
-
-/**
- * @function convertMapToObject
- * @description Helper to convert Mongoose Map to plain object for JSON serialization.
- */
-const convertOpeningHoursToObject = (openingHours: any) => {
-  if (!openingHours) return {};
-  if (openingHours instanceof Map || typeof openingHours.entries === "function") {
-    const result: Record<string, any> = {};
-    openingHours.forEach((value: any, key: string) => {
-      result[key] = value;
-    });
-    return result;
-  }
-  return openingHours;
-};
+// Helper functions removed and moved to restaurantUtils.ts
 
 /**
  * @function getPublicRestaurants
@@ -546,7 +653,14 @@ export const getMyRestaurants = async (req: Request, res: Response): Promise<voi
       .select("-collaborators -createdAt -updatedAt")
       .sort({ name: 1 });
 
-    res.status(200).json({ restaurants });
+    const restaurantsWithStatus = restaurants.map((r) => {
+      return {
+        ...r.toObject(),
+        isOpenNow: isRestaurantOpen(r.openingHours),
+      };
+    });
+
+    res.status(200).json({ restaurants: restaurantsWithStatus });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

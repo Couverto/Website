@@ -24,6 +24,8 @@ import { Config } from "@/pages/Admin/components/config";
 import { AdminRestaurants } from "@/pages/Admin/components/restaurants";
 import { AdminRestaurantStats } from "@/pages/Admin/components/restaurants/restaurantStats";
 import { AdminRestaurantForm } from "@/pages/Admin/components/restaurants/restaurantForm";
+import { AdminPayments } from "@/pages/Admin/components/payments";
+
 import { ForgotPassword } from "@/pages/Authentication/ForgotPassword";
 import { ResetPassword } from "@/pages/Authentication/ResetPassword";
 import { Footer } from "@/components/Footer";
@@ -42,6 +44,8 @@ import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/Restaurants";
 import { RestaurantRoleProtectedRoute } from "./RestaurantRoleProtectedRoute";
 import { RestaurantGallery } from "@/pages/Restaurant/Gallery";
+import { PaymentSuccess } from "@/pages/Account/PaymentSuccess";
+import { PaymentCancel } from "@/pages/Account/PaymentCancel";
 
 export const Router = () => {
   return (
@@ -97,6 +101,8 @@ export const Router = () => {
           <Route path="restaurants" element={<AccountRestaurants />} />
           <Route path="bookings" element={<AccountBooking />} />
           <Route path="preferences" element={<AccountPreferences />} />
+          <Route path="payment-success" element={<PaymentSuccess />} />
+          <Route path="payment-cancel" element={<PaymentCancel />} />
         </Route>
 
         <Route
@@ -234,6 +240,7 @@ export const Router = () => {
           <Route path="restaurants" element={<AdminRestaurants />} />
           <Route path="restaurants/:id/stats" element={<AdminRestaurantStats />} />
           <Route path="restaurants/:id/edit" element={<AdminRestaurantForm />} />
+          <Route path="payments" element={<AdminPayments />} />
         </Route>
       </Route>
 

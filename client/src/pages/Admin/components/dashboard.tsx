@@ -1,7 +1,20 @@
-import { Users, Utensils, LayoutDashboard, Mail, Calendar, Activity, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  Users,
+  Utensils,
+  LayoutDashboard,
+  Mail,
+  Calendar,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  TrendingUp,
+  PieChart as PieChartIcon,
+} from "lucide-react";
+
 import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
-import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -41,42 +54,18 @@ const StatCard = ({
 
 export const Dashboard = () => {
   const [stats, setStats] = useState({
-    users: { total: 0, newLast7Days: 0 },
-    restaurants: { total: 0, newLast7Days: 0 },
+    users: { total: 0, newLast7Days: 0, trend: [] },
+    restaurants: { total: 0, newLast7Days: 0, trend: [] },
     bookings: { total: 0, pending: 0, confirmed: 0, cancelled: 0, totalGuests: 0 },
     system: { totalLogs: 0, errorLogsLast24h: 0 },
-    authMethods: { google: 0, local: 0 },
+    finance: { totalRevenue: 0, revenueByDay: [], revenueByPlan: [] },
   });
-
-  const data = [
-    { name: "Lun", value: 4 },
-    { name: "Mar", value: 3 },
-    { name: "Mer", value: 7 },
-    { name: "Jeu", value: 5 },
-    { name: "Ven", value: 8 },
-    { name: "Sam", value: 12 },
-    { name: "Dim", value: 10 },
-  ];
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [adminStatsRes, authStatsRes] = await Promise.all([
-          axiosConfig.get("/admin/stats"),
-          axiosConfig.get("/users/stats/authTypes"),
-        ]);
-
-        const authData = authStatsRes.data.data;
-        const googleUsers = authData.find((s: any) => s.label === "Google")?.value || 0;
-        const localUsers = authData.find((s: any) => s.label === "Local")?.value || 0;
-
-        setStats({
-          ...adminStatsRes.data,
-          authMethods: {
-            google: googleUsers,
-            local: localUsers,
-          },
-        });
+        const response = await axiosConfig.get("/admin/stats");
+        setStats(response.data);
       } catch (error: any) {
         console.error("Error fetching stats:", error);
       }
@@ -84,6 +73,8 @@ export const Dashboard = () => {
 
     fetchStats();
   }, []);
+
+  const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
 
   return (
     <div className="space-y-6">
@@ -115,34 +106,37 @@ export const Dashboard = () => {
           description={`${stats.bookings.totalGuests} couverts`}
         />
         <StatCard
-          title="Santé Système"
-          value={stats.system.errorLogsLast24h > 0 ? "Attention" : "Sain"}
-          icon={Activity}
-          trend={stats.system.errorLogsLast24h > 0 ? "down" : "up"}
-          trendValue={`${stats.system.errorLogsLast24h == undefined ? 0 : stats.system.errorLogsLast24h} erreurs`}
-          description="dernières 24h"
+          title="Chiffre d'Affaires"
+          value={`${stats.finance.totalRevenue.toLocaleString()} €`}
+          icon={DollarSign}
+          trend="up"
+          trendValue="+5%"
+          description="somme totale"
         />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Aperçu des Inscriptions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              {"Évolution des revenus (30j)"}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="pl-0">
-            <div className="h-[200px] w-full">
+          <CardContent className="pl-2">
+            <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data}>
+                <AreaChart data={stats.finance.revenueByDay}>
                   <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }} />
-                  <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorValue)" />
+                  <XAxis dataKey="_id" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none" }} formatter={(value: any) => [`${value} €`, "Revenu"]} />
+                  <Area type="monotone" dataKey="total" stroke="#10b981" fillOpacity={1} fill="url(#colorRevenue)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -151,38 +145,89 @@ export const Dashboard = () => {
 
         <Card className="col-span-3">
           <CardHeader>
-            <CardTitle>Méthodes d'Authentification</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5 text-primary" />
+              {"Répartition des abonnements"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-8">
-              <div className="flex items-center">
-                <div className="w-full space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Google</span>
-                    <span className="text-sm text-muted-foreground">{stats.authMethods.google}</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${(stats.authMethods.google / (stats.users.total || 1)) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="w-full space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Email / Mot de passe</span>
-                    <span className="text-sm text-muted-foreground">{stats.authMethods.local}</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-muted-foreground transition-all"
-                      style={{ width: `${(stats.authMethods.local / (stats.users.total || 1)) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.finance.revenueByPlan}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="total"
+                    nameKey="_id"
+                  >
+                    {stats.finance.revenueByPlan?.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: any) => [`${value} €`, "Revenu"]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              {"Nouveaux Utilisateurs (30j)"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.users.trend}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="_id" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none" }} />
+                  <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorUsers)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Utensils className="h-5 w-5 text-primary" />
+              {"Nouveaux Restaurants (30j)"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.restaurants.trend}>
+                  <defs>
+                    <linearGradient id="colorRestaurants" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="_id" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none" }} />
+                  <Area type="monotone" dataKey="count" stroke="#3b82f6" fillOpacity={1} fill="url(#colorRestaurants)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

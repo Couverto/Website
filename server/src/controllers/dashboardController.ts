@@ -12,6 +12,8 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const [
       totalUsers,
@@ -25,6 +27,11 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
       totalLogs,
       errorLogs24h,
       totalGuestsAgg,
+      totalRevenueAgg,
+      usersTrend,
+      restaurantsTrend,
+      revenueByDay,
+      revenueByPlan,
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ createdAt: { $gte: last7Days } }),
@@ -40,9 +47,52 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
         createdAt: { $gte: last24Hours },
       }),
       Booking.aggregate([{ $group: { _id: null, totalGuests: { $sum: "$guests" } } }]),
+      import("../models/paymentModel.js").then((m) =>
+        m.Payment.aggregate([{ $match: { status: "completed" } }, { $group: { _id: null, totalRevenue: { $sum: "$amount" } } }]),
+      ),
+      User.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Restaurant.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      import("../models/paymentModel.js").then((m) =>
+        m.Payment.aggregate([
+          { $match: { status: "completed", createdAt: { $gte: thirtyDaysAgo } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+              total: { $sum: "$amount" },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ]),
+      ),
+      import("../models/paymentModel.js").then((m) =>
+        m.Payment.aggregate([
+          { $match: { status: "completed" } },
+          { $group: { _id: "$planName", total: { $sum: "$amount" }, count: { $sum: 1 } } },
+          { $sort: { total: -1 } },
+        ]),
+      ),
     ]);
 
     const totalGuests = totalGuestsAgg[0]?.totalGuests || 0;
+    const totalRevenue = (totalRevenueAgg as any)[0]?.totalRevenue || 0;
 
     createLog({
       message: `Admin dashboard statistics accessed`,
@@ -54,10 +104,12 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
       users: {
         total: totalUsers,
         newLast7Days: newUsers,
+        trend: usersTrend,
       },
       restaurants: {
         total: totalRestaurants,
         newLast7Days: newRestaurants,
+        trend: restaurantsTrend,
       },
       bookings: {
         total: totalBookings,
@@ -66,8 +118,14 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
         cancelled: cancelledBookings,
         totalGuests,
       },
+      finance: {
+        totalRevenue,
+        revenueByDay,
+        revenueByPlan,
+      },
       system: {
         totalLogs,
+        errorLogsLast24h: errorLogs24h,
       },
     });
   } catch (error: any) {

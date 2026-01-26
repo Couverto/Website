@@ -103,6 +103,7 @@ export const getCreatePlanSchema = () => {
     features: z.array(z.string()).default([]),
     active: z.boolean(),
     position: z.coerce.number(),
+    stripePriceId: z.string().optional(),
   });
 };
 
@@ -114,6 +115,7 @@ export const getUpdatePlanSchema = () => {
     features: z.array(z.string()).default([]),
     active: z.boolean(),
     position: z.coerce.number(),
+    stripePriceId: z.string().optional(),
   });
 };
 

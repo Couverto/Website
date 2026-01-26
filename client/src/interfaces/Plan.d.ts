@@ -8,6 +8,8 @@ export interface Plan {
   features: Feature[];
   active: boolean;
   position: number;
+  stripePriceId?: string;
   createdAt: string;
+
   updatedAt: string;
 }

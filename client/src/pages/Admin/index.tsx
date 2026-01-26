@@ -12,6 +12,7 @@ const segmentLabels: Record<string, string> = {
   features: "Fonctionnalités",
   configs: "Configurations",
   logs: "Logs",
+  payments: "Paiements",
 };
 
 export const Index = () => {

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Payment } from "../models/paymentModel.js";
 import { Restaurant } from "../models/restaurantModel.js";
 import { Plan } from "../models/planModel.js";
+import { stripeService } from "../services/stripeService.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 
@@ -22,6 +23,28 @@ export const getRestaurantPayments = async (req: Request, res: Response): Promis
 };
 
 /**
+ * @function getPayments
+ * @description Retrieves all payments for administrative view.
+ */
+export const getPayments = async (req: Request, res: Response): Promise<void> => {
+  const page = parseInt(req.query.page as string) || 0;
+  const size = parseInt(req.query.size as string) || 10;
+
+  try {
+    const payments = await Payment.find({})
+      .sort({ createdAt: -1 })
+      .skip(page * size)
+      .limit(size)
+      .populate("restaurant", "name")
+      .populate("plan", "name");
+    const count = await Payment.countDocuments({});
+    res.status(200).json({ payments, count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
  * @function createPayment
  * @description Creates a new payment record for a restaurant.
  */
@@ -29,7 +52,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
   const { restaurantId, planId, amount, paymentMethod } = req.body;
 
   try {
-    const restaurant = await Restaurant.findById(restaurantId);
+    const restaurant = await Restaurant.findById(restaurantId).populate("collaborators");
     if (!restaurant) {
       res.status(404).json({ error: "Restaurant introuvable" });
       return;
@@ -41,6 +64,36 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // If no active Stripe subscription and plan requires payment, launch Stripe checkout
+    if (!restaurant.stripeSubscriptionId && plan.price > 0 && plan.stripePriceId) {
+      // Get owner email for Stripe customer
+      const owner = (restaurant.collaborators as any[])?.[0];
+      const customerEmail = owner?.email || "client@couverto.fr";
+
+      // Create or reuse Stripe customer
+      let customerId = restaurant.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripeService.createCustomer(customerEmail, restaurant.name);
+        customerId = customer.id;
+        restaurant.stripeCustomerId = customerId;
+        await restaurant.save();
+      }
+
+      // Create Stripe checkout session
+      const successUrl = `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${process.env.CORS_ORIGIN}/restaurant/${restaurantId}/plan`;
+
+      const session = await stripeService.createCheckoutSession(customerId, plan.stripePriceId, successUrl, cancelUrl, {
+        restaurantId: restaurantId,
+        planId: plan._id.toString(),
+        type: "RESUBSCRIPTION",
+      });
+
+      res.status(200).json({ url: session.url, requiresStripe: true });
+      return;
+    }
+
+    // Free plan or existing subscription: proceed with direct activation
     const payment = await Payment.create({
       restaurant: restaurantId,
       plan: planId,
@@ -57,7 +110,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
     restaurant.plan = plan._id as any;
     restaurant.subscriptionStatus = "active";
     restaurant.subscriptionEndDate = subscriptionEndDate;
-    restaurant.autoRenew = true; // defaulting to autoRenew true on new payment
+    restaurant.autoRenew = true;
 
     // Feature: Auto-Reopen if restaurant was closed due to cancelled plan
     const wasClosed = restaurant.isClosed;
@@ -104,11 +157,51 @@ export const updateSubscription = async (req: Request, res: Response): Promise<v
         res.status(404).json({ error: "Plan introuvable" });
         return;
       }
+
+      // Update Stripe subscription with new price if applicable
+      if (restaurant.stripeSubscriptionId && plan.stripePriceId) {
+        try {
+          // Retrieve current subscription to get the item ID
+          const subscription = await stripeService.retrieveSubscription(restaurant.stripeSubscriptionId);
+          const subscriptionItemId = (subscription as any).items?.data?.[0]?.id;
+
+          if (subscriptionItemId) {
+            // Update the subscription item with the new price
+            await stripeService.updateSubscriptionItem(subscriptionItemId, plan.stripePriceId);
+            console.log(`[Stripe] Subscription item ${subscriptionItemId} updated to price ${plan.stripePriceId}`);
+          }
+        } catch (stripeError: any) {
+          console.error(`[Stripe] Failed to update subscription price:`, stripeError.message);
+        }
+      }
+
+      // Record a payment for the plan change
+      await Payment.create({
+        restaurant: restaurant._id,
+        plan: plan._id,
+        planName: plan.name,
+        amount: plan.price,
+        status: "completed",
+        paymentMethod: "card",
+      });
+
       restaurant.plan = plan._id as any;
     }
 
     if (autoRenew !== undefined) {
       restaurant.autoRenew = autoRenew;
+
+      // Sync with Stripe: cancel_at_period_end = !autoRenew
+      if (restaurant.stripeSubscriptionId) {
+        try {
+          await stripeService.updateSubscription(restaurant.stripeSubscriptionId, {
+            cancel_at_period_end: !autoRenew,
+          });
+          console.log(`[Stripe] Subscription ${restaurant.stripeSubscriptionId} updated: cancel_at_period_end=${!autoRenew}`);
+        } catch (stripeError: any) {
+          console.error(`[Stripe] Failed to update subscription:`, stripeError.message);
+        }
+      }
     }
 
     await restaurant.save();
@@ -133,7 +226,10 @@ export const getSubscription = async (req: Request, res: Response): Promise<void
   const { id } = req.params;
 
   try {
-    const restaurant = await Restaurant.findById(id).populate("plan");
+    const restaurant = await Restaurant.findById(id).populate({
+      path: "plan",
+      populate: { path: "features" },
+    });
     if (!restaurant) {
       res.status(404).json({ error: "Restaurant introuvable" });
       return;
@@ -164,16 +260,28 @@ export const cancelSubscription = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Cancel subscription and close restaurant
+    // Cancel on Stripe if applicable
+    if (restaurant.stripeSubscriptionId) {
+      try {
+        await stripeService.cancelSubscription(restaurant.stripeSubscriptionId);
+        console.log(`[Stripe] Subscription ${restaurant.stripeSubscriptionId} cancelled for restaurant ${id}`);
+      } catch (stripeError: any) {
+        console.error(`[Stripe] Failed to cancel subscription ${restaurant.stripeSubscriptionId}:`, stripeError.message);
+        // We continue even if Stripe fails, to ensure the restaurant is closed in our DB
+      }
+    }
+
+    // Cancel subscription and close restaurant in our database
     restaurant.subscriptionStatus = "cancelled";
     restaurant.autoRenew = false;
     restaurant.plan = null as any;
     restaurant.isClosed = true;
+    restaurant.stripeSubscriptionId = null as any; // Clear the subscription ID
 
     await restaurant.save();
 
     createLog({
-      message: `Subscription cancelled for restaurant ${restaurant.name} - Restaurant is now closed`,
+      message: `Subscription cancelled for restaurant ${restaurant.name} - Restaurant is now closed and billing stopped`,
       userId: req.userId,
       level: logLevels.INFO,
     });

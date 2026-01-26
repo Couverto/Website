@@ -9,6 +9,7 @@ const PlanSchema = new Schema<IPlan>(
     features: { type: [{ type: Schema.Types.ObjectId, ref: "Feature" }], default: [] },
     active: { type: Boolean, default: true },
     position: { type: Number, default: 0 },
+    stripePriceId: { type: String, default: null },
   },
   { timestamps: true },
 );

@@ -52,10 +52,7 @@ export const getPlanSchema = () =>
 
 export const getPaymentSchema = () =>
   z.object({
-    cardHolder: z.string().min(3, "Le nom est requis."),
-    cardNumber: z.string().regex(/^\d{16}$/, "Numéro de carte invalide (16 chiffres)."),
-    expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, "Date invalide (MM/AA)."),
-    cvc: z.string().regex(/^\d{3}$/, "Le CVC doit contenir 3 chiffres."),
+    // Payment is handled by Stripe Checkout
   });
 
 export const getOpeningHoursSchema = () =>

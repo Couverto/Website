@@ -44,10 +44,6 @@ const INITIAL_DATA: WizardData = {
     tiktok: "",
   },
   planId: "",
-  cardHolder: "",
-  cardNumber: "",
-  expiry: "",
-  cvc: "",
   openingHours: {
     monday: {
       isClosed: false,
@@ -175,7 +171,14 @@ export const AddRestaurantWizard = () => {
         slug: formData.name.toLowerCase().replace(/ /g, "-") + "-" + Date.now(),
       };
 
-      await axiosConfig.post("/restaurants", payload);
+      const response = await axiosConfig.post("/restaurants", payload);
+
+      if (response.data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = response.data.url;
+        return;
+      }
+
       toast.success("Restaurant créé avec succès !");
       navigate("/account/restaurants");
     } catch (error: any) {

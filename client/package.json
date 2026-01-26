@@ -29,6 +29,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@stripe/stripe-js": "^8.6.4",
     "@tailwindcss/vite": "^4.1.7",
     "@tanstack/react-table": "^8.21.3",
     "@types/react-datepicker": "^7.0.0",

@@ -1,6 +1,7 @@
 import * as React from "react";
-import { LayoutDashboard, Users, FileText, Settings, Utensils, House, Paperclip, DollarSign, List } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Settings, Utensils, House, Paperclip, DollarSign, List, Zap, CreditCard } from "lucide-react";
 import { NavMain } from "./nav-main";
+
 import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/contexts/authContext";
@@ -39,13 +40,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {
         title: "Offres",
         url: "/admin/plans",
-        icon: DollarSign,
+        icon: Zap,
         roles: ["admin"],
       },
       {
         title: "Fonctionnalités",
         url: "/admin/features",
         icon: List,
+        roles: ["admin"],
+      },
+      {
+        title: "Paiements",
+        url: "/admin/payments",
+        icon: CreditCard,
         roles: ["admin"],
       },
       {

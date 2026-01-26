@@ -113,6 +113,12 @@ export const RestaurantPlan = () => {
         paymentMethod: "card",
       });
 
+      // If Stripe checkout is required, redirect to Stripe
+      if (response.data.requiresStripe && response.data.url) {
+        window.location.href = response.data.url;
+        return;
+      }
+
       if (response.data.reopened) {
         toast.success(`Abonnement renouvelé - Votre restaurant est à nouveau ouvert ! 🎉`);
       } else {
@@ -200,10 +206,10 @@ export const RestaurantPlan = () => {
                   </div>
                 )}
                 <ul className="space-y-2 pt-2">
-                  {subscription.plan.features?.map((feature: string, i: number) => (
+                  {subscription.plan.features?.map((feature: any, i: number) => (
                     <li key={i} className="flex items-center gap-2 text-sm">
                       <Check className="h-4 w-4 text-emerald-500" />
-                      {feature}
+                      {typeof feature === "string" ? feature : feature.name}
                     </li>
                   ))}
                 </ul>
@@ -270,10 +276,10 @@ export const RestaurantPlan = () => {
                             <span className="text-muted-foreground">/mois</span>
                           </div>
                           <ul className="space-y-2">
-                            {plan.features.map((feature, i) => (
+                            {plan.features?.map((feature: any, i: number) => (
                               <li key={i} className="flex items-start gap-2 text-sm">
                                 <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground">{feature}</span>
+                                <span className="text-muted-foreground">{typeof feature === "string" ? feature : feature.name}</span>
                               </li>
                             ))}
                           </ul>
@@ -347,13 +353,15 @@ export const RestaurantPlan = () => {
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Résilier l'abonnement ?</AlertDialogTitle>
-                      <AlertDialogDescription className="space-y-3">
-                        <p>
-                          Cette action va <strong>immédiatement fermer votre restaurant</strong> et le rendre invisible aux clients.
-                        </p>
-                        <p>Vous pourrez le réactiver à tout moment en souscrivant à un nouveau plan.</p>
-                        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-                          ⚠️ Attention : Toutes les réservations futures seront annulées.
+                      <AlertDialogDescription asChild>
+                        <div className="text-sm text-muted-foreground space-y-3">
+                          <span className="block">
+                            Cette action va <strong>immédiatement fermer votre restaurant</strong> et le rendre invisible aux clients.
+                          </span>
+                          <span className="block">Vous pourrez le réactiver à tout moment en souscrivant à un nouveau plan.</span>
+                          <span className="block p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                            ⚠️ Attention : Toutes les réservations futures seront annulées.
+                          </span>
                         </div>
                       </AlertDialogDescription>
                     </AlertDialogHeader>

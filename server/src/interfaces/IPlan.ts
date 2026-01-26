@@ -8,6 +8,7 @@ export interface IPlan extends Document {
   features: Schema.Types.ObjectId[] | IFeature[];
   active: boolean;
   position: number;
+  stripePriceId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
