@@ -408,8 +408,11 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
       return;
     }
 
-    // Prevent reopening if no active plan
-    if (restaurant.isClosed && !restaurant.plan) {
+    // Check if Stripe is configured
+    const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
+
+    // Prevent reopening if no active plan (only when Stripe is configured)
+    if (stripeConfigured && restaurant.isClosed && !restaurant.plan) {
       res.status(400).json({
         error: "Vous devez souscrire à un abonnement pour ouvrir votre restaurant.",
         requiresPlan: true,
