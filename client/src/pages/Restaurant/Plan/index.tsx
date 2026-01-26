@@ -1,5 +1,5 @@
-import { useParams, useOutletContext, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams, useOutletContext, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,7 @@ interface RestaurantContext {
 
 export const RestaurantPlan = () => {
   const { id } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { userRole } = useOutletContext<RestaurantContext>();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -60,6 +61,7 @@ export const RestaurantPlan = () => {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const navigate = useNavigate();
+  const paymentHandled = useRef(false);
 
   const fetchData = async () => {
     try {
@@ -80,6 +82,37 @@ export const RestaurantPlan = () => {
       setLoading(false);
     }
   };
+
+  // Handle payment success/cancelled from URL params
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const sessionId = searchParams.get("session_id");
+
+    if (paymentHandled.current) return;
+
+    if (paymentStatus === "success" && sessionId) {
+      paymentHandled.current = true;
+      // Finalize the payment
+      api
+        .post("/restaurants/finalize-payment", { sessionId })
+        .then(() => {
+          toast.success("Paiement réussi ! Votre abonnement est maintenant actif 🎉");
+          fetchData();
+        })
+        .catch((err) => {
+          console.error("Finalize error:", err);
+          toast.success("Paiement réussi ! Votre abonnement sera activé sous peu.");
+        })
+        .finally(() => {
+          // Clean up URL params
+          setSearchParams({});
+        });
+    } else if (paymentStatus === "cancelled") {
+      paymentHandled.current = true;
+      toast.error("Paiement annulé");
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     fetchData();

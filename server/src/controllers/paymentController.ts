@@ -64,8 +64,11 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // If no active Stripe subscription and plan requires payment, launch Stripe checkout
-    if (!restaurant.stripeSubscriptionId && plan.price > 0 && plan.stripePriceId) {
+    // Check if Stripe is configured
+    const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
+
+    // If no active Stripe subscription and plan requires payment, launch Stripe checkout (if configured)
+    if (!restaurant.stripeSubscriptionId && plan.price > 0 && plan.stripePriceId && stripeConfigured) {
       // Get owner email for Stripe customer
       const owner = (restaurant.collaborators as any[])?.[0];
       const customerEmail = owner?.email || "client@couverto.fr";
@@ -79,9 +82,9 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
         await restaurant.save();
       }
 
-      // Create Stripe checkout session
-      const successUrl = `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`;
-      const cancelUrl = `${process.env.CORS_ORIGIN}/restaurant/${restaurantId}/plan`;
+      // Create Stripe checkout session - redirect back to plan page with success param
+      const successUrl = `${process.env.CORS_ORIGIN}/restaurant/${restaurantId}/plan?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${process.env.CORS_ORIGIN}/restaurant/${restaurantId}/plan?payment=cancelled`;
 
       const session = await stripeService.createCheckoutSession(customerId, plan.stripePriceId, successUrl, cancelUrl, {
         restaurantId: restaurantId,
@@ -93,7 +96,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Free plan or existing subscription: proceed with direct activation
+    // Stripe not configured or free plan: proceed with direct activation (dev mode)
     const payment = await Payment.create({
       restaurant: restaurantId,
       plan: planId,
