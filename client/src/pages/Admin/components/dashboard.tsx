@@ -107,7 +107,7 @@ export const Dashboard = () => {
         />
         <StatCard
           title="Chiffre d'Affaires"
-          value={`${stats.finance.totalRevenue.toLocaleString()} €`}
+          value={`${(stats.finance?.totalRevenue ?? 0).toLocaleString()} €`}
           icon={DollarSign}
           trend="up"
           trendValue="+5%"
@@ -126,7 +126,7 @@ export const Dashboard = () => {
           <CardContent className="pl-2">
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.finance.revenueByDay}>
+                <AreaChart data={stats.finance?.revenueByDay ?? []}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -155,7 +155,7 @@ export const Dashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={stats.finance.revenueByPlan}
+                    data={stats.finance?.revenueByPlan ?? []}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -164,7 +164,7 @@ export const Dashboard = () => {
                     dataKey="total"
                     nameKey="_id"
                   >
-                    {stats.finance.revenueByPlan?.map((entry: any, index: number) => (
+                    {(stats.finance?.revenueByPlan ?? []).map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
