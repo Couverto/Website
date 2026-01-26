@@ -114,17 +114,12 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
     restaurant.subscriptionStatus = "active";
     restaurant.subscriptionEndDate = subscriptionEndDate;
     restaurant.autoRenew = true;
-
-    // Feature: Auto-Reopen if restaurant was closed due to cancelled plan
-    const wasClosed = restaurant.isClosed;
-    if (wasClosed) {
-      restaurant.isClosed = false;
-    }
+    // Note: Restaurant stays closed - user must manually open it
 
     await restaurant.save();
 
     createLog({
-      message: `Payment of ${payment.amount}€ recorded for restaurant ${restaurant.name} - ${wasClosed ? "Reopened" : "Renewed"}`,
+      message: `Payment of ${payment.amount}€ recorded for restaurant ${restaurant.name} - Subscription activated`,
       userId: req.userId,
       level: logLevels.INFO,
     });
@@ -132,7 +127,6 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
     res.status(201).json({
       payment,
       message: "Paiement enregistré",
-      reopened: wasClosed,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

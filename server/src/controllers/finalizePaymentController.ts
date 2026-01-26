@@ -68,7 +68,7 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
       restaurant.subscriptionEndDate = subscriptionEndDate;
       restaurant.stripeSubscriptionId = session.subscription as string;
       restaurant.autoRenew = true;
-      restaurant.isClosed = false; // Reopen the restaurant
+      // Note: Restaurant stays closed - user must manually open it
 
       await restaurant.save();
 
