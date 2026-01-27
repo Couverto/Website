@@ -5,7 +5,7 @@ import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChefHat } from "lucide-react";
 
 interface RestaurantListProps {
   isPreview?: boolean;
@@ -107,7 +107,15 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
         )}
 
         {!loading && restaurants.length === 0 && (
-          <div className="text-center py-24 text-muted-foreground text-lg">{"Aucun restaurant trouvé pour le moment."}</div>
+          <div className="flex flex-col items-center justify-center py-24 px-4 text-center animate-in fade-in zoom-in duration-500">
+            <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+              <ChefHat className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="text-2xl font-bold text-foreground mb-3">{"Les restaurants arrivent bientôt !"}</h3>
+            <p className="text-lg text-muted-foreground max-w-md mx-auto">
+              {"Nous sélectionnons actuellement les meilleures adresses pour vous offrir une expérience inoubliable. Revenez très vite !"}
+            </p>
+          </div>
         )}
 
         <div className="mt-12 text-center md:hidden">

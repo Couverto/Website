@@ -299,17 +299,6 @@ export const Navbar = () => {
             <div className="flex flex-col gap-2">
               <div className="text-sm font-medium text-muted-foreground px-2 mb-2">{"Mon compte"}</div>
 
-              <Link
-                to="/account"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-4 text-lg font-medium p-2 rounded-xl hover:bg-muted transition-colors"
-              >
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <User className="h-5 w-5" />
-                </div>
-                {"Mon compte"}
-              </Link>
-
               {userLinks
                 .filter((link) => !link.role || (link.role === "admin" ? authUser.role === "admin" : true))
                 .map((link) => {
