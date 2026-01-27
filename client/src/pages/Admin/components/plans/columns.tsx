@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Check, X, EllipsisVertical } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Check, X, EllipsisVertical, Trash, Copy, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { Plan } from "@/interfaces/Plan";
+import { toast } from "sonner";
 
 export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog: (plan: Plan) => void): ColumnDef<Plan>[] => {
   return [
@@ -154,13 +155,22 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{"Actions"}</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => openEditSheet(plan)} className="cursor-pointer">
-                {"Modifier"}
+              <DropdownMenuItem
+                className="flex gap-2"
+                onClick={() => {
+                  navigator.clipboard.writeText(plan._id);
+                  toast.success("ID du plan copié");
+                }}
+              >
+                <Copy className="w-4 h-4 text-muted-foreground" />
+                {"Copier l'ID"}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => openDeleteDialog(plan)} className="cursor-pointer text-destructive focus:text-destructive">
-                {"Supprimer"}
+
+              <DropdownMenuItem className="flex gap-2" onClick={() => openEditSheet(plan)}>
+                <Pencil className="w-4 h-4 text-blue-500" /> {"Modifier le plan"}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex gap-2 text-destructive focus:text-destructive" onClick={() => openDeleteDialog(plan)}>
+                <Trash className="w-4 h-4" /> {"Supprimer le plan"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

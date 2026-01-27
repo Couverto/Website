@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Check, X, EllipsisVertical } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Check, X, EllipsisVertical, Copy, Pencil, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Feature } from "@/interfaces/Feature";
+import { toast } from "sonner";
 
 export const useColumns = (
   openEditDialog: (feature: Feature) => void,
@@ -95,16 +96,22 @@ export const useColumns = (
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{"Actions"}</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => openEditDialog(feature)} className="cursor-pointer">
-                {"Modifier"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => openDeleteDialog(feature)}
-                className="cursor-pointer text-destructive focus:text-destructive"
+                className="flex gap-2"
+                onClick={() => {
+                  navigator.clipboard.writeText(feature._id);
+                  toast.success("ID de la fonctionnalité copié");
+                }}
               >
-                {"Supprimer"}
+                <Copy className="w-4 h-4 text-muted-foreground" />
+                {"Copier l'ID"}
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex gap-2" onClick={() => openEditDialog(feature)}>
+                <Pencil className="w-4 h-4 text-blue-500" /> {"Modifier la fonctionnalité"}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex gap-2 text-destructive focus:text-destructive" onClick={() => openDeleteDialog(feature)}>
+                <Trash className="w-4 h-4" /> {"Supprimer la fonctionnalité"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

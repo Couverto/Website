@@ -28,14 +28,16 @@ export const RestaurantLayout = () => {
       const response = await api.get(`/restaurants/${id}/details`);
       setRestaurant(response.data.restaurant);
       setUserRole(response.data.userRole || "employee");
+      setLoading(false);
     } catch (err: any) {
       if (err.response?.status === 403) {
-        setError("not_collaborator");
+        toast.error("Accès refusé : Vous n'êtes pas collaborateur de ce restaurant.");
+        navigate("/", { replace: true });
+        return;
       } else {
         setError("not_found");
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -75,10 +77,8 @@ export const RestaurantLayout = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <h1 className="text-2xl font-bold">{error === "not_collaborator" ? "Accès refusé" : "Restaurant non trouvé"}</h1>
-        <p className="text-muted-foreground">
-          {error === "not_collaborator" ? "Vous n'êtes pas collaborateur de ce restaurant." : "Ce restaurant n'existe pas."}
-        </p>
+        <h1 className="text-2xl font-bold">Restaurant non trouvé</h1>
+        <p className="text-muted-foreground">Ce restaurant n'existe pas ou a été supprimé.</p>
         <button onClick={() => navigate("/account/restaurants")} className="text-primary hover:underline">
           Retour à mes restaurants
         </button>

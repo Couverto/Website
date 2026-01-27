@@ -741,7 +741,7 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
     const restaurant = await Restaurant.findById(req.params.id).populate("collaborators", "name forename email avatar");
 
     // Get the requesting user's role for this restaurant
-    const userRole = restaurant?.collaboratorRoles.get(req.userId!.toString()) || restaurantRoles.EMPLOYEE;
+    const userRole = (req as any).restaurantRole || restaurant?.collaboratorRoles.get(req.userId!.toString()) || restaurantRoles.EMPLOYEE;
 
     res.status(200).json({ restaurant, userRole });
   } catch (err: any) {

@@ -3,7 +3,25 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Copy, EllipsisVertical, Pencil, Trash, Utensils, MapPin, Phone, Calendar, Globe, BarChart3 } from "lucide-react";
+import {
+  ArrowUpDown,
+  Copy,
+  EllipsisVertical,
+  Pencil,
+  Trash,
+  Utensils,
+  MapPin,
+  Phone,
+  Calendar,
+  Globe,
+  BarChart3,
+  Users,
+  ImageIcon,
+  MessageSquare,
+  UserPlus,
+  Settings,
+  CreditCard,
+} from "lucide-react";
 import { toast } from "sonner";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { Badge } from "@/components/ui/badge";
@@ -178,17 +196,15 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
                 {"Visiter le site"}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem className="flex gap-2" onClick={() => callback("stats", restaurant._id)}>
-              <BarChart3 className="w-4 h-4 text-primary" /> {"Statistiques"}
-            </DropdownMenuItem>
-            <DropdownMenuItem className="flex gap-2" onClick={() => callback("edit", restaurant._id)}>
-              <Pencil className="w-4 h-4 text-blue-500" /> {"Modifier"}
+
+            <DropdownMenuItem className="flex gap-2" onClick={() => callback("dashboard", restaurant._id)}>
+              <Settings className="w-4 h-4 text-blue-500" /> {"Paramétrer le restaurant"}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="flex gap-2 text-destructive focus:text-destructive"
               onClick={() => callback("delete", restaurant._id)}
             >
-              <Trash className="w-4 h-4" /> {"Supprimer"}
+              <Trash className="w-4 h-4" /> {"Supprimer le restaurant"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

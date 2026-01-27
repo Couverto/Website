@@ -49,6 +49,27 @@ export const AdminRestaurants = () => {
       case "edit":
         navigate(`/admin/restaurants/${data}/edit`);
         break;
+      case "dashboard":
+        navigate(`/restaurant/${data}/dashboard`);
+        break;
+      case "bookings":
+        navigate(`/restaurant/${data}/bookings`);
+        break;
+      case "clients":
+        navigate(`/restaurant/${data}/clients`);
+        break;
+      case "collaborators":
+        navigate(`/restaurant/${data}/collaborators`);
+        break;
+      case "gallery":
+        navigate(`/restaurant/${data}/gallery`);
+        break;
+      case "reviews":
+        navigate(`/restaurant/${data}/reviews`);
+        break;
+      case "settings":
+        navigate(`/restaurant/${data}/settings`);
+        break;
       case "stats":
         navigate(`/admin/restaurants/${data}/stats`);
         break;

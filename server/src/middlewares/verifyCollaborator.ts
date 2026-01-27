@@ -4,6 +4,8 @@ import { User } from "../models/userModel.js";
 import mongoose from "mongoose";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
+import { createLog } from "../controllers/logController.js";
+import { logLevels } from "../utils/enums/logLevels.js";
 
 /**
  * Middleware to verify that the authenticated user is a collaborator of the restaurant and has the required role.
@@ -18,7 +20,7 @@ export const verifyCollaborator = (allowedRoles?: string[]) => {
       if (req.userId) {
         const user = await User.findById(req.userId);
         if (user && user.role === userRoles.ADMIN) {
-          req.restaurantRole = restaurantRoles.ADMIN;
+          (req as any).restaurantRole = restaurantRoles.ADMIN;
           next();
           return;
         }
@@ -42,6 +44,13 @@ export const verifyCollaborator = (allowedRoles?: string[]) => {
 
       const isCollaborator = restaurant.collaborators.some((collab) => collab.toString() === req.userId?.toString());
       if (!isCollaborator) {
+        // Log the unauthorized access attempt
+        createLog({
+          message: `Unauthorised access attempt to restaurant ${restaurant.name} (${restaurant._id}) by user ${req.userId}`,
+          userId: req.userId!,
+          level: logLevels.WARN,
+        });
+
         res.status(403).json({ error: "Vous n'êtes pas collaborateur de ce restaurant" });
         return;
       }
