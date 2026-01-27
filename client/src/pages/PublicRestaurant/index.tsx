@@ -1,13 +1,29 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
-import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft, FileText, ExternalLink, Utensils } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  Clock,
+  Phone,
+  Globe,
+  Star,
+  ChefHat,
+  Wallet,
+  ChevronLeft,
+  FileText,
+  ExternalLink,
+  Utensils,
+  MessageSquare,
+} from "lucide-react";
 import { BookingDialog } from "../Home/components/Booking/BookingDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface PublicRestaurant {
   _id: string;
@@ -46,6 +62,8 @@ export const PublicRestaurant = () => {
   const [restaurant, setRestaurant] = useState<PublicRestaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewsList, setReviewsList] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -71,8 +89,21 @@ export const PublicRestaurant = () => {
       }
     };
 
+    const fetchReviews = async () => {
+      setLoadingReviews(true);
+      try {
+        const response = await api.get(`/reviews/restaurant/${id}`);
+        setReviewsList(response.data);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
     if (id) {
       fetchRestaurant();
+      fetchReviews();
     }
   }, [id]);
 
@@ -393,8 +424,57 @@ export const PublicRestaurant = () => {
 
               <TabsContent value="reviews">
                 <Card>
-                  <CardContent className="pt-6 text-center py-12 text-muted-foreground">
-                    <p>{"Aucun avis pour le moment."}</p>
+                  <CardContent className="pt-6">
+                    {loadingReviews ? (
+                      <div className="flex justify-center p-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : reviewsList.length > 0 ? (
+                      <div className="grid gap-4">
+                        {reviewsList.map((review) => (
+                          <div key={review._id} className="border-b last:border-0 pb-4 last:pb-0">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-start justify-between">
+                                <div className="flex flex-col">
+                                  <span className="font-semibold">
+                                    {review.user?.forename} {review.user?.name?.charAt(0)}.
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(review.createdAt), "d MMMM yyyy", { locale: fr })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`w-4 h-4 ${review.rating >= star ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted/20"}`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-sm text-foreground/90 leading-relaxed">{review.comment}</p>
+                              {review.reply && (
+                                <div className="mt-3 bg-muted/50 p-3 rounded-md border border-border/50">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                                    <span className="font-semibold text-xs">{"Réponse du restaurant"}</span>
+                                    <span className="text-[10px] text-muted-foreground">
+                                      {format(new Date(review.reply.createdAt), "d MMM yyyy", { locale: fr })}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm italic text-muted-foreground">{review.reply.text}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>{"Aucun avis pour le moment."}</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

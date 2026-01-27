@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, BarChart3, CreditCard, ImageIcon } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Settings, UserPlus, BarChart3, CreditCard, ImageIcon, MessageSquare } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -57,6 +57,12 @@ export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: Restaur
       title: "Collaborateurs",
       url: `/restaurant/${id}/collaborators`,
       icon: UserPlus,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Avis Clients",
+      url: `/restaurant/${id}/reviews`,
+      icon: MessageSquare,
       roles: ["admin", "manager"],
     },
     {

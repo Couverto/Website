@@ -11,6 +11,7 @@ import { bookingRouter } from "./bookingRoutes.js";
 import { adminRouter } from "./adminRoutes.js";
 import paymentRouter from "./paymentRoutes.js";
 import { featureRouter } from "./featureRoutes.js";
+import { reviewRoutes } from "./reviewRoutes.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -19,8 +20,7 @@ const __dirname = path.dirname(__filename);
 
 export const router: Router = express.Router();
 
-// // API routes
-// // API routes
+// API routes
 router.use("/api/users", userRouter); // User-related routes
 router.use("/api/auth", authRouter); // Authentication routes
 router.use("/api/logs", logRouter); // Logging routes
@@ -29,6 +29,7 @@ router.use("/api/restaurants", restaurantRouter); // Restaurant routes
 router.use("/api/plans", planRouter); // Plan routes
 router.use("/api/features", featureRouter); // Feature routes
 router.use("/api/bookings", bookingRouter); // Booking routes
+router.use("/api/reviews", reviewRoutes); // Review routes
 router.use("/api/admin", adminRouter); // Admin routes
 router.use("/api", paymentRouter); // Payment routes
 

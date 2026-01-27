@@ -2,6 +2,7 @@ import { createServer } from "http";
 import { app } from "./app.js";
 import { connectToDatabase } from "./database/connectToDB.js";
 import { initSockets } from "./sockets/socket.js";
+// import { initReviewScheduler } from "./cron/reviewScheduler.js";
 
 /**
  * Initializes the HTTP server, connects to the database, and sets up WebSockets.
@@ -15,6 +16,9 @@ export function initServer() {
 
   // Initialize WebSocket connections
   initSockets(httpServer);
+
+  // Initialize Cron Jobs
+  // initReviewScheduler();
 
   // Ensure the PORT environment variable is defined
   if (!process.env.PORT) {

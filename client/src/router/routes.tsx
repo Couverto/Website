@@ -6,6 +6,7 @@ import { AccountLayout } from "@/pages/Account/layout";
 import { AccountRestaurants } from "@/pages/Account/restaurants";
 import { AccountBooking } from "@/pages/Account/booking";
 import { AccountPreferences } from "@/pages/Account/preferences";
+import { AddReview } from "@/pages/Account/AddReview";
 
 import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Professional";
@@ -39,6 +40,7 @@ import { RestaurantSettings } from "@/pages/Restaurant/Settings";
 import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
 import { RestaurantStats } from "@/pages/Restaurant/Stats";
 import { RestaurantPlan } from "@/pages/Restaurant/Plan";
+import { RestaurantReviews } from "@/pages/Restaurant/Reviews";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/Restaurants";
@@ -105,6 +107,7 @@ export const Router = () => {
           <Route path="restaurants" element={<AccountRestaurants />} />
           <Route path="bookings" element={<AccountBooking />} />
           <Route path="preferences" element={<AccountPreferences />} />
+          <Route path="add-review" element={<AddReview />} />
           <Route path="payment-success" element={<PaymentSuccess />} />
           <Route path="payment-cancel" element={<PaymentCancel />} />
         </Route>
@@ -167,6 +170,14 @@ export const Router = () => {
             element={
               <RestaurantRoleProtectedRoute roles={["admin"]}>
                 <RestaurantStats />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="reviews"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin", "manager"]}>
+                <RestaurantReviews />
               </RestaurantRoleProtectedRoute>
             }
           />
