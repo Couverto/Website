@@ -10,10 +10,13 @@ import {
   DollarSign,
   TrendingUp,
   PieChart as PieChartIcon,
+  MessageSquare,
+  AlertTriangle,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
+import { useSocketContext } from "@/contexts/socketContext";
 import { Area, AreaChart, CartesianGrid, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,12 +56,14 @@ const StatCard = ({
 );
 
 export const Dashboard = () => {
+  const { onlineUsers } = useSocketContext();
   const [stats, setStats] = useState({
     users: { total: 0, newLast7Days: 0, trend: [] },
     restaurants: { total: 0, newLast7Days: 0, trend: [] },
     bookings: { total: 0, pending: 0, confirmed: 0, cancelled: 0, totalGuests: 0 },
     system: { totalLogs: 0, errorLogsLast24h: 0 },
     finance: { totalRevenue: 0, revenueByDay: [], revenueByPlan: [] },
+    reviews: { total: 0, avgRating: 0 },
   });
 
   useEffect(() => {
@@ -92,6 +97,14 @@ export const Dashboard = () => {
           description="cette semaine"
         />
         <StatCard
+          title="Utilisateurs Actifs"
+          value={onlineUsers.length}
+          icon={Activity}
+          description="en temps réel"
+          trend="neutral"
+          trendValue="Live"
+        />
+        <StatCard
           title="Restaurants"
           value={stats.restaurants.total}
           icon={Utensils}
@@ -112,6 +125,27 @@ export const Dashboard = () => {
           trend="up"
           trendValue="+5%"
           description="somme totale"
+        />
+        <StatCard
+          title="Conversion"
+          value={`${((stats.bookings.confirmed / stats.bookings.total) * 100).toFixed(1)}%`}
+          icon={TrendingUp}
+          description="confirmées / total"
+          trend="neutral"
+        />
+        <StatCard
+          title="Avis Clients"
+          value={stats.reviews?.total || 0}
+          icon={MessageSquare}
+          description={`Note moyenne: ${stats.reviews?.avgRating || "N/A"}`}
+        />
+        <StatCard
+          title="Erreurs Système (24h)"
+          value={stats.system.errorLogsLast24h}
+          icon={AlertTriangle}
+          trend={stats.system.errorLogsLast24h > 0 ? "down" : "neutral"}
+          trendValue={stats.system.errorLogsLast24h > 0 ? "Attention" : "Stable"}
+          description="logs d'erreur"
         />
       </div>
 

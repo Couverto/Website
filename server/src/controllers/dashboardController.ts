@@ -32,6 +32,8 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
       restaurantsTrend,
       revenueByDay,
       revenueByPlan,
+      totalReviews,
+      avgRating,
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ createdAt: { $gte: last7Days } }),
@@ -89,6 +91,8 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
           { $sort: { total: -1 } },
         ]),
       ),
+      import("../models/reviewModel.js").then((m) => m.Review.countDocuments()),
+      import("../models/reviewModel.js").then((m) => m.Review.aggregate([{ $group: { _id: null, avgRating: { $avg: "$rating" } } }])),
     ]);
 
     const totalGuests = totalGuestsAgg[0]?.totalGuests || 0;
@@ -126,6 +130,10 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
       system: {
         totalLogs,
         errorLogsLast24h: errorLogs24h,
+      },
+      reviews: {
+        total: totalReviews,
+        avgRating: (avgRating[0]?.avgRating ?? 0).toFixed(2),
       },
     });
   } catch (error: any) {
