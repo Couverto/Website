@@ -242,11 +242,13 @@ export function DataTable<TData, TValue>({
                 <SelectValue placeholder={pagination.pageSize} />
               </SelectTrigger>
               <SelectContent side="top">
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={`${pageSize}`}>
-                    {pageSize}
-                  </SelectItem>
-                ))}
+                {[10, 20, 30, 40, 50]
+                  .filter((size) => size < dataCount)
+                  .map((pageSize) => (
+                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
                 <SelectItem value={`${dataCount}`}>{"Tout"}</SelectItem>
               </SelectContent>
             </Select>
