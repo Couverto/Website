@@ -612,7 +612,7 @@ export const getRestaurantClients = async (req: Request, res: Response): Promise
 export const updateBookingStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id, bookingId } = req.params;
-    const { status } = req.body;
+    const { status, reason } = req.body;
 
     if (!Object.values(bookingStatus).includes(status)) {
       res.status(400).json({ error: "Statut invalide" });
@@ -632,7 +632,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     // Send Cancellation Email if status is CANCELLED (Restaurant initiated)
     if (status === bookingStatus.CANCELLED) {
       try {
-        const restaurantDoc = await Restaurant.findById(id).select("name");
+        const restaurantDoc = await Restaurant.findById(id).select("name adress phone website");
         const customerEmail = booking.customer?.email;
 
         if (customerEmail && restaurantDoc) {
@@ -644,6 +644,10 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
             restaurantName: restaurantDoc.name,
             date: dateStr,
             time: timeStr,
+            reason: reason,
+            address: restaurantDoc.adress,
+            phone: restaurantDoc.phone,
+            website: restaurantDoc.website,
           });
 
           await sendEmail({
@@ -654,6 +658,43 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
         }
       } catch (mailError) {
         console.error("Booking cancellation email failed", mailError);
+      }
+    } else if (status === bookingStatus.CONFIRMED) {
+      // Send Confirmation Email if status is CONFIRMED (Restaurant manually confirmed)
+      try {
+        const restaurantDoc = await Restaurant.findById(id).select("name adress phone website");
+        const customerEmail = booking.customer?.email;
+
+        if (customerEmail && restaurantDoc) {
+          const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+          const htmlContent = bookingConfirmationTemplate({
+            customerName: booking.customer.name,
+            restaurantName: restaurantDoc.name,
+            date: dateStr,
+            time: timeStr,
+            guests: booking.guests,
+            status: "Confirmée",
+            isConfirmed: true,
+            address: restaurantDoc.adress,
+            phone: restaurantDoc.phone,
+            website: restaurantDoc.website,
+          });
+
+          await sendEmail({
+            email: customerEmail,
+            subject: `Réservation Confirmée - ${restaurantDoc.name}`,
+            message: htmlContent,
+          });
+        }
+      } catch (mailError) {
+        console.error("Booking confirmation email failed", mailError);
       }
     }
 

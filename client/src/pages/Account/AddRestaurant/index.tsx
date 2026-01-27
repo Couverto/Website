@@ -26,6 +26,8 @@ const INITIAL_DATA: WizardData = {
   name: "",
   adress: "",
   city: "",
+  addressVerified: false,
+  cityVerified: false,
   phone: "",
   email: "",
   cuisineType: [],

@@ -26,7 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Plus, RefreshCw, Search, Settings2, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Separator } from "../ui/separator";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -231,7 +230,7 @@ export function DataTable<TData, TValue>({
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">{"Par page"}</p>
+            <p className="text-sm font-medium">Par page</p>
             <Select
               value={`${pagination.pageSize}`}
               onValueChange={(value) => {
@@ -239,17 +238,21 @@ export function DataTable<TData, TValue>({
               }}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={pagination.pageSize} />
+                <SelectValue placeholder={`${pagination.pageSize}`} />
               </SelectTrigger>
               <SelectContent side="top">
-                {[10, 20, 30, 40, 50]
-                  .filter((size) => size < dataCount)
-                  .map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                <SelectItem value={`${dataCount}`}>{"Tout"}</SelectItem>
+                {[10, 20, 30, 40, 50].map((size) => (
+                  <SelectItem
+                    key={size}
+                    value={`${size}`}
+                    disabled={size > dataCount} // grisé si plus grand que dataCount
+                  >
+                    {size}
+                  </SelectItem>
+                ))}
+
+                {/* Affiche "Tout" uniquement si dataCount n'est pas déjà dans la liste */}
+                {dataCount > 0 && ![10, 20, 30, 40, 50].includes(dataCount) && <SelectItem value={`${dataCount}`}>Tout</SelectItem>}
               </SelectContent>
             </Select>
           </div>

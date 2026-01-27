@@ -1,20 +1,22 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MoreHorizontal, Check, X, Users, User as UserIcon, Calendar, Clock, Phone, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, Check, X, Users, User as UserIcon, Calendar, Clock, Phone, ArrowUpDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { BookingInterface } from "@/interfaces/Booking";
 
-export const getColumns = (
-  updateStatus: (id: string, status: string) => void,
-  cancelBooking: (id: string) => void,
-  newBookingIds: Set<string>,
-): ColumnDef<BookingInterface>[] => [
-  // Customer column FIRST - shows user avatar if registered, otherwise initials
+export const getColumns = (onAction: (action: "CONFIRM" | "CANCEL", booking: BookingInterface) => void): ColumnDef<BookingInterface>[] => [
   {
     id: "name",
     accessorFn: (row) => (row.user ? `${row.user.forename} ${row.user.name}` : row.customer.name),
@@ -172,24 +174,33 @@ export const getColumns = (
     header: "Actions",
     cell: ({ row }) => {
       const booking = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted hover:text-primary data-[state=open]:bg-muted">
               <span className="sr-only">Open menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-[160px]">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
             {booking.status !== "CONFIRMED" && (
-              <DropdownMenuItem onClick={() => updateStatus(booking._id, "CONFIRMED")}>
-                <Check className="h-4 w-4 mr-2 text-green-600" />
+              <DropdownMenuItem
+                onClick={() => setTimeout(() => onAction("CONFIRM", booking), 100)}
+                className="text-green-600 focus:text-green-700 focus:bg-green-50/50 cursor-pointer"
+              >
+                <Check className="h-4 w-4 mr-2" />
                 Confirmer
               </DropdownMenuItem>
             )}
+
             {booking.status !== "CANCELLED" && (
-              <DropdownMenuItem onClick={() => cancelBooking(booking._id)} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem
+                onClick={() => setTimeout(() => onAction("CANCEL", booking), 100)}
+                className="text-destructive focus:text-destructive focus:bg-destructive/5 cursor-pointer"
+              >
                 <X className="h-4 w-4 mr-2" />
                 Annuler
               </DropdownMenuItem>

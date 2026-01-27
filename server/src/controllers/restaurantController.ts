@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Restaurant } from "../models/restaurantModel.js";
+import { Booking } from "../models/bookingModel.js";
 import { User } from "../models/userModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
@@ -472,28 +473,45 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
   const { page, size } = getPaginationParams(req, 12);
   const search = (req.query.search as string) || "";
   const city = (req.query.city as string) || "";
+  const adress = (req.query.adress as string) || "";
   const priceRange = (req.query.priceRange as string) || "";
   const cuisineType = (req.query.cuisineType as string) || "";
   const date = (req.query.date as string) || "";
   const guests = parseInt(req.query.guests as string) || 0;
 
   try {
-    const query: any = { isClosed: false }; // Only show open restaurants by default
+    const conditions: any[] = [{ isClosed: false }];
 
     if (search) {
-      query.name = { $regex: search, $options: "i" };
+      conditions.push({
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { city: { $regex: search, $options: "i" } },
+          { adress: { $regex: search, $options: "i" } },
+        ],
+      });
     }
+
     if (city) {
-      query.city = { $regex: city, $options: "i" };
+      conditions.push({
+        $or: [{ city: { $regex: city, $options: "i" } }, { adress: { $regex: city, $options: "i" } }],
+      });
     }
+
+    if (adress) {
+      conditions.push({
+        $or: [{ city: { $regex: adress, $options: "i" } }, { adress: { $regex: adress, $options: "i" } }],
+      });
+    }
+
     if (priceRange) {
-      query.priceRange = priceRange;
+      conditions.push({ priceRange });
     }
     if (cuisineType) {
-      query.cuisineType = { $regex: cuisineType, $options: "i" };
+      conditions.push({ cuisineType: { $regex: cuisineType, $options: "i" } });
     }
     if (guests > 0) {
-      query.capacity = { $gte: guests };
+      conditions.push({ capacity: { $gte: guests } });
     }
     if (date) {
       const queryDate = new Date(date);
@@ -502,13 +520,14 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
         const dayName = dayNames[queryDate.getDay()];
 
         // Ensure the restaurant is open on this specific day
-        // 1. The day entry must not be marked as closed
-        // 2. The day entry must have at least one opening period
-        // Note: We use dynamic key access matching Mongoose Map structure
-        query[`openingHours.${dayName}.isClosed`] = { $ne: true };
-        query[`openingHours.${dayName}.periods.0`] = { $exists: true };
+        const dayCondition: any = {};
+        dayCondition[`openingHours.${dayName}.isClosed`] = { $ne: true };
+        dayCondition[`openingHours.${dayName}.periods.0`] = { $exists: true };
+        conditions.push(dayCondition);
       }
     }
+
+    const query = conditions.length > 0 ? { $and: conditions } : {};
 
     const restaurants = await Restaurant.find(query)
       .select("-collaborators -createdAt -updatedAt") // Exclude internal/private fields
@@ -534,10 +553,6 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
   }
 };
 
-/**
- * @function getRestaurantSlots
- * @description Retrieves available time slots for a restaurant on a specific date.
- */
 export const getRestaurantSlots = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { date } = req.query;
@@ -576,13 +591,33 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    // Prepare for capacity check
+    const capacity = restaurant.capacity || 0;
+    const baseDateStr = new Date(date as string).toISOString().split("T")[0]; // YYYY-MM-DD
+
+    // Fetch all confirmed/pending bookings for this day (full day range to cover overlaps)
+    // We cover from 00:00 to 23:59 of the requested date, plus potential overlaps from previous day?
+    // For simplicity, let's look at the day matching the query date.
+    const startOfDay = new Date(baseDateStr);
+    const endOfDay = new Date(baseDateStr);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    // Import Booking model if not already imported (assuming it is available in scope or needs import)
+    // Note: Assuming Booking is imported at top level.
+
+    const existingBookings = await Booking.find({
+      restaurant: id,
+      bookingDate: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ["CONFIRMED", "PENDING"] },
+    });
+
     const allSlots = Array.from({ length: 48 }, (_, i) => {
       const hour = Math.floor(i / 2);
       const minute = (i % 2) * 30;
       return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
     });
 
-    const slots = allSlots.filter((slot) => {
+    const validSlots = allSlots.filter((slot) => {
       const [slotHour, slotMinute] = slot.split(":").map(Number);
       const slotTime = slotHour * 60 + slotMinute;
 
@@ -597,7 +632,49 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       });
     });
 
-    res.status(200).json({ slots });
+    // Check availability for each valid slot
+    const slotsWithAvailability = validSlots.map((slot) => {
+      if (capacity <= 0) return { time: slot, available: 99 }; // Unlimited if capacity 0? Or just return max.
+
+      // Slot timestamp
+      const [h, m] = slot.split(":").map(Number);
+      const slotDate = new Date(baseDateStr);
+      slotDate.setHours(h, m, 0, 0);
+      const slotTimeMs = slotDate.getTime();
+      const slotEndMs = slotTimeMs + 2 * 60 * 60 * 1000; // Assume 2h duration
+
+      // Count overlap
+      let currentHeadCount = 0;
+      for (const booking of existingBookings) {
+        const bStart = new Date(booking.bookingDate).getTime();
+        // Assuming booking duration 2h as standard
+        const bEnd = bStart + 2 * 60 * 60 * 1000;
+
+        // Overlap logic: StartA < EndB && EndA > StartB
+        if (slotTimeMs < bEnd && slotEndMs > bStart) {
+          currentHeadCount += booking.guests;
+        }
+      }
+
+      return {
+        time: slot,
+        available: Math.max(0, capacity - currentHeadCount),
+      };
+    });
+
+    // Filter out full slots if desired, or let frontend handle it
+    // User wants "max guests" to be dynamic. We keep slots even if low availability?
+    // Usually if available <= 0, we shouldn't offer it.
+    const finalSlots = slotsWithAvailability.filter((s) => s.available > 0).map((s) => s.time);
+
+    // Also return the map of availability so frontend can use it
+    res.status(200).json({
+      slots: finalSlots,
+      availability: slotsWithAvailability.reduce((acc: any, curr) => {
+        acc[curr.time] = curr.available;
+        return acc;
+      }, {}),
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

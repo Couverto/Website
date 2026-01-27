@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const getEssentialsSchema = () =>
   z.object({
+    addressVerified: z.boolean().refine((val) => val === true, "Veuillez sélectionner une adresse valide dans la liste."),
+    cityVerified: z.boolean().refine((val) => val === true, "Veuillez sélectionner une ville valide dans la liste."),
     name: z.string().min(2, "Le nom du restaurant est requis (min 2 caractères)."),
     adress: z.string().min(5, "L'adresse est requise.").regex(/\d/, "L'adresse doit inclure un numéro de rue."),
     city: z.string().min(2, "La ville est requise."),

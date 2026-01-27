@@ -19,7 +19,7 @@ export const PublicRestaurants = () => {
 
   const [filters, setFilters] = useState({
     search: searchParams.get("search") || "",
-    city: searchParams.get("city") || "",
+    adress: searchParams.get("adress") || "",
     priceRange: searchParams.get("priceRange") || "",
     cuisineType: searchParams.get("cuisineType") || "",
     date: searchParams.get("date") || "",
@@ -33,7 +33,7 @@ export const PublicRestaurants = () => {
   useEffect(() => {
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
-    if (filters.city) params.set("city", filters.city);
+    if (filters.adress) params.set("adress", filters.adress);
     if (filters.priceRange) params.set("priceRange", filters.priceRange);
     if (filters.cuisineType) params.set("cuisineType", filters.cuisineType);
     if (filters.date) params.set("date", filters.date);
@@ -66,7 +66,7 @@ export const PublicRestaurants = () => {
   const clearFilters = () => {
     setFilters({
       search: "",
-      city: "",
+      adress: "",
       priceRange: "",
       cuisineType: "",
       date: "",
@@ -108,10 +108,10 @@ export const PublicRestaurants = () => {
           <div className="md:col-span-4 relative">
             <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Ville"
+              placeholder="Où ? Ville, code postal..."
               className="pl-9 bg-background"
-              value={filters.city}
-              onChange={handleInputChange("city")}
+              value={filters.adress}
+              onChange={handleInputChange("adress")}
               onKeyDown={handleKeyDown}
             />
           </div>
@@ -197,7 +197,7 @@ export const PublicRestaurants = () => {
         </div>
 
         {/* Reset Filters Link - Subtle but clear hover */}
-        {(filters.search || filters.city || filters.priceRange || filters.cuisineType) && (
+        {(filters.search || filters.adress || filters.priceRange || filters.cuisineType) && (
           <div className="text-right mt-3">
             <Button
               variant="link"

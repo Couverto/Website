@@ -498,13 +498,13 @@ export const PublicRestaurant = () => {
                     <div>
                       <div className="font-medium">{"Adresse"}</div>
                       <div className="text-sm text-muted-foreground group-hover:text-primary/80 transition-colors underline decoration-dotted underline-offset-2">
-                        {restaurant.adress}, {restaurant.city}
+                        {restaurant.adress}
                       </div>
                     </div>
                   </a>
 
                   <Separator />
-
+                  {/* 
                   {(restaurant.capacity ?? 0) > 0 && (
                     <>
                       <div className="flex items-start gap-3">
@@ -520,7 +520,7 @@ export const PublicRestaurant = () => {
                       </div>
                       <Separator />
                     </>
-                  )}
+                  )} */}
 
                   <div className="flex items-start gap-3">
                     <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />

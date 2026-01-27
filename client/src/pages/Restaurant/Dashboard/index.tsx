@@ -37,6 +37,9 @@ export const RestaurantDashboard = () => {
   const [newBookingIds, setNewBookingIds] = useState<Set<string>>(new Set());
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [cancellationReason, setCancellationReason] = useState(
+    "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
+  );
 
   const fetchStats = useCallback(async () => {
     try {
@@ -79,9 +82,9 @@ export const RestaurantDashboard = () => {
     }
   }, [socket, id, fetchStats]);
 
-  const updateStatus = async (bookingId: string, newStatus: string) => {
+  const updateStatus = async (bookingId: string, newStatus: string, reason?: string) => {
     try {
-      await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus });
+      await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus, reason });
       if (newBookingIds.has(bookingId)) {
         setNewBookingIds((prev) => {
           const next = new Set(prev);
@@ -342,11 +345,33 @@ export const RestaurantDashboard = () => {
       </Card>
 
       {/* Cancellation Confirmation Dialog */}
-      <AlertDialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
+      <AlertDialog
+        open={!!bookingToCancel}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBookingToCancel(null);
+            setCancellationReason(
+              "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
+            );
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer l'annulation ?</AlertDialogTitle>
             <AlertDialogDescription>Cette action est irréversible. Le client recevra une notification d'annulation.</AlertDialogDescription>
+            <div className="space-y-2 py-4">
+              <label htmlFor="reason" className="text-sm font-medium text-foreground">
+                Motif de l'annulation (optionnel)
+              </label>
+              <textarea
+                id="reason"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Ex: Problème technique, intempéries..."
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+              />
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={!bookingToCancel}>Retour</AlertDialogCancel>
@@ -354,8 +379,9 @@ export const RestaurantDashboard = () => {
               className="bg-red-600 hover:bg-red-700"
               onClick={() => {
                 if (bookingToCancel) {
-                  updateStatus(bookingToCancel, "CANCELLED");
+                  updateStatus(bookingToCancel, "CANCELLED", cancellationReason);
                   setBookingToCancel(null);
+                  setCancellationReason("");
                 }
               }}
             >

@@ -6,7 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CalendarIcon } from "lucide-react";
-import { format, startOfDay } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
@@ -32,6 +32,7 @@ interface BookingFormProps {
 export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormProps) => {
   const { authUser: user } = useAuthContext();
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<Record<string, number>>({});
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [closedDays, setClosedDays] = useState<number[]>([]); // 0 = Sunday, 6 = Saturday
 
@@ -60,7 +61,6 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
   // Determine closed days from restaurant opening hours
   useEffect(() => {
-    // If no opening hours configured, allow all days (don't block any)
     if (!restaurant.openingHours || Object.keys(restaurant.openingHours).length === 0) {
       setClosedDays([]);
       return;
@@ -77,9 +77,10 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
     setClosedDays(closed);
   }, [restaurant.openingHours]);
 
-  // Set initial date from filters, or today if it's open, otherwise leave empty
+  // Set initial date
   useEffect(() => {
-    if (closedDays.length === 0) return;
+    // Removed strict check on closedDays.length === 0 to allow setting date for 7/7 open restaurants
+    // if (closedDays.length === 0) return;
 
     let targetDate = new Date();
     if (initialData?.date) {
@@ -91,8 +92,6 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
     if (!closedDays.includes(dayOfWeek)) {
       form.setValue("bookingDate", targetDate);
     } else if (!initialData?.date) {
-      // Only reset if we were trying to set today and today is closed.
-      // If user passed a specific date that is closed, we still reset to force them to pick a valid one.
       form.resetField("bookingDate");
     }
   }, [closedDays, form, initialData]);
@@ -108,7 +107,8 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           params: { date: format(bookingDate, "yyyy-MM-dd") },
         });
         setTimeSlots(response.data.slots || []);
-        // Set first slot as default if available
+        setAvailability(response.data.availability || {});
+
         if (response.data.slots?.length > 0) {
           form.setValue("time", response.data.slots[0]);
         }
@@ -122,16 +122,18 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
     fetchSlots();
   }, [bookingDate, restaurant._id, form]);
 
+  const selectedTime = form.watch("time");
+  // Default max to restaurant capacity if available, or a fallback (e.g. 50) if strictly needed, or just let backend handle.
+  // User asked for "number of covers max still available".
+  // If no time selected, existing behavior (min 1).
+  const maxGuests = selectedTime && availability[selectedTime] !== undefined ? availability[selectedTime] : restaurant.capacity || 50;
+
   const onSubmit = async (values: CreateBookingSchema) => {
     try {
-      // Combine date and time
       const [hours, minutes] = values.time.split(":").map(Number);
       const bookingDate = new Date(values.bookingDate);
       bookingDate.setHours(hours, minutes);
 
-      // Handle empty email if it's an optional field in schema but might strict check in backend logic?
-      // Schema says optional string or literal empty. Backend model: email optional.
-      // Cleaning up email if empty string to undefined might be safer for backend if it expects real email or null.
       const payload = {
         restaurant: restaurant._id,
         bookingDate,
@@ -143,7 +145,6 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
         notes: values.notes,
       };
 
-      // Use /guest endpoint when user is not authenticated
       const endpoint = user ? "/bookings" : "/bookings/guest";
       await axiosConfig.post(endpoint, payload);
       toast.success("Réservation créée avec succès !");
@@ -229,8 +230,17 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
             <FormItem>
               <FormLabel>{"Couverts"}</FormLabel>
               <FormControl>
-                <Input type="number" min={1} {...field} />
+                <Input
+                  type="number"
+                  min={1}
+                  max={maxGuests}
+                  {...field}
+                  onChange={(e) => field.onChange(Math.min(Number(e.target.value), maxGuests))}
+                />
               </FormControl>
+              {selectedTime && availability[selectedTime] !== undefined && (
+                <p className="text-xs text-primary mt-1">{`Disponible : ${availability[selectedTime]} couverts`}</p>
+              )}
               <FormMessage />
             </FormItem>
           )}

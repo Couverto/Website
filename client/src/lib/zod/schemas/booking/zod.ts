@@ -6,7 +6,7 @@ export const createBookingSchema = z.object({
     invalid_type_error: "Date invalide.",
   }),
   time: z.string().min(1, { message: "Veuillez sélectionner une heure." }),
-  guests: z.coerce.number().min(1, { message: "Au moins 1 couvert requis." }).max(20, { message: "Maximum 20 couverts." }),
+  guests: z.coerce.number().min(1, { message: "Au moins 1 couvert requis." }),
   customer: z.object({
     name: z.string().min(2, { message: "Le nom est requis." }),
     email: z.string().email({ message: "Adresse email invalide." }).optional().or(z.literal("")),

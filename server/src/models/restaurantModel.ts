@@ -84,4 +84,17 @@ const RestaurantSchema = new Schema<IRestaurant>(
   { timestamps: true },
 );
 
+// Pre-save hook to normalize city name
+RestaurantSchema.pre("save", function (next) {
+  if (this.isModified("city") && this.city) {
+    this.city = this.city
+      .trim()
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+  next();
+});
+
 export const Restaurant = model<IRestaurant>("Restaurant", RestaurantSchema);

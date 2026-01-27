@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,6 @@ export const RestaurantBookings = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [count, setCount] = useState(0);
-  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState(10);
 
   // Memoize fetcher for DataTable
@@ -106,25 +105,65 @@ export const RestaurantBookings = () => {
     }
   }, [socket, id]);
 
-  const updateStatus = async (bookingId: string, newStatus: string) => {
-    try {
-      await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus });
-      setBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus as BookingStatus } : b)));
+  const updateStatus = useCallback(
+    async (bookingId: string, newStatus: string, reason?: string) => {
+      try {
+        await api.patch(`/bookings/restaurant/${id}/${bookingId}/status`, { status: newStatus, reason });
+        setBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus as BookingStatus } : b)));
 
-      // Remove "new" indicator if action taken
-      if (newBookingIds.has(bookingId)) {
+        // Remove "new" indicator if action taken
         setNewBookingIds((prev) => {
+          if (!prev.has(bookingId)) return prev;
           const next = new Set(prev);
           next.delete(bookingId);
           return next;
         });
-      }
 
-      toast.success("Statut mis à jour");
-    } catch (error) {
-      toast.error("Erreur lors de la mise à jour");
+        toast.success("Statut mis à jour");
+      } catch (error) {
+        toast.error("Erreur lors de la mise à jour");
+      }
+    },
+    [id],
+  );
+
+  /* Dialogs State */
+  const [selectedBooking, setSelectedBooking] = useState<BookingInterface | null>(null);
+  const [actionType, setActionType] = useState<"CONFIRM" | "CANCEL" | null>(null);
+  const [cancellationReason, setCancellationReason] = useState(
+    "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
+  );
+
+  const handleAction = useCallback((action: "CONFIRM" | "CANCEL", booking: BookingInterface) => {
+    setSelectedBooking(booking);
+    setActionType(action);
+  }, []);
+
+  const handleConfirmAction = async () => {
+    if (!selectedBooking) return;
+    try {
+      await updateStatus(selectedBooking._id, "CONFIRMED");
+    } finally {
+      setSelectedBooking(null);
+      setActionType(null);
     }
   };
+
+  const handleCancelAction = async () => {
+    if (!selectedBooking) return;
+    try {
+      await updateStatus(selectedBooking._id, "CANCELLED", cancellationReason);
+    } finally {
+      // Reset reason
+      setCancellationReason(
+        "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
+      );
+      setSelectedBooking(null);
+      setActionType(null);
+    }
+  };
+
+  const columns = useMemo(() => getColumns(handleAction), [handleAction]);
 
   return (
     <div className="space-y-6">
@@ -135,7 +174,7 @@ export const RestaurantBookings = () => {
 
       <div className="bg-card rounded-md border p-4">
         <DataTable
-          columns={getColumns(updateStatus, (id) => setBookingToCancel(id), newBookingIds)}
+          columns={columns}
           data={bookings}
           dataCount={count}
           fetchData={fetchWithState}
@@ -146,25 +185,63 @@ export const RestaurantBookings = () => {
         />
       </div>
 
-      {/* Cancellation Confirmation Dialog */}
-      <AlertDialog open={!!bookingToCancel} onOpenChange={(open) => !open && setBookingToCancel(null)}>
+      {/* Global Confirmation Dialog */}
+      <AlertDialog open={actionType === "CONFIRM" && !!selectedBooking} onOpenChange={(open) => !open && setActionType(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer l'annulation ?</AlertDialogTitle>
-            <AlertDialogDescription>Cette action est irréversible. Le client recevra une notification d'annulation.</AlertDialogDescription>
+            <AlertDialogTitle>Confirmer la réservation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action changera le statut de la réservation à "Confirmée" et informera le client.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={!bookingToCancel}>Retour</AlertDialogCancel>
+            <AlertDialogCancel>Retour</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={() => {
-                if (bookingToCancel) {
-                  updateStatus(bookingToCancel, "CANCELLED");
-                  setBookingToCancel(null);
-                }
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmAction();
               }}
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
-              Confirmer l'annulation
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Global Cancellation Dialog */}
+      <AlertDialog open={actionType === "CANCEL" && !!selectedBooking} onOpenChange={(open) => !open && setActionType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler la réservation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.
+            </AlertDialogDescription>
+            <div className="space-y-2 py-4">
+              <label htmlFor="reason" className="text-sm font-medium text-foreground">
+                Motif de l'annulation (optionnel)
+              </label>
+              <textarea
+                id="reason"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Ex: Problème technique, intempéries..."
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+              />
+            </div>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Retour</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleCancelAction();
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Annuler la réservation
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

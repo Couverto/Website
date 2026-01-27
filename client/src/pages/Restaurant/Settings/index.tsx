@@ -60,6 +60,7 @@ import { FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantResources"
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { PriceRangeControl } from "@/components/customs/PriceRangeControl";
 import { CuisineSelector } from "@/components/CuisineSelector";
+import { AddressAutocomplete } from "@/components/customs/AddressAutocomplete";
 
 export const RestaurantSettings = () => {
   const { id } = useParams();
@@ -67,12 +68,19 @@ export const RestaurantSettings = () => {
   const [saving, setSaving] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [toggling, setToggling] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const { refreshRestaurant } = useOutletContext<{ refreshRestaurant: () => void }>();
   const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
 
-  const isFetched = useRef(false);
-
-  const { register, handleSubmit, control, setValue, watch, reset } = useForm<RestaurantInterface>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    clearErrors,
+    formState: { errors },
+  } = useForm<RestaurantInterface>({
     defaultValues: {
       cuisineType: [],
       features: [],
@@ -82,8 +90,6 @@ export const RestaurantSettings = () => {
       openingHours: {},
     },
   });
-
-  const { refreshRestaurant } = useOutletContext<{ refreshRestaurant: () => void }>();
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -126,6 +132,9 @@ export const RestaurantSettings = () => {
       setDeleting(false);
     }
   };
+
+  const addressValid = useRef(true);
+  const cityValid = useRef(true);
 
   const onSubmit = async (data: RestaurantInterface) => {
     setSaving(true);
@@ -181,19 +190,44 @@ export const RestaurantSettings = () => {
 
             <div className="space-y-2">
               <Label htmlFor="adress">{"Adresse"}</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="adress" {...register("adress")} placeholder="123 rue..." className="pl-10" />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">{"Ville"}</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="city" {...register("city")} placeholder="Paris" className="pl-10" />
-                </div>
-              </div>
+              <Controller
+                control={control}
+                name="adress"
+                render={({ field }) => (
+                  <AddressAutocomplete
+                    value={field.value}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      // Reset validity on manual type
+                      addressValid.current = false;
+                      cityValid.current = false;
+                    }}
+                    onValidityChange={(isValid) => {
+                      // This might be redundant if we handle it in onChange/onSelect effectively
+                      // but good for clearing
+                      addressValid.current = isValid;
+                    }}
+                    onSelect={(addr) => {
+                      field.onChange(addr.address);
+                      setValue("city", addr.city);
+                      addressValid.current = true;
+                      cityValid.current = true;
+                      // Clear any error
+                      clearErrors("adress");
+                    }}
+                    error={!!errors.adress}
+                    placeholder="123 rue..."
+                  />
+                )}
+                rules={{
+                  validate: (value) => (value && addressValid.current) || "Veuillez sélectionner une adresse valide dans la liste",
+                }}
+              />
+              {errors.adress && (
+                <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
+                  <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.adress.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="shortDescription">{"Slogan / Phrase d'accroche"}</Label>
