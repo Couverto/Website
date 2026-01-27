@@ -65,17 +65,18 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     if (photoURL) {
       try {
-        const avatarPath = await saveAvatarFromUrl(photoURL, user._id);
-        if (avatarPath) {
-          user.avatar = `${req.protocol}://${req.get("host")}${avatarPath}`;
+        const avatarUrl = await saveAvatarFromUrl(photoURL, user._id);
+        if (avatarUrl) {
+          user.avatar = avatarUrl;
           await user.save();
         }
       } catch (err: any) {
         console.error("Failed to download avatar:", err.message);
       }
     } else {
-      const avatarPath = await generateRandomAvatar(user._id);
-      user.avatar = `${req.protocol}://${req.get("host")}${avatarPath}`;
+      // Generate random avatar and upload to Firebase
+      const avatarUrl = await generateRandomAvatar(user._id);
+      user.avatar = avatarUrl;
       await user.save();
     }
 
@@ -241,6 +242,18 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
         auth_type: authTypes.GOOGLE,
         avatar: photoURL || "",
       });
+
+      if (photoURL) {
+        try {
+          const avatarUrl = await saveAvatarFromUrl(photoURL, user._id);
+          if (avatarUrl) {
+            user.avatar = avatarUrl;
+            await user.save();
+          }
+        } catch (err: any) {
+          console.error("Failed to download avatar from Google:", err.message);
+        }
+      }
 
       createLog({
         message: `New user ${user.username} registered automatically with Google`,

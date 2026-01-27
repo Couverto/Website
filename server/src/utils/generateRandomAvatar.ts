@@ -1,7 +1,7 @@
-import fs from "fs";
 import mongoose from "mongoose";
-import path from "path";
 import sharp from "sharp";
+import { bucket } from "../lib/firebase.js";
+import { uploadToFirebase } from "../controllers/uploadController.js";
 
 const getRandomHexColor = (): string => {
   const min = 0; // min = sombre (0 = noir)
@@ -60,15 +60,19 @@ export const generateRandomAvatar = async (userId: mongoose.Types.ObjectId): Pro
 
   const svgBuffer = Buffer.from(svgImage);
 
-  // Chemin
+  // Convert to PNG
+  const pngBuffer = await sharp(svgBuffer).png().toBuffer();
+
+  // Upload to Firebase Storage
   const filename = `avatar_${userId}_${Date.now()}.png`;
-  const folderPath = path.join(process.cwd(), "uploads", "users", "avatars");
-  const fullPath = path.join(folderPath, filename);
 
-  fs.mkdirSync(folderPath, { recursive: true });
-  await sharp(svgBuffer).png().toFile(fullPath);
+  const file = {
+    buffer: pngBuffer,
+    originalname: filename,
+    mimetype: "image/png",
+  };
 
-  // Chemin relatif pour url
-  const relativePath = path.relative(path.join(process.cwd(), "uploads"), fullPath);
-  return path.join("/uploads", relativePath).replace(/\\/g, "/"); // Windows-proof
+  const publicUrl = await uploadToFirebase(file, "avatars", filename);
+
+  return publicUrl;
 };

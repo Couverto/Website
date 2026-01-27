@@ -1,11 +1,16 @@
 import { User } from "../models/userModel.js";
 import { Constants } from "../constants/constants.js";
 import { bucket } from "../lib/firebase.js";
+import { deleteFile } from "../utils/fileUploadUtils.js";
 
 /**
  * Helper to upload a buffer to Firebase Storage and return the public URL.
  */
-const uploadToFirebase = async (file: Express.Multer.File, folder: string, customFilename?: string): Promise<string> => {
+export const uploadToFirebase = async (
+  file: { buffer: Buffer; mimetype: string },
+  folder: string,
+  customFilename?: string,
+): Promise<string> => {
   let extension = file.mimetype.split("/")[1];
   if (extension.includes("+")) extension = extension.split("+")[0];
 
@@ -47,23 +52,14 @@ export const updateUserAvatar = async (req, res) => {
       });
     }
 
-    // Delete old avatar if it exists in Firebase
-    if (user.avatar && user.avatar.includes("storage.googleapis.com")) {
-      try {
-        const oldFileUrl = new URL(user.avatar);
-        const oldPath = decodeURIComponent(oldFileUrl.pathname.split("/").slice(2).join("/"));
-        await bucket
-          .file(oldPath)
-          .delete()
-          .catch(() => {});
-      } catch (err) {
-        console.warn("Failed to parse or delete old avatar:", err);
-      }
+    // Delete old avatar if it exists
+    if (user.avatar) {
+      await deleteFile(user.avatar);
     }
 
     let extension = req.file.mimetype.split("/")[1];
     if (extension.includes("+")) extension = extension.split("+")[0];
-    const customFilename = `${userId}_${Date.now()}.${extension}`;
+    const customFilename = `avatar_${userId}_${Date.now()}.${extension}`;
 
     const publicUrl = await uploadToFirebase(req.file, "avatars", customFilename);
 

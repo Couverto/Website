@@ -3,14 +3,13 @@ import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { createLog } from "./logController.js";
-import fs from "fs";
-import path from "path";
 import { generateRandomPassword } from "../utils/generateRandomPassword.js";
 import { authTypes } from "../utils/enums/authTypes.js";
 import { generateRandomAvatar } from "../utils/generateRandomAvatar.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { Constants } from "../constants/constants.js";
 import { getPaginationParams } from "../utils/pagination.js";
+import { deleteFile } from "../utils/fileUploadUtils.js";
 
 /**
  * @function getUsers
@@ -76,8 +75,9 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       forename,
     });
 
-    const avatarPath = await generateRandomAvatar(user._id);
-    user.avatar = `${req.protocol}://${req.get("host")}${avatarPath}`;
+    // Generate random avatar and upload to Firebase
+    const avatarUrl = await generateRandomAvatar(user._id);
+    user.avatar = avatarUrl;
     await user.save();
 
     const userObj = user.toObject();
@@ -184,10 +184,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     if (user.avatar) {
-      const oldAvatarPath = path.join(process.cwd(), "uploads", "users", "avatars", path.basename(user.avatar));
-      if (fs.existsSync(oldAvatarPath)) {
-        fs.unlinkSync(oldAvatarPath);
-      }
+      await deleteFile(user.avatar);
     }
 
     createLog({
@@ -295,10 +292,7 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
     }
 
     if (user.avatar) {
-      const oldAvatarPath = path.join(process.cwd(), "uploads", "users", "avatars", path.basename(user.avatar));
-      if (fs.existsSync(oldAvatarPath)) {
-        fs.unlinkSync(oldAvatarPath);
-      }
+      await deleteFile(user.avatar);
     }
 
     createLog({
