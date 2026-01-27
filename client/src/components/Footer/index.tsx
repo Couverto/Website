@@ -10,8 +10,8 @@ export const Footer = () => {
     product: {
       title: "Produit",
       links: [
-        { label: "Fonctionnalités", href: "#features" },
-        { label: "Tarifs", href: "#pricing" },
+        { label: "Fonctionnalités", href: "/pro#features" },
+        { label: "Tarifs", href: "/pro#pricing" },
       ],
     },
     company: {
@@ -24,9 +24,9 @@ export const Footer = () => {
     legal: {
       title: "Légal",
       links: [
-        { label: "Mentions légales", href: "#" },
-        { label: "Politique de confidentialité", href: "#" },
-        { label: "CGU", href: "#" },
+        { label: "Mentions légales", href: "/legal/mentions-legales" },
+        { label: "Politique de confidentialité", href: "/legal/confidentialite" },
+        { label: "CGU", href: "/legal/cgu" },
       ],
     },
   };

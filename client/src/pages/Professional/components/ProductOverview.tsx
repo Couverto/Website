@@ -1,4 +1,4 @@
-import { Calendar, LayoutGrid, Users } from "lucide-react";
+import { Calendar, Users, TrendingUp, Globe, ShieldCheck } from "lucide-react";
 
 export const ProductOverview = () => {
   const features = [
@@ -10,18 +10,25 @@ export const ProductOverview = () => {
       image: "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?q=80&w=2000&auto=format&fit=crop", // Tablet/reservation management
     },
     {
-      icon: LayoutGrid,
-      title: "Plan de salle",
+      icon: ShieldCheck,
+      title: "Gestion d'équipe",
       description:
-        "Visualisez l'occupation de vos tables en temps réel. Glissez-déposez pour réorganiser, voyez d'un coup d'œil les tables disponibles.",
-      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop", // Restaurant interior/layout
+        "Invitez vos collaborateurs et définissez leurs permissions. Assignez des rôles précis (Manager, Serveur) pour sécuriser l'accès à vos données sensibles.",
+      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop", // Team collaboration
     },
     {
-      icon: Users,
-      title: "Fichier clients",
+      icon: TrendingUp,
+      title: "Statistiques détaillées",
       description:
-        "Centralisez les informations de vos clients réguliers. Notes, préférences, allergies - tout est accessible en un clic lors de la prise de réservation.",
-      image: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop", // Team/Client interaction
+        "Analysez vos performances en temps réel. Nombre de couverts, taux de remplissage, pics d'affluence : pilotez votre activité avec des données claires.",
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop", // Analytics/Graphs
+    },
+    {
+      icon: Globe,
+      title: "Visibilité en ligne",
+      description:
+        "Une page restaurant moderne et référencée sur les moteurs de recherche. Mettez en avant votre menu, vos photos et vos horaires pour attirer de nouveaux clients.",
+      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop", // Restaurant ambiance/online presence
     },
   ];
 

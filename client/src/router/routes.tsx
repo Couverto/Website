@@ -46,6 +46,10 @@ import { RestaurantRoleProtectedRoute } from "./RestaurantRoleProtectedRoute";
 import { RestaurantGallery } from "@/pages/Restaurant/Gallery";
 import { PaymentSuccess } from "@/pages/Account/PaymentSuccess";
 import { PaymentCancel } from "@/pages/Account/PaymentCancel";
+import { LegalLayout } from "@/pages/Legal/Layout";
+import { MentionsLegales } from "@/pages/Legal/MentionsLegales";
+import { Privacy } from "@/pages/Legal/Privacy";
+import { Terms } from "@/pages/Legal/Terms";
 
 export const Router = () => {
   return (
@@ -119,6 +123,13 @@ export const Router = () => {
 
         {/* Public Restaurant Page - Moved inside LayoutWrapper for Navbar/Footer */}
         <Route path="/restaurants/infos/:id" element={<PublicRestaurant />} />
+
+        {/* Legal Pages */}
+        <Route path="/legal" element={<LegalLayout />}>
+          <Route path="mentions-legales" element={<MentionsLegales />} />
+          <Route path="confidentialite" element={<Privacy />} />
+          <Route path="cgu" element={<Terms />} />
+        </Route>
       </Route>
 
       {/* Authenticated Application/Dashboard Routes */}

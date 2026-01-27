@@ -38,18 +38,18 @@ export const Hero = () => {
 
             {/* Main Headline */}
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              {"Gérez vos réservations et votre salle"} <span className="text-primary">{"sans complexité."}</span>
+              {"Gérez votre restaurant et votre équipe"} <span className="text-primary">{"sans complexité."}</span>
             </h1>
 
             {/* Slogan */}
             <p className="text-lg text-muted-foreground md:text-xl max-w-xl">
-              {appName} est l'outil indispensable pour gérer votre restaurant en toute simplicité.
+              {appName} est la solution tout-en-un pour piloter votre activité, fidéliser vos clients et gérer vos collaborateurs.
             </p>
 
             {/* Description */}
             <p className="text-muted-foreground max-w-xl">
               {
-                "Un logiciel conçu pour les restaurateurs indépendants qui veulent se concentrer sur leur métier, pas sur des outils complexes."
+                "Un outil puissant et intuitif conçu pour les restaurateurs ambitieux qui veulent développer leur visibilité et optimiser leur gestion."
               }
             </p>
 
@@ -135,11 +135,11 @@ export const Hero = () => {
                     </div>
                     <div className="rounded-lg bg-card border border-border p-3">
                       <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                        <LayoutGrid className="h-3 w-3" />
-                        <span>{"Tables"}</span>
+                        <Users className="h-3 w-3" />
+                        <span>{"Vues profil"}</span>
                       </div>
-                      <div className="text-xl font-bold text-foreground">14/18</div>
-                      <div className="text-xs text-muted-foreground">{"Occupées"}</div>
+                      <div className="text-xl font-bold text-foreground">843</div>
+                      <div className="text-xs text-accent">{"+12%"}</div>
                     </div>
                     <div className="rounded-lg bg-card border border-border p-3">
                       <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">

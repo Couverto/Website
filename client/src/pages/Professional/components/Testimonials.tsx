@@ -18,7 +18,7 @@ export const Testimonials = () => {
     {
       name: "Jean-Pierre Martin",
       role: "La Table du Chef, Lyon",
-      text: "La gestion du plan de salle est un vrai plus. Fini le stress des doubles réservations.",
+      text: "La gestion de l'équipe est un vrai plus. Fini le stress des services désorganisés.",
       rating: 5,
     },
     {

@@ -1,4 +1,4 @@
-import { Calendar, ClipboardList, LayoutGrid, Zap } from "lucide-react";
+import { Calendar, ClipboardList, Users, Zap } from "lucide-react";
 
 export const ValueProposition = () => {
   const benefits = [
@@ -8,9 +8,9 @@ export const ValueProposition = () => {
       description: "Recevez et gérez vos réservations instantanément, depuis n'importe quel appareil.",
     },
     {
-      icon: LayoutGrid,
-      title: "Organisation simple des tables et services",
-      description: "Visualisez votre salle en un coup d'œil et gérez les affectations facilement.",
+      icon: Users,
+      title: "Collaboration efficace",
+      description: "Une gestion d'équipe fluide avec des rôles adaptés à chacun (service, cuisine, direction).",
     },
     {
       icon: ClipboardList,
