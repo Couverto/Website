@@ -71,26 +71,52 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
     meta: { label: "Téléphone" },
   },
   {
-    accessorKey: "subscriptionStatus",
-    header: "Abonnement",
+    accessorKey: "isClosed",
+    header: "Statut",
     cell: ({ row }) => {
-      const status = row.getValue("subscriptionStatus") as string;
-      const isExpired = status === "expired";
-      const isActive = status === "active";
-
+      const isClosed = row.getValue("isClosed") as boolean;
       return (
         <Badge
           variant="outline"
           className={`gap-1.5 font-medium border-0 px-2.5 py-0.5 ${
-            isActive
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 hover:bg-emerald-100"
-              : isExpired
-                ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 hover:bg-red-100"
-                : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200"
+            !isClosed
+              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
+              : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
           }`}
         >
-          {status === "active" ? "Actif" : status === "cancelled" ? "Annulé" : status === "expired" ? "Expiré" : "Aucun"}
+          {!isClosed ? "Ouvert" : "Fermé"}
         </Badge>
+      );
+    },
+    meta: { label: "Statut" },
+  },
+  {
+    accessorKey: "subscriptionStatus",
+    header: "Abonnement",
+    cell: ({ row }) => {
+      const status = row.getValue("subscriptionStatus") as string;
+      const restaurant = row.original;
+      const isExpired = status === "expired";
+      const isActive = status === "active";
+      // Plan name (handle populated object or string)
+      const planName = typeof restaurant.plan === "object" && restaurant.plan ? restaurant.plan.name : "";
+
+      return (
+        <div className="flex flex-col gap-1">
+          <Badge
+            variant="outline"
+            className={`w-fit gap-1.5 font-medium border-0 px-2.5 py-0.5 ${
+              isActive
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 hover:bg-emerald-100"
+                : isExpired
+                  ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 hover:bg-red-100"
+                  : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-zinc-200"
+            }`}
+          >
+            {status === "active" ? "Actif" : status === "cancelled" ? "Annulé" : status === "expired" ? "Expiré" : "Aucun"}
+          </Badge>
+          {planName && <span className="text-xs text-muted-foreground font-medium">{planName}</span>}
+        </div>
       );
     },
     meta: { label: "Abonnement" },

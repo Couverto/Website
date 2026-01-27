@@ -391,6 +391,10 @@ export const RestaurantPlan = () => {
                           <span className="block">
                             Cette action va <strong>immédiatement fermer votre restaurant</strong> et le rendre invisible aux clients.
                           </span>
+                          <span className="block p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium">
+                            💡 Conseil : Pour <strong>profiter du mois en cours</strong> sans être débité le mois prochain, il suffit de{" "}
+                            <strong>désactiver le renouvellement automatique</strong> ci-dessus.
+                          </span>
                           <span className="block">Vous pourrez le réactiver à tout moment en souscrivant à un nouveau plan.</span>
                           <span className="block p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
                             ⚠️ Attention : Toutes les réservations futures seront annulées.
@@ -416,8 +420,12 @@ export const RestaurantPlan = () => {
       {/* Payment History */}
       <Card className="border-2">
         <CardHeader>
-          <CardTitle className="text-xl">Historique des paiements</CardTitle>
-          <CardDescription>Consultez l'historique de vos paiements</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl">Historique des paiements</CardTitle>
+              <CardDescription>Consultez l'historique de vos paiements</CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {payments.length > 0 ? (
@@ -425,7 +433,7 @@ export const RestaurantPlan = () => {
               columns={columns}
               data={payments}
               dataCount={payments.length}
-              fetchData={() => {}}
+              fetchData={() => fetchData()}
               isLoading={false}
               callback={() => {}}
               searchElement="planName"

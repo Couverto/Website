@@ -28,6 +28,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
 
     const restaurants = await Restaurant.find(query)
       .populate("collaborators", "name forename email avatar")
+      .populate("plan", "name")
       .sort({ createdAt: -1 })
       .skip(page * size)
       .limit(size);

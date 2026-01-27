@@ -172,16 +172,6 @@ export const updateSubscription = async (req: Request, res: Response): Promise<v
         }
       }
 
-      // Record a payment for the plan change
-      await Payment.create({
-        restaurant: restaurant._id,
-        plan: plan._id,
-        planName: plan.name,
-        amount: plan.price,
-        status: "completed",
-        paymentMethod: "card",
-      });
-
       restaurant.plan = plan._id as any;
     }
 

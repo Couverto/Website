@@ -71,7 +71,90 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       }
       break;
     }
-    // Handle other event types if needed
+
+    case "invoice.payment_succeeded": {
+      const invoice = event.data.object as any;
+      const subscriptionId = invoice.subscription;
+      const customerId = invoice.customer;
+      const amountPaid = invoice.amount_paid / 100; // Convert cents to units (Euros)
+
+      console.log(`[Stripe Webhook] Invoice paid: ${invoice.id}, amount: ${amountPaid}€`);
+
+      if (!subscriptionId && !customerId) {
+        console.error("[Stripe Webhook] Invoice has no subscription or customer ID");
+        break;
+      }
+
+      try {
+        const { Payment } = await import("../models/paymentModel.js");
+        const { Plan } = await import("../models/planModel.js");
+
+        // Find restaurant by subscription ID or customer ID
+        const restaurant = await Restaurant.findOne({
+          $or: [{ stripeSubscriptionId: subscriptionId }, { stripeCustomerId: customerId }],
+        });
+
+        if (!restaurant) {
+          console.error(`[Stripe Webhook] Restaurant not found for subscription ${subscriptionId} or customer ${customerId}`);
+          break;
+        }
+
+        // Determine plan from invoice line items
+        let planId = restaurant.plan;
+        let planName = "Unknown Plan";
+
+        const lineItem = invoice.lines?.data?.find((line: any) => line.price?.id);
+        if (lineItem?.price?.id) {
+          const plan = await Plan.findOne({ stripePriceId: lineItem.price.id });
+          if (plan) {
+            planId = plan._id as any;
+            planName = plan.name;
+          }
+        } else if (restaurant.plan) {
+          // Fallback to current restaurant plan details if we can fetch them
+          const currentPlan = await Plan.findById(restaurant.plan);
+          if (currentPlan) {
+            planName = currentPlan.name;
+          }
+        }
+
+        // Create Payment Record (only if active payment > 0 or if we want to track 0 invoice)
+        // We generally track all invoices even if 0 if it extends validity
+        await Payment.create({
+          restaurant: restaurant._id,
+          plan: planId,
+          planName: planName,
+          amount: amountPaid,
+          status: "completed",
+          paymentMethod: "card",
+        });
+
+        // Update Restaurant Subscription Validity
+        if (invoice.lines?.data?.[0]?.period?.end) {
+          const newEndDate = new Date(invoice.lines.data[0].period.end * 1000);
+          restaurant.subscriptionEndDate = newEndDate;
+          restaurant.subscriptionStatus = "active";
+          restaurant.isClosed = false; // Ensure restaurant is open if paid
+
+          // Also update plan reference if changed via invoice
+          if (planId && String(restaurant.plan) !== String(planId)) {
+            restaurant.plan = planId;
+          }
+
+          await restaurant.save();
+          console.log(`[Stripe Webhook] Updated restaurant ${restaurant.name} subscription to end ${newEndDate.toISOString()}`);
+        }
+
+        createLog({
+          message: `Invoice paid (${amountPaid}€) for restaurant ${restaurant.name} - Subscription verified`,
+          userId: (restaurant.collaborators?.[0] as any) || restaurant._id, // Assign to owner or self
+          level: logLevels.INFO,
+        });
+      } catch (error: any) {
+        console.error("[Stripe Webhook] Error processing invoice payment:", error);
+      }
+      break;
+    }
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
