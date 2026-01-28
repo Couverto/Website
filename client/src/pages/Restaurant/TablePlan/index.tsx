@@ -8,7 +8,7 @@ import { DraggableTable, TableProps } from "./DraggableTable";
 import { ItemTypes } from "./ItemTypes";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { useParams, useOutletContext } from "react-router-dom";
-import { Loader2, Save, Armchair, Plus, Minus, Copy, Trash2, Edit2, GripVertical, Check } from "lucide-react";
+import { Loader2, Save, Armchair, Plus, Minus, Copy, Trash2, Edit2, GripVertical, Check, Grid3X3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Zone {
   id: string;
@@ -81,6 +82,12 @@ function TablePlanContent() {
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [deleteZoneId, setDeleteZoneId] = useState<string | null>(null);
   const [customSeats, setCustomSeats] = useState(2);
+
+  // Table Edit Stats
+  const [isEditTableDialogOpen, setIsEditTableDialogOpen] = useState(false);
+  const [editingTableId, setEditingTableId] = useState<string | null>(null);
+  const [editTableName, setEditTableName] = useState("");
+  const [editTableSeats, setEditTableSeats] = useState(2);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -213,7 +220,7 @@ function TablePlanContent() {
         // Prevent deleting if user is typing in an input
         if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-        handleDeleteTable();
+        handleDeleteTable(selectedTableId);
       }
     };
 
@@ -336,39 +343,11 @@ function TablePlanContent() {
     setTables(tables.map((t) => (t.id === selectedTableId ? { ...t, [field]: value } : t)));
   };
 
-  const handleDeleteTable = () => {
-    setTables(tables.filter((t) => t.id !== selectedTableId));
-    setSelectedTableId(null);
-  };
-
-  const handleResizeTable = (id: string, width: number, height: number) => {
-    setTables((prev) => prev.map((t) => (t.id === id ? { ...t, width, height } : t)));
-  };
-
-  const handleDuplicateTable = () => {
-    if (!selectedTableId) return;
-    const tableToClone = tables.find((t) => t.id === selectedTableId);
-    if (!tableToClone) return;
-
-    const newTable: TableProps = {
-      ...tableToClone,
-      id: `table-${Date.now()}`,
-      label: `${tableToClone.label} (Copie)`,
-      x: tableToClone.x + 20,
-      y: tableToClone.y + 20,
-    };
-
-    setTables((prev) => [...prev, newTable]);
-    setSelectedTableId(newTable.id);
-    toast.success("Table dupliquée");
-  };
-
   // Zone Management
   const handleSaveZone = () => {
     if (!newZoneName.trim()) return;
 
     if (editingZoneId) {
-      // Edit existing
       setZones((prev) => prev.map((z) => (z.id === editingZoneId ? { ...z, name: newZoneName } : z)));
       toast.success("Zone renommée");
     } else {
@@ -414,6 +393,57 @@ function TablePlanContent() {
     toast.success("Zone supprimée");
   };
 
+  const handleResizeTable = (id: string, width: number, height: number) => {
+    setTables((prev) => prev.map((t) => (t.id === id ? { ...t, width, height } : t)));
+  };
+
+  // Table Edit Logic
+  const initiateEditTable = (table: TableProps) => {
+    setEditingTableId(table.id);
+    setEditTableName(table.label);
+    setEditTableSeats(table.seats);
+    setIsEditTableDialogOpen(true);
+  };
+
+  const handleDuplicateTable = (id: string | null) => {
+    const tableId = id || selectedTableId; // Support both direct and selected
+    if (!tableId) return;
+
+    const tableToClone = tables.find((t) => t.id === tableId);
+    if (!tableToClone) return;
+
+    const newTable: TableProps = {
+      ...tableToClone,
+      id: `table-${Date.now()}`,
+      label: `${tableToClone.label} (Copie)`,
+      x: tableToClone.x + 20,
+      y: tableToClone.y + 20,
+    };
+
+    setTables((prev) => [...prev, newTable]);
+    setSelectedTableId(newTable.id);
+    toast.success("Table dupliquée");
+  };
+
+  const handleDeleteTable = (id: string | null = null) => {
+    const targetId = id || selectedTableId;
+    if (!targetId) return;
+
+    setTables(tables.filter((t) => t.id !== targetId));
+    if (selectedTableId === targetId) setSelectedTableId(null);
+    toast.success("Table supprimée");
+  };
+
+  const handleSaveTable = () => {
+    if (!editingTableId) return;
+
+    setTables((prev) => prev.map((t) => (t.id === editingTableId ? { ...t, label: editTableName, seats: editTableSeats } : t)));
+
+    setIsEditTableDialogOpen(false);
+    setEditingTableId(null);
+    toast.success("Table modifiée");
+  };
+
   const handleDeleteZone = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (zones.length <= 1) {
@@ -425,8 +455,72 @@ function TablePlanContent() {
 
   // Zoom & Pan State
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
   const isPanningRef = useRef(false);
   const startPanRef = useRef({ x: 0, y: 0 });
+
+  const fitViewToTables = () => {
+    if (!canvasRef.current || tables.length === 0) {
+      setView({ x: 0, y: 0, scale: 1 });
+      setIsCanvasReady(true);
+      return;
+    }
+
+    const PADDING = 100; // px
+    const containerWidth = canvasRef.current.clientWidth;
+    const containerHeight = canvasRef.current.clientHeight;
+
+    // Calculate Bounding Box
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    tables.forEach((t) => {
+      minX = Math.min(minX, t.x);
+      minY = Math.min(minY, t.y);
+      maxX = Math.max(maxX, t.x + (t.width || 80));
+      maxY = Math.max(maxY, t.y + (t.height || 60));
+    });
+
+    if (minX === Infinity) return; // Should be handled by tables.length check but safety first
+
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+
+    // Determine scale to fit
+    const scaleX = (containerWidth - PADDING * 2) / contentWidth;
+    const scaleY = (containerHeight - PADDING * 2) / contentHeight;
+    const scale = Math.min(Math.max(Math.min(scaleX, scaleY), 0.1), 1.5); // Cap max zoom at 1.5 for auto-fit
+
+    // Determine center
+    const contentCenterX = minX + contentWidth / 2;
+    const contentCenterY = minY + contentHeight / 2;
+
+    const containerCenterX = containerWidth / 2;
+    const containerCenterY = containerHeight / 2;
+
+    // Calculate Pan (Translate)
+    // We want the content center to be at the container center
+    // containerCenter = (contentCenter * scale) + pan
+    // pan = containerCenter - (contentCenter * scale)
+    const x = containerCenterX - contentCenterX * scale;
+    const y = containerCenterY - contentCenterY * scale;
+
+    setView({ x, y, scale });
+    setIsCanvasReady(true);
+  };
+
+  useEffect(() => {
+    // Auto-fit when changing zones or loading data
+    setIsCanvasReady(false);
+
+    // We add a small timeout to allow DOM to settle if needed, or if canvasRef is not yet ready
+    const timeout = setTimeout(() => {
+      fitViewToTables();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [activeZoneId, zones]); // Triggers when zone changes or zones data loads
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return; // Only left click
@@ -623,54 +717,32 @@ function TablePlanContent() {
                 <SidebarItem type="rect" label="Table Custom" seats={customSeats} onAdd={() => handleAddTable("rect", customSeats)} />
               </div>
             </Card>
-            {selectedTable && (
-              <Card className="p-4 grow">
-                <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide text-muted-foreground">Propriétés</h3>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Numéro / Nom</Label>
-                    <Input value={selectedTable.label} onChange={(e) => handleUpdateTable("label", e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Couverts</Label>
-                    <Input
-                      type="number"
-                      value={selectedTable.seats}
-                      onChange={(e) => handleUpdateTable("seats", parseInt(e.target.value))}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-2">
-                      <Label>Largeur</Label>
-                      <Input
-                        type="number"
-                        value={selectedTable.width}
-                        onChange={(e) => handleUpdateTable("width", parseInt(e.target.value))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Hauteur</Label>
-                      <Input
-                        type="number"
-                        value={selectedTable.height}
-                        onChange={(e) => handleUpdateTable("height", parseInt(e.target.value))}
-                      />
-                    </div>
-                  </div>
+            <Card className="p-5 bg-card border-slate-200/60 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
+              <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span className="inline-block w-1 h-1 rounded-full bg-primary" />
+                DÉTAILS DE LA ZONE
+              </h3>
 
-                  <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" className="w-full" onClick={handleDuplicateTable}>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Dupliquer
-                    </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 transition-colors hover:bg-slate-100/50">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Grid3X3 className="w-3 h-3" />
+                    <span className="text-[10px] font-medium uppercase leading-none">Tables</span>
                   </div>
-
-                  <Button variant="destructive" size="sm" className="w-full mt-4" onClick={handleDeleteTable}>
-                    Supprimer la table
-                  </Button>
+                  <div className="text-xl font-bold tracking-tight">{tables.length}</div>
                 </div>
-              </Card>
-            )}
+
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 transition-colors hover:bg-slate-100/50">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                    <Armchair className="w-3 h-3" />
+                    <span className="text-[10px] font-medium uppercase leading-none">Couverts</span>
+                  </div>
+                  <div className="text-xl font-bold tracking-tight">{tables.reduce((acc, t) => acc + t.seats, 0)}</div>
+                </div>
+              </div>
+            </Card>
+            {/* Removed Properties Panel */}
           </div>
 
           {/* Infinite Canvas Container */}
@@ -682,6 +754,16 @@ function TablePlanContent() {
             }}
             onMouseDown={handleMouseDown}
           >
+            {/* Loading Skeleton Overlay */}
+            {!isCanvasReady && (
+              <div className="absolute inset-0 z-50 bg-slate-100 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                  <Skeleton className="w-[800px] h-[600px] rounded-xl bg-slate-200" />
+                  <span className="text-muted-foreground text-sm animate-pulse">Chargement du plan...</span>
+                </div>
+              </div>
+            )}
+
             {/* Grid Background (Fixed or Panning? Panning usually feels better) */}
             <div
               className="absolute inset-0 pointer-events-none opacity-20"
@@ -737,6 +819,9 @@ function TablePlanContent() {
                     isOverlay={false}
                     isSelected={selectedTableId === table.id}
                     onSelect={() => setSelectedTableId(table.id)}
+                    onEdit={() => initiateEditTable(table)}
+                    onDuplicate={() => handleDuplicateTable(table.id)}
+                    onDelete={() => handleDeleteTable(table.id)}
                     onResize={handleResizeTable}
                     scale={view.scale}
                   />
@@ -759,6 +844,31 @@ function TablePlanContent() {
           </div>
         </div>
       </div>
+
+      {/* Edit Table Dialog */}
+      <Dialog open={isEditTableDialogOpen} onOpenChange={setIsEditTableDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier la table</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nom / Numéro</Label>
+              <Input value={editTableName} onChange={(e) => setEditTableName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Nombre de couverts</Label>
+              <Input type="number" min={1} value={editTableSeats} onChange={(e) => setEditTableSeats(parseInt(e.target.value) || 0)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditTableDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveTable}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isZoneDialogOpen} onOpenChange={setIsZoneDialogOpen}>
         <DialogContent>

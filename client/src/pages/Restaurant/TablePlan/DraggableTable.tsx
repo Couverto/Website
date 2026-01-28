@@ -1,7 +1,7 @@
 import { useDrag } from "react-dnd";
 import { ItemTypes } from "./ItemTypes";
 import { useState, useEffect } from "react";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, Settings, Copy, Trash2, Edit2 } from "lucide-react";
 
 export interface TableProps {
   id: string;
@@ -15,6 +15,9 @@ export interface TableProps {
   isOverlay?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
+  onEdit?: () => void;
+  onDuplicate?: () => void;
+  onDelete?: () => void;
   onResize?: (id: string, width: number, height: number) => void;
   scale?: number;
 }
@@ -31,6 +34,9 @@ export function DraggableTable({
   isOverlay,
   isSelected,
   onSelect,
+  onEdit,
+  onDuplicate,
+  onDelete,
   onResize,
   scale = 1,
 }: TableProps) {
@@ -126,6 +132,47 @@ export function DraggableTable({
         <div className="font-bold text-xs">{label}</div>
         <div className="text-[10px] text-muted-foreground">{seats} pers.</div>
       </div>
+
+      {/* Action Toolbar (Top Center or Dynamic) - Visible on hover only */}
+      {!isOverlay && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
+          {/* Edit */}
+          <div
+            className="w-7 h-7 bg-blue-500 text-white rounded-full shadow-md cursor-pointer flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto"
+            title="Modifier"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </div>
+
+          {/* Duplicate */}
+          <div
+            className="w-7 h-7 bg-slate-500 text-white rounded-full shadow-md cursor-pointer flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto"
+            title="Dupliquer"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onDuplicate?.();
+            }}
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </div>
+
+          {/* Delete */}
+          <div
+            className="w-7 h-7 bg-red-500 text-white rounded-full shadow-md cursor-pointer flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto"
+            title="Supprimer"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
 
       {/* Resize Handle (Bottom Right) */}
       {isSelected && (
