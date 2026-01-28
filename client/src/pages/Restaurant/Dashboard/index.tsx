@@ -12,12 +12,10 @@ import {
   ExternalLink,
   ChevronRight,
   Info,
-  Trash2,
-  EyeClosed,
-  EyeIcon,
-  ScanEye,
-  LucideEye,
-  EyeOff,
+  Armchair,
+  Layout,
+  MessageSquare,
+  MoveHorizontal,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -31,7 +29,9 @@ import { RestaurantStats } from "@/interfaces/Restaurant";
 import { BookingInterface } from "@/interfaces/Booking";
 import { RestaurantContext } from "@/interfaces/Components";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookingForm } from "@/pages/Home/components/Booking/BookingForm";
+import { DashboardTablePlan } from "./DashboardTablePlan";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +54,8 @@ export const RestaurantDashboard = () => {
   const [newBookingIds, setNewBookingIds] = useState<Set<string>>(new Set());
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [bookingToMove, setBookingToMove] = useState<BookingInterface | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
   const [cancellationReason, setCancellationReason] = useState(
     "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
@@ -117,13 +119,17 @@ export const RestaurantDashboard = () => {
     }
   };
 
-  const dismissBooking = async (bookingId: string) => {
+  const handleMoveTable = async (bookingId: string, tableId: string, zoneId: string) => {
     try {
-      await api.patch(`/bookings/restaurant/${id}/${bookingId}/dismiss`);
-      toast.success("Réservation masquée");
+      setIsMoving(true);
+      await api.patch(`/bookings/restaurant/${id}/${bookingId}/table`, { tableId, zoneId });
+      toast.success("Table mise à jour");
+      setBookingToMove(null);
       fetchStats();
     } catch (error) {
-      toast.error("Erreur lors de la suppression");
+      toast.error("Erreur lors de la mise à jour de la table");
+    } finally {
+      setIsMoving(false);
     }
   };
 
@@ -155,7 +161,7 @@ export const RestaurantDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">{"Tableau de bord"}</h1>
@@ -208,177 +214,226 @@ export const RestaurantDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">En attente</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <CardTitle className="text-sm font-medium">Occupation actuelle</CardTitle>
+            <Armchair className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{upcomingBookings.filter((b) => b.status === "PENDING").length}</div>
-            <p className="text-xs text-muted-foreground">Nécessitent une action</p>
+            <div className="text-2xl font-bold text-primary">
+              {stats?.activeBookings?.length || 0} / {context?.restaurant?.capacity || 0}
+            </div>
+            <p className="text-xs text-muted-foreground font-medium">Tables occupées en ce moment</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cette semaine</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Nouveaux clients</CardTitle>
+            <Plus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.week.bookings || 0}</div>
-            <p className="text-xs text-muted-foreground">Réservations cette semaine</p>
+            <div className="text-2xl font-bold">{stats?.totalClients || 0}</div>
+            <p className="text-xs text-muted-foreground">Dans votre base de données</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Bookings List Card */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-muted/30 border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Dernières réservations</CardTitle>
-              <CardDescription>Les 10 dernières réservations reçues</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`/restaurant/${id}/bookings`}>
-                {"Voir tout"}
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y">
-            {recentBookings.length === 0 ? (
-              <div className="text-center py-20 px-4">
-                <Info className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
-                <p className="text-muted-foreground font-medium">Aucune réservation récente</p>
-                <p className="text-sm text-muted-foreground mt-1">Les nouvelles réservations apparaîtront ici</p>
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
+        {/* Left Column: Table Plan Map */}
+        {context?.restaurant && <DashboardTablePlan restaurant={context.restaurant} bookings={stats?.activeBookings || []} />}
+
+        {/* Right Column: Recent Bookings */}
+        <Card className="col-span-1 border-primary/10 shadow-sm overflow-hidden flex flex-col">
+          <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold">Dernières réservations</CardTitle>
+                <CardDescription className="text-[10px] uppercase tracking-wider font-semibold opacity-70">
+                  Les 10 dernières
+                </CardDescription>
               </div>
-            ) : (
-              recentBookings.map((booking) => {
-                const isPending = booking.status === "PENDING";
-                const isConfirmed = booking.status === "CONFIRMED";
-                const isCancelled = booking.status === "CANCELLED";
+              <Button variant="ghost" size="sm" asChild className="h-8 px-2 hover:bg-primary/5 hover:text-primary">
+                <Link to={`/restaurant/${id}/bookings`} className="flex items-center">
+                  <span className="text-xs font-bold mr-1">Voir tout</span>
+                  <ChevronRight className="h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 flex-1 overflow-hidden">
+            <div className="divide-y max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20">
+              {recentBookings.length === 0 ? (
+                <div className="text-center py-20 px-4">
+                  <Info className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
+                  <p className="text-muted-foreground font-medium">Aucune réservation récente</p>
+                  <p className="text-sm text-muted-foreground mt-1">Les nouvelles réservations apparaîtront ici</p>
+                </div>
+              ) : (
+                recentBookings.map((booking) => {
+                  const isPending = booking.status === "PENDING";
+                  const isConfirmed = booking.status === "CONFIRMED";
+                  const isCancelled = booking.status === "CANCELLED";
 
-                return (
-                  <div
-                    key={booking._id}
-                    className={cn(
-                      "group flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-muted/30 transition-all border-l-4",
-                      newBookingIds.has(booking._id) ? "bg-primary/5 border-l-primary" : "border-l-transparent",
-                      isPending && "border-l-yellow-500",
-                      isConfirmed && "border-l-green-500",
-                      isCancelled && "border-l-red-500 opacity-60",
-                    )}
-                  >
-                    <div className="flex items-start gap-4 flex-1">
-                      {/* Date & Time Box */}
-                      <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-2 min-w-[4.5rem] border">
-                        <span className="text-xs font-medium uppercase text-muted-foreground">
-                          {format(new Date(booking.bookingDate), "MMM", { locale: fr })}
-                        </span>
-                        <span className="text-2xl font-bold leading-none">{format(new Date(booking.bookingDate), "dd")}</span>
-                        <span className="text-sm font-semibold text-primary mt-1">{format(new Date(booking.bookingDate), "HH:mm")}</span>
-                      </div>
-
-                      {/* Main Info */}
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className={cn("font-bold text-lg truncate", isCancelled && "line-through")}>{booking.customer.name}</span>
-                          <Badge
-                            variant="secondary"
-                            className={cn("text-[10px] h-5 px-1.5 uppercase tracking-wider font-bold", getStatusColor(booking.status))}
-                          >
-                            {booking.status === "PENDING"
-                              ? "En attente"
-                              : booking.status === "CONFIRMED"
-                                ? "Confirmée"
-                                : booking.status === "CANCELLED"
-                                  ? "Annulée"
-                                  : "Brouillon"}
-                          </Badge>
-                          {booking.notes && (
-                            <div className="relative group/note">
-                              <Info className="h-4 w-4 text-orange-400 cursor-help" />
-                              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover/note:block px-2 py-1 text-xs text-white bg-black rounded whitespace-nowrap z-10">
-                                {booking.notes}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1.5 text-foreground font-medium bg-muted/30 px-2 py-0.5 rounded-full">
-                            <Users className="h-3.5 w-3.5" />
-                            {booking.guests} {"couvert(s)"}
+                  return (
+                    <div
+                      key={booking._id}
+                      className={cn(
+                        "group flex flex-col p-4 gap-3 hover:bg-muted/20 transition-all border-l-4",
+                        newBookingIds.has(booking._id) ? "bg-primary/5 border-l-primary" : "border-l-transparent",
+                        isPending && "border-l-yellow-500",
+                        isConfirmed && "border-l-green-500",
+                        isCancelled && "border-l-red-500 opacity-60",
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Compact Date Box */}
+                        <div className="flex flex-col items-center justify-center bg-muted/50 rounded-lg p-1.5 min-w-[3.2rem] border shadow-sm">
+                          <span className="text-[9px] font-black uppercase text-muted-foreground/80">
+                            {format(new Date(booking.bookingDate), "MMM", { locale: fr })}
                           </span>
-                          {booking.customer.phone && (
-                            <span className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-                              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                              {booking.customer.phone}
-                            </span>
-                          )}
-                          {booking.customer.email && (
-                            <span className="flex items-center gap-1.5 hover:text-foreground transition-colors truncate max-w-[200px]">
-                              <span className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                              {booking.customer.email}
-                            </span>
-                          )}
+                          <span className="text-lg font-black leading-none">{format(new Date(booking.bookingDate), "dd")}</span>
+                          <span className="text-[9px] font-black text-primary mt-1">{format(new Date(booking.bookingDate), "HH:mm")}</span>
                         </div>
 
-                        {booking.notes ? (
-                          <p className="text-xs text-orange-600/80 italic truncate max-w-[400px]">Note: "{booking.notes}"</p>
-                        ) : (
-                          <p className="text-xs text-orange-600/80 italic truncate max-w-[400px]">Aucune note</p>
-                        )}
+                        {/* Main Info */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={cn("font-bold text-sm truncate", isCancelled && "line-through")}>{booking.customer.name}</span>
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "text-[9px] h-4 px-1.5 uppercase tracking-widest font-black leading-none",
+                                getStatusColor(booking.status),
+                              )}
+                            >
+                              {booking.status === "PENDING" ? "Attente" : isConfirmed ? "OK" : isCancelled ? "OFF" : "B?"}
+                            </Badge>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                            <span className="flex items-center gap-1 font-bold text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
+                              <Users className="h-3 w-3" />
+                              {booking.guests}
+                            </span>
+                            {booking.tableLabel && (
+                              <span className="flex items-center gap-1 text-primary font-bold bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
+                                <Armchair className="h-3 w-3" />
+                                {booking.tableLabel}
+                              </span>
+                            )}
+                            {booking.notes && (
+                              <div className="flex items-start gap-1 w-full mt-1 p-2 bg-muted/30 rounded border border-dashed text-[10px] italic">
+                                <MessageSquare className="h-3 w-3 shrink-0 mt-0.5" />
+                                <span className="truncate">{booking.notes}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 sm:self-center shrink-0">
-                      {isPending && (
-                        <Button
-                          size="sm"
-                          className="h-9 bg-green-600 hover:bg-green-700 text-white shadow-sm"
-                          onClick={() => updateStatus(booking._id, "CONFIRMED")}
-                        >
-                          <Check className="h-4 w-4 mr-1.5" />
-                          {"Confirmer"}
-                        </Button>
-                      )}
-
+                      {/* Actions Row */}
                       {!isCancelled && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-9 px-3 text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                          onClick={() => setBookingToCancel(booking._id)}
-                          title="Annuler la réservation"
-                        >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Annuler</span>
-                        </Button>
+                        <div className="flex items-center gap-2 pt-1 mt-1 border-t border-dashed border-muted-foreground/10">
+                          {isPending && (
+                            <Button
+                              size="sm"
+                              className="h-8 text-[10px] font-bold flex-1 bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                              onClick={() => updateStatus(booking._id, "CONFIRMED")}
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Accepter
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={cn(
+                              "h-8 text-[10px] font-bold flex-1 hover:bg-red-50 hover:text-red-600 transition-colors",
+                              isPending ? "text-red-400" : "text-muted-foreground",
+                            )}
+                            onClick={() => setBookingToCancel(booking._id)}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            {isPending ? "Refuser" : "Annuler"}
+                          </Button>
+                          {isConfirmed && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-[10px] font-bold flex-1 border-primary/20 text-primary hover:bg-primary/5"
+                              onClick={() => setBookingToMove(booking)}
+                            >
+                              <MoveHorizontal className="h-3 w-3 mr-1" />
+                              Déplacer
+                            </Button>
+                          )}
+                        </div>
                       )}
-
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-9 px-3 text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                        onClick={() => dismissBooking(booking._id)}
-                        title="Enlever du tableau de bord"
-                      >
-                        <EyeOff className="h-4 w-4" />
-                        <span className="sr-only">Enlever</span>
-                      </Button>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Move Table Dialog */}
+      <Dialog open={!!bookingToMove} onOpenChange={(open) => !open && setBookingToMove(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MoveHorizontal className="h-5 w-5 text-primary" />
+              Réassigner une table
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase opacity-70">Client</p>
+                <p className="font-bold">{bookingToMove?.customer.name}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-muted-foreground uppercase opacity-70">Couverts</p>
+                <p className="font-bold text-right">{bookingToMove?.guests}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold">Sélectionner la nouvelle table</label>
+              <Select
+                disabled={isMoving}
+                defaultValue={bookingToMove?.tableId}
+                onValueChange={(val) => {
+                  if (bookingToMove) {
+                    const [tid, zid] = val.split("|");
+                    handleMoveTable(bookingToMove._id, tid, zid);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une table" />
+                </SelectTrigger>
+                <SelectContent>
+                  {context?.restaurant?.zones?.map((zone) => (
+                    <div key={zone.id}>
+                      <div className="px-2 py-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground bg-muted/30">
+                        {zone.name}
+                      </div>
+                      {zone.tables.map((table) => (
+                        <SelectItem key={table.id} value={`${table.id}|${zone.id}`}>
+                          Table {table.label} ({table.seats} places)
+                        </SelectItem>
+                      ))}
+                    </div>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       {/* Cancellation Confirmation Dialog */}
       <AlertDialog

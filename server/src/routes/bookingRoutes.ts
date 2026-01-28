@@ -10,6 +10,7 @@ import {
   getRestaurantClients,
   updateBookingStatus,
   dismissBooking,
+  updateBookingTable,
 } from "../controllers/bookingController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
@@ -111,4 +112,16 @@ bookingRouter.patch(
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
   dismissBooking,
+);
+
+/**
+ * @route PATCH /api/bookings/restaurant/:id/:bookingId/table
+ * @desc Update a booking table
+ * @access Private (Collaborator)
+ */
+bookingRouter.patch(
+  "/restaurant/:id/:bookingId/table",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  updateBookingTable,
 );

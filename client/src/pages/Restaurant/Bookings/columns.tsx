@@ -137,6 +137,30 @@ export const getColumns = (onAction: (action: "CONFIRM" | "CANCEL", booking: Boo
     meta: { label: "Couverts" },
   },
   {
+    id: "table",
+    accessorFn: (row) => row.tableLabel || "Non assignée",
+    header: ({ column }) => (
+      <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+        {"Table"}
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const booking = row.original;
+      if (!booking.tableLabel) {
+        return <span className="text-xs text-muted-foreground italic tracking-tight">Non assignée</span>;
+      }
+
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold text-primary/80 text-sm">{booking.tableLabel}</span>
+          {booking.zoneName && <span className="text-[10px] text-muted-foreground uppercase font-medium">{booking.zoneName}</span>}
+        </div>
+      );
+    },
+    meta: { label: "Table" },
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => (
       <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>

@@ -44,6 +44,21 @@ export interface RestaurantInterface {
   referrals?: string[];
   subscriptionStartDelay?: number;
 
+  zones: {
+    id: string;
+    name: string;
+    tables: {
+      id: string;
+      label: string;
+      seats: number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      shape: "rect" | "circle";
+    }[];
+  }[];
+  tablePlan?: any[];
   createdAt: string;
   updatedAt: string;
 }
@@ -61,4 +76,5 @@ export interface RestaurantStats {
   averageGuests: number;
   averageLeadTime: number;
   busyDays: { day: number; count: number }[];
+  activeBookings?: any[]; // Enriched bookings for widgets
 }

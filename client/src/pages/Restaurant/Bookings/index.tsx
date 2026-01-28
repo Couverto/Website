@@ -192,6 +192,14 @@ export const RestaurantBookings = () => {
             <AlertDialogTitle>Confirmer la réservation ?</AlertDialogTitle>
             <AlertDialogDescription>
               Cette action changera le statut de la réservation à "Confirmée" et informera le client.
+              {selectedBooking?.tableLabel && (
+                <div className="mt-2 p-2 bg-primary/5 border border-primary/10 rounded-md">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">Table assignée:</span>
+                  <p className="font-bold text-lg">
+                    {selectedBooking.tableLabel} ({selectedBooking.zoneName || "Salle"})
+                  </p>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

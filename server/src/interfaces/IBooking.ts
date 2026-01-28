@@ -13,6 +13,8 @@ export interface IBooking {
     email?: string;
     phone: string;
   };
+  tableId?: string;
+  zoneId?: string;
   notes?: string;
   isDismissedByRestaurant?: boolean;
   reviewRequestSent?: boolean;
