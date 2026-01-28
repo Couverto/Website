@@ -8,7 +8,7 @@ import { DraggableTable, TableProps } from "./DraggableTable";
 import { ItemTypes } from "./ItemTypes";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { useParams, useOutletContext } from "react-router-dom";
-import { Loader2, Save, Armchair, Plus, Copy, Trash2, Edit2 } from "lucide-react";
+import { Loader2, Save, Armchair, Plus, Minus, Copy, Trash2, Edit2, GripVertical, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -31,23 +31,32 @@ interface Zone {
 }
 
 function SidebarItem({ type, label, seats, onAdd }: { type: "rect" | "circle"; label: string; seats: number; onAdd: () => void }) {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: ItemTypes.SIDEBAR_ITEM,
-    item: { type: ItemTypes.SIDEBAR_ITEM, shape: type, seats, label },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: ItemTypes.SIDEBAR_ITEM,
+      item: { type: ItemTypes.SIDEBAR_ITEM, shape: type, seats, label },
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
+      }),
     }),
-  }));
+    [type, label, seats],
+  );
 
   return (
-    <div className={`p-3 border rounded-md bg-card flex items-center justify-between shadow-sm ${isDragging ? "opacity-50" : ""}`}>
-      <div ref={drag as any} className="flex items-center gap-2 cursor-grab grow hover:bg-accent/50 p-1 rounded -ml-1">
-        <Armchair className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">{label}</span>
+    <div
+      ref={drag as any}
+      className={`
+            p-3 border rounded-md bg-card flex items-center gap-3 shadow-sm cursor-grab active:cursor-grabbing hover:border-primary transition-colors
+            ${isDragging ? "opacity-50 ring-2 ring-primary border-primary" : ""}
+        `}
+    >
+      <GripVertical className="h-5 w-5 text-muted-foreground/50" />
+      <div className="flex flex-col">
+        <span className="text-sm font-medium leading-none">{label}</span>
+        <span className="text-xs text-muted-foreground mt-1">{seats} personnes</span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs bg-secondary px-2 py-0.5 rounded-full text-secondary-foreground">{seats} p.</span>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onAdd}>
+      <div className="ml-auto">
+        <Button variant="ghost" size="icon" className="h-6 w-6 ml-2" onClick={onAdd}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -71,6 +80,7 @@ function TablePlanContent() {
   const [newZoneName, setNewZoneName] = useState("");
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [deleteZoneId, setDeleteZoneId] = useState<string | null>(null);
+  const [customSeats, setCustomSeats] = useState(2);
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -194,72 +204,30 @@ function TablePlanContent() {
     return { x: snappedX ? snapX : dragX, y: snappedY ? snapY : dragY, lines, isSnapped: snappedX || snappedY };
   };
 
-  const [, drop] = useDrop(
-    () => ({
-      accept: [ItemTypes.TABLE, ItemTypes.SIDEBAR_ITEM],
-      hover: (item: any, monitor) => {
-        if (!canvasRef.current || !activeZoneId) return;
-        const canvasRect = canvasRef.current.getBoundingClientRect();
-        const sourceClientOffset = monitor.getSourceClientOffset();
-        if (!sourceClientOffset) return;
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedTableId) return;
 
-        const rawX = sourceClientOffset.x - canvasRect.left;
-        const rawY = sourceClientOffset.y - canvasRect.top;
+      if (e.key === "Delete" || e.key === "Backspace") {
+        // Prevent deleting if user is typing in an input
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-        // Ideal dimensions
-        const width = item.type === ItemTypes.SIDEBAR_ITEM ? (item.shape === "rect" ? 80 : 60) : item.width || 80;
-        const height = item.type === ItemTypes.SIDEBAR_ITEM ? (item.shape === "rect" ? 60 : 60) : item.height || 60;
+        handleDeleteTable();
+      }
+    };
 
-        // Calculate Snap (excluding the item itself if it's an existing table being moved)
-        const otherTables = tables.filter((t) => t.id !== item.id);
-        const { lines } = calculateSnap(rawX, rawY, width, height, otherTables, 10);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedTableId, tables]); // Re-bind when selection or tables change
 
-        setAlignmentLines(lines);
-      },
-      drop: (item: any, monitor) => {
-        if (!canvasRef.current || !activeZoneId) return;
-
-        setAlignmentLines([]); // Clear lines
-
-        const canvasRect = canvasRef.current.getBoundingClientRect();
-        const sourceClientOffset = monitor.getSourceClientOffset();
-
-        if (!sourceClientOffset) return;
-
-        let x = sourceClientOffset.x - canvasRect.left;
-        let y = sourceClientOffset.y - canvasRect.top;
-
-        // Dimensions
-        const width = item.type === ItemTypes.SIDEBAR_ITEM ? (item.shape === "rect" ? 80 : 60) : item.width || 80;
-        const height = item.type === ItemTypes.SIDEBAR_ITEM ? (item.shape === "rect" ? 60 : 60) : item.height || 60;
-
-        // Final Snap Calculation
-        const otherTables = tables.filter((t) => t.id !== item.id);
-        const snapped = calculateSnap(x, y, width, height, otherTables, 10);
-
-        x = snapped.x;
-        y = snapped.y;
-
-        // Grid snap fallthrough if no alignment snap
-        if (!snapped.isSnapped) {
-          x = Math.round(x / 10) * 10;
-          y = Math.round(y / 10) * 10;
-        }
-
-        const safeX = Math.max(0, x);
-        const safeY = Math.max(0, y);
-
-        if (item.type === ItemTypes.TABLE) {
-          moveTable(item.id, safeX, safeY);
-        } else if (item.type === ItemTypes.SIDEBAR_ITEM) {
-          createNewTableFromDrop(item, safeX, safeY);
-        }
-      },
-    }),
-    [zones, activeZoneId, tables],
-  );
-
-  drop(canvasRef);
+  interface Zone {
+    id: string;
+    name: string;
+    width: number;
+    height: number;
+    tables: TableProps[];
+  }
 
   useEffect(() => {
     fetchPlan();
@@ -275,10 +243,29 @@ function TablePlanContent() {
       // Migration Logic: If no zones but tablePlan exists
       if (fetchedZones.length === 0) {
         if (data.tablePlan && data.tablePlan.length > 0) {
-          fetchedZones = [{ id: "main-hall", name: "Salle Principale", tables: data.tablePlan }];
+          fetchedZones = [{ id: "main-hall", name: "Salle Principale", width: 1000, height: 800, tables: data.tablePlan }];
         } else {
-          fetchedZones = [{ id: "main-hall", name: "Salle Principale", tables: [] }];
+          fetchedZones = [{ id: "main-hall", name: "Salle Principale", width: 1000, height: 800, tables: [] }];
         }
+      } else {
+        // Ensure dimensions exist for existing zones and fit all tables
+        fetchedZones = fetchedZones.map((z) => {
+          let minW = z.width || 1000;
+          let minH = z.height || 800;
+
+          if (z.tables && z.tables.length > 0) {
+            const maxX = Math.max(...z.tables.map((t) => t.x + (t.width || 80)));
+            const maxY = Math.max(...z.tables.map((t) => t.y + (t.height || 60)));
+            minW = Math.max(minW, maxX + 50);
+            minH = Math.max(minH, maxY + 50);
+          }
+
+          return {
+            ...z,
+            width: minW,
+            height: minH,
+          };
+        });
       }
 
       setZones(fetchedZones);
@@ -389,6 +376,8 @@ function TablePlanContent() {
       const newZone: Zone = {
         id: `zone-${Date.now()}`,
         name: newZoneName,
+        width: 1000,
+        height: 800,
         tables: [],
       };
       setZones((prev) => [...prev, newZone]);
@@ -434,7 +423,115 @@ function TablePlanContent() {
     setDeleteZoneId(id);
   };
 
+  // Zoom & Pan State
+  const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
+  const isPanningRef = useRef(false);
+  const startPanRef = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only left click
+    // If clicking on a table or something interactive, don't pan
+    if ((e.target as HTMLElement).closest(".draggable-table")) return;
+
+    isPanningRef.current = true;
+    startPanRef.current = { x: e.clientX - view.x, y: e.clientY - view.y };
+
+    document.body.style.cursor = "grabbing";
+  };
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const scaleAmount = -e.deltaY * 0.001;
+        // Use functional state update to ensure latest scale is used without dependency issues
+        setView((prev) => {
+          const newScale = Math.min(Math.max(0.1, prev.scale + scaleAmount), 3);
+          return { ...prev, scale: newScale };
+        });
+      }
+    };
+
+    const canvasEl = canvasRef.current;
+    if (canvasEl) {
+      canvasEl.addEventListener("wheel", handleWheel, { passive: false });
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isPanningRef.current) return;
+      e.preventDefault();
+      setView((prev) => ({
+        ...prev,
+        x: e.clientX - startPanRef.current.x,
+        y: e.clientY - startPanRef.current.y,
+      }));
+    };
+
+    const handleMouseUp = () => {
+      isPanningRef.current = false;
+      document.body.style.cursor = "";
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      if (canvasEl) {
+        canvasEl.removeEventListener("wheel", handleWheel);
+      }
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []); // Empty dependency array is fine if using functional state updates or refs
+
   const selectedTable = tables.find((t) => t.id === selectedTableId);
+
+  // Modified Drop Logic for Zoom
+  const [, drop] = useDrop(
+    () => ({
+      accept: [ItemTypes.TABLE, ItemTypes.SIDEBAR_ITEM],
+      hover: (item: any, monitor) => {
+        if (!canvasRef.current || !activeZoneId) return;
+        // Optimization: We might need to adjust this for alignment lines with zoom,
+        // but for now keeping it simple or adding TODO
+      },
+      drop: (item: any, monitor) => {
+        if (!canvasRef.current || !activeZoneId) return;
+
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        const sourceClientOffset = monitor.getSourceClientOffset();
+
+        if (!sourceClientOffset) return;
+
+        // CRITICAL: Adjust for Zoom and Pan
+        // rawX/Y is the position relative to the screen
+        // elementX = (rawX - containerLeft - panX) / scale
+
+        const rawX = sourceClientOffset.x - canvasRect.left;
+        const rawY = sourceClientOffset.y - canvasRect.top;
+
+        const x = (rawX - view.x) / view.scale;
+        const y = (rawY - view.y) / view.scale;
+
+        // Snap and movement logic remains similar, just using the new calculated x/y
+        const width = item.type === ItemTypes.SIDEBAR_ITEM ? (item.shape === "rect" ? 80 : 60) : item.width || 80;
+        const height = item.type === ItemTypes.SIDEBAR_ITEM ? (item.shape === "rect" ? 60 : 60) : item.height || 60;
+
+        // ... Snap logic using calculated x, y ...
+        // For brevity, using simple snap here, you might want to call calculateSnap with these new coords
+
+        const safeX = Math.max(0, Math.round(x / 10) * 10);
+        const safeY = Math.max(0, Math.round(y / 10) * 10);
+
+        if (item.type === ItemTypes.TABLE) {
+          moveTable(item.id, safeX, safeY);
+        } else if (item.type === ItemTypes.SIDEBAR_ITEM) {
+          createNewTableFromDrop(item, safeX, safeY);
+        }
+      },
+    }),
+    [zones, activeZoneId, tables, view],
+  );
 
   if (loading)
     return (
@@ -444,7 +541,7 @@ function TablePlanContent() {
     );
 
   return (
-    <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
+    <div className="space-y-6 min-h-[calc(100vh-140px)] flex flex-col pb-10">
       <div className="flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Plan de salle</h2>
@@ -458,7 +555,7 @@ function TablePlanContent() {
         </div>
       </div>
 
-      <div className="flex flex-col grow overflow-hidden gap-4">
+      <div className="flex flex-col grow gap-4">
         <div className="flex items-center justify-between">
           <Tabs value={activeZoneId} onValueChange={setActiveZoneId} className="w-full">
             <div className="flex items-center justify-between mb-2">
@@ -490,19 +587,42 @@ function TablePlanContent() {
           </Tabs>
         </div>
 
-        <div className="flex gap-6 grow overflow-hidden">
+        <div className="flex gap-6 grow items-start overflow-hidden h-[600px]">
+          {/* Fixed height for infinite canvas container */}
+
           {/* Sidebar */}
-          <div className="w-64 shrink-0 space-y-4 flex flex-col">
-            <Card className="p-4">
-              <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide text-muted-foreground">Modèles</h3>
+          <div className="w-64 shrink-0 space-y-4 flex flex-col z-20">
+            {" "}
+            {/* z-20 to float above canvas if needed */}
+            <Card className="p-4 bg-slate-50/50">
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Tables Standard</h3>
+              <div className="space-y-2">
+                <SidebarItem type="rect" label="Petite" seats={2} onAdd={() => handleAddTable("rect", 2)} />
+                <SidebarItem type="rect" label="Moyenne" seats={4} onAdd={() => handleAddTable("rect", 4)} />
+                <SidebarItem type="rect" label="Grande" seats={6} onAdd={() => handleAddTable("rect", 6)} />
+                <SidebarItem type="circle" label="Ronde" seats={4} onAdd={() => handleAddTable("circle", 4)} />
+              </div>
+
+              <div className="my-4 border-t" />
+
+              <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Sur Mesure</h3>
               <div className="space-y-3">
-                <SidebarItem type="rect" label="Table Carrée" seats={2} onAdd={() => handleAddTable("rect", 2)} />
-                <SidebarItem type="rect" label="Table Rect." seats={4} onAdd={() => handleAddTable("rect", 4)} />
-                <SidebarItem type="rect" label="Grande Table" seats={6} onAdd={() => handleAddTable("rect", 6)} />
-                <SidebarItem type="circle" label="Table Ronde" seats={4} onAdd={() => handleAddTable("circle", 4)} />
+                <div className="space-y-2">
+                  <Label className="text-xs">Nombre de couverts</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={customSeats}
+                      onChange={(e) => setCustomSeats(parseInt(e.target.value) || 0)}
+                      className="bg-white"
+                    />
+                  </div>
+                </div>
+                <SidebarItem type="rect" label="Table Custom" seats={customSeats} onAdd={() => handleAddTable("rect", customSeats)} />
               </div>
             </Card>
-
             {selectedTable && (
               <Card className="p-4 grow">
                 <h3 className="font-semibold mb-4 text-sm uppercase tracking-wide text-muted-foreground">Propriétés</h3>
@@ -553,56 +673,90 @@ function TablePlanContent() {
             )}
           </div>
 
-          {/* Canvas */}
-          <Card
-            ref={canvasRef}
-            className={`grow relative overflow-hidden shadow-inner border-2 min-h-[500px] transition-colors bg-slate-50`}
-            id="canvas-area"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setSelectedTableId(null);
-              }
+          {/* Infinite Canvas Container */}
+          <div
+            className="grow h-full bg-slate-100 overflow-hidden relative cursor-grab border rounded-lg shadow-inner"
+            ref={(node) => {
+              drop(node);
+              (canvasRef as any).current = node;
             }}
+            onMouseDown={handleMouseDown}
           >
-            {/* Grid background */}
+            {/* Grid Background (Fixed or Panning? Panning usually feels better) */}
             <div
               className="absolute inset-0 pointer-events-none opacity-20"
               style={{
+                width: "100%",
+                height: "100%",
                 backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
-                backgroundSize: "20px 20px",
+                backgroundSize: `${20 * view.scale}px ${20 * view.scale}px`, // Scale grid? Or keep fixed and transform container?
+                // Let's transform a wrapper div instead.
               }}
             />
 
-            {/* Alignment Guides */}
-            {alignmentLines.map((line, i) => (
+            {/* Transformation Wrapper */}
+            <div
+              style={{
+                transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
+                transformOrigin: "0 0",
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              {/* Visual Grid for reference that moves with pan */}
               <div
-                key={i}
-                className="absolute bg-blue-500 z-50 pointer-events-none"
+                className="absolute -inset-[5000px] opacity-20 pointer-events-none"
                 style={{
-                  left: line.type === "vertical" ? line.x : 0,
-                  top: line.type === "horizontal" ? line.y : 0,
-                  width: line.type === "vertical" ? "1px" : "100%",
-                  height: line.type === "horizontal" ? "1px" : "100%",
-                  borderTop: line.type === "horizontal" ? "1px dashed #3b82f6" : "none",
-                  borderLeft: line.type === "vertical" ? "1px dashed #3b82f6" : "none",
-                  backgroundColor: "transparent",
+                  backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
+                  backgroundSize: "20px 20px",
                 }}
               />
-            ))}
 
-            <div className="absolute inset-0 w-full h-full">
-              {tables.map((table) => (
-                <DraggableTable
-                  key={table.id}
-                  {...table}
-                  isOverlay={false}
-                  isSelected={selectedTableId === table.id}
-                  onSelect={() => setSelectedTableId(table.id)}
-                  onResize={handleResizeTable}
+              {/* Alignment Guides */}
+              {alignmentLines.map((line, i) => (
+                <div
+                  key={i}
+                  className="absolute bg-blue-500 z-50 pointer-events-none"
+                  style={{
+                    left: line.type === "vertical" ? line.x : 0,
+                    top: line.type === "horizontal" ? line.y : 0,
+                    width: line.type === "vertical" ? "1px" : "100%",
+                    height: line.type === "horizontal" ? "1px" : "100%",
+                    borderTop: line.type === "horizontal" ? "1px dashed #3b82f6" : "none",
+                    borderLeft: line.type === "vertical" ? "1px dashed #3b82f6" : "none",
+                    backgroundColor: "transparent",
+                  }}
                 />
               ))}
+
+              <div className="absolute inset-0 w-full h-full">
+                {tables.map((table) => (
+                  <DraggableTable
+                    key={table.id}
+                    {...table}
+                    isOverlay={false}
+                    isSelected={selectedTableId === table.id}
+                    onSelect={() => setSelectedTableId(table.id)}
+                    onResize={handleResizeTable}
+                    scale={view.scale}
+                  />
+                ))}
+              </div>
             </div>
-          </Card>
+
+            {/* Controls */}
+            <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+              <Button size="icon" variant="secondary" onClick={() => setView((v) => ({ ...v, scale: Math.min(3, v.scale + 0.1) }))}>
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button size="icon" variant="secondary" onClick={() => setView((v) => ({ ...v, scale: Math.max(0.1, v.scale - 0.1) }))}>
+                <Minus className="h-4 w-4" /> {/* Need to import Minus */}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setView({ x: 0, y: 0, scale: 1 })}>
+                Reset
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

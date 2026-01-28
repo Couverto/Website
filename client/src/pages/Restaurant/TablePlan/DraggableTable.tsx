@@ -16,9 +16,24 @@ export interface TableProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onResize?: (id: string, width: number, height: number) => void;
+  scale?: number;
 }
 
-export function DraggableTable({ id, label, seats, x, y, width, height, shape, isOverlay, isSelected, onSelect, onResize }: TableProps) {
+export function DraggableTable({
+  id,
+  label,
+  seats,
+  x,
+  y,
+  width,
+  height,
+  shape,
+  isOverlay,
+  isSelected,
+  onSelect,
+  onResize,
+  scale = 1,
+}: TableProps) {
   const [isResizing, setIsResizing] = useState(false);
 
   const [{ isDragging }, drag] = useDrag(
@@ -44,8 +59,8 @@ export function DraggableTable({ id, label, seats, x, y, width, height, shape, i
     const startHeight = height;
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
+      const deltaX = (moveEvent.clientX - startX) / scale;
+      const deltaY = (moveEvent.clientY - startY) / scale;
 
       const newWidth = Math.max(40, Math.round((startWidth + deltaX) / 10) * 10);
       const newHeight = Math.max(40, Math.round((startHeight + deltaY) / 10) * 10);
@@ -100,6 +115,7 @@ export function DraggableTable({ id, label, seats, x, y, width, height, shape, i
         onSelect?.();
       }}
       className={`
+        draggable-table
         flex items-center justify-center border-2 bg-background shadow-sm hover:shadow-md transition-shadow relative group
         ${shape === "circle" ? "rounded-full" : "rounded-md"}
         ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-primary"}
