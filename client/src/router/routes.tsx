@@ -41,6 +41,7 @@ import { RestaurantSettings } from "@/pages/Restaurant/Settings";
 import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
 import { RestaurantStats } from "@/pages/Restaurant/Stats";
 import { RestaurantPlan } from "@/pages/Restaurant/Plan";
+import RestaurantTablePlan from "@/pages/Restaurant/TablePlan";
 import { RestaurantReviews } from "@/pages/Restaurant/Reviews";
 import { RestaurantReferral } from "@/pages/Restaurant/Referral";
 import { JoinRestaurant } from "@/pages/Join";
@@ -197,6 +198,14 @@ export const Router = () => {
             element={
               <RestaurantRoleProtectedRoute roles={["admin"]}>
                 <RestaurantPlan />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="table-plan"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin", "manager"]}>
+                <RestaurantTablePlan />
               </RestaurantRoleProtectedRoute>
             }
           />

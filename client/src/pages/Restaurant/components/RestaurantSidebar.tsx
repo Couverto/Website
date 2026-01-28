@@ -10,6 +10,7 @@ import {
   ImageIcon,
   MessageSquare,
   Gift,
+  Armchair,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +63,12 @@ export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: Restaur
       title: "Clients",
       url: `/restaurant/${id}/clients`,
       icon: Users,
+      roles: ["admin", "manager"],
+    },
+    {
+      title: "Plan de salle",
+      url: `/restaurant/${id}/table-plan`,
+      icon: Armchair,
       roles: ["admin", "manager"],
     },
     {

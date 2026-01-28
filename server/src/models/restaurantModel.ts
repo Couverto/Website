@@ -101,6 +101,22 @@ const RestaurantSchema = new Schema<IRestaurant>(
       type: Number,
       default: 0, // Days of delay before subscription starts
     },
+
+    tablePlan: {
+      type: [
+        {
+          id: { type: String, required: true },
+          label: { type: String, required: true },
+          seats: { type: Number, required: true },
+          x: { type: Number, required: true },
+          y: { type: Number, required: true },
+          width: { type: Number, required: true },
+          height: { type: Number, required: true },
+          shape: { type: String, enum: ["rect", "circle"], default: "rect" },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true },
 );

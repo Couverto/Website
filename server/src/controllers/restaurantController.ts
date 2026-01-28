@@ -567,6 +567,14 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
         });
         return;
       }
+
+      // Check for table plan
+      if (!restaurant.tablePlan || restaurant.tablePlan.length === 0) {
+        res.status(400).json({
+          error: "Impossible d'ouvrir le restaurant. Vous devez d'abord configurer votre plan de salle.",
+        });
+        return;
+      }
     }
 
     restaurant.isClosed = !restaurant.isClosed;
