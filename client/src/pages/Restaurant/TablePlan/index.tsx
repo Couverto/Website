@@ -54,12 +54,12 @@ function TablePlanContent() {
         if (!canvasRef.current) return;
 
         const canvasRect = canvasRef.current.getBoundingClientRect();
-        const clientOffset = monitor.getClientOffset();
+        const sourceClientOffset = monitor.getSourceClientOffset();
 
-        if (!clientOffset) return;
+        if (!sourceClientOffset) return;
 
-        const x = Math.round((clientOffset.x - canvasRect.left) / 10) * 10;
-        const y = Math.round((clientOffset.y - canvasRect.top) / 10) * 10;
+        const x = Math.round((sourceClientOffset.x - canvasRect.left) / 10) * 10;
+        const y = Math.round((sourceClientOffset.y - canvasRect.top) / 10) * 10;
 
         // Ensure within bounds (simplistic check, can be improved)
         const safeX = Math.max(0, x);
@@ -150,6 +150,10 @@ function TablePlanContent() {
   const handleDeleteTable = () => {
     setTables(tables.filter((t) => t.id !== selectedTableId));
     setSelectedTableId(null);
+  };
+
+  const handleResizeTable = (id: string, width: number, height: number) => {
+    setTables((prev) => prev.map((t) => (t.id === id ? { ...t, width, height } : t)));
   };
 
   const selectedTable = tables.find((t) => t.id === selectedTableId);
@@ -256,6 +260,7 @@ function TablePlanContent() {
                 isOverlay={false}
                 isSelected={selectedTableId === table.id}
                 onSelect={() => setSelectedTableId(table.id)}
+                onResize={handleResizeTable}
               />
             ))}
           </div>
