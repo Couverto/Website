@@ -1,4 +1,5 @@
 import { useDrag } from "react-dnd";
+import { getEmptyImage } from "react-dnd-html5-backend";
 import { ItemTypes } from "./ItemTypes";
 import { useState, useEffect } from "react";
 import { Maximize2, Settings, Copy, Trash2, Edit2 } from "lucide-react";
@@ -42,7 +43,7 @@ export function DraggableTable({
 }: TableProps) {
   const [isResizing, setIsResizing] = useState(false);
 
-  const [{ isDragging }, drag] = useDrag(
+  const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: ItemTypes.TABLE,
       item: { type: ItemTypes.TABLE, id, label, seats, width, height, shape, x, y },
@@ -53,6 +54,10 @@ export function DraggableTable({
     }),
     [id, x, y, width, height, shape, isResizing],
   );
+
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, [preview]);
 
   const handleResizeStart = (e: React.PointerEvent) => {
     e.stopPropagation(); // Prevent drag start

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { DndProvider, useDrag, useDrop, useDragLayer } from "react-dnd";
+import { HTML5Backend, getEmptyImage } from "react-dnd-html5-backend";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { DraggableTable, TableProps } from "./DraggableTable";
 import { ItemTypes } from "./ItemTypes";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { useParams, useOutletContext } from "react-router-dom";
-import { Loader2, Save, Armchair, Plus, Minus, Copy, Trash2, Edit2, GripVertical, Check, Grid3X3 } from "lucide-react";
+import { Loader2, Save, Armchair, Plus, Minus, Copy, Trash2, Edit2, GripVertical, Check, Grid3X3, ForkKnife, Table } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -31,17 +31,35 @@ interface Zone {
   tables: TableProps[];
 }
 
-function SidebarItem({ type, label, seats, onAdd }: { type: "rect" | "circle"; label: string; seats: number; onAdd: () => void }) {
-  const [{ isDragging }, drag] = useDrag(
+function SidebarItem({
+  type,
+  label,
+  seats,
+  width,
+  height,
+  onAdd,
+}: {
+  type: "rect" | "circle";
+  label: string;
+  seats: number;
+  width: number;
+  height: number;
+  onAdd: () => void;
+}) {
+  const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: ItemTypes.SIDEBAR_ITEM,
-      item: { type: ItemTypes.SIDEBAR_ITEM, shape: type, seats, label },
+      item: { type: ItemTypes.SIDEBAR_ITEM, shape: type, seats, label, width, height },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
     }),
-    [type, label, seats],
+    [type, label, seats, width, height],
   );
+
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, [preview]);
 
   return (
     <div
@@ -520,12 +538,15 @@ function TablePlanContent() {
       fitViewToTables();
     }, 100);
     return () => clearTimeout(timeout);
-  }, [activeZoneId, zones]); // Triggers when zone changes or zones data loads
+  }, [activeZoneId, zones.length]); // Trigger on zone change or if zones are added/removed, but NOT on position updates
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return; // Only left click
     // If clicking on a table or something interactive, don't pan
     if ((e.target as HTMLElement).closest(".draggable-table")) return;
+
+    // Click away to deselect
+    setSelectedTableId(null);
 
     isPanningRef.current = true;
     startPanRef.current = { x: e.clientX - view.x, y: e.clientY - view.y };
@@ -614,8 +635,8 @@ function TablePlanContent() {
         // ... Snap logic using calculated x, y ...
         // For brevity, using simple snap here, you might want to call calculateSnap with these new coords
 
-        const safeX = Math.max(0, Math.round(x / 10) * 10);
-        const safeY = Math.max(0, Math.round(y / 10) * 10);
+        const safeX = Math.round(x / 10) * 10;
+        const safeY = Math.round(y / 10) * 10;
 
         if (item.type === ItemTypes.TABLE) {
           moveTable(item.id, safeX, safeY);
@@ -681,7 +702,7 @@ function TablePlanContent() {
           </Tabs>
         </div>
 
-        <div className="flex gap-6 grow items-start overflow-hidden h-[600px]">
+        <div className="flex gap-6 grow items-stretch overflow-hidden h-[700px]">
           {/* Fixed height for infinite canvas container */}
 
           {/* Sidebar */}
@@ -691,10 +712,10 @@ function TablePlanContent() {
             <Card className="p-4 bg-slate-50/50">
               <h3 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">Tables Standard</h3>
               <div className="space-y-2">
-                <SidebarItem type="rect" label="Petite" seats={2} onAdd={() => handleAddTable("rect", 2)} />
-                <SidebarItem type="rect" label="Moyenne" seats={4} onAdd={() => handleAddTable("rect", 4)} />
-                <SidebarItem type="rect" label="Grande" seats={6} onAdd={() => handleAddTable("rect", 6)} />
-                <SidebarItem type="circle" label="Ronde" seats={4} onAdd={() => handleAddTable("circle", 4)} />
+                <SidebarItem type="rect" label="Petite" seats={2} width={80} height={60} onAdd={() => handleAddTable("rect", 2)} />
+                <SidebarItem type="rect" label="Moyenne" seats={4} width={80} height={60} onAdd={() => handleAddTable("rect", 4)} />
+                <SidebarItem type="rect" label="Grande" seats={6} width={100} height={60} onAdd={() => handleAddTable("rect", 6)} />
+                <SidebarItem type="circle" label="Ronde" seats={4} width={60} height={60} onAdd={() => handleAddTable("circle", 4)} />
               </div>
 
               <div className="my-4 border-t" />
@@ -714,7 +735,14 @@ function TablePlanContent() {
                     />
                   </div>
                 </div>
-                <SidebarItem type="rect" label="Table Custom" seats={customSeats} onAdd={() => handleAddTable("rect", customSeats)} />
+                <SidebarItem
+                  type="rect"
+                  label="Table Custom"
+                  seats={customSeats}
+                  width={80}
+                  height={60}
+                  onAdd={() => handleAddTable("rect", customSeats)}
+                />
               </div>
             </Card>
             <Card className="p-5 bg-card border-slate-200/60 shadow-sm relative overflow-hidden group">
@@ -727,7 +755,7 @@ function TablePlanContent() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 transition-colors hover:bg-slate-100/50">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Grid3X3 className="w-3 h-3" />
+                    <Table className="w-3 h-3" />
                     <span className="text-[10px] font-medium uppercase leading-none">Tables</span>
                   </div>
                   <div className="text-xl font-bold tracking-tight">{tables.length}</div>
@@ -735,7 +763,7 @@ function TablePlanContent() {
 
                 <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 transition-colors hover:bg-slate-100/50">
                   <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Armchair className="w-3 h-3" />
+                    <ForkKnife className="w-3 h-3" />
                     <span className="text-[10px] font-medium uppercase leading-none">Couverts</span>
                   </div>
                   <div className="text-xl font-bold tracking-tight">{tables.reduce((acc, t) => acc + t.seats, 0)}</div>
@@ -758,7 +786,7 @@ function TablePlanContent() {
             {!isCanvasReady && (
               <div className="absolute inset-0 z-50 bg-slate-100 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                  <Skeleton className="w-[800px] h-[600px] rounded-xl bg-slate-200" />
+                  <Skeleton className="w-[80%] h-[80%] rounded-xl bg-slate-200" />
                   <span className="text-muted-foreground text-sm animate-pulse">Chargement du plan...</span>
                 </div>
               </div>
@@ -768,11 +796,11 @@ function TablePlanContent() {
             <div
               className="absolute inset-0 pointer-events-none opacity-20"
               style={{
+                backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
+                backgroundSize: `${20 * view.scale}px ${20 * view.scale}px`,
+                backgroundPosition: `${view.x % (20 * view.scale)}px ${view.y % (20 * view.scale)}px`,
                 width: "100%",
                 height: "100%",
-                backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
-                backgroundSize: `${20 * view.scale}px ${20 * view.scale}px`, // Scale grid? Or keep fixed and transform container?
-                // Let's transform a wrapper div instead.
               }}
             />
 
@@ -781,8 +809,6 @@ function TablePlanContent() {
               style={{
                 transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
                 transformOrigin: "0 0",
-                width: "100%",
-                height: "100%",
               }}
             >
               {/* Visual Grid for reference that moves with pan */}
@@ -811,7 +837,7 @@ function TablePlanContent() {
                 />
               ))}
 
-              <div className="absolute inset-0 w-full h-full">
+              <div className="absolute top-0 left-0">
                 {tables.map((table) => (
                   <DraggableTable
                     key={table.id}
@@ -837,7 +863,7 @@ function TablePlanContent() {
               <Button size="icon" variant="secondary" onClick={() => setView((v) => ({ ...v, scale: Math.max(0.1, v.scale - 0.1) }))}>
                 <Minus className="h-4 w-4" /> {/* Need to import Minus */}
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => setView({ x: 0, y: 0, scale: 1 })}>
+              <Button size="sm" variant="secondary" onClick={fitViewToTables}>
                 Reset
               </Button>
             </div>
@@ -903,9 +929,57 @@ function TablePlanContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TableDragLayer scale={view.scale} canvasRef={canvasRef} />
     </div>
   );
 }
+
+const TableDragLayer = ({ scale, canvasRef }: { scale: number; canvasRef: React.RefObject<HTMLDivElement | null> }) => {
+  const { isDragging, item, itemType, currentOffset } = useDragLayer((monitor) => ({
+    item: monitor.getItem(),
+    itemType: monitor.getItemType(),
+    currentOffset: monitor.getSourceClientOffset(),
+    isDragging: monitor.isDragging(),
+  }));
+
+  if (!isDragging || !currentOffset) return null;
+  if (itemType !== ItemTypes.TABLE && itemType !== ItemTypes.SIDEBAR_ITEM) return null;
+
+  const canvasRect = canvasRef.current?.getBoundingClientRect();
+  const isOverCanvas = canvasRect
+    ? currentOffset.x >= canvasRect.left &&
+      currentOffset.x <= canvasRect.right &&
+      currentOffset.y >= canvasRect.top &&
+      currentOffset.y <= canvasRect.bottom
+    : false;
+
+  // Scale only if over canvas or if it's an existing table
+  const actualScale = isOverCanvas || itemType === ItemTypes.TABLE ? scale : 1;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[1000]">
+      <div
+        style={{
+          transform: `translate(${currentOffset.x}px, ${currentOffset.y}px) scale(${actualScale})`,
+          transformOrigin: "0 0",
+        }}
+      >
+        {isOverCanvas || itemType === ItemTypes.TABLE ? (
+          <DraggableTable {...item} isOverlay={true} width={item.width || (item.shape === "circle" ? 60 : 80)} height={item.height || 60} />
+        ) : (
+          <div className="p-3 border rounded-md bg-white flex items-center gap-3 shadow-lg w-56 border-primary/50 opacity-90">
+            <GripVertical className="h-5 w-5 text-primary/50" />
+            <div className="flex flex-col">
+              <span className="text-sm font-medium leading-none">{item.label}</span>
+              <span className="text-xs text-muted-foreground mt-1">{item.seats} personnes</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function TablePlan() {
   return (
