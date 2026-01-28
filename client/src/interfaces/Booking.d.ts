@@ -26,6 +26,10 @@ export interface BookingInterface {
     email: string;
     avatar?: string;
   };
+  tableId?: string;
+  zoneId?: string;
+  tableLabel?: string;
+  zoneName?: string;
   notes?: string;
   isDismissedByRestaurant?: boolean;
   createdAt: string;

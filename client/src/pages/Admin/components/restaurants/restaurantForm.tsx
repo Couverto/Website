@@ -154,10 +154,6 @@ export const AdminRestaurantForm = () => {
                   <Input id="city" {...register("city")} className="pl-10" />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="capacity">{"Capacité"}</Label>
-                <Input id="capacity" type="number" {...register("capacity")} />
-              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="shortDescription">{"Slogan / Phrase d'accroche"}</Label>

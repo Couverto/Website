@@ -397,6 +397,15 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
     await processImageArray("images");
     await processImageArray("menu");
 
+    // Recalculate capacity if zones are provided
+    if (req.body.zones && Array.isArray(req.body.zones)) {
+      const totalCapacity = req.body.zones.reduce((acc: number, zone: any) => {
+        const zoneTables = zone.tables || [];
+        return acc + zoneTables.reduce((tAcc: number, table: any) => tAcc + (table.seats || 0), 0);
+      }, 0);
+      req.body.capacity = totalCapacity;
+    }
+
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,
       {
@@ -568,10 +577,13 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
         return;
       }
 
-      // Check for table plan
-      if (!restaurant.tablePlan || restaurant.tablePlan.length === 0) {
+      // Check for table plan in zones (preferred) or legacy tablePlan
+      const hasTablesInZones = restaurant.zones && restaurant.zones.some((z) => z.tables && z.tables.length > 0);
+      const hasLegacyTables = restaurant.tablePlan && restaurant.tablePlan.length > 0;
+
+      if (!hasTablesInZones && !hasLegacyTables) {
         res.status(400).json({
-          error: "Impossible d'ouvrir le restaurant. Vous devez d'abord configurer votre plan de salle.",
+          error: "Impossible d'ouvrir le restaurant. Vous devez d'abord configurer votre plan de salle avec au moins une table.",
         });
         return;
       }
@@ -946,8 +958,8 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
     });
 
-    // Upcoming bookings (next 7 days) - used for the counts and specific "future" views
-    const upcomingBookings = await Booking.find({
+    // Upcoming bookings (next 7 days)
+    const rawUpcomingBookings = await Booking.find({
       restaurant: id,
       bookingDate: { $gte: now },
       status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
@@ -965,6 +977,47 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       .sort({ createdAt: -1 })
       .limit(10)
       .populate("user", "name forename avatar");
+
+    // Active bookings for widget (now - 2h to now + 2h)
+    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+    const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    const rawActiveBookings = await Booking.find({
+      restaurant: id,
+      bookingDate: { $gte: twoHoursAgo, $lte: twoHoursFromNow },
+      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+    }).populate("user", "name forename avatar");
+
+    // Enrich with table labels
+    const restaurantDoc = await Restaurant.findById(id).select("zones");
+    const upcomingBookings = rawUpcomingBookings.map((b) => {
+      const bObj = b.toObject();
+      if (bObj.tableId && restaurantDoc?.zones) {
+        for (const zone of restaurantDoc.zones) {
+          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
+          if (table) {
+            (bObj as any).tableLabel = table.label;
+            (bObj as any).zoneName = zone.name;
+            break;
+          }
+        }
+      }
+      return bObj;
+    });
+
+    const activeBookings = rawActiveBookings.map((b) => {
+      const bObj = b.toObject();
+      if (bObj.tableId && restaurantDoc?.zones) {
+        for (const zone of restaurantDoc.zones) {
+          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
+          if (table) {
+            (bObj as any).tableLabel = table.label;
+            (bObj as any).zoneName = zone.name;
+            break;
+          }
+        }
+      }
+      return bObj;
+    });
 
     // Daily stats for the last 7 days
     const sevenDaysAgo = new Date(startOfToday);
@@ -1105,9 +1158,12 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
         averageGuests: parseFloat(averageGuests.toFixed(1)),
         averageLeadTime: parseFloat(averageLeadTime.toFixed(1)),
         busyDays: busyDays.map((d) => ({ day: d._id, count: d.count })),
+        activeBookings,
+        upcomingBookings,
       },
       upcomingBookings,
       recentBookings,
+      activeBookings,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -1356,6 +1412,15 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
 
     await processImageArray("images");
     await processImageArray("menu");
+
+    // Recalculate capacity if zones are provided
+    if (req.body.zones && Array.isArray(req.body.zones)) {
+      const totalCapacity = req.body.zones.reduce((acc: number, zone: any) => {
+        const zoneTables = zone.tables || [];
+        return acc + zoneTables.reduce((tAcc: number, table: any) => tAcc + (table.seats || 0), 0);
+      }, 0);
+      req.body.capacity = totalCapacity;
+    }
 
     const restaurant = await Restaurant.findByIdAndUpdate(
       id,

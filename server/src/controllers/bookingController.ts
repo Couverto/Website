@@ -137,6 +137,46 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
       // Auto-confirm if within capacity
       bookingData.status = bookingStatus.CONFIRMED;
+
+      // Table Auto-Assignment Logic
+      if (restaurantExists.zones && restaurantExists.zones.length > 0) {
+        // Get all tables from all zones
+        const allTables: any[] = [];
+        restaurantExists.zones.forEach((zone: any) => {
+          if (zone.tables) {
+            zone.tables.forEach((table: any) => {
+              allTables.push({
+                id: table.id,
+                seats: table.seats,
+                label: table.label,
+                zoneId: zone.id,
+              });
+            });
+          }
+        });
+
+        // Find tables occupied by existingBookings within the overlap
+        const occupiedTableIds = new Set();
+        for (const booking of existingBookings) {
+          if (booking.tableId) {
+            const bStart = new Date(booking.bookingDate).getTime();
+            const bEnd = bStart + twoHours;
+            if (bStart < newEnd && bEnd > newStart) {
+              occupiedTableIds.add(booking.tableId);
+            }
+          }
+        }
+
+        // Find available tables that fit the guests
+        const availableFittingTables = allTables
+          .filter((table) => !occupiedTableIds.has(table.id) && table.seats >= Number(guests))
+          .sort((a, b) => a.seats - b.seats); // Greedy: pick the smallest table that fits
+
+        if (availableFittingTables.length > 0) {
+          bookingData.tableId = availableFittingTables[0].id;
+          bookingData.zoneId = availableFittingTables[0].zoneId;
+        }
+      }
     }
 
     const newBooking = await Booking.create(bookingData);
@@ -474,7 +514,7 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
       }
     }
 
-    const newBooking = await Booking.create({
+    const bookingData: any = {
       restaurant,
       bookingDate,
       guests,
@@ -482,7 +522,62 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
       notes,
       status: bookingStatus.CONFIRMED, // Manual bookings are usually direct entry
       user: null, // Usually manual bookings are not linked to a web user account unless specified
-    });
+    };
+
+    // Table Auto-Assignment Logic for Manual Bookings
+    if (restaurantExists.zones && restaurantExists.zones.length > 0) {
+      const bookingTime = new Date(bookingDate).getTime();
+      const twoHours = 2 * 60 * 60 * 1000;
+      const newStart = bookingTime;
+      const newEnd = bookingTime + twoHours;
+
+      // Get all tables from all zones
+      const allTables: any[] = [];
+      restaurantExists.zones.forEach((zone: any) => {
+        if (zone.tables) {
+          zone.tables.forEach((table: any) => {
+            allTables.push({
+              id: table.id,
+              seats: table.seats,
+              label: table.label,
+              zoneId: zone.id,
+            });
+          });
+        }
+      });
+
+      // Find occupied tables
+      const startTime = new Date(bookingTime - twoHours);
+      const endTime = new Date(bookingTime + twoHours);
+      const existingBookings = await Booking.find({
+        restaurant: restaurant,
+        bookingDate: { $gte: startTime, $lte: endTime },
+        status: { $in: [bookingStatus.CONFIRMED, bookingStatus.PENDING] },
+      });
+
+      const occupiedTableIds = new Set();
+      for (const booking of existingBookings) {
+        if (booking.tableId) {
+          const bStart = new Date(booking.bookingDate).getTime();
+          const bEnd = bStart + twoHours;
+          if (bStart < newEnd && bEnd > newStart) {
+            occupiedTableIds.add(booking.tableId);
+          }
+        }
+      }
+
+      // Find available tables that fit the guests
+      const availableFittingTables = allTables
+        .filter((table) => !occupiedTableIds.has(table.id) && table.seats >= Number(guests))
+        .sort((a, b) => a.seats - b.seats);
+
+      if (availableFittingTables.length > 0) {
+        bookingData.tableId = availableFittingTables[0].id;
+        bookingData.zoneId = availableFittingTables[0].zoneId;
+      }
+    }
+
+    const newBooking = await Booking.create(bookingData);
 
     createLog({
       message: `Manual booking created for restaurant ${restaurant}`,
@@ -537,8 +632,25 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
 
     const count = await Booking.countDocuments(query);
 
+    // Enrich with table labels
+    const restaurantDoc = await Restaurant.findById(id).select("zones");
+    const bookingsWithLabels = bookings.map((b) => {
+      const bObj = b.toObject();
+      if (bObj.tableId && restaurantDoc?.zones) {
+        for (const zone of restaurantDoc.zones) {
+          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
+          if (table) {
+            (bObj as any).tableLabel = table.label;
+            (bObj as any).zoneName = zone.name;
+            break;
+          }
+        }
+      }
+      return bObj;
+    });
+
     res.status(200).json({
-      bookings,
+      bookings: bookingsWithLabels,
       count,
       page,
       size,
@@ -754,6 +866,45 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     });
 
     res.status(200).json({ booking, message: "Réservation mise à jour" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function updateBookingTable
+ * @description Updates the assigned table for a booking (for restaurant collaborators).
+ */
+export const updateBookingTable = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, bookingId } = req.params;
+    const { tableId, zoneId } = req.body;
+
+    const booking = await Booking.findOne({ _id: bookingId, restaurant: id });
+
+    if (!booking) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    booking.tableId = tableId;
+    booking.zoneId = zoneId || booking.zoneId;
+    await booking.save();
+
+    // Emit real-time event
+    try {
+      getIO().to(`restaurant_${id}`).emit("updateBooking", booking);
+    } catch (error) {
+      console.error("Socket emit failed", error);
+    }
+
+    createLog({
+      message: `Booking ${bookingId} table updated to ${tableId}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ booking, message: "Table mise à jour" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

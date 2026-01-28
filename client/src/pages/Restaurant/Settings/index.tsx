@@ -258,8 +258,33 @@ export const RestaurantSettings = () => {
                 <Input id="website" {...register("website")} placeholder="https://" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="capacity">{"Capacité"}</Label>
-                <Input id="capacity" type="number" {...register("capacity")} />
+                <Label htmlFor="capacity" className="flex items-center gap-2">
+                  {"Capacité (Nombre de couverts)"}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full border border-muted-foreground/20">
+                        <Info className="h-3 w-3 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <p className="text-xs text-muted-foreground">
+                        {
+                          "La capacité totale est calculée automatiquement à partir de la somme des sièges de toutes vos tables dans votre plan de salle."
+                        }
+                      </p>
+                    </PopoverContent>
+                  </Popover>
+                </Label>
+                <div className="relative">
+                  <Input id="capacity" type="number" {...register("capacity")} disabled className="bg-muted cursor-not-allowed pr-10" />
+                  <div className="absolute inset-y-0 right-3 flex items-center">
+                    <Check className="h-4 w-4 text-green-500" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-primary" />
+                  {"Géré automatiquement via le plan de salle"}
+                </p>
               </div>
             </div>
           </CardContent>

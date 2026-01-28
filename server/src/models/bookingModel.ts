@@ -44,6 +44,12 @@ const bookingSchema = new Schema<IBooking>(
       phone: { type: String, required: true },
     },
 
+    tableId: {
+      type: String,
+    },
+    zoneId: {
+      type: String,
+    },
     notes: {
       type: String,
     },
