@@ -52,7 +52,23 @@ export interface IRestaurant extends Document {
   referrals: mongoose.Types.ObjectId[];
   subscriptionStartDelay: number;
   // Table Plan
-  tablePlan: {
+  zones: {
+    id: string;
+    name: string;
+    tables: {
+      id: string;
+      label: string;
+      seats: number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      shape: "rect" | "circle";
+    }[];
+  }[];
+
+  /** @deprecated Use zones instead */
+  tablePlan?: {
     id: string;
     label: string;
     seats: number;
