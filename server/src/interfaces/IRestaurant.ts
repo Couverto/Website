@@ -51,6 +51,17 @@ export interface IRestaurant extends Document {
   referredBy?: mongoose.Types.ObjectId;
   referrals: mongoose.Types.ObjectId[];
   subscriptionStartDelay: number;
+  // Table Plan
+  tablePlan: {
+    id: string;
+    label: string;
+    seats: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    shape: "rect" | "circle";
+  }[];
 
   createdAt: Date;
   updatedAt: Date;
