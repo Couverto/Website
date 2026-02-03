@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { ThemeChanger } from "@/components/customs/themeChanger";
 import { Settings2 } from "lucide-react";
 
 export const AccountPreferences = () => {

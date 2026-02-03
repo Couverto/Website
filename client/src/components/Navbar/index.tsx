@@ -90,14 +90,6 @@ export const Navbar = () => {
       auth: false,
       hideIfAuth: false,
     },
-    // {
-    //   label: "About",
-    //   translationKey: "A propos",
-    //   path: "/about",
-    //   icon: Users,
-    //   auth: false,
-    //   hideIfAuth: false,
-    // },
     {
       label: "Contact",
       translationKey: "Contact",
@@ -353,10 +345,6 @@ export const Navbar = () => {
               </Button>
             </div>
           )}
-
-          <div className="mt-auto pt-8 flex items-center justify-between">
-            <div className="flex gap-2"></div>
-          </div>
         </div>
       </div>
 

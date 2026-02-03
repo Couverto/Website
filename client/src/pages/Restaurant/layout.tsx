@@ -10,7 +10,7 @@ import { useSocketContext } from "@/contexts/socketContext";
 import { toast } from "sonner";
 import { BookingInterface } from "@/interfaces/Booking";
 import { Separator } from "@/components/ui/separator";
-import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { ThemeChanger } from "@/components/customs/themeChanger";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/customs/loading";
 

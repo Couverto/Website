@@ -66,13 +66,13 @@ const SelectContent = React.forwardRef<
       position={position}
       {...props}
     >
-      <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn("p-1", position === "popper" && "h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)")}
       >
         {children}
       </SelectPrimitive.Viewport>
-      <SelectScrollDownButton />
+      {/* Subtle bottom fade to indicate scrollability */}
+      <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-popover/80 to-transparent pointer-events-none z-10" />
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ));

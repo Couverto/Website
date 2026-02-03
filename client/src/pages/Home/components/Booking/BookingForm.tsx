@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CalendarIcon } from "lucide-react";
+import { Loader2, CalendarIcon, Users, Clock, Check } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/authContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DatePicker, { registerLocale } from "react-datepicker";
 
@@ -111,11 +111,36 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
         const response = await axiosConfig.get(`/restaurants/public/${restaurant._id}/slots`, {
           params: { date: format(bookingDate, "yyyy-MM-dd") },
         });
-        setTimeSlots(response.data.slots || []);
+
+        let slots = response.data.slots || [];
+
+        // Filter out past time slots if the selected date is today
+        const today = new Date();
+        const isToday = format(bookingDate, "yyyy-MM-dd") === format(today, "yyyy-MM-dd");
+
+        if (isToday) {
+          const currentHour = today.getHours();
+          const currentMinute = today.getMinutes();
+
+          slots = slots.filter((slot: string) => {
+            const [hour, minute] = slot.split(":").map(Number);
+            if (hour > currentHour) return true;
+            if (hour === currentHour && minute > currentMinute) return true;
+            return false;
+          });
+        }
+
+        setTimeSlots(slots);
         setAvailability(response.data.availability || {});
 
-        if (response.data.slots?.length > 0) {
-          form.setValue("time", response.data.slots[0]);
+        // Automatically select the first available slot if not already set or if previous slot is no longer available
+        if (slots.length > 0) {
+          const currentTime = form.getValues("time");
+          if (!currentTime || !slots.includes(currentTime)) {
+            form.setValue("time", slots[0]);
+          }
+        } else {
+          form.setValue("time", "");
         }
       } catch (error) {
         console.error("Failed to fetch slots:", error);
@@ -128,9 +153,8 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
   }, [bookingDate, restaurant._id, form]);
 
   const selectedTime = form.watch("time");
+
   // Default max to restaurant capacity if available, or a fallback (e.g. 50) if strictly needed, or just let backend handle.
-  // User asked for "number of covers max still available".
-  // If no time selected, existing behavior (min 1).
   const maxGuests = selectedTime && availability[selectedTime] !== undefined ? availability[selectedTime] : restaurant.capacity || 50;
 
   const onSubmit = async (values: CreateBookingSchema) => {
@@ -162,8 +186,8 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
             name="bookingDate"
@@ -179,8 +203,8 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
             }}
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>{"Date"}</FormLabel>
-                <div className="relative">
+                <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">{"Date de réservation"}</FormLabel>
+                <div className="relative group">
                   <DatePicker
                     selected={field.value}
                     onChange={(date: Date | null) => field.onChange(date)}
@@ -190,12 +214,12 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                     filterDate={(date) => !closedDays.includes(date.getDay())}
                     placeholderText={"Choisir une date"}
                     className={cn(
-                      "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                      "flex h-12 w-full rounded-xl border border-input bg-background/50 backdrop-blur-sm px-4 py-2 text-base ring-offset-background transition-all hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
                       !field.value && "text-muted-foreground",
                     )}
                     wrapperClassName="w-full"
                   />
-                  <CalendarIcon className="pointer-events-none absolute right-3 top-3 h-4 w-4 opacity-50" />
+                  <CalendarIcon className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-hover:opacity-60 transition-opacity" />
                 </div>
                 <FormMessage />
               </FormItem>
@@ -204,24 +228,26 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
           <FormField
             control={form.control}
-            name="time"
+            name="guests"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{"Heure"}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={loadingSlots || timeSlots.length === 0}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingSlots ? "Chargement des créneaux..." : "Sélectionner une heure"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">{"Nombre de couverts"}</FormLabel>
+                <FormControl>
+                  <div className="relative group">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={maxGuests}
+                      {...field}
+                      onChange={(e) => field.onChange(Math.min(Number(e.target.value), maxGuests))}
+                      className="h-12 rounded-xl bg-background/50 backdrop-blur-sm pl-4 pr-10 text-lg font-medium border-input hover:border-primary/50 transition-all focus-visible:ring-primary/20"
+                    />
+                    <Users className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-hover:opacity-60 transition-opacity" />
+                  </div>
+                </FormControl>
+                {selectedTime && availability[selectedTime] !== undefined && (
+                  <p className="text-[10px] text-primary/60 mt-1 font-medium">{`Disponibilité max : ${availability[selectedTime]} personnes`}</p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -230,40 +256,71 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
         <FormField
           control={form.control}
-          name="guests"
+          name="time"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>{"Couverts"}</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  max={maxGuests}
-                  {...field}
-                  onChange={(e) => field.onChange(Math.min(Number(e.target.value), maxGuests))}
-                />
-              </FormControl>
-              {selectedTime && availability[selectedTime] !== undefined && (
-                <p className="text-xs text-primary mt-1">{`Disponible : ${availability[selectedTime]} couverts`}</p>
+            <FormItem className="flex flex-col">
+              <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">{"Choisir l'horaire"}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value} disabled={loadingSlots || timeSlots.length === 0}>
+                <FormControl>
+                  <div className="relative group">
+                    <SelectTrigger className="h-12 rounded-xl border border-input bg-background/50 backdrop-blur-sm px-4 text-base transition-all hover:border-primary/50 focus:ring-primary/20">
+                      <div className="flex items-center gap-3">
+                        <Clock className="h-5 w-5 opacity-40 group-hover:opacity-60 transition-opacity" />
+                        <SelectValue placeholder={loadingSlots ? "Recherche de créneaux..." : "Sélectionner une heure"} />
+                      </div>
+                    </SelectTrigger>
+                  </div>
+                </FormControl>
+                <SelectContent className="max-h-[300px] rounded-xl border-input/50 backdrop-blur-xl">
+                  {timeSlots.map((slot) => {
+                    const avail = availability[slot] || 0;
+                    const isLow = avail <= 4 && avail > 0;
+                    return (
+                      <SelectItem key={slot} value={slot} className="py-3 focus:bg-primary/5 rounded-lg cursor-pointer">
+                        <div className="flex items-center justify-between w-full gap-4">
+                          <span className="font-semibold text-base">{slot}</span>
+                          {isLow && (
+                            <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
+                              {"Plus que " + avail}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {timeSlots.length === 0 && !loadingSlots && (
+                <p className="text-xs text-muted-foreground mt-2 italic">{"Aucun créneau disponible pour cette date"}</p>
               )}
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="space-y-4 border-t pt-4">
-          <h4 className="font-medium text-sm text-muted-foreground">{"Coordonnées"}</h4>
+        <div className="space-y-6 pt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-px flex-1 bg-border" />
+            <h4 className="font-semibold text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 whitespace-nowrap">
+              {"Vos coordonnées"}
+            </h4>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
           <FormField
             control={form.control}
             name="customer.name"
             render={({ field, fieldState }) => (
-              <FormItem>
-                <FormLabel>{"Nom"}</FormLabel>
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-xs font-medium text-foreground/60 ml-1">{"Nom complet"}</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Jean Dupont"
                     {...field}
-                    className={fieldState.invalid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    className={cn(
+                      "h-11 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20",
+                      fieldState.invalid && "border-red-500 focus-visible:ring-red-500",
+                    )}
                   />
                 </FormControl>
                 <FormMessage />
@@ -271,19 +328,22 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
             )}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="customer.email"
               render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>{"Email"}</FormLabel>
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-medium text-foreground/60 ml-1">{"Email"}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="john@example.com"
+                      placeholder="jean.dupont@exemple.com"
                       {...field}
-                      className={fieldState.invalid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      className={cn(
+                        "h-11 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20",
+                        fieldState.invalid && "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                   </FormControl>
                   <FormMessage />
@@ -294,14 +354,17 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
               control={form.control}
               name="customer.phone"
               render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>{"Téléphone"}</FormLabel>
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-medium text-foreground/60 ml-1">{"Téléphone"}</FormLabel>
                   <FormControl>
                     <Input
                       type="tel"
                       placeholder="+33 6 12 34 56 78"
                       {...field}
-                      className={fieldState.invalid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      className={cn(
+                        "h-11 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20",
+                        fieldState.invalid && "border-red-500 focus-visible:ring-red-500",
+                      )}
                     />
                   </FormControl>
                   <FormMessage />
@@ -315,10 +378,14 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           control={form.control}
           name="notes"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>{"Notes"}</FormLabel>
+            <FormItem className="space-y-1.5">
+              <FormLabel className="text-xs font-medium text-foreground/60 ml-1">{"Notes optionnelles"}</FormLabel>
               <FormControl>
-                <Textarea placeholder={"Demandes spéciales ? (Allergies, occasion, etc.)"} className="resize-none" {...field} />
+                <Textarea
+                  placeholder={"Une précision ? Allergies, occasion spéciale..."}
+                  className="resize-none min-h-[80px] rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -327,11 +394,11 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
         <Button
           type="submit"
-          className="w-full"
-          disabled={form.formState.isSubmitting || (bookingDate && closedDays.includes(bookingDate.getDay()))}
+          className="w-full h-14 text-base font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          disabled={form.formState.isSubmitting || !bookingDate || timeSlots.length === 0}
         >
-          {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {"Confirmer la réservation"}
+          {form.formState.isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
+          {"Confirmer ma réservation"}
         </Button>
       </form>
     </Form>

@@ -5,7 +5,7 @@ import { NavMain } from "./nav-main";
 import { NavUser } from "@/components/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuthContext } from "@/contexts/authContext";
-import { ThemeChanger } from "@/components/Navbar/themeChanger";
+import { ThemeChanger } from "@/components/customs/themeChanger";
 import { useConfigContext } from "@/contexts/configContext";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";

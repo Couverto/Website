@@ -269,10 +269,19 @@ export const AccountBooking = () => {
         const response = await axiosConfig.get<BookingsResponse>(`/bookings/my-bookings?${params}`);
         const data = response.data;
 
+        const sortedBookings = [...data.bookings].sort((a, b) => {
+          // Rule 1: Cancelled at the bottom
+          if (a.status === "CANCELLED" && b.status !== "CANCELLED") return 1;
+          if (a.status !== "CANCELLED" && b.status === "CANCELLED") return -1;
+
+          // Rule 2: Chronological order (descending) within groups
+          return new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime();
+        });
+
         if (append) {
-          setBookings((prev) => [...prev, ...data.bookings]);
+          setBookings((prev) => [...prev, ...sortedBookings]);
         } else {
-          setBookings(data.bookings);
+          setBookings(sortedBookings);
         }
         setPage(data.page);
         setTotalPages(data.totalPages);
