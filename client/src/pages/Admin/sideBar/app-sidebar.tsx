@@ -14,7 +14,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { authUser } = useAuthContext();
   const { state } = useSidebar();
   const navigate = useNavigate();
-  const { configValues } = useConfigContext();
+  // const { configValues } = useConfigContext();
 
   const adminMenus = {
     navMain: [
@@ -82,11 +82,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props} className="border-r border-zinc-200/50 dark:border-zinc-800/50 transition-all duration-300">
       <SidebarHeader onClick={() => navigate("/")} className="p-4 group-data-[state=collapsed]:p-0 transition-all hover:cursor-pointer">
         <div className="flex items-center gap-2 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:h-16 transition-all">
-          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary text-primary-foreground">
-            <span className="text-lg font-bold">{configValues["APP_NAME"].charAt(0)}</span>
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10">
+            <img src="/logos/logo.svg" alt="Logo" className="h-5 w-5" />
           </div>
           <div className="flex flex-col overflow-hidden transition-all group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0">
-            <span className="font-semibold tracking-tight whitespace-nowrap">{configValues["APP_NAME"]}</span>
+            <span className="text-2xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </div>
         </div>
       </SidebarHeader>

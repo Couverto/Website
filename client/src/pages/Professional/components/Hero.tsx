@@ -4,8 +4,7 @@ import { ArrowRight, Calendar, LayoutGrid, Users, Utensils, Clock, Star, ChefHat
 import { useConfigContext } from "@/contexts/configContext";
 
 export const Hero = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] flex items-center overflow-hidden">
@@ -43,7 +42,8 @@ export const Hero = () => {
 
             {/* Slogan */}
             <p className="text-lg text-muted-foreground md:text-xl max-w-xl">
-              {appName} est la solution tout-en-un pour piloter votre activité, fidéliser vos clients et gérer vos collaborateurs.
+              <span className="font-logo font-bold text-primary">Couverto</span> est la solution tout-en-un pour piloter votre activité,
+              fidéliser vos clients et gérer vos collaborateurs.
             </p>
 
             {/* Description */}
@@ -111,10 +111,12 @@ export const Hero = () => {
                 {/* Dashboard Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                      <span className="text-primary-foreground font-bold text-sm">C</span>
+                    <div className="flex items-center gap-2">
+                      <img src="/logos/logo.svg" alt="Logo" className="w-6 h-6" />
+                      <span className="text-primary font-bold text-sm font-logo">Couverto</span>
                     </div>
-                    <span className="font-semibold text-foreground">{"Tableau de bord"}</span>
+                    <div className="w-px h-4 bg-border mx-2"></div>
+                    <span className="font-semibold text-foreground text-sm">Tableau de bord</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-muted"></div>

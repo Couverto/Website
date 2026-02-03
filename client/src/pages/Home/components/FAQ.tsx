@@ -4,8 +4,8 @@ import { HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const FAQ = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
+  const appName = "Couverto";
   const navigate = useNavigate();
 
   const faqs = [

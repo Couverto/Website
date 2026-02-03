@@ -40,8 +40,7 @@ const FeatureCard = ({ title, description, icon, className, delay = 0, children 
 );
 
 export const ValueProps = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
   const navigate = useNavigate();
 
   return (
@@ -62,7 +61,7 @@ export const ValueProps = () => {
           </Badge>
 
           <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-            Simplifiez vos réservations avec {appName}
+            Simplifiez vos réservations avec <span className="text-primary font-logo">Couverto</span>
           </h2>
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">

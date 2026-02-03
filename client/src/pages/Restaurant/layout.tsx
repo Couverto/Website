@@ -12,6 +12,7 @@ import { BookingInterface } from "@/interfaces/Booking";
 import { Separator } from "@/components/ui/separator";
 import { ThemeChanger } from "@/components/Navbar/themeChanger";
 import { Badge } from "@/components/ui/badge";
+import { Loading } from "@/components/customs/loading";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -67,11 +68,7 @@ export const RestaurantLayout = () => {
   }, [socket, id]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error) {

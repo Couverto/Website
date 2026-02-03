@@ -20,7 +20,8 @@ export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setAuthUser } = useAuthContext();
-  const { configValues } = useConfigContext();
+  // const { configValues } = useConfigContext();
+  // const appName = "Couverto";
 
   const loginSchema = getLoginSchema();
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -75,10 +76,10 @@ export const Login = () => {
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
           <div className="max-w-md">
             <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
-              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <span className="text-2xl font-bold">C</span>
+              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm shadow-inner border border-white/10">
+                <img src="/logos/logo.svg" alt="Couverto" className="h-8 w-8" />
               </div>
-              <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
+              <span className="text-4xl font-bold font-logo tracking-tight">Couverto</span>
             </Link>
 
             <h2 className="text-3xl font-bold mb-4">{"Gérez votre restaurant en toute simplicité"}</h2>
@@ -101,8 +102,7 @@ export const Login = () => {
             {/* Testimonial */}
             <div className="mt-12 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
               <p className="text-white/90 italic mb-4">
-                "{configValues["APP_NAME"]} a totalement transformé notre façon de travailler. C'est intuitif et nos clients apprécient la
-                simplicité."
+                "{"Couverto"} a totalement transformé notre façon de travailler. C'est intuitif et nos clients apprécient la simplicité."
               </p>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-accent/30 flex items-center justify-center">
@@ -122,11 +122,11 @@ export const Login = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 md:p-12 bg-background">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
-          <Link to="/" className="lg:hidden flex items-center justify-center gap-2 mb-8 hover:opacity-80 transition-opacity">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">C</span>
+          <Link to="/" className="lg:hidden flex items-center justify-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
+            <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
 
           <div className="text-center mb-8">

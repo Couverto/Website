@@ -11,18 +11,16 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { OAuth } from "@/components/customs/oauth";
-import { useConfigContext } from "@/contexts/configContext";
 import { Check, Star, Shield, Zap } from "lucide-react";
 
 export const Register = () => {
   const [loading, setLoading] = useState(false);
-  const { configValues } = useConfigContext();
 
   const navigate = useNavigate();
   const location = useLocation();
   const { setAuthUser } = useAuthContext();
 
-  const registerSchema = getRegisterSchema((key: string) => key);
+  const registerSchema = getRegisterSchema();
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -71,13 +69,13 @@ export const Register = () => {
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
           <div className="max-w-md">
             <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
-              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <span className="text-2xl font-bold">C</span>
+              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm shadow-inner border border-white/10">
+                <img src="/logos/logo.svg" alt="Couverto" className="h-8 w-8" />
               </div>
-              <span className="text-3xl font-bold">{configValues["APP_NAME"]}</span>
+              <span className="text-4xl font-bold font-logo tracking-tight">Couverto</span>
             </Link>
 
-            <h2 className="text-3xl font-bold mb-4">Rejoignez {configValues["APP_NAME"]}</h2>
+            <h2 className="text-3xl font-bold mb-4">Rejoignez {"Couverto"}</h2>
 
             <p className="text-white/80 text-lg mb-8">
               {"Des milliers de restaurateurs nous font confiance pour gérer leurs réservations au quotidien."}
@@ -113,11 +111,11 @@ export const Register = () => {
       <div className="w-full lg:w-3/5 flex items-center justify-center p-6 md:p-12 bg-background overflow-y-auto">
         <div className="w-full max-w-lg">
           {/* Mobile logo */}
-          <Link to="/" className="lg:hidden flex items-center justify-center gap-2 mb-6 hover:opacity-80 transition-opacity">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">C</span>
+          <Link to="/" className="lg:hidden flex items-center justify-center gap-3 mb-6 hover:opacity-80 transition-opacity">
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6" />
             </div>
-            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
+            <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
 
           <div className="text-center mb-6">

@@ -20,36 +20,15 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
   const loadConfig = useCallback(
     async (keys: string[]) => {
-      const missingKeys = keys.filter((key) => !(key in configValues));
-      if (missingKeys.length === 0) {
-        return configValues;
-      }
+      // Static override - no API calls for branding
+      const staticConfig: ConfigMap = {
+        APP_NAME: "Couverto",
+        ACCENT_COLOR: "#2d5a43",
+      };
 
-      try {
-        const res = await axiosConfig.get(`/config?keys=${missingKeys.join(",")}`);
-        const foundConfig = res.data.config;
-
-        const configMap: ConfigMap = {};
-        const fetchedKeys = new Set<string>();
-
-        for (const c of foundConfig) {
-          configMap[c.key] = c.value;
-          fetchedKeys.add(c.key);
-        }
-
-        // Marque les clés manquantes avec une valeur spéciale
-        for (const key of missingKeys) {
-          if (!fetchedKeys.has(key)) {
-            configMap[key] = "__NOT_FOUND__";
-          }
-        }
-
-        setConfigValues((prevConfig) => ({ ...prevConfig, ...configMap }));
-        return { ...configValues, ...configMap };
-      } catch (err: any) {
-        console.error("Config fetch failed:", err.response?.status, err.response?.data);
-        return configValues;
-      }
+      const combined = { ...configValues, ...staticConfig };
+      setConfigValues(combined);
+      return combined;
     },
     [configValues],
   );

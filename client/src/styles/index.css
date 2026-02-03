@@ -120,6 +120,11 @@
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   }
 
+  .font-logo {
+    font-family: "League Spartan", sans-serif;
+    font-weight: 900;
+  }
+
   html {
     scroll-behavior: smooth;
     -ms-overflow-style: none;
@@ -134,79 +139,79 @@
 @layer base {
   :root {
     /* Couverto Brand Colors - Light Mode */
-    --background: #f4f1ec;
-    --foreground: #2b2e34;
+    --background: #faf7f3;
+    --foreground: #2b2b2b;
     --card: #ffffff;
-    --card-foreground: #2b2e34;
+    --card-foreground: #2b2b2b;
     --popover: #ffffff;
-    --popover-foreground: #2b2e34;
-    --primary: #1f7a63;
+    --popover-foreground: #2b2b2b;
+    --primary: #2d5a43;
     --primary-foreground: #ffffff;
-    --secondary: #f0ede8;
-    --secondary-foreground: #2b2e34;
-    --muted: #f0ede8;
+    --secondary: #e8ded4;
+    --secondary-foreground: #2b2b2b;
+    --muted: #e8ded4;
     --muted-foreground: #6b7280;
-    --accent: #2ecc9a;
+    --accent: #2d5a43;
     --accent-foreground: #ffffff;
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
     --success: #22c55e;
     --success-foreground: #ffffff;
-    --border: #e5e2dc;
-    --input: #e5e2dc;
-    --ring: #1f7a63;
-    --chart-1: #1f7a63;
+    --border: #e8ded4;
+    --input: #e8ded4;
+    --ring: #2d5a43;
+    --chart-1: #2d5a43;
     --chart-2: #2ecc9a;
     --chart-3: #3d5866;
     --chart-4: #6b7280;
-    --chart-5: #2b2e34;
+    --chart-5: #2b2b2b;
     --radius: 0.5rem;
     --sidebar-background: #ffffff;
-    --sidebar-foreground: #2b2e34;
-    --sidebar-primary: #1f7a63;
+    --sidebar-foreground: #2b2b2b;
+    --sidebar-primary: #2d5a43;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f0ede8;
-    --sidebar-accent-foreground: #2b2e34;
-    --sidebar-border: #e5e2dc;
-    --sidebar-ring: #1f7a63;
+    --sidebar-accent: #e8ded4;
+    --sidebar-accent-foreground: #2b2b2b;
+    --sidebar-border: #e8ded4;
+    --sidebar-ring: #2d5a43;
   }
 
   .dark {
-    /* Couverto Brand Colors - Dark Mode */
-    --background: #1a1c1e;
-    --foreground: #f4f1ec;
+    /* Couverto Brand Colors - Dark Mode Override (preserving some structure but matching new brand) */
+    --background: #1a1c1e; /* Keep dark background for dark mode */
+    --foreground: #faf7f3;
     --card: #242628;
-    --card-foreground: #f4f1ec;
+    --card-foreground: #faf7f3;
     --popover: #242628;
-    --popover-foreground: #f4f1ec;
-    --primary: #2ecc9a;
-    --primary-foreground: #1a1c1e;
+    --popover-foreground: #faf7f3;
+    --primary: #2d5a43; /* Maintain brand green */
+    --primary-foreground: #ffffff;
     --secondary: #2b2e34;
-    --secondary-foreground: #f4f1ec;
+    --secondary-foreground: #faf7f3;
     --muted: #2b2e34;
     --muted-foreground: #9ca3af;
-    --accent: #2ecc9a;
-    --accent-foreground: #1a1c1e;
+    --accent: #2d5a43;
+    --accent-foreground: #ffffff;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
     --success: #22c55e;
     --success-foreground: #ffffff;
     --border: #3f4246;
     --input: #3f4246;
-    --ring: #2ecc9a;
-    --chart-1: #2ecc9a;
+    --ring: #2d5a43;
+    --chart-1: #2d5a43;
     --chart-2: #1f7a63;
     --chart-3: #6b7280;
     --chart-4: #9ca3af;
-    --chart-5: #f4f1ec;
+    --chart-5: #faf7f3;
     --sidebar-background: #242628;
-    --sidebar-foreground: #f4f1ec;
-    --sidebar-primary: #2ecc9a;
-    --sidebar-primary-foreground: #1a1c1e;
+    --sidebar-foreground: #faf7f3;
+    --sidebar-primary: #2d5a43;
+    --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: #2b2e34;
-    --sidebar-accent-foreground: #f4f1ec;
+    --sidebar-accent-foreground: #faf7f3;
     --sidebar-border: #3f4246;
-    --sidebar-ring: #2ecc9a;
+    --sidebar-ring: #2d5a43;
   }
 }
 

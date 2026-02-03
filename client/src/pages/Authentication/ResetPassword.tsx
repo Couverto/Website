@@ -25,8 +25,8 @@ export const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const { resetToken } = useParams();
   const navigate = useNavigate();
-  const { configValues } = useConfigContext();
-
+  // const { configValues } = useConfigContext();
+  // const appName = "Couverto";
   const form = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -52,11 +52,11 @@ export const ResetPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <Link to="/" className="flex items-center justify-center gap-2 mb-8 hover:opacity-80 transition-opacity">
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold">C</span>
+          <Link to="/" className="flex items-center justify-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-7 w-7 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-primary">{configValues["APP_NAME"]}</span>
+            <span className="text-4xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
           <h1 className="text-2xl font-bold tracking-tight">Réinitialiser le mot de passe</h1>
           <p className="text-muted-foreground mt-2">Entrez votre nouveau mot de passe ci-dessous.</p>

@@ -3,8 +3,7 @@ import { Smartphone, CheckCircle2, Star, MapPin } from "lucide-react";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const DownloadApp = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
 
   return (
     <section className="py-24 bg-primary text-primary-foreground overflow-hidden relative">
@@ -26,10 +25,10 @@ export const DownloadApp = () => {
             </div>
 
             <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-white">
-              Téléchargez {appName} sur votre téléphone{" "}
+              Téléchargez <span className="font-logo font-bold">Couverto</span> sur votre téléphone{" "}
             </h2>
             <p className="max-w-[600px] mx-auto lg:mx-0 text-white/80 text-xl leading-relaxed">
-              {appName + " disponible sur votre portable gratuitement"}
+              <span className="font-logo font-bold">Couverto</span> est disponible sur votre portable gratuitement.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -71,7 +70,12 @@ export const DownloadApp = () => {
               <div className="h-full w-full bg-background/95 text-foreground flex flex-col pt-12 relative overflow-hidden">
                 {/* App Header */}
                 <div className="px-6 pb-4 flex justify-between items-center bg-background/50 backdrop-blur-md sticky top-0 z-10">
-                  <span className="font-bold text-lg">{appName}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <img src="/logos/logo.svg" alt="Logo" className="h-4 w-4" />
+                    </div>
+                    <span className="font-bold text-lg font-logo text-primary">Couverto</span>
+                  </div>
                   <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
                     <span className="text-xs font-bold">JD</span>
                   </div>

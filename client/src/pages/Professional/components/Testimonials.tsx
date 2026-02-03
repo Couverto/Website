@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const Testimonials = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const testimonials = [

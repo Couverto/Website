@@ -8,8 +8,8 @@ import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 
 export const About = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
+  const appName = "Couverto";
   const navigate = useNavigate();
   const [realStats, setRealStats] = useState({
     restaurants: 0,

@@ -43,7 +43,7 @@ export const Navbar = () => {
   const location = useLocation();
   const { logout } = useLogout();
   const { authUser } = useAuthContext();
-  const { configValues } = useConfigContext();
+  // const { configValues } = useConfigContext();
 
   // Handle scroll effect
   useEffect(() => {
@@ -161,7 +161,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-2 font-semibold group"
+            className="flex items-center gap-3 group"
             onClick={(e) => {
               if (location.pathname === "/") {
                 e.preventDefault();
@@ -169,10 +169,10 @@ export const Navbar = () => {
               }
             }}
           >
-            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground shadow-lg group-hover:scale-110 transition-transform duration-300">
-              <Utensils className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6" />
             </div>
-            <span className={cn("text-xl font-bold tracking-tight")}>{configValues["APP_NAME"]}</span>
+            <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -269,7 +269,10 @@ export const Navbar = () => {
         )}
       >
         <div className="flex justify-between items-center mb-8">
-          <span className="text-lg font-bold">{configValues["APP_NAME"]}</span>
+          <div className="flex items-center gap-2">
+            <img src="/logos/logo.svg" alt="Logo" className="h-8 w-8" />
+            <span className="text-2xl font-bold text-primary font-logo tracking-tight">Couverto</span>
+          </div>
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
             <X className="h-6 w-6" />
           </Button>
@@ -346,7 +349,10 @@ export const Navbar = () => {
           )}
 
           <div className="mt-auto pt-8 flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Couverto</span>
+            <div className="flex items-center gap-3">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-8 w-8" />
+              <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
+            </div>
             <div className="flex gap-2"></div>
           </div>
         </div>

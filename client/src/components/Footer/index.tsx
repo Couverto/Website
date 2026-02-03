@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const Footer = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
+  // const { configValues } = useConfigContext();
+  const appName = "Couverto";
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -38,8 +38,11 @@ export const Footer = () => {
         <div className="py-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand Column */}
           <div className="lg:col-span-1">
-            <Link to="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold text-primary">{appName}</span>
+            <Link to="/" className="flex items-center gap-3 mb-4 group">
+              <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6" />
+              </div>
+              <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4 max-w-xs">
               La gestion du service, simplement. Un outil conçu pour les restaurateurs indépendants.
