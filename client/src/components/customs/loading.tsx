@@ -46,7 +46,7 @@ export const Loading = () => {
             initial={{ scale: 0.5, opacity: 0, rotate: -10 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ duration: 0.5, ease: "backOut" }}
-            className="relative flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl shadow-xl shadow-primary/20"
+            className="relative flex items-center justify-center w-20 h-20 bg-gradient-to-br from-secondary to-secondary/80 rounded-2xl shadow-xl shadow-secondary/20"
           >
             <img src="/logos/logo.svg" alt="Logo" className="w-12 h-12" />
           </motion.div>
@@ -68,7 +68,7 @@ export const Loading = () => {
             transition={{ delay: 0.6 }}
             className="text-sm font-medium text-muted-foreground flex items-center gap-1"
           >
-            <span>Loading</span>
+            <span>Chargement</span>
             <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.1 }}>
               .
             </motion.span>
