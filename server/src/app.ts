@@ -29,6 +29,11 @@ app.use(cors(corsOptions));
 // Register main application routes
 app.use(router);
 
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
+
 setInterval(
   async () => {
     try {
