@@ -14,6 +14,7 @@ export interface IBooking {
     phone: string;
   };
   notes?: string;
+  isDismissedByRestaurant?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

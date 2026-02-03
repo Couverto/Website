@@ -798,13 +798,23 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
     });
 
-    // Upcoming bookings (next 7 days)
+    // Upcoming bookings (next 7 days) - used for the counts and specific "future" views
     const upcomingBookings = await Booking.find({
       restaurant: id,
       bookingDate: { $gte: now },
       status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+      isDismissedByRestaurant: { $ne: true },
     })
       .sort({ bookingDate: 1 })
+      .populate("user", "name forename avatar");
+
+    // Recent bookings (last 10 received) - for the dashboard feed widget
+    // Includes CANCELLED, but excludes dismissed
+    const recentBookings = await Booking.find({
+      restaurant: id,
+      isDismissedByRestaurant: { $ne: true },
+    })
+      .sort({ createdAt: -1 })
       .limit(10)
       .populate("user", "name forename avatar");
 
@@ -949,6 +959,7 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
         busyDays: busyDays.map((d) => ({ day: d._id, count: d.count })),
       },
       upcomingBookings,
+      recentBookings,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

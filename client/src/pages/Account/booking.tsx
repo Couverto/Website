@@ -302,6 +302,7 @@ export const AccountBooking = () => {
     if (!selectedBooking) return;
     setActionLoading(true);
     try {
+      await axiosConfig.patch(`/bookings/${selectedBooking._id}/cancel`);
       toast.success("Réservation annulée avec succès");
       setCancelDialogOpen(false);
       setSelectedBooking(null);

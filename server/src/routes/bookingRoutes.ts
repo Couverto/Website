@@ -9,6 +9,7 @@ import {
   getRestaurantBookings,
   getRestaurantClients,
   updateBookingStatus,
+  dismissBooking,
 } from "../controllers/bookingController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
@@ -98,4 +99,16 @@ bookingRouter.patch(
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
   updateBookingStatus,
+);
+
+/**
+ * @route PATCH /api/bookings/restaurant/:id/:bookingId/dismiss
+ * @desc Dismiss a booking from the dashboard (archive)
+ * @access Private (Collaborator)
+ */
+bookingRouter.patch(
+  "/restaurant/:id/:bookingId/dismiss",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  dismissBooking,
 );

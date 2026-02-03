@@ -365,6 +365,13 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
     booking.status = bookingStatus.CANCELLED;
     await booking.save();
 
+    // Emit real-time event to restaurant room
+    try {
+      getIO().to(`restaurant_${booking.restaurant}`).emit("updateBooking", booking);
+    } catch (error) {
+      console.error("Socket emit failed", error);
+    }
+
     createLog({
       message: `Booking ${id} cancelled by user`,
       userId: userId,
@@ -372,6 +379,37 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(200).json({ message: "Réservation annulée" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function dismissBooking
+ * @description Dismisses a booking from the restaurant dashboard (archives it visually).
+ */
+export const dismissBooking = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, bookingId } = req.params;
+    const userId = req.userId;
+
+    const booking = await Booking.findOne({ _id: bookingId, restaurant: id });
+
+    if (!booking) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    booking.isDismissedByRestaurant = true;
+    await booking.save();
+
+    createLog({
+      message: `Booking ${bookingId} dismissed from dashboard widget`,
+      userId: userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ message: "Réservation masquée", booking });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

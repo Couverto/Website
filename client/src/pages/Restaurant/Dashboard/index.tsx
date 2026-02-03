@@ -2,7 +2,23 @@ import { useParams, useOutletContext, Link } from "react-router-dom";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, Clock, Check, X, Plus, ExternalLink, ChevronRight, Info } from "lucide-react";
+import {
+  CalendarDays,
+  Users,
+  Clock,
+  Check,
+  X,
+  Plus,
+  ExternalLink,
+  ChevronRight,
+  Info,
+  Trash2,
+  EyeClosed,
+  EyeIcon,
+  ScanEye,
+  LucideEye,
+  EyeOff,
+} from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +49,7 @@ export const RestaurantDashboard = () => {
   const { socket } = useSocketContext();
   const [stats, setStats] = useState<RestaurantStats | null>(null);
   const [upcomingBookings, setUpcomingBookings] = useState<BookingInterface[]>([]);
+  const [recentBookings, setRecentBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [newBookingIds, setNewBookingIds] = useState<Set<string>>(new Set());
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
@@ -46,6 +63,7 @@ export const RestaurantDashboard = () => {
       const response = await api.get(`/restaurants/${id}/stats`);
       setStats(response.data.stats);
       setUpcomingBookings(response.data.upcomingBookings);
+      setRecentBookings(response.data.recentBookings || []);
     } catch (error) {
       console.error("Failed to fetch stats", error);
     } finally {
@@ -99,9 +117,15 @@ export const RestaurantDashboard = () => {
     }
   };
 
-  const recentBookings = useMemo(() => {
-    return upcomingBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
-  }, [upcomingBookings]);
+  const dismissBooking = async (bookingId: string) => {
+    try {
+      await api.patch(`/bookings/restaurant/${id}/${bookingId}/dismiss`);
+      toast.success("Réservation masquée");
+      fetchStats();
+    } catch (error) {
+      toast.error("Erreur lors de la suppression");
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -330,11 +354,23 @@ export const RestaurantDashboard = () => {
                           variant="ghost"
                           className="h-9 px-3 text-muted-foreground hover:text-red-600 hover:bg-red-50"
                           onClick={() => setBookingToCancel(booking._id)}
+                          title="Annuler la réservation"
                         >
                           <X className="h-4 w-4" />
                           <span className="sr-only">Annuler</span>
                         </Button>
                       )}
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 px-3 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                        onClick={() => dismissBooking(booking._id)}
+                        title="Enlever du tableau de bord"
+                      >
+                        <EyeOff className="h-4 w-4" />
+                        <span className="sr-only">Enlever</span>
+                      </Button>
                     </div>
                   </div>
                 );

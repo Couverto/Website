@@ -47,6 +47,11 @@ const bookingSchema = new Schema<IBooking>(
     notes: {
       type: String,
     },
+    isDismissedByRestaurant: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true },
 );

@@ -27,6 +27,7 @@ export interface BookingInterface {
     avatar?: string;
   };
   notes?: string;
+  isDismissedByRestaurant?: boolean;
   createdAt: string;
   updatedAt: string;
 }
