@@ -38,6 +38,8 @@ export const verifyToken = ({ role }: VerifyTokenOptions = {}) => {
       }
 
       req.userId = new mongoose.Types.ObjectId(decoded.id);
+      // @ts-ignore - Add full user object for controllers that need email etc.
+      req.user = user;
 
       if (role && user.role !== role) {
         await createLog({

@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/customs/loading";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -123,6 +124,11 @@ export const PublicRestaurant = () => {
 
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.adress} ${restaurant.city}`)}`;
 
+  // Compute dynamic rating from reviews
+  const computedRating =
+    reviewsList.length > 0 ? (reviewsList.reduce((sum, r) => sum + r.rating, 0) / reviewsList.length).toFixed(1) : null;
+  const displayRating = computedRating || restaurant.rating || "NEW";
+
   return (
     <div className="min-h-screen bg-background pb-20 relative">
       {/* Back Button */}
@@ -198,7 +204,7 @@ export const PublicRestaurant = () => {
                 </div>
                 <div className="flex items-center gap-1 text-yellow-500">
                   <Star className="h-4 w-4 fill-current" />
-                  <span className="font-medium text-foreground">{restaurant.rating || "NEW"}</span>
+                  <span className="font-medium text-foreground">{displayRating}</span>
                 </div>
               </div>
               <div className="hidden md:block mt-4">
@@ -295,10 +301,27 @@ export const PublicRestaurant = () => {
           {/* Main Content */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="mb-8">
-                <TabsTrigger value="overview">{"Aperçu"}</TabsTrigger>
-                <TabsTrigger value="menu">{"Menu"}</TabsTrigger>
-                {restaurant.reviews && restaurant.reviews.length > 0 && <TabsTrigger value="reviews">{"Avis"}</TabsTrigger>}
+              <TabsList className="mb-8 h-auto p-1 bg-muted/50 rounded-xl w-full md:w-auto grid grid-cols-3 md:flex gap-1">
+                <TabsTrigger
+                  value="overview"
+                  className="px-6 py-2.5 rounded-lg font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all"
+                >
+                  {"Aperçu"}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="menu"
+                  className="px-6 py-2.5 rounded-lg font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all"
+                >
+                  {"Menu"}
+                </TabsTrigger>
+                {reviewsList.length > 0 && (
+                  <TabsTrigger
+                    value="reviews"
+                    className="px-6 py-2.5 rounded-lg font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary transition-all"
+                  >
+                    {"Avis"} <span className="ml-1 text-xs text-muted-foreground">({reviewsList.length})</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="overview" className="space-y-8">
@@ -420,60 +443,124 @@ export const PublicRestaurant = () => {
               </TabsContent>
 
               <TabsContent value="reviews">
-                <Card>
-                  <CardContent className="pt-6">
-                    {loadingReviews ? (
-                      <div className="flex justify-center p-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    ) : reviewsList.length > 0 ? (
-                      <div className="grid gap-4">
-                        {reviewsList.map((review) => (
-                          <div key={review._id} className="border-b last:border-0 pb-4 last:pb-0">
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-start justify-between">
-                                <div className="flex flex-col">
-                                  <span className="font-semibold">
-                                    {review.user?.forename} {review.user?.name?.charAt(0)}.
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {format(new Date(review.createdAt), "d MMMM yyyy", { locale: fr })}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-0.5">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                      key={star}
-                                      className={`w-4 h-4 ${review.rating >= star ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted/20"}`}
+                <div className="space-y-6">
+                  {/* Rating Summary */}
+                  {reviewsList.length > 0 && (
+                    <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row items-center gap-6">
+                          {/* Average Rating */}
+                          <div className="text-center md:text-left">
+                            <div className="text-5xl font-bold text-primary">{displayRating}</div>
+                            <div className="flex items-center justify-center md:justify-start gap-0.5 mt-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-5 h-5 ${parseFloat(displayRating as string) >= star ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted/30"}`}
+                                />
+                              ))}
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">{reviewsList.length} avis</p>
+                          </div>
+
+                          {/* Rating Distribution */}
+                          <div className="flex-1 w-full md:w-auto space-y-2">
+                            {[5, 4, 3, 2, 1].map((rating) => {
+                              const count = reviewsList.filter((r) => r.rating === rating).length;
+                              const percentage = (count / reviewsList.length) * 100;
+                              return (
+                                <div key={rating} className="flex items-center gap-2">
+                                  <span className="text-xs w-3 font-medium">{rating}</span>
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <div className="flex-1 h-2 bg-muted/50 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-yellow-400 rounded-full transition-all duration-500"
+                                      style={{ width: `${percentage}%` }}
                                     />
-                                  ))}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground w-8">{count}</span>
                                 </div>
-                              </div>
-                              <p className="text-sm text-foreground/90 leading-relaxed">{review.comment}</p>
-                              {review.reply && (
-                                <div className="mt-3 bg-muted/50 p-3 rounded-md border border-border/50">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                                    <span className="font-semibold text-xs">{"Réponse du restaurant"}</span>
-                                    <span className="text-[10px] text-muted-foreground">
-                                      {format(new Date(review.reply.createdAt), "d MMM yyyy", { locale: fr })}
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Reviews List */}
+                  <Card>
+                    <CardContent className="pt-6">
+                      {loadingReviews ? (
+                        <div className="flex justify-center p-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      ) : reviewsList.length > 0 ? (
+                        <div className="space-y-6">
+                          {reviewsList.map((review, index) => (
+                            <div key={review._id} className={`${index !== reviewsList.length - 1 ? "pb-6 border-b" : ""}`}>
+                              <div className="flex gap-4">
+                                {/* Avatar */}
+                                <Avatar className="h-10 w-10 border-2 border-primary/10">
+                                  <AvatarImage src={review.user?.avatar} alt={review.user?.forename} />
+                                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                                    {review.user?.forename?.charAt(0) || "?"}
+                                    {review.user?.name?.charAt(0) || ""}
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                                    <span className="font-semibold">
+                                      {review.user?.forename} {review.user?.name?.charAt(0)}.
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">•</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(new Date(review.createdAt), "d MMMM yyyy", { locale: fr })}
                                     </span>
                                   </div>
-                                  <p className="text-sm italic text-muted-foreground">{review.reply.text}</p>
+
+                                  {/* Stars */}
+                                  <div className="flex items-center gap-0.5 mb-3">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star
+                                        key={star}
+                                        className={`w-4 h-4 ${review.rating >= star ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted/20"}`}
+                                      />
+                                    ))}
+                                  </div>
+
+                                  {/* Comment */}
+                                  {review.comment && <p className="text-sm text-foreground/90 leading-relaxed">{review.comment}</p>}
+
+                                  {/* Restaurant Reply */}
+                                  {review.reply && (
+                                    <div className="mt-4 bg-muted/30 p-4 rounded-lg border-l-4 border-primary">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <MessageSquare className="w-4 h-4 text-primary" />
+                                        <span className="font-semibold text-sm">Réponse du restaurant</span>
+                                        <span className="text-xs text-muted-foreground">
+                                          • {format(new Date(review.reply.createdAt), "d MMM yyyy", { locale: fr })}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">{review.reply.text}</p>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>{"Aucun avis pour le moment."}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 text-muted-foreground">
+                          <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>{"Aucun avis pour le moment."}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

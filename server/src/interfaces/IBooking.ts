@@ -15,6 +15,7 @@ export interface IBooking {
   };
   notes?: string;
   isDismissedByRestaurant?: boolean;
+  reviewRequestSent?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

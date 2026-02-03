@@ -1,12 +1,14 @@
 import { Router } from "express";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator as authorize } from "../middlewares/verifyCollaborator.js";
-import { createReview, getRestaurantReviews, replyToReview } from "../controllers/reviewController.js";
+import { createReview, getRestaurantReviews, replyToReview, getUserReviews, deleteReview } from "../controllers/reviewController.js";
 
 const router = Router();
 
 // Public/Protected User Routes
 router.post("/", verifyToken(), createReview); // User creates review (must be logged in)
+router.get("/my-reviews", verifyToken(), getUserReviews); // Get user's own reviews
+router.delete("/:reviewId", verifyToken(), deleteReview); // Delete own review
 
 // Restaurant Routes
 router.get("/restaurant/:restaurantId", getRestaurantReviews);

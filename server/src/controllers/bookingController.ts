@@ -273,6 +273,8 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
   try {
     const { id } = req.params;
     const userId = req.userId;
+    // @ts-ignore
+    const userEmail = req.user?.email?.toLowerCase();
 
     const booking = await Booking.findById(id).populate("restaurant");
 
@@ -281,15 +283,17 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Security check: only owner or guest (if we had a guest token) can see.
-    // Assuming this route is for the 'My Bookings' detail view, so user must own it.
-    if (booking.user && booking.user.toString() !== userId.toString()) {
-      // TODO: Add Admin check here if admins need to see any booking via this route
+    // Security check: user must own the booking (by user ID or email match)
+    const bookingEmail = booking.customer?.email?.toLowerCase();
+    const isUserMatch = booking.user && booking.user.toString() === userId?.toString();
+    const isEmailMatch = userEmail && bookingEmail && userEmail === bookingEmail;
+
+    if (!isUserMatch && !isEmailMatch) {
       res.status(403).json({ error: "Accès interdit" });
       return;
     }
 
-    res.status(200).json({ booking });
+    res.status(200).json(booking);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

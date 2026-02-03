@@ -15,6 +15,7 @@ import { stripeService } from "../services/stripeService.js";
 import { PendingTransaction } from "../models/pendingTransactionModel.js";
 
 import { isRestaurantOpen, convertOpeningHoursToObject } from "../utils/restaurantUtils.js";
+import { Review } from "../models/reviewModel.js";
 
 /**
  * @function getRestaurants
@@ -537,13 +538,26 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
 
     const count = await Restaurant.countDocuments(query);
 
-    // Calculate isOpenNow for each restaurant
+    // Compute average ratings from reviews for all restaurants
+    const restaurantIds = restaurants.map((r) => r._id);
+    const ratingsAgg = await Review.aggregate([
+      { $match: { restaurant: { $in: restaurantIds } } },
+      { $group: { _id: "$restaurant", avgRating: { $avg: "$rating" }, reviewCount: { $sum: 1 } } },
+    ]);
+
+    // Create a map for quick lookup
+    const ratingsMap = new Map(ratingsAgg.map((r) => [r._id.toString(), { avgRating: r.avgRating, reviewCount: r.reviewCount }]));
+
+    // Calculate isOpenNow and rating for each restaurant
     const restaurantsWithStatus = restaurants.map((r) => {
       const restaurantObj = r.toObject();
+      const ratingData = ratingsMap.get(r._id.toString());
       return {
         ...restaurantObj,
         openingHours: convertOpeningHoursToObject(r.openingHours),
         isOpenNow: isRestaurantOpen(r.openingHours),
+        rating: ratingData ? parseFloat(ratingData.avgRating.toFixed(1)) : 0,
+        reviewCount: ratingData?.reviewCount || 0,
       };
     });
 

@@ -52,6 +52,11 @@ const bookingSchema = new Schema<IBooking>(
       default: false,
       index: true,
     },
+    reviewRequestSent: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true },
 );

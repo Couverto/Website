@@ -354,4 +354,3 @@ export const RestaurantStats = () => {
     </div>
   );
 };
-```

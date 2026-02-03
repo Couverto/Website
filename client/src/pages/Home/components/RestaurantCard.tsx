@@ -36,16 +36,7 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
             alt={restaurant.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
-
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {restaurant.rating > 0 && (
-              <Badge className="bg-white/90 text-black hover:bg-white backdrop-blur-sm border-none shadow-sm flex items-center gap-1 w-fit">
-                <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="font-bold">{restaurant.rating}</span>
-              </Badge>
-            )}
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
           <div className="absolute top-3 right-3">
             <div onClick={(e) => e.stopPropagation()}>
@@ -78,11 +69,22 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
           </div>
 
           <div className="absolute bottom-3 left-3 right-3 text-white">
-            {restaurant.priceRange && <PriceIndicator value={restaurant.priceRange} variant="compact" className="mb-2 backdrop-blur-sm" />}
-            <h3 className="font-bold text-xl leading-tight text-white shadow-sm truncate">{restaurant.name}</h3>
+            {/* Name and Location */}
+            <h3 className="font-bold text-xl leading-tight text-white drop-shadow-md truncate">{restaurant.name}</h3>
             <div className="flex items-center gap-1 text-white/90 text-sm mt-1">
               <MapPin className="w-3.5 h-3.5" />
               <span className="truncate">{restaurant.city}</span>
+            </div>
+
+            {/* Price and Rating aligned horizontally */}
+            <div className="flex items-center justify-between mt-2">
+              {restaurant.priceRange && <PriceIndicator value={restaurant.priceRange} variant="compact" className="backdrop-blur-sm" />}
+              {restaurant.rating > 0 && (
+                <Badge className="bg-white/90 text-black hover:bg-white backdrop-blur-sm border-none shadow-sm flex items-center gap-1">
+                  <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                  <span className="font-bold">{restaurant.rating}</span>
+                </Badge>
+              )}
             </div>
           </div>
         </div>

@@ -29,6 +29,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.1",
     "multer": "2.0.1",
+    "node-cron": "^4.2.1",
     "nodemon": "3.1.10",
     "prettier": "^3.6.2",
     "resend": "^6.8.0",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.10",
+    "@types/node-cron": "^3.0.11",
     "@types/react": "^19.2.10",
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "3.1.4",

@@ -7,6 +7,7 @@ import { AccountRestaurants } from "@/pages/Account/restaurants";
 import { AccountBooking } from "@/pages/Account/booking";
 import { AccountPreferences } from "@/pages/Account/preferences";
 import { AddReview } from "@/pages/Account/AddReview";
+import { MyReviews } from "@/pages/Account/MyReviews";
 
 import { ProtectedRoute } from "@/router/protectedRoute";
 import { Landing } from "@/pages/Professional";
@@ -108,6 +109,7 @@ export const Router = () => {
           <Route path="bookings" element={<AccountBooking />} />
           <Route path="preferences" element={<AccountPreferences />} />
           <Route path="add-review" element={<AddReview />} />
+          <Route path="reviews" element={<MyReviews />} />
           <Route path="payment-success" element={<PaymentSuccess />} />
           <Route path="payment-cancel" element={<PaymentCancel />} />
         </Route>
