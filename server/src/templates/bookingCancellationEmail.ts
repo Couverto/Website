@@ -23,38 +23,49 @@ export const bookingCancellationTemplate = ({
 }: BookingCancellationProps): string => {
   const content = `
     <h2>Annulation de réservation</h2>
+    
     <p>Bonjour ${customerName},</p>
     
-    <div style="text-align: center; margin: 30px 0;">
-        <h1 style="margin: 0; color: #111827; font-size: 24px;">${restaurantName}</h1>
-        <p style="margin: 5px 0 0 0; font-size: 20px; font-weight: bold; color: #ef4444;">${date} à ${time}</p>
+    <p>Nous sommes désolés de vous informer que votre réservation a été annulée.</p>
+    
+    <div class="text-center my-6">
+      <p class="restaurant-name">${restaurantName}</p>
+      <p style="font-size: 20px; font-weight: 600; color: #ef4444; margin: 8px 0 0 0;">
+        ❌ ${date} à ${time}
+      </p>
     </div>
 
-    <p>Nous sommes désolés de vous informer que votre réservation a été annulée par l'établissement.</p>
-    
     ${
       reason
         ? `
-    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-      <p style="margin: 0; font-size: 0.9em; color: #4b5563;"><strong>Motif de l'annulation :</strong></p>
-      <p style="margin: 5px 0 0 0; font-style: italic;">"${reason}"</p>
+    <div class="info-box">
+      <h3>Motif de l'annulation</h3>
+      <p style="margin: 0; font-style: italic; color: #4b5563;">"${reason}"</p>
     </div>
     `
         : ""
     }
 
-    <div style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-        <p style="margin: 0; font-weight: bold;">Coordonnées du restaurant :</p>
-        ${address ? `<p style="margin: 5px 0 0 0;">📍 ${address}</p>` : ""}
-        ${phone ? `<p style="margin: 5px 0 0 0;">📞 ${phone}</p>` : ""}
-        ${website ? `<p style="margin: 5px 0 0 0;">🌐 <a href="${website}">${website}</a></p>` : ""}
-    </div>
+    <div class="divider"></div>
 
-    <p>Nous vous invitons à contacter le restaurant directement pour plus d'informations ou à effectuer une nouvelle recherche.</p>
+    <p style="margin-bottom: 8px;"><strong>Coordonnées du restaurant :</strong></p>
+    ${address ? `<p style="margin: 4px 0; font-size: 14px;">📍 ${address}</p>` : ""}
+    ${phone ? `<p style="margin: 4px 0; font-size: 14px;">📞 ${phone}</p>` : ""}
+    ${website ? `<p style="margin: 4px 0; font-size: 14px;">🌐 <a href="${website}">${website}</a></p>` : ""}
+
+    <p>Nous vous invitons à contacter le restaurant directement pour plus d'informations ou à rechercher un autre établissement.</p>
     
-    <center>
-      <a href="${process.env.CORS_ORIGIN || "#"}/restaurants" class="button" style="background-color: #4b5563;">Trouver un autre restaurant</a>
-    </center>
+    <div class="text-center my-6">
+      <a href="${process.env.CORS_ORIGIN || "#"}/restaurants" class="button button-secondary">
+        🔍 Trouver un autre restaurant
+      </a>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <p style="font-size: 13px; color: #9ca3af; text-align: center;">
+      Nous nous excusons pour la gêne occasionnée.
+    </p>
   `;
   return baseEmailLayout(content, `Réservation Annulée - ${restaurantName}`);
 };

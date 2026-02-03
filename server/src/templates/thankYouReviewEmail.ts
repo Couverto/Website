@@ -6,21 +6,28 @@ export const thankYouReviewEmail = (customerName: string, restaurantName: string
     
     <p>Nous avons bien reçu votre avis concernant votre expérience chez <strong>${restaurantName}</strong>.</p>
     
-    <p>Vos retours sont précieux pour nous et aident la communauté à découvrir les meilleurs établissements.</p>
-    
-    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #2ecc9a;">
-      <p style="margin: 0; color: #173B15; font-weight: 500;">
-        💚 Votre contribution fait la différence !
-      </p>
+    <div class="highlight-box">
+      <p>💚 <strong>Votre contribution fait la différence !</strong><br>
+      Vos retours sont précieux pour nous et aident la communauté à découvrir les meilleurs établissements.</p>
     </div>
     
-    <p>À très bientôt sur Couverto !</p>
+    <div class="text-center my-4">
+      <p style="font-size: 40px; margin: 0;">🌟</p>
+    </div>
     
-    <div style="text-align: center; margin: 30px 0;">
+    <p>Grâce à des membres engagés comme vous, Couverto devient chaque jour une meilleure plateforme pour trouver le restaurant idéal.</p>
+    
+    <div class="text-center my-6">
       <a href="${process.env.CORS_ORIGIN || "#"}/restaurants" class="button">
-        Découvrir d'autres restaurants
+        🍽️ Découvrir d'autres restaurants
       </a>
     </div>
+    
+    <div class="divider"></div>
+    
+    <p style="font-size: 13px; color: #9ca3af; text-align: center;">
+      À très bientôt sur Couverto !
+    </p>
   `;
 
   return baseEmailLayout(content, `Merci pour votre avis - ${restaurantName}`);
