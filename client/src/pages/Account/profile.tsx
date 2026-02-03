@@ -94,12 +94,15 @@ export const AccountProfile = () => {
   return loading ? (
     <Loading />
   ) : (
-    <div className="flex justify-center p-8">
-      <Card className="w-full max-w-4xl p-4 shadow-xl rounded-2xl">
-        <CardHeader className="flex flex-row items-center justify-between ">
+    <div className="flex justify-center p-0 sm:p-4 md:p-8">
+      <div className="w-full max-w-4xl bg-background md:bg-card md:border md:shadow-xl md:rounded-2xl p-4 sm:p-6 md:p-8 transition-all">
+        {/* Header section (replaces CardHeader) */}
+        <div className="flex flex-row items-center justify-between mb-8">
           <div>
-            <CardTitle>{"Paramètres du compte"}</CardTitle>
-            <CardDescription>{"Mettez à jour vos informations personnelles et les détails de votre compte."}</CardDescription>
+            <h1 className="text-2xl font-bold text-foreground">{"Paramètres du compte"}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {"Mettez à jour vos informations personnelles et les détails de votre compte."}
+            </p>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild className="cursor-pointer">
@@ -116,56 +119,35 @@ export const AccountProfile = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <div className="relative">
-              <Avatar className="w-28 h-28 ">
-                <AvatarImage src={authUser?.avatar} alt="User Avatar" className="object-cover object-center w-full h-full rounded-full" />
-              </Avatar>
-            </div>
-            <div>
-              <InputFile buttonText="Choisir une image" id="profile-picture" disabled={loading} onChange={updateProfilePic} />
-            </div>
+        </div>
+
+        {/* Profile picture section */}
+        <div className="flex flex-col items-center gap-4 mb-10">
+          <div className="relative">
+            <Avatar className="w-32 h-32 border-4 border-background shadow-lg">
+              <AvatarImage src={authUser?.avatar} alt="User Avatar" className="object-cover object-center w-full h-full rounded-full" />
+            </Avatar>
           </div>
-          <Form {...updateForm}>
-            <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="space-y-6">
-              <div className="flex flex-col gap-4 md:flex-row ">
-                <FormField
-                  control={updateForm.control}
-                  name="forename"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>{"Prénom"}</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Jean" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={updateForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>{"Nom"}</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Dupont" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <div className="flex flex-col items-center gap-2">
+            <InputFile buttonText="Choisir une image" id="profile-picture" disabled={loading} onChange={updateProfilePic} />
+          </div>
+        </div>
+
+        <Form {...updateForm}>
+          <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={updateForm.control}
-                name="username"
+                name="forename"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{"Nom d'utilisateur"}</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider ml-1">{"Prénom"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="jean_dupont" {...field} />
+                      <Input
+                        placeholder="Jean"
+                        {...field}
+                        className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -173,12 +155,56 @@ export const AccountProfile = () => {
               />
               <FormField
                 control={updateForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider ml-1">{"Nom"}</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Dupont"
+                        {...field}
+                        className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={updateForm.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider ml-1">
+                    {"Nom d'utilisateur"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="jean_dupont"
+                      {...field}
+                      className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={updateForm.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{"Email"}</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider ml-1">{"Email"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="jean.dupont@gmail.com" {...field} />
+                      <Input
+                        placeholder="jean.dupont@gmail.com"
+                        {...field}
+                        className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -189,55 +215,54 @@ export const AccountProfile = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{"Téléphone"}</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider ml-1">{"Téléphone"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="06 12 34 56 78" {...field} />
+                      <Input
+                        placeholder="06 12 34 56 78"
+                        {...field}
+                        className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              {authUser?.auth_type !== "google" && (
-                <FormItem>
-                  <div className="flex flex-col w-full gap-2">
-                    <FormLabel>{"Mot de passe"}</FormLabel>
-                    <div className="flex items-center justify-between gap-4">
-                      <FormControl>
-                        <Input type="password" placeholder={"********"} disabled />
-                      </FormControl>
-                      <Button type="button" variant="outline" onClick={() => setOpenUpdatePasswordDialog(true)} disabled={updateLoading}>
-                        {"Changer le mot de passe"}
-                      </Button>
-                    </div>
+            {(authUser?.hasPassword || authUser?.auth_type !== "google") && (
+              <FormItem className="pt-4">
+                <div className="flex flex-col w-full gap-3 p-4 rounded-2xl border border-dashed border-input bg-muted/20">
+                  <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">{"Mot de passe"}</FormLabel>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    <FormControl className="flex-1">
+                      <Input type="password" placeholder={"********"} disabled className="h-11 rounded-xl bg-background/50 border-input" />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setOpenUpdatePasswordDialog(true)}
+                      disabled={updateLoading}
+                      className="rounded-xl"
+                    >
+                      {"Modifier le mot de passe"}
+                    </Button>
                   </div>
-                </FormItem>
-              )}
-              {authUser?.auth_type === "google" && authUser?.hasPassword && (
-                <FormItem>
-                  <div className="flex flex-col w-full gap-2">
-                    <FormLabel>{"Mot de passe"}</FormLabel>
-                    <div className="flex items-center justify-between gap-4">
-                      <FormControl>
-                        <Input type="password" placeholder={"********"} disabled />
-                      </FormControl>
-                      <Button type="button" variant="outline" onClick={() => setOpenUpdatePasswordDialog(true)} disabled={updateLoading}>
-                        {"Changer le mot de passe"}
-                      </Button>
-                    </div>
-                  </div>
-                </FormItem>
-              )}
+                </div>
+              </FormItem>
+            )}
 
-              <CardFooter className="px-0">
-                <Button type="submit" disabled={updateLoading} className="w-full">
-                  {"Mettre à jour"}
-                </Button>
-              </CardFooter>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+            <div className="pt-6">
+              <Button
+                type="submit"
+                disabled={updateLoading}
+                className="w-full h-14 text-base font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
+              >
+                {updateLoading ? "Mise à jour..." : "Enregistrer les modifications"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
 
       <Dialog open={openUpdatePasswordDialog} onOpenChange={setOpenUpdatePasswordDialog}>
         <UpdatePasswordForm setOpen={setOpenUpdatePasswordDialog} />
