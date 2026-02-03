@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Star, Utensils, MoreHorizontal, Info } from "lucide-react";
+import { MapPin, Star, Utensils, MoreHorizontal, Info, ExternalLink } from "lucide-react";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -59,11 +59,19 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
                     <MoreHorizontal className="h-4 w-4 text-black" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate(`/restaurants/infos/${restaurant._id}`)}>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate(`/restaurants/infos/${restaurant._id}`)} className="cursor-pointer">
                     <Info className="mr-2 h-4 w-4" />
                     <span>{"En savoir plus"}</span>
                   </DropdownMenuItem>
+                  {restaurant.website && (
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        <span>{"Voir le site web"}</span>
+                      </a>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

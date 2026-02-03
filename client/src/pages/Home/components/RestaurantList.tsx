@@ -77,14 +77,19 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
   return (
     <section className="py-20 bg-muted/20 w-full">
       <div className="container mx-auto px-4 md:px-6">
-        {isPreview && (
-          <div className="flex justify-end mb-8">
-            <Button variant="ghost" className="hidden md:flex group text-primary font-semibold hover:bg-primary/10" onClick={handleSeeAll}>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">{"Nos restaurants"}</h2>
+          {isPreview && (
+            <Button
+              variant="ghost"
+              className="hidden md:flex group text-primary font-bold hover:bg-primary/10 rounded-full px-6 transition-all"
+              onClick={handleSeeAll}
+            >
               {"Voir tous les restaurants"}
               <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         {loading && page === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">

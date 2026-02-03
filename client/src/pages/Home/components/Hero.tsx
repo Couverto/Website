@@ -46,7 +46,7 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
       </div>
 
-      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-8 md:space-y-10 pt-24 md:pt-32 animate-in fade-in zoom-in duration-700">
+      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-8 md:space-y-10  animate-in fade-in zoom-in duration-700">
         <div className="space-y-4 max-w-4xl px-4">
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg text-balance">
             {"Réservez une table simplement."}
@@ -56,11 +56,11 @@ export const Hero = () => {
           </p>
         </div>
 
-        <div className="w-full max-w-5xl bg-background/80 backdrop-blur-xl rounded-2xl md:rounded-3xl lg:rounded-full shadow-2xl border p-4 lg:p-2 flex flex-col lg:flex-row items-center gap-4 lg:gap-2 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] relative z-50 ring-1 ring-white/20">
+        <div className="w-full max-w-5xl bg-background/80 backdrop-blur-xl rounded-2xl md:rounded-3xl lg:rounded-full shadow-2xl p-4 lg:p-2 flex flex-col lg:flex-row items-center gap-2 lg:gap-1 transition-all hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] relative z-50">
           <div className="flex-1 relative group w-full">
             <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             <Input
-              className="pl-14 h-14 lg:h-16 text-base lg:text-lg border-none bg-transparent hover:bg-muted/30 focus-visible:ring-0 focus-visible:bg-muted/30 rounded-xl lg:rounded-full transition-colors"
+              className="pl-14 h-14 lg:h-16 text-base lg:text-lg border-0 bg-transparent hover:bg-muted/30 focus-visible:ring-0 focus-visible:bg-muted/30 rounded-xl lg:rounded-full transition-colors"
               placeholder={"Où ? (Ville, code postal, adresse...)"}
               value={location}
               onChange={(e) => setLocation(e.target.value)}
@@ -68,8 +68,8 @@ export const Hero = () => {
             />
           </div>
 
-          <div className="h-8 w-[1px] bg-border hidden lg:block mx-1" />
-          <div className="w-full h-[1px] bg-border lg:hidden" />
+          <div className="h-8 w-[1px] bg-primary/10 hidden lg:block mx-1 shrink-0" />
+          <div className="w-full h-[1px] bg-primary/10 lg:hidden" />
 
           <div className="flex-1 relative group w-full ">
             <CalendarIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors z-10" />
@@ -80,18 +80,18 @@ export const Hero = () => {
               dateFormat="dd/MM/yyyy"
               minDate={new Date()}
               placeholderText={"Date"}
-              className="pl-14 h-14 lg:h-16 w-full text-base lg:text-lg border-none bg-transparent hover:bg-muted/30 focus-visible:ring-0 focus-visible:bg-muted/30 rounded-xl lg:rounded-full outline-none focus:outline-none placeholder:text-muted-foreground transition-colors hover:cursor-pointer"
+              className="pl-14 h-14 lg:h-16 w-full text-base lg:text-lg border-0 bg-transparent hover:bg-muted/30 focus-visible:ring-0 focus-visible:bg-muted/30 rounded-xl lg:rounded-full outline-none focus:outline-none placeholder:text-muted-foreground transition-colors hover:cursor-pointer"
               wrapperClassName="w-full"
               popperClassName="!z-[100]"
             />
           </div>
 
-          <div className="h-8 w-[1px] bg-border hidden lg:block mx-1" />
-          <div className="w-full h-[1px] bg-border lg:hidden" />
+          <div className="h-8 w-[1px] bg-primary/10 hidden lg:block mx-1 shrink-0" />
+          <div className="w-full h-[1px] bg-primary/10 lg:hidden" />
 
-          <div className="w-full lg:w-[240px]">
+          <div className="w-full lg:w-[220px]">
             <Select value={guests} onValueChange={setGuests}>
-              <SelectTrigger className="w-full h-14 lg:h-16 text-base lg:text-lg border-none bg-transparent hover:bg-muted/30 focus:ring-0 rounded-xl lg:rounded-full px-6 transition-colors">
+              <SelectTrigger className="w-full h-14 lg:h-16 text-base lg:text-lg border-0 bg-transparent hover:bg-muted/30 focus:ring-0 rounded-xl lg:rounded-full px-6 transition-colors shadow-none">
                 <div className="flex items-center">
                   <Users className="mr-3 h-5 w-5 text-muted-foreground" />
                   <SelectValue placeholder={"Personnes"} />
@@ -108,11 +108,11 @@ export const Hero = () => {
             </Select>
           </div>
 
-          <div className="w-full h-[1px] bg-border lg:hidden" />
+          <div className="w-full h-[1px] bg-primary/10 lg:hidden mb-1" />
 
           <Button
             size="lg"
-            className="w-full lg:w-auto h-14 lg:h-16 px-10 text-base lg:text-lg font-bold rounded-xl lg:rounded-full shadow-lg hover:shadow-primary/25 transition-all shrink-0"
+            className="w-full lg:w-auto h-14 lg:h-16 px-10 text-base lg:text-lg font-bold rounded-xl lg:rounded-full shadow-lg hover:shadow-primary/25 transition-all shrink-0 lg:ml-2"
             onClick={handleSearch}
           >
             <Search className="mr-2 h-5 w-5" />
