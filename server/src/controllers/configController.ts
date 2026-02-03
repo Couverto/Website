@@ -56,7 +56,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
       }
     }
 
-    res.json({ message: "config_updated" });
+    res.json({ message: "Configuration mise à jour avec succès" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
