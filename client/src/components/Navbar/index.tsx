@@ -150,11 +150,12 @@ export const Navbar = () => {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-4 px-4 pointer-events-none">
+      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center py-2 px-2 md:pt-4 md:px-4 pointer-events-none">
         <nav
           className={cn(
-            "pointer-events-auto w-full max-w-7xl rounded-full border transition-all duration-300 ease-in-out px-4 md:px-6 h-16 flex items-center justify-between",
-            "bg-background backdrop-blur-md border-border/40 shadow-sm", // Default state (always visible/glassy)
+            "pointer-events-auto w-full max-w-7xl rounded-full border transition-all duration-300 ease-in-out px-4 md:px-6 flex items-center justify-between",
+            "h-14 md:h-16", // Smaller height on mobile
+            "bg-background/95 md:bg-background backdrop-blur-md border-border/40 shadow-sm", // Enhanced mobile blur
             scrolled || isOpen ? "bg-background shadow-lg border-border" : "",
           )}
         >
@@ -169,10 +170,10 @@ export const Navbar = () => {
               }
             }}
           >
-            <div className="h-10 w-10 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-              <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6" />
+            <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
+            <span className="hidden md:block text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -206,7 +207,7 @@ export const Navbar = () => {
                 <DropdownMenuTrigger asChild className="cursor-pointer">
                   <Button
                     variant="ghost"
-                    className="relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-colors"
+                    className="hidden md:inline-flex relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-colors"
                   >
                     <AvatarWithStatusCell user={authUser} />
                   </Button>
@@ -252,8 +253,13 @@ export const Navbar = () => {
 
             {/* Mobile Menu Trigger */}
             <div className="md:hidden">
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="rounded-full">
-                <Menu className="h-6 w-6" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(!isOpen)}
+                className="rounded-full bg-primary/5 border border-primary/10 hover:bg-primary/10 text-primary w-10 h-10"
+              >
+                <Menu className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -349,10 +355,6 @@ export const Navbar = () => {
           )}
 
           <div className="mt-auto pt-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/logos/logo.svg" alt="Couverto" className="h-8 w-8" />
-              <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
-            </div>
             <div className="flex gap-2"></div>
           </div>
         </div>

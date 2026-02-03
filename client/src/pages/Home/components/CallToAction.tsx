@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, UtensilsCrossed } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const CallToAction = () => {
@@ -12,8 +12,8 @@ export const CallToAction = () => {
 
       <div className="container relative z-10 px-4 md:px-6 mx-auto">
         <div className="flex flex-col items-center text-center space-y-10 max-w-4xl mx-auto">
-          <div className="h-20 w-20 rounded-3xl bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center rotate-12 hover:rotate-0 transition-all duration-500">
-            <UtensilsCrossed className="h-10 w-10 text-primary" />
+          <div className="h-24 w-24 rounded-3xl bg-white flex items-center justify-center rotate-12 hover:rotate-0 transition-all duration-500 shadow-2xl">
+            <img src="/logos/logo.svg" alt="Couverto" className="h-12 w-12" />
           </div>
 
           <div className="space-y-6">
