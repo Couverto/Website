@@ -288,16 +288,11 @@ export const AccountBooking = () => {
   );
 
   useEffect(() => {
-    fetchBookings(0, false);
-  }, [statusFilter]);
-
-  // Debounced search
-  useEffect(() => {
     const timer = setTimeout(() => {
       fetchBookings(0, false);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, statusFilter]);
 
   const handleLoadMore = () => {
     fetchBookings(page + 1, true);
@@ -449,11 +444,7 @@ export const AccountBooking = () => {
           {/* Bookings List */}
           <div className="space-y-4">
             {loading ? (
-              <>
-                <BookingCardSkeleton />
-                <BookingCardSkeleton />
-                <BookingCardSkeleton />
-              </>
+              Array.from({ length: 10 }).map((_, i) => <BookingCardSkeleton key={i} />)
             ) : bookings.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">{"Aucune réservation trouvée"}</div>
             ) : (

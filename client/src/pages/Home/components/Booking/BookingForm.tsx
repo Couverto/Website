@@ -38,7 +38,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
   const form = useForm<CreateBookingSchema>({
     resolver: zodResolver(createBookingSchema),
-    mode: "onChange",
+    mode: "all",
     defaultValues: {
       // bookingDate is handled by useEffect to check for closed days
       guests: initialData?.guests ? Number(initialData.guests) : 2,
@@ -56,6 +56,11 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
       form.setValue("customer.name", `${user.forename} ${user.name}`);
       form.setValue("customer.email", user.email);
       form.setValue("customer.phone", user.phone || "");
+    } else {
+      //rendre les champs obligatoires
+      form.setValue("customer.name", "");
+      form.setValue("customer.email", "");
+      form.setValue("customer.phone", "");
     }
   }, [user, form]);
 
@@ -251,11 +256,15 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           <FormField
             control={form.control}
             name="customer.name"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>{"Nom"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Jean Dupont" {...field} />
+                  <Input
+                    placeholder="Jean Dupont"
+                    {...field}
+                    className={fieldState.invalid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -266,11 +275,16 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
             <FormField
               control={form.control}
               name="customer.email"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>{"Email"}</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john@example.com" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="john@example.com"
+                      {...field}
+                      className={fieldState.invalid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -279,11 +293,16 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
             <FormField
               control={form.control}
               name="customer.phone"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel>{"Téléphone"}</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="+33 6 12 34 56 78" {...field} />
+                    <Input
+                      type="tel"
+                      placeholder="+33 6 12 34 56 78"
+                      {...field}
+                      className={fieldState.invalid ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -309,7 +328,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
         <Button
           type="submit"
           className="w-full"
-          disabled={form.formState.isSubmitting || !form.formState.isValid || (bookingDate && closedDays.includes(bookingDate.getDay()))}
+          disabled={form.formState.isSubmitting || (bookingDate && closedDays.includes(bookingDate.getDay()))}
         >
           {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {"Confirmer la réservation"}
