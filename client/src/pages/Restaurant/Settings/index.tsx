@@ -442,7 +442,7 @@ export const RestaurantSettings = () => {
                   variant="secondary"
                   size="sm"
                   onClick={() => {
-                    const code = `<a href="${window.location.origin}/restaurants/infos/${id}" target="_blank" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">Réserver sur Couverto</a>`;
+                    const code = `<a href="${window.location.origin}/restaurants/infos/${id}" target="_blank" style="background-color: #2d5a43; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">Réserver sur Couverto</a>`;
                     navigator.clipboard.writeText(code);
                     toast.success("Code copié dans le presse-papier");
                   }}
@@ -454,7 +454,7 @@ export const RestaurantSettings = () => {
               <pre className="p-4 rounded-lg bg-muted font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
                 <code>{`<a href="${window.location.origin}/restaurants/infos/${id}" 
                   target="_blank" 
-                  style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">
+                  style="background-color: #2d5a43; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">
                   Réserver sur Couverto
                       </a>`}</code>
               </pre>
