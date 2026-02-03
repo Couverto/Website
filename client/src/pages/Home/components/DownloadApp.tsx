@@ -1,9 +1,40 @@
 import { Button } from "@/components/ui/button";
-import { Smartphone, CheckCircle2, Star, MapPin } from "lucide-react";
+import { Smartphone, CheckCircle2, Star, MapPin, Search, Heart, Calendar, User, Wifi, Battery, Signal } from "lucide-react";
 import { useConfigContext } from "@/contexts/configContext";
 
 export const DownloadApp = () => {
   // const { configValues } = useConfigContext();
+
+  const mobileNav = [
+    { icon: Search, active: true },
+    { icon: Heart, active: false },
+    { icon: Calendar, active: false },
+    { icon: User, active: false },
+  ];
+
+  const restaurants = [
+    {
+      name: "Le Gourmet",
+      price: "$$$",
+      rating: "4.9",
+      city: "Paris, 11ème",
+      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop",
+    },
+    {
+      name: "Bistrot chic",
+      price: "$$",
+      rating: "4.7",
+      city: "Lyon, 2ème",
+      image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?q=80&w=2070&auto=format&fit=crop",
+    },
+    {
+      name: "L'Oasis Plastique",
+      price: "$$",
+      rating: "4.5",
+      city: "Marseille, Vieux Port",
+      image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2070&auto=format&fit=crop",
+    },
+  ];
 
   return (
     <section className="py-24 bg-primary text-primary-foreground overflow-hidden relative">
@@ -66,10 +97,20 @@ export const DownloadApp = () => {
                 <div className="w-16 h-4 bg-black rounded-full" />
               </div>
 
+              {/* Status Bar */}
+              <div className="absolute top-2 inset-x-0 px-8 flex justify-between items-center z-30 text-[10px] font-bold text-foreground/80">
+                <div className="flex items-center gap-1">9:41</div>
+                <div className="flex items-center gap-1">
+                  <Signal className="h-3 w-3" />
+                  <Wifi className="h-3 w-3" />
+                  <Battery className="h-3 w-3" />
+                </div>
+              </div>
+
               {/* Screen Content */}
               <div className="h-full w-full bg-background/95 text-foreground flex flex-col pt-12 relative overflow-hidden">
                 {/* App Header */}
-                <div className="px-6 pb-4 flex justify-between items-center bg-background/50 backdrop-blur-md sticky top-0 z-10">
+                <div className="px-6 pb-4 flex justify-between items-center bg-background/50 backdrop-blur-md sticky top-0 z-10 border-b border-border/10">
                   <div className="flex items-center gap-2">
                     <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
                       <img src="/logos/logo.svg" alt="Logo" className="h-4 w-4" />
@@ -82,50 +123,65 @@ export const DownloadApp = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-4 pb-8 space-y-6 no-scrollbar">
+                <div className="flex-1 overflow-y-auto px-4 pb-20 space-y-6 no-scrollbar">
                   {/* Search Bar */}
-                  <div className="h-12 rounded-xl bg-muted/50 w-full flex items-center px-4 text-sm text-muted-foreground">
+                  <div className="mt-4 h-12 rounded-xl bg-muted/50 w-full flex items-center px-4 text-sm text-muted-foreground gap-3">
+                    <Search className="h-4 w-4" />
                     Rechercher un restaurant...
                   </div>
 
-                  {/* Featured Card */}
-                  <div className="rounded-2xl overflow-hidden bg-card shadow-sm border border-border/50">
-                    <div className="h-32 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center relative">
-                      <div className="absolute top-2 right-2 bg-white/90 text-black text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        4.9
+                  {/* Categories */}
+                  <div className="flex flex-wrap gap-2 pb-2">
+                    {["Italien", "Français", "Japonais"].map((cat, i) => (
+                      <div
+                        key={i}
+                        className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap ${i === 0 ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground"}`}
+                      >
+                        {cat}
                       </div>
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-bold">Le Gourmet</h4>
-                        <span className="text-xs text-muted-foreground">$$$</span>
-                      </div>
-                      <div className="flex items-center text-xs text-muted-foreground gap-1">
-                        <MapPin className="h-3 w-3" /> Paris, 11ème
-                      </div>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* Horizontal Scroll */}
-                  <div className="flex gap-3 overflow-x-hidden">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="min-w-[120px] h-32 rounded-xl bg-muted/30 p-2 space-y-2">
-                        <div className="h-20 rounded-lg bg-gray-200/50 w-full" />
-                        <div className="h-3 w-2/3 bg-gray-200/50 rounded" />
+                  {/* Restaurant Cards */}
+                  <div className="space-y-4">
+                    {restaurants.map((rest, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl overflow-hidden bg-card shadow-sm border border-border/50 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:scale-[1.02] transition-transform"
+                        style={{ animationDelay: `${i * 100}ms` }}
+                      >
+                        <div className="h-32 bg-muted relative">
+                          <img src={rest.image} alt={rest.name} className="w-full h-full object-cover" />
+                          <div className="absolute top-2 right-2 bg-white/90 text-black text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            {rest.rating}
+                          </div>
+                          <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md">
+                            2.4 km
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-sm tracking-tight">{rest.name}</h4>
+                            <span className="text-xs text-primary font-bold">{rest.price}</span>
+                          </div>
+                          <div className="flex items-center text-[11px] text-muted-foreground gap-1">
+                            <MapPin className="h-3 w-3" /> {rest.city}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Bottom Nav */}
-                <div className="h-16 bg-background/80 backdrop-blur-md border-t flex justify-around items-center px-2">
-                  {[1, 2, 3, 4].map((i) => (
+                <div className="absolute bottom-0 inset-x-0 h-16 bg-background/80 backdrop-blur-md border-t border-border/40 flex justify-around items-center px-2 z-20">
+                  {mobileNav.map((item, i) => (
                     <div
                       key={i}
-                      className={`h-8 w-8 rounded-full flex items-center justify-center ${i === 1 ? "text-primary bg-primary/10" : "text-muted-foreground"}`}
+                      className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all ${item.active ? "text-primary bg-primary/10 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                     >
-                      <div className="h-4 w-4 bg-current rounded-sm" />
+                      <item.icon className="h-5 w-5" />
                     </div>
                   ))}
                 </div>
