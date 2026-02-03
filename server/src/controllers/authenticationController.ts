@@ -314,6 +314,12 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
         message: htmlContent,
       });
 
+      createLog({
+        message: `Password reset email sent to ${user.email}`,
+        userId: user._id,
+        level: logLevels.INFO,
+      });
+
       res.status(200).json({ success: true, data: "Email sent" });
     } catch (err) {
       console.error("Forgot Password Email Error:", err);
@@ -357,6 +363,12 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     user.resetPasswordExpire = undefined;
 
     await user.save();
+
+    createLog({
+      message: `Password reset successfully for user ${user.username}`,
+      userId: user._id,
+      level: logLevels.INFO,
+    });
 
     const accessToken = generateAccessToken(user._id);
 
