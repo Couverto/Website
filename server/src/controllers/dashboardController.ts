@@ -145,9 +145,9 @@ export const getPublicStats = async (req: Request, res: Response): Promise<void>
   try {
     const [totalUsers, totalRestaurants, totalBookings, totalCities] = await Promise.all([
       User.countDocuments(),
-      Restaurant.countDocuments(),
-      Booking.countDocuments(),
-      Restaurant.distinct("address.city"),
+      Restaurant.countDocuments({ isClosed: false }), // Only count open restaurants for public "partner" stats
+      Booking.countDocuments({ status: { $in: [bookingStatus.CONFIRMED, bookingStatus.PENDING] } }),
+      Restaurant.distinct("city"), // Corrected from address.city
     ]);
 
     res.status(200).json({
