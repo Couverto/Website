@@ -234,3 +234,47 @@
     }
   }
 }
+
+@media print {
+  .no-print,
+  [data-radix-portal],
+  [role="dialog"],
+  .fixed,
+  button,
+  nav,
+  aside,
+  header:not(.print-header),
+  .sonner-toast {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .print-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .card {
+    border: 1px solid #eee !important;
+    break-inside: avoid;
+    box-shadow: none !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 400px !important;
+    min-height: 400px !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .recharts-surface {
+    overflow: visible !important;
+  }
+}

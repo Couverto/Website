@@ -1,5 +1,5 @@
-import { useParams, useOutletContext } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,20 +12,35 @@ import {
   Percent,
   CalendarCheck,
   Clock8,
+  FileDown,
+  FileText,
+  Settings2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RestaurantStats as StatsInterface } from "@/interfaces/Restaurant";
-import { RestaurantContext } from "@/interfaces/Components";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { useSocketContext } from "@/contexts/socketContext";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export const RestaurantStats = () => {
   const { id } = useParams();
   const { socket } = useSocketContext();
   const [stats, setStats] = useState<StatsInterface | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Export Categories State
+  const [exportOptions, setExportOptions] = useState({
+    metrics: true,
+    weeklyTrend: true,
+    groupDistribution: true,
+  });
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -61,6 +76,14 @@ export const RestaurantStats = () => {
     }
   }, [socket, id, fetchStats]);
 
+  const handleExportPDF = () => {
+    setIsExportDialogOpen(false);
+    // Increase delay slightly to ensure DOM updates and animations finish
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  };
+
   const GUEST_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"];
   const guestPieData = stats?.guestDistribution ? Object.entries(stats.guestDistribution).map(([name, value]) => ({ name, value })) : [];
 
@@ -82,15 +105,98 @@ export const RestaurantStats = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Statistiques</h1>
-        <p className="text-muted-foreground">Analyse détaillée de votre activité</p>
+    <div className="space-y-6 print-container">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Statistiques</h1>
+          <p className="text-muted-foreground">Analyse détaillée de votre activité</p>
+        </div>
+
+        <div className="no-print">
+          <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 font-bold shadow-sm">
+                <FileDown className="h-4 w-4" />
+                {"Exporter en PDF"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Settings2 className="h-5 w-5 text-primary" />
+                  {"Personnaliser l'export"}
+                </DialogTitle>
+                <DialogDescription>{"Sélectionnez les sections que vous souhaitez inclure dans votre rapport PDF."}</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                <div
+                  className="flex items-center space-x-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => setExportOptions((prev) => ({ ...prev, metrics: !prev.metrics }))}
+                >
+                  <Checkbox
+                    id="metrics"
+                    checked={exportOptions.metrics}
+                    onCheckedChange={(checked) => setExportOptions((prev) => ({ ...prev, metrics: !!checked }))}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="metrics" className="text-sm font-bold cursor-pointer">
+                      {"Chiffres clés"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">{"Réservations, clients uniques et taux d'annulation"}</p>
+                  </div>
+                </div>
+
+                <div
+                  className="flex items-center space-x-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => setExportOptions((prev) => ({ ...prev, weeklyTrend: !prev.weeklyTrend }))}
+                >
+                  <Checkbox
+                    id="weeklyTrend"
+                    checked={exportOptions.weeklyTrend}
+                    onCheckedChange={(checked) => setExportOptions((prev) => ({ ...prev, weeklyTrend: !!checked }))}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="weeklyTrend" className="text-sm font-bold cursor-pointer">
+                      {"Tendance hebdomadaire"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">{"Graphique des réservations sur les 7 derniers jours"}</p>
+                  </div>
+                </div>
+
+                <div
+                  className="flex items-center space-x-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => setExportOptions((prev) => ({ ...prev, groupDistribution: !prev.groupDistribution }))}
+                >
+                  <Checkbox
+                    id="groupDistribution"
+                    checked={exportOptions.groupDistribution}
+                    onCheckedChange={(checked) => setExportOptions((prev) => ({ ...prev, groupDistribution: !!checked }))}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="groupDistribution" className="text-sm font-bold cursor-pointer">
+                      {"Répartition des groupes"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">{"Graphique des couverts par réservation"}</p>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsExportDialogOpen(false)}>
+                  {"Annuler"}
+                </Button>
+                <Button onClick={handleExportPDF} className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  {"Générer le PDF"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      {/* Stats Cards - Metrics */}
+      <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4", !exportOptions.metrics && "no-print")}>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{"Réservations aujourd'hui"}</CardTitle>
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
@@ -103,7 +209,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{"Réservations cette semaine"}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -114,7 +220,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{"Réservations ce mois"}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -125,7 +231,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{"Clients uniques"}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -135,7 +241,7 @@ export const RestaurantStats = () => {
             <p className="text-xs text-muted-foreground">{"Clients différents"}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">{"Taux d'annulation"}</CardTitle>
             <Percent className="h-4 w-4 text-muted-foreground" />
@@ -146,7 +252,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Couverts moyens</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -157,7 +263,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Anticipation</CardTitle>
             <Clock8 className="h-4 w-4 text-muted-foreground" />
@@ -168,7 +274,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Jour le plus actif</CardTitle>
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
@@ -186,7 +292,7 @@ export const RestaurantStats = () => {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
+        <Card className={cn("lg:col-span-2 card", !exportOptions.weeklyTrend && "no-print")}>
           <CardHeader>
             <div className="flex items-center gap-2">
               <BarChartIcon className="h-5 w-5 text-primary" />
@@ -212,7 +318,7 @@ export const RestaurantStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={cn("card", !exportOptions.groupDistribution && "no-print")}>
           <CardHeader>
             <div className="flex items-center gap-2">
               <PieChartIcon className="h-5 w-5 text-primary" />
@@ -248,3 +354,4 @@ export const RestaurantStats = () => {
     </div>
   );
 };
+```
