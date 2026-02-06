@@ -237,7 +237,14 @@ export const AccountRestaurants = () => {
                           )}
                         </div>
 
-                        <Button size="sm" className="font-bold gap-2 group/btn" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          className="font-bold gap-2 group/btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/restaurant/${restaurant._id}`);
+                          }}
+                        >
                           Tableau de Bord
                           <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                         </Button>

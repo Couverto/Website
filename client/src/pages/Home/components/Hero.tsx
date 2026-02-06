@@ -46,8 +46,8 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
       </div>
 
-      <div className="container relative z-10 px-4 md:px-6 flex flex-col items-center text-center space-y-8 md:space-y-10  animate-in fade-in zoom-in duration-700">
-        <div className="space-y-4 max-w-4xl px-4">
+      <div className="container relative z-10 px-6 sm:px-8 md:px-6 pt-20 md:pt-0 flex flex-col items-center text-center space-y-8 md:space-y-10 animate-in fade-in zoom-in duration-700">
+        <div className="space-y-4 max-w-4xl">
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg text-balance">
             {"Réservez une table simplement."}
           </h1>
@@ -56,7 +56,7 @@ export const Hero = () => {
           </p>
         </div>
 
-        <div className="w-full max-w-5xl bg-background/80 backdrop-blur-xl rounded-2xl md:rounded-3xl lg:rounded-full shadow-2xl p-4 lg:p-2 flex flex-col lg:flex-row items-center gap-2 lg:gap-1 transition-all hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] relative z-50">
+        <div className="w-full max-w-5xl bg-background/80 backdrop-blur-xl rounded-2xl md:rounded-3xl lg:rounded-full shadow-2xl p-5 sm:p-6 lg:p-2 flex flex-col lg:flex-row items-center gap-3 lg:gap-1 transition-all hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)] relative z-50">
           <div className="flex-1 relative group w-full">
             <MapPin className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             <Input
