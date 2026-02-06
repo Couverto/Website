@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateOptionalPhone } from "@/lib/zod/validators/phone";
 
 export const getUpdateAccountSchema = () =>
   z.object({
@@ -16,7 +17,7 @@ export const getUpdateAccountSchema = () =>
       .max(25, { message: "Le nom d'utilisateur doit comporter au maximum 25 caractères." })
       .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
 
-    phone: z.string().optional(),
+    phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
 
     email: z.string().email({ message: "Adresse e-mail invalide." }),
   });

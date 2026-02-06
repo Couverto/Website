@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validatePhone } from "@/lib/zod/validators/phone";
 
 export const getEssentialsSchema = () =>
   z.object({
@@ -7,7 +8,7 @@ export const getEssentialsSchema = () =>
     name: z.string().min(2, "Le nom du restaurant est requis (min 2 caractères)."),
     adress: z.string().min(5, "L'adresse est requise.").regex(/\d/, "L'adresse doit inclure un numéro de rue."),
     city: z.string().min(2, "La ville est requise."),
-    phone: z.string().min(10, "Le numéro de téléphone est requis."),
+    phone: z.string().refine(validatePhone, "Numéro de téléphone invalide."),
     email: z.string().email("Adresse email invalide."),
   });
 

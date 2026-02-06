@@ -1,0 +1,19 @@
+import { z } from "zod";
+import { validateOptionalPhone } from "@/lib/zod/validators/phone";
+
+export const getRestaurantSettingsSchema = () =>
+  z
+    .object({
+      name: z.string().min(2, { message: "Le nom du restaurant est requis." }),
+      phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
+      email: z.string().email({ message: "Adresse email invalide." }).optional().or(z.literal("")),
+      website: z.string().url({ message: "URL invalide." }).optional().or(z.literal("")),
+      socials: z
+        .object({
+          facebook: z.string().url({ message: "URL Facebook invalide" }).optional().or(z.literal("")),
+          instagram: z.string().url({ message: "URL Instagram invalide" }).optional().or(z.literal("")),
+          tiktok: z.string().url({ message: "URL Tiktok invalide" }).optional().or(z.literal("")),
+        })
+        .optional(),
+    })
+    .passthrough(); // Allow additional properties from RestaurantInterface

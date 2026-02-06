@@ -13,6 +13,7 @@ import { UserInterface } from "@/interfaces/User";
 import { getCreateUserSchema, getDeleteUserSchema, getUpdateUserSchema } from "@/lib/zod/schemas/admin/zod";
 import { UserFormProps } from "@/interfaces/Components";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PhoneInput } from "@/components/customs/phoneInput";
 
 export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
   const [loading, setLoading] = useState(false);
@@ -254,7 +255,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               <FormItem>
                 <FormLabel>{"Téléphone"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="06 12 34 56 78" {...field} />
+                  <PhoneInput defaultCountry="FR" value={field.value} onChange={field.onChange} placeholder="6 12 34 56 78" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -404,7 +405,7 @@ export const UserForm = ({ dialog, refresh, action, user }: UserFormProps) => {
               <FormItem>
                 <FormLabel>{"Téléphone"}</FormLabel>
                 <FormControl>
-                  <Input placeholder="06 12 34 56 78" {...field} />
+                  <PhoneInput defaultCountry="FR" value={field.value} onChange={field.onChange} placeholder="6 12 34 56 78" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

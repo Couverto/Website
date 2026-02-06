@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validatePhone, validateOptionalPhone } from "@/lib/zod/validators/phone";
 
 export const getCreateUserSchema = () =>
   z.object({
@@ -17,7 +18,7 @@ export const getCreateUserSchema = () =>
       .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
     email: z.string().email({ message: "Adresse e-mail invalide." }),
     password: z.string().min(1, { message: "Le mot de passe est requis." }),
-    phone: z.string().optional(),
+    phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
     role: z.string(),
   });
 
@@ -38,7 +39,7 @@ export const getUpdateUserSchema = () =>
       .regex(/^[^A-Z\s]+$/, { message: "Le nom d'utilisateur ne doit pas contenir d'espaces ni de lettres majuscules." }),
     email: z.string().email({ message: "Adresse e-mail invalide." }),
     role: z.string(),
-    phone: z.string().optional(),
+    phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
     password: z.string().optional(),
   });
 
@@ -57,7 +58,7 @@ export const getCreateRestaurantSchema = () => {
     description: z.string().optional(),
     address: z.string().min(1, { message: "L'adresse est requise" }),
     city: z.string().min(1, { message: "La ville est requise" }),
-    phone: z.string().min(1, { message: "Le téléphone est requis" }),
+    phone: z.string().refine(validatePhone, { message: "Numéro de téléphone invalide." }),
     website: z.string().optional(),
     coverImage: z.string().optional(),
     priceRange: z.enum(["$", "$$", "$$$"]).default("$$"),
@@ -76,7 +77,7 @@ export const getUpdateRestaurantSchema = () => {
     description: z.string().optional(),
     address: z.string().optional(),
     city: z.string().optional(),
-    phone: z.string().optional(),
+    phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
     website: z.string().optional(),
     coverImage: z.string().optional(),
     priceRange: z.enum(["$", "$$", "$$$"]).optional(),

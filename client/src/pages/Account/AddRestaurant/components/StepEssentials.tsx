@@ -1,9 +1,10 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WizardData } from "../types";
-import { MapPin, Phone, Store } from "lucide-react";
+import { MapPin, Store } from "lucide-react";
 import { StepProps } from "@/interfaces/Components";
 import { AddressAutocomplete } from "@/components/customs/AddressAutocomplete";
+import { PhoneInput } from "@/components/customs/phoneInput";
 
 export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
   return (
@@ -42,18 +43,12 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
           >
             {"Téléphone"}
           </Label>
-          <div className="relative group">
-            <Phone
-              className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${errors?.phone ? "text-red-400" : "text-muted-foreground group-focus-within:text-primary"}`}
-            />
-            <Input
-              id="phone"
-              value={data.phone}
-              onChange={(e) => updateData({ phone: e.target.value })}
-              placeholder={"+33 1 23 45 67 89"}
-              className={`pl-10 h-12 text-base transition-all ${errors?.phone ? "border-red-500 bg-red-50/30 focus-visible:ring-red-500" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
-            />
-          </div>
+          <PhoneInput
+            defaultCountry="FR"
+            value={data.phone}
+            onChange={(value) => updateData({ phone: value || "" })}
+            placeholder="6 12 34 56 78"
+          />
           {errors?.phone && (
             <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
               <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.phone}

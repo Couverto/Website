@@ -123,13 +123,6 @@ export const Navbar = () => {
       role: "user", // Also accessible to users who want to be pros
     },
     {
-      label: "My Preferences",
-      translationKey: "Mes préférences",
-      path: "/account/preferences",
-      icon: Settings2,
-      role: "user",
-    },
-    {
       label: "Dashboard",
       translationKey: "Tableau de bord",
       path: "/admin/dashboard",

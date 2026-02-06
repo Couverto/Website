@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { PhoneInput } from "@/components/customs/phoneInput";
 import { Loader2, CalendarIcon, Users, Clock, Check } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -357,15 +358,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-medium text-foreground/60 ml-1">{"Téléphone"}</FormLabel>
                   <FormControl>
-                    <Input
-                      type="tel"
-                      placeholder="+33 6 12 34 56 78"
-                      {...field}
-                      className={cn(
-                        "h-11 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20",
-                        fieldState.invalid && "border-red-500 focus-visible:ring-red-500",
-                      )}
-                    />
+                    <PhoneInput defaultCountry="FR" value={field.value} onChange={field.onChange} placeholder="6 12 34 56 78" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

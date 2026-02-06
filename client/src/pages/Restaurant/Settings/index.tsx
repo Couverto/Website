@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { getRestaurantSettingsSchema } from "@/lib/zod/schemas/restaurant/zod";
 import { Badge } from "@/components/ui/badge";
 import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 import {
@@ -61,6 +63,7 @@ import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { PriceRangeControl } from "@/components/customs/PriceRangeControl";
 import { CuisineSelector } from "@/components/CuisineSelector";
 import { AddressAutocomplete } from "@/components/customs/AddressAutocomplete";
+import { PhoneInput } from "@/components/customs/phoneInput";
 
 export const RestaurantSettings = () => {
   const { id } = useParams();
@@ -81,6 +84,7 @@ export const RestaurantSettings = () => {
     clearErrors,
     formState: { errors },
   } = useForm<RestaurantInterface>({
+    resolver: zodResolver(getRestaurantSettingsSchema()),
     defaultValues: {
       cuisineType: [],
       features: [],
@@ -180,7 +184,18 @@ export const RestaurantSettings = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">{"Téléphone"}</Label>
-                <Input id="phone" {...register("phone")} />
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field }) => (
+                    <PhoneInput defaultCountry="FR" value={field.value} onChange={field.onChange} placeholder="6 12 34 56 78" />
+                  )}
+                />
+                {errors.phone && (
+                  <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
+                    <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.phone.message}
+                  </p>
+                )}
               </div>
             </div>
             <div className="space-y-2">

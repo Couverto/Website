@@ -33,6 +33,7 @@ import { PRICES, FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantRe
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { PriceRangeControl } from "@/components/customs/PriceRangeControl";
 import { CuisineSelector } from "@/components/CuisineSelector";
+import { PhoneInput } from "@/components/customs/phoneInput";
 
 export const AdminRestaurantForm = () => {
   const { id } = useParams();
@@ -124,7 +125,13 @@ export const AdminRestaurantForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">{"Téléphone"}</Label>
-                <Input id="phone" {...register("phone")} />
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field }) => (
+                    <PhoneInput defaultCountry="FR" value={field.value} onChange={field.onChange} placeholder="6 12 34 56 78" />
+                  )}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">{"Email de contact"}</Label>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validatePhone } from "@/lib/zod/validators/phone";
 
 export const createBookingSchema = z.object({
   bookingDate: z.date({
@@ -10,7 +11,7 @@ export const createBookingSchema = z.object({
   customer: z.object({
     name: z.string().min(2, { message: "Le nom est requis." }),
     email: z.string().email({ message: "Adresse email invalide." }),
-    phone: z.string().min(10, { message: "Le numéro de téléphone est requis." }),
+    phone: z.string().refine(validatePhone, { message: "Numéro de téléphone invalide." }),
   }),
   notes: z.string().optional(),
 });

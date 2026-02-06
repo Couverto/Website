@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { InputFile } from "@/components/customs/inputFile";
+import { PhoneInput } from "@/components/customs/phoneInput";
 import { UpdatePasswordForm } from "./components/updatePasswordForm";
 import { Dialog } from "@radix-ui/react-dialog";
 import { EllipsisVertical, Trash } from "lucide-react";
@@ -217,11 +218,7 @@ export const AccountProfile = () => {
                   <FormItem>
                     <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider ml-1">{"Téléphone"}</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="06 12 34 56 78"
-                        {...field}
-                        className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
-                      />
+                      <PhoneInput defaultCountry="FR" value={field.value} onChange={field.onChange} placeholder="6 12 34 56 78" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
