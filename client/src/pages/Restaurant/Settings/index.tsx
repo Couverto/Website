@@ -84,7 +84,7 @@ export const RestaurantSettings = () => {
     clearErrors,
     formState: { errors },
   } = useForm<RestaurantInterface>({
-    resolver: zodResolver(getRestaurantSettingsSchema()),
+    resolver: zodResolver(getRestaurantSettingsSchema()) as any,
     defaultValues: {
       cuisineType: [],
       features: [],
