@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { SEO } from "@/components/SEO";
 
 interface PublicRestaurant {
   _id: string;
@@ -131,6 +132,12 @@ export const PublicRestaurant = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 relative">
+      <SEO
+        title={`${restaurant.name} - ${restaurant.city} - Réservation Couverto`}
+        description={`Réservez une table chez ${restaurant.name} à ${restaurant.city}. ${Array.isArray(restaurant.cuisineType) ? restaurant.cuisineType.join(", ") : restaurant.cuisineType}. ${restaurant.description?.substring(0, 150) || ""}...`}
+        image={restaurant.coverImage}
+        url={`/restaurants/infos/${restaurant._id}`}
+      />
       {/* Back Button */}
       <Button
         variant="outline"
