@@ -5,7 +5,7 @@ services:
     container_name: couverto-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "27018:27017" # Use 27018 externally to avoid conflict with local MongoDB
     volumes:
       - mongodb_data:/data/db
     networks:
@@ -32,6 +32,18 @@ services:
       - MONG_URI_TEST=mongodb://mongodb:27017/couverto-test
       - SECRET_ACCESS_TOKEN=${SECRET_ACCESS_TOKEN:-your-secret-token}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
+      - SELF_URL=${SELF_URL:-http://server:3000}
+      # Email Service (Resend)
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
+      # Firebase Configuration
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL:-}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY:-}
+      - FIREBASE_BUCKET_NAME=${FIREBASE_BUCKET_NAME:-}
+      # Stripe Configuration
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
     volumes:
       - server_uploads:/app/uploads
     depends_on:
