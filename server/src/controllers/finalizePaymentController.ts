@@ -145,18 +145,60 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
 
     await restaurant.save();
 
-    // Create payment record
-    await Payment.create({
-      restaurant: restaurant._id,
-      plan: plan._id,
-      planName: plan.name,
-      amount: plan.price,
-      status: "completed",
-      paymentMethod: "card",
-    });
+    // Handle referral linking if restaurant was referred
+    const referredBy = pending.payload.referredBy;
+    if (referredBy) {
+      console.log(`[Finalize] Restaurant referred by: ${referredBy}`);
+      // The referredBy is already saved in the restaurant via pending.payload
+      // We just need to log it for debugging
+    }
+
+    // Generate referral code for the new restaurant
+    try {
+      const { ReferralCode } = await import("../models/referralCodeModel.js");
+      const newRefCode = await (ReferralCode as any).generateUniqueCode();
+      const refCodeDoc = new ReferralCode({
+        code: newRefCode,
+        restaurantId: restaurant._id,
+        isActive: true,
+        discountPercentage: 10,
+      });
+      await refCodeDoc.save();
+      restaurant.referralCode = refCodeDoc._id as any;
+      await restaurant.save();
+      console.log(`[Finalize] Generated referral code ${newRefCode} for ${restaurant.name}`);
+    } catch (codeError) {
+      console.error("[Finalize] Error generating referral code:", codeError);
+    }
+
+    // Check if subscription has a trial period (don't create payment record for trials)
+    let isTrialPeriod = false;
+    if (session.subscription) {
+      try {
+        const subscription = await stripeService.retrieveSubscription(session.subscription as string);
+        isTrialPeriod = (subscription as any).status === "trialing";
+        console.log(`[Finalize] Subscription status: ${(subscription as any).status}, isTrialing: ${isTrialPeriod}`);
+      } catch (subError) {
+        console.error("[Finalize] Error checking subscription status:", subError);
+      }
+    }
+
+    // Create payment record only if not in trial period
+    if (!isTrialPeriod) {
+      await Payment.create({
+        restaurant: restaurant._id,
+        plan: plan._id,
+        planName: plan.name,
+        amount: plan.price,
+        status: "completed",
+        paymentMethod: "card",
+      });
+    } else {
+      console.log(`[Finalize] Skipping payment record - restaurant is in trial period`);
+    }
 
     createLog({
-      message: `Restaurant '${restaurant.name}' created via manual finalization after payment`,
+      message: `Restaurant '${restaurant.name}' created via manual finalization after payment${isTrialPeriod ? " (trial period)" : ""}`,
       userId: pending.userId,
       level: logLevels.INFO,
     });

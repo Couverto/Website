@@ -12,6 +12,7 @@ import { adminRouter } from "./adminRoutes.js";
 import paymentRouter from "./paymentRoutes.js";
 import { featureRouter } from "./featureRoutes.js";
 import { reviewRoutes } from "./reviewRoutes.js";
+import { referralRouter } from "./referralRoutes.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,6 +31,7 @@ router.use("/api/plans", planRouter); // Plan routes
 router.use("/api/features", featureRouter); // Feature routes
 router.use("/api/bookings", bookingRouter); // Booking routes
 router.use("/api/reviews", reviewRoutes); // Review routes
+router.use("/api/referral", referralRouter); // Referral routes
 router.use("/api/admin", adminRouter); // Admin routes
 router.use("/api", paymentRouter); // Payment routes
 

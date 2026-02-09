@@ -24,11 +24,12 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
     case "checkout.session.completed": {
       const session = event.data.object as any;
       console.log(`[Stripe Webhook] Session completed: ${session.id}`);
-      const { transactionId, planId } = session.metadata || {};
-      console.log(`[Stripe Webhook] Metadata: transactionId=${transactionId}, planId=${planId}`);
+      const { transactionId, planId, referrerId } = session.metadata || {};
+      console.log(`[Stripe Webhook] Metadata: transactionId=${transactionId}, planId=${planId}, referrerId=${referrerId}`);
 
       try {
         const { PendingTransaction } = await import("../models/pendingTransactionModel.js");
+        const { ReferralCode } = await import("../models/referralCodeModel.js");
         const pending = await PendingTransaction.findById(transactionId);
 
         if (pending && pending.type === "RESTAURANT_CREATION") {
@@ -54,6 +55,47 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           });
 
           await restaurant.save();
+
+          // Handle referral linking
+          const referredBy = pending.payload.referredBy;
+          const referralCodeUsed = pending.payload.referralCodeUsed;
+
+          console.log(`[Stripe Webhook] Referral data - referredBy: ${referredBy}, referralCodeUsed: ${referralCodeUsed}`);
+
+          if (referredBy) {
+            try {
+              // Add new restaurant to referrer's referrals list
+              await Restaurant.findByIdAndUpdate(referredBy, {
+                $push: { referrals: restaurant._id },
+              });
+              console.log(`[Stripe Webhook] Added restaurant ${restaurant.name} to referrer's referrals`);
+
+              createLog({
+                message: `Restaurant '${restaurant.name}' linked to referrer (ID: ${referredBy})`,
+                userId: pending.userId,
+                level: logLevels.INFO,
+              });
+            } catch (refError) {
+              console.error("[Stripe Webhook] Error handling referral linking:", refError);
+            }
+          }
+
+          // Generate referral code for the new restaurant
+          try {
+            const newRefCode = await (ReferralCode as any).generateUniqueCode();
+            const refCodeDoc = new ReferralCode({
+              code: newRefCode,
+              restaurantId: restaurant._id,
+              isActive: true,
+              discountPercentage: 10,
+            });
+            await refCodeDoc.save();
+            restaurant.referralCode = refCodeDoc._id as any;
+            await restaurant.save();
+            console.log(`[Stripe Webhook] Generated referral code ${newRefCode} for ${restaurant.name}`);
+          } catch (codeError) {
+            console.error("[Stripe Webhook] Error generating referral code:", codeError);
+          }
 
           createLog({
             message: `Restaurant '${restaurant.name}' created and subscription activated after payment`,
@@ -118,16 +160,19 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           }
         }
 
-        // Create Payment Record (only if active payment > 0 or if we want to track 0 invoice)
-        // We generally track all invoices even if 0 if it extends validity
-        await Payment.create({
-          restaurant: restaurant._id,
-          plan: planId,
-          planName: planName,
-          amount: amountPaid,
-          status: "completed",
-          paymentMethod: "card",
-        });
+        // Create Payment Record only if amount > 0 (skip trial period invoices)
+        if (amountPaid > 0) {
+          await Payment.create({
+            restaurant: restaurant._id,
+            plan: planId,
+            planName: planName,
+            amount: amountPaid,
+            status: "completed",
+            paymentMethod: "card",
+          });
+        } else {
+          console.log(`[Stripe Webhook] Skipping payment record for 0€ trial invoice`);
+        }
 
         // Update Restaurant Subscription Validity
         if (invoice.lines?.data?.[0]?.period?.end) {

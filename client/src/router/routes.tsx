@@ -42,6 +42,7 @@ import { RestaurantCollaborators } from "@/pages/Restaurant/Collaborators";
 import { RestaurantStats } from "@/pages/Restaurant/Stats";
 import { RestaurantPlan } from "@/pages/Restaurant/Plan";
 import { RestaurantReviews } from "@/pages/Restaurant/Reviews";
+import { RestaurantReferral } from "@/pages/Restaurant/Referral";
 import { JoinRestaurant } from "@/pages/Join";
 import { PublicRestaurant } from "@/pages/PublicRestaurant";
 import { PublicRestaurants } from "@/pages/Restaurants";
@@ -204,6 +205,14 @@ export const Router = () => {
             element={
               <RestaurantRoleProtectedRoute roles={["admin", "manager"]}>
                 <RestaurantGallery />
+              </RestaurantRoleProtectedRoute>
+            }
+          />
+          <Route
+            path="referral"
+            element={
+              <RestaurantRoleProtectedRoute roles={["admin"]}>
+                <RestaurantReferral />
               </RestaurantRoleProtectedRoute>
             }
           />

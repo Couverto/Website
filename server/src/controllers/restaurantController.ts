@@ -13,6 +13,7 @@ import { deleteFile } from "../utils/fileUploadUtils.js";
 import { Plan } from "../models/planModel.js";
 import { stripeService } from "../services/stripeService.js";
 import { PendingTransaction } from "../models/pendingTransactionModel.js";
+import { ReferralCode } from "../models/referralCodeModel.js";
 
 import { isRestaurantOpen, convertOpeningHoursToObject } from "../utils/restaurantUtils.js";
 import { Review } from "../models/reviewModel.js";
@@ -49,7 +50,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
  */
 export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, slug, address, city, phone, website, planId, ...otherFields } = req.body;
+    const { name, slug, address, city, phone, website, planId, referralCode: referralCodeInput, ...otherFields } = req.body;
     const collaborators = [];
 
     const creator = await User.findById(req.userId);
@@ -72,6 +73,35 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
     // Set subscription end date if plan is provided (initial set to none/pending_payment)
     const subscriptionEndDate = null;
+
+    // Validate referral code if provided
+    let referrerRestaurant: any = null;
+    let validReferralCode: any = null;
+    let subscriptionStartDelay = 0;
+
+    if (referralCodeInput) {
+      validReferralCode = await ReferralCode.findOne({
+        code: referralCodeInput.toUpperCase().trim(),
+        isActive: true,
+      }).populate("restaurantId");
+
+      if (!validReferralCode) {
+        res.status(400).json({ error: "Code de parrainage invalide ou inactif" });
+        return;
+      }
+
+      // restaurantId is already populated, so it's the full restaurant object
+      referrerRestaurant = validReferralCode.restaurantId as any;
+      if (!referrerRestaurant || !referrerRestaurant._id) {
+        res.status(400).json({ error: "Le restaurant parrain n'existe plus" });
+        return;
+      }
+
+      console.log(`[createRestaurant] Referral validated - referrer: ${referrerRestaurant.name} (${referrerRestaurant._id})`);
+
+      // Set 30 days delay for referred restaurants
+      subscriptionStartDelay = 30;
+    }
 
     // Check if plan exists and handle Stripe/Free flow
     if (planId) {
@@ -122,13 +152,16 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
             collaboratorRoles: Object.fromEntries(collaboratorRoles), // Maps need to be objects in Mixed fields
             plan: planId,
             stripeCustomerId: customer.id,
+            referredBy: referrerRestaurant?._id || null,
+            subscriptionStartDelay,
+            referralCodeUsed: validReferralCode?._id || null,
             ...otherFields,
           },
         });
 
         await pendingTransaction.save();
 
-        // Create Checkout Session
+        // Create Checkout Session with trial period if referred
         const stripeSession = await stripeService.createCheckoutSession(
           customer.id,
           plan.stripePriceId,
@@ -137,15 +170,47 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           {
             transactionId: pendingTransaction._id.toString(),
             planId: planId.toString(),
+            referrerId: referrerRestaurant?._id?.toString() || "",
           },
+          // Add 30 days trial for referred restaurants
+          subscriptionStartDelay > 0 ? { trialPeriodDays: subscriptionStartDelay } : undefined,
         );
+
+        // Apply cumulative discount to referrer if applicable
+        if (referrerRestaurant && validReferralCode) {
+          try {
+            if (referrerRestaurant.stripeCustomerId) {
+              // Count current referrals + 1 for the new one being created
+              const currentReferrals = await Restaurant.countDocuments({ referredBy: referrerRestaurant._id });
+              const totalReferrals = currentReferrals + 1;
+              const discountPerReferral = validReferralCode.discountPercentage || 10;
+              const totalDiscount = Math.min(totalReferrals * discountPerReferral, 100);
+
+              // Apply cumulative permanent discount
+              await stripeService.applyCumulativeReferralDiscount(
+                referrerRestaurant.stripeCustomerId,
+                totalDiscount,
+                referrerRestaurant._id.toString(),
+              );
+
+              createLog({
+                message: `Cumulative referral discount updated for '${referrerRestaurant.name}' (${totalDiscount}% off - ${totalReferrals} referrals)`,
+                userId: req.userId,
+                level: logLevels.INFO,
+              });
+            }
+          } catch (discountError) {
+            console.error("Failed to apply referrer discount:", discountError);
+            // Don't fail the restaurant creation if discount fails
+          }
+        }
 
         // Update transaction with session ID for tracking
         pendingTransaction.stripeSessionId = stripeSession.id;
         await pendingTransaction.save();
 
         createLog({
-          message: `Restaurant creation initiated (pending payment) for '${name}'`,
+          message: `Restaurant creation initiated (pending payment) for '${name}'${subscriptionStartDelay > 0 ? ` with ${subscriptionStartDelay} days trial` : ""}`,
           userId: req.userId,
           level: logLevels.INFO,
         });
@@ -170,13 +235,35 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         autoRenew: true,
         subscriptionEndDate: null, // No end date for free plans usually, or set a trial period
         isClosed: true,
+        referredBy: referrerRestaurant?._id || null,
+        subscriptionStartDelay,
         ...otherFields,
       });
 
       await restaurant.save();
 
+      // Handle referral linking after successful creation
+      if (referrerRestaurant && validReferralCode) {
+        // Add new restaurant to referrer's referrals list
+        await Restaurant.findByIdAndUpdate(referrerRestaurant._id, {
+          $push: { referrals: restaurant._id },
+        });
+      }
+
+      // Generate referral code for the new restaurant
+      const newReferralCode = await (ReferralCode as any).generateUniqueCode();
+      const referralCodeDoc = new ReferralCode({
+        code: newReferralCode,
+        restaurantId: restaurant._id,
+        isActive: true,
+        discountPercentage: 10,
+      });
+      await referralCodeDoc.save();
+      restaurant.referralCode = referralCodeDoc._id;
+      await restaurant.save();
+
       createLog({
-        message: `Restaurant '${name}' created (Free plan activated)`,
+        message: `Restaurant '${name}' created (Free plan activated)${referrerRestaurant ? ` - Referred by ${referrerRestaurant.name}` : ""}`,
         userId: req.userId,
         level: logLevels.INFO,
       });
@@ -200,13 +287,34 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       autoRenew: true,
       subscriptionEndDate,
       isClosed: true,
+      referredBy: referrerRestaurant?._id || null,
+      subscriptionStartDelay,
       ...otherFields,
     });
 
     await restaurant.save();
 
+    // Handle referral linking after successful creation
+    if (referrerRestaurant && validReferralCode) {
+      await Restaurant.findByIdAndUpdate(referrerRestaurant._id, {
+        $push: { referrals: restaurant._id },
+      });
+    }
+
+    // Generate referral code for the new restaurant
+    const newRefCode = await (ReferralCode as any).generateUniqueCode();
+    const refCodeDoc = new ReferralCode({
+      code: newRefCode,
+      restaurantId: restaurant._id,
+      isActive: true,
+      discountPercentage: 10,
+    });
+    await refCodeDoc.save();
+    restaurant.referralCode = refCodeDoc._id;
+    await restaurant.save();
+
     createLog({
-      message: `Restaurant '${name}' created successfully (without plan)`,
+      message: `Restaurant '${name}' created successfully (without plan)${referrerRestaurant ? ` - Referred by ${referrerRestaurant.name}` : ""}`,
       userId: req.userId,
       level: logLevels.INFO,
     });
@@ -378,6 +486,24 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     }
     if (restaurant.menu && restaurant.menu.length > 0) {
       await Promise.all(restaurant.menu.map((img) => deleteFile(img)));
+    }
+
+    // Cleanup referral data
+    try {
+      // 1. Delete the restaurant's own referral code
+      if (restaurant.referralCode) {
+        await ReferralCode.findByIdAndDelete(restaurant.referralCode);
+        console.log(`[Delete] Deleted referral code for restaurant ${restaurant.name}`);
+      }
+
+      // 2. Clear referredBy reference is handled by step 3 below
+      // (No usageCount to update anymore)
+
+      // 3. Clear referredBy references in any restaurants that might reference this one
+      // (this is a safety measure in case data is inconsistent)
+      await Restaurant.updateMany({ referredBy: restaurant._id }, { $unset: { referredBy: 1 } });
+    } catch (refError) {
+      console.error("[Delete] Error cleaning up referral data:", refError);
     }
 
     createLog({

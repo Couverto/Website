@@ -80,6 +80,27 @@ const RestaurantSchema = new Schema<IRestaurant>(
       type: String,
       default: null,
     },
+
+    // Referral fields
+    referralCode: {
+      type: Schema.Types.ObjectId,
+      ref: "ReferralCode",
+      default: null,
+    },
+    referredBy: {
+      type: Schema.Types.ObjectId,
+      ref: "Restaurant",
+      default: null,
+    },
+    referrals: {
+      type: [Schema.Types.ObjectId],
+      ref: "Restaurant",
+      default: [],
+    },
+    subscriptionStartDelay: {
+      type: Number,
+      default: 0, // Days of delay before subscription starts
+    },
   },
   { timestamps: true },
 );

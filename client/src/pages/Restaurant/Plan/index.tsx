@@ -48,6 +48,13 @@ interface RestaurantContext {
   userRole: string;
 }
 
+interface ReferralDiscount {
+  totalDiscountPercentage: number;
+  discountAmount: number;
+  priceAfterDiscount: number;
+  totalReferrals: number;
+}
+
 export const RestaurantPlan = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,6 +62,7 @@ export const RestaurantPlan = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [referralDiscount, setReferralDiscount] = useState<ReferralDiscount | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
@@ -65,14 +73,23 @@ export const RestaurantPlan = () => {
 
   const fetchData = async () => {
     try {
-      const [subRes, payRes, plansRes] = await Promise.all([
+      const [subRes, payRes, plansRes, refRes] = await Promise.all([
         api.get(`/restaurants/${id}/subscription`),
         api.get(`/restaurants/${id}/payments`),
         api.get("/plans/public"),
+        api.get(`/referral/restaurant/${id}`).catch(() => null),
       ]);
       setSubscription(subRes.data);
       setPayments(payRes.data.payments || []);
       setPlans(plansRes.data.plans || []);
+      if (refRes?.data?.pricing) {
+        setReferralDiscount({
+          totalDiscountPercentage: refRes.data.pricing.totalDiscountPercentage,
+          discountAmount: refRes.data.pricing.discountAmount,
+          priceAfterDiscount: refRes.data.pricing.priceAfterDiscount,
+          totalReferrals: refRes.data.stats?.totalReferrals || 0,
+        });
+      }
       if (subRes.data.plan) {
         setSelectedPlan(subRes.data.plan._id);
       }
@@ -225,7 +242,17 @@ export const RestaurantPlan = () => {
                 <div className="flex items-center gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
-                    <span className="font-semibold text-foreground">{subscription.plan.price}€</span>
+                    {referralDiscount && referralDiscount.totalDiscountPercentage > 0 ? (
+                      <>
+                        <span className="font-semibold text-muted-foreground line-through">{subscription.plan.price}€</span>
+                        <span className="font-bold text-emerald-600">{referralDiscount.priceAfterDiscount.toFixed(2)}€</span>
+                        <Badge className="bg-emerald-500/15 text-emerald-600 text-xs">
+                          -{referralDiscount.totalDiscountPercentage}% parrainage
+                        </Badge>
+                      </>
+                    ) : (
+                      <span className="font-semibold text-foreground">{subscription.plan.price}€</span>
+                    )}
                     <span>/mois</span>
                   </div>
                 </div>

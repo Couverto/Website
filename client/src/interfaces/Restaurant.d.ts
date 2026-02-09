@@ -37,6 +37,13 @@ export interface RestaurantInterface {
   plan?: { _id: string; name: string } | string;
   subscriptionStatus?: "active" | "cancelled" | "expired" | "none";
   collaborators: string[] | any[]; // IDs or Populated Users
+
+  // Referral fields
+  referralCode?: string;
+  referredBy?: string;
+  referrals?: string[];
+  subscriptionStartDelay?: number;
+
   createdAt: string;
   updatedAt: string;
 }

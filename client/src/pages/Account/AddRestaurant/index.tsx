@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { StepEssentials } from "./components/StepEssentials";
 import { StepIdentity } from "./components/StepIdentity";
 import { StepDetails } from "./components/StepDetails";
+import { StepReferral } from "./components/StepReferral";
 import { StepPlan } from "./components/StepPlan";
 import { StepPayment } from "./components/StepPayment";
 import { WizardPreview } from "./components/WizardPreview";
@@ -18,6 +19,7 @@ import {
   getDetailsSchema,
   getMenuSchema,
   getMediaSchema,
+  getReferralSchema,
   getPlanSchema,
   getPaymentSchema,
 } from "./schemas";
@@ -46,6 +48,9 @@ const INITIAL_DATA: WizardData = {
     tiktok: "",
   },
   planId: "",
+  referralCode: "",
+  referralCodeValidated: false,
+  referrer: null,
   openingHours: {
     monday: {
       isClosed: false,
@@ -129,9 +134,12 @@ export const AddRestaurantWizard = () => {
         schema = getDetailsSchema();
         break;
       case 4:
-        schema = getPlanSchema();
+        schema = getReferralSchema();
         break;
       case 5:
+        schema = getPlanSchema();
+        break;
+      case 6:
         schema = getPaymentSchema();
         break;
       default:
@@ -153,7 +161,7 @@ export const AddRestaurantWizard = () => {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      setStep((prev: number) => Math.min(prev + 1, 5));
+      setStep((prev: number) => Math.min(prev + 1, 6));
       window.scrollTo(0, 0);
     }
   };
@@ -195,8 +203,9 @@ export const AddRestaurantWizard = () => {
     { id: 1, key: "essentials", label: "L'essentiel" },
     { id: 2, key: "identity", label: "Identité" },
     { id: 3, key: "details", label: "Détails" },
-    { id: 4, key: "plan", label: "Abonnement" },
-    { id: 5, key: "payment", label: "Paiement" },
+    { id: 4, key: "referral", label: "Parrainage" },
+    { id: 5, key: "plan", label: "Abonnement" },
+    { id: 6, key: "payment", label: "Paiement" },
   ];
 
   return (
@@ -261,8 +270,10 @@ export const AddRestaurantWizard = () => {
                     : step === 3
                       ? "Précisez vos services, équipements et moyens de paiement."
                       : step === 4
-                        ? "Configurez votre abonnement."
-                        : "Configurez vos informations de facturation."}
+                        ? "Avez-vous été recommandé par un autre restaurant ?"
+                        : step === 5
+                          ? "Choisissez votre abonnement."
+                          : "Configurez vos informations de facturation."}
               </p>
             </div>
 
@@ -271,8 +282,9 @@ export const AddRestaurantWizard = () => {
                 {step === 1 && <StepEssentials data={formData} updateData={updateFormData} errors={errors} />}
                 {step === 2 && <StepIdentity data={formData} updateData={updateFormData} errors={errors} />}
                 {step === 3 && <StepDetails data={formData} updateData={updateFormData} errors={errors} />}
-                {step === 4 && <StepPlan data={formData} updateData={updateFormData} errors={errors} />}
-                {step === 5 && <StepPayment data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 4 && <StepReferral data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 5 && <StepPlan data={formData} updateData={updateFormData} errors={errors} />}
+                {step === 6 && <StepPayment data={formData} updateData={updateFormData} errors={errors} />}
               </div>
 
               <div className="flex justify-between items-center mt-12 pt-8 border-t">
@@ -286,7 +298,7 @@ export const AddRestaurantWizard = () => {
                   {"Précédent"}
                 </Button>
 
-                {step < 5 ? (
+                {step < 6 ? (
                   <Button
                     onClick={nextStep}
                     className="gap-2 px-8 h-11 text-base font-medium shadow-lg hover:shadow-primary/20 transition-all"

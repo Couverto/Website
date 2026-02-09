@@ -53,6 +53,21 @@ export const getPlanSchema = () =>
     planId: z.string().min(1, "Veuillez sélectionner un plan."),
   });
 
+export const getReferralSchema = () =>
+  z.object({
+    referralCode: z.string().optional(),
+    referralCodeValidated: z.boolean().optional(),
+    referrer: z
+      .object({
+        id: z.string(),
+        name: z.string(),
+        city: z.string(),
+        coverImage: z.string().optional(),
+      })
+      .optional()
+      .nullable(),
+  });
+
 export const getPaymentSchema = () =>
   z.object({
     // Payment is handled by Stripe Checkout
@@ -78,6 +93,7 @@ export const getRestaurantWizardSchema = () =>
     ...getDetailsSchema().shape,
     ...getMenuSchema().shape,
     ...getMediaSchema().shape,
+    ...getReferralSchema().shape,
     ...getPlanSchema().shape,
     ...getPaymentSchema().shape,
     openingHours: getOpeningHoursSchema(),
