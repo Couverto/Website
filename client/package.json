@@ -52,6 +52,7 @@
     "react-datepicker": "^9.1.0",
     "react-day-picker": "^9.13.0",
     "react-dom": "19.1.0",
+    "react-helmet-async": "^2.0.5",
     "react-hook-form": "^7.56.4",
     "react-phone-number-input": "^3.4.14",
     "react-router-dom": "7.6.1",

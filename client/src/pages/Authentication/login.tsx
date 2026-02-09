@@ -13,6 +13,7 @@ import { useState } from "react";
 import { OAuth } from "@/components/customs/oauth";
 import { useConfigContext } from "@/contexts/configContext";
 import { Calendar, Users, UtensilsCrossed, Check } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 export const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -65,6 +66,7 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen flex">
+      <SEO title="Connexion - Couverto" description="Connectez-vous à votre espace Couverto pour gérer votre restaurant." url="/login" />
       {/* Left Side - Brand Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
         {/* Decorative elements */}

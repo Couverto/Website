@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { OAuth } from "@/components/customs/oauth";
 import { Check, Star, Shield, Zap } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 export const Register = () => {
   const [loading, setLoading] = useState(false);
@@ -59,6 +60,11 @@ export const Register = () => {
 
   return (
     <div className="min-h-screen flex">
+      <SEO
+        title="Inscription - Couverto"
+        description="Créez votre compte Couverto et commencez à gérer votre restaurant simplement."
+        url="/register"
+      />
       {/* Left Side - Brand Section */}
       <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-primary to-primary/80 relative overflow-hidden">
         {/* Decorative elements */}
@@ -99,7 +105,7 @@ export const Register = () => {
                 <div className="text-sm text-white/70">{"restaurants"}</div>
               </div>
               <div className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-                <div className="text-3xl font-bold">50k+</div>
+                <div className="text-3xl font-bold">5k+</div>
                 <div className="text-sm text-white/70">{"réservations gérées"}</div>
               </div>
             </div>
