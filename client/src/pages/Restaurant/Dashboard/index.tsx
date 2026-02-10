@@ -76,6 +76,9 @@ export const RestaurantDashboard = () => {
   useEffect(() => {
     if (id) {
       fetchStats();
+      // Refresh every minute to keep "Active Bookings" live
+      const interval = setInterval(fetchStats, 60000);
+      return () => clearInterval(interval);
     }
   }, [id, fetchStats]);
 
@@ -233,7 +236,39 @@ export const RestaurantDashboard = () => {
             <div className="text-2xl font-bold text-primary">
               {stats?.activeBookings?.length || 0} / {context?.restaurant?.capacity || 0}
             </div>
-            <p className="text-xs text-muted-foreground font-medium">Tables occupées en ce moment</p>
+            <p className="text-xs text-muted-foreground font-medium">
+              Tables occupées en ce moment{" "}
+              {(() => {
+                if (!context?.restaurant?.openingHours) return null;
+                const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                const now = new Date();
+                const today = days[now.getDay()];
+                const schedule = (context.restaurant.openingHours as any)[today];
+
+                if (!schedule || schedule.isClosed || !schedule.periods?.length)
+                  return <span className="text-muted-foreground/60">(Fermé)</span>;
+
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const currentPeriod = schedule.periods.find((p: any) => {
+                  const [startH, startM] = p.open.split(":").map(Number);
+                  const [endH, endM] = p.close.split(":").map(Number);
+                  const start = startH * 60 + startM;
+                  const end = endH * 60 + endM;
+                  // Handle overnight? Assuming simple day hours for now as per typical restaurant logic
+                  return currentMinutes >= start && currentMinutes < end;
+                });
+
+                if (currentPeriod) {
+                  return (
+                    <span>
+                      ({currentPeriod.open} - {currentPeriod.close})
+                    </span>
+                  );
+                }
+
+                return <span className="text-muted-foreground/60">(Fermé)</span>;
+              })()}
+            </p>
           </CardContent>
         </Card>
 

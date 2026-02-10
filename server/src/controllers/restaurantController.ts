@@ -921,6 +921,9 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
   try {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(startOfToday);
+    endOfToday.setDate(endOfToday.getDate() + 1); // Next day 00:00 marks end of today
+
     const startOfWeek = new Date(startOfToday);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -928,7 +931,7 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
     // Today's bookings
     const todayBookings = await Booking.countDocuments({
       restaurant: id,
-      bookingDate: { $gte: startOfToday },
+      bookingDate: { $gte: startOfToday, $lt: endOfToday },
       status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
     });
 
