@@ -2,18 +2,20 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Armchair, Users, Info, Map as MapIcon } from "lucide-react";
+import { Armchair, Users, Info, Map as MapIcon, Clock, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { BookingInterface } from "@/interfaces/Booking";
-import { isWithinInterval, addHours, subHours, parseISO } from "date-fns";
+import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DashboardTablePlanProps {
   restaurant: RestaurantInterface;
   bookings: BookingInterface[];
+  onDismiss?: (bookingId: string) => void;
 }
 
-export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaurant, bookings }) => {
+export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaurant, bookings, onDismiss }) => {
   const [activeZoneId, setActiveZoneId] = useState<string>(restaurant.zones[0]?.id || "");
 
   const activeZone = useMemo(
@@ -27,7 +29,6 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
   }, [bookings]);
 
   // Calculate viewport transformation to fit all tables
-  // Calculate bounding box and transformation metrics
   const layout = useMemo(() => {
     if (!activeZone?.tables || activeZone.tables.length === 0) {
       return {
@@ -41,7 +42,7 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
       };
     }
 
-    const padding = 20; // Internal padding inside the scaled space
+    const padding = 20;
     const minX = Math.min(...activeZone.tables.map((t: any) => t.x)) - padding;
     const minY = Math.min(...activeZone.tables.map((t: any) => t.y)) - padding;
     const maxX = Math.max(...activeZone.tables.map((t: any) => t.x + t.width)) + padding;
@@ -50,7 +51,6 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
     const contentWidth = maxX - minX;
     const contentHeight = maxY - minY;
 
-    // Calculate aspect ratio for the container
     const aspectRatio = `${contentWidth} / ${contentHeight}`;
 
     return {
@@ -123,71 +123,123 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
           className="relative w-full transition-all duration-500 ease-in-out bg-background/50 rounded-xl border border-dashed border-muted-foreground/20 overflow-hidden shadow-inner"
           style={{ aspectRatio: layout.aspectRatio }}
         >
-          {/* Legend */}
-          <div className="absolute bottom-4 left-4 flex gap-4 z-10 bg-background/80 backdrop-blur-sm p-2 px-3 rounded-full border shadow-sm">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight">
-              <div className="w-2.5 h-2.5 rounded-full bg-background border border-muted-foreground/30" />
+          {/* Legend - top left, above everything */}
+          <div className="absolute top-3 left-3 flex gap-3 z-30 bg-background/90 backdrop-blur-sm p-1.5 px-3 rounded-full border shadow-sm">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-tight">
+              <div className="w-2.5 h-2.5 rounded-full bg-background border-2 border-muted-foreground/30" />
               <span>Libre</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-tight">
-              <div className="w-2.5 h-2.5 rounded-full bg-primary border border-primary/30" />
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-tight">
+              <div className="w-2.5 h-2.5 rounded-full bg-primary border-2 border-primary/30" />
               <span>Occupé</span>
             </div>
           </div>
 
-          <div className="w-full h-full relative">
-            {activeZone?.tables.map((table: any) => {
-              const tid = String(table.id || table._id || "");
-              const booking = currentBookings.find((b: BookingInterface) => b.tableId && String(b.tableId) === tid);
-              const isOccupied = !!booking;
+          <TooltipProvider delayDuration={200}>
+            <div className="w-full h-full relative">
+              {activeZone?.tables.map((table: any) => {
+                const tid = String(table.id || table._id || "");
+                const booking = currentBookings.find((b: BookingInterface) => b.tableId && String(b.tableId) === tid);
+                const isOccupied = !!booking;
 
-              // Calculate percentage-based positions relative to bounding box
-              const left = ((table.x - layout.minX) / layout.contentWidth) * 100;
-              const top = ((table.y - layout.minY) / layout.contentHeight) * 100;
-              const width = (table.width / layout.contentWidth) * 100;
-              const height = (table.height / layout.contentHeight) * 100;
+                // Calculate percentage-based positions relative to bounding box
+                const left = ((table.x - layout.minX) / layout.contentWidth) * 100;
+                const top = ((table.y - layout.minY) / layout.contentHeight) * 100;
+                const width = (table.width / layout.contentWidth) * 100;
+                const height = (table.height / layout.contentHeight) * 100;
 
-              return (
-                <div
-                  key={table.id}
-                  className={cn(
-                    "absolute transition-all duration-500 border-2 shadow-sm flex flex-col items-center justify-center text-center p-0.5 overflow-hidden",
-                    isOccupied
-                      ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 z-20"
-                      : "bg-background text-muted-foreground border-muted-foreground/20 hover:border-primary/50 z-10",
-                  )}
-                  style={{
-                    left: `${left}%`,
-                    top: `${top}%`,
-                    width: `${width}%`,
-                    height: `${height}%`,
-                    borderRadius: table.shape === "circle" ? "9999px" : "12%",
-                  }}
-                >
-                  <div className="flex flex-col items-center justify-center w-full h-full p-1 sm:p-2">
-                    <span
-                      className={cn(
-                        "font-black leading-tight truncate w-full",
-                        isOccupied ? "text-[clamp(8px,2cqi,14px)]" : "text-[clamp(6px,1.5cqi,11px)] opacity-80",
+                const tableContent = (
+                  <div
+                    key={table.id}
+                    className={cn(
+                      "absolute transition-all duration-500 border-2 shadow-sm flex flex-col items-center justify-center text-center p-0.5 overflow-hidden group",
+                      isOccupied
+                        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 z-20"
+                        : "bg-background text-muted-foreground border-muted-foreground/20 hover:border-primary/50 z-10",
+                    )}
+                    style={{
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      width: `${width}%`,
+                      height: `${height}%`,
+                      borderRadius: table.shape === "circle" ? "9999px" : "12%",
+                    }}
+                  >
+                    <div className="flex flex-col items-center justify-center w-full h-full p-1 sm:p-2 relative">
+                      {/* Dismiss button - only on occupied tables */}
+                      {isOccupied && onDismiss && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDismiss(booking._id);
+                          }}
+                          className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-all bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 z-30 cursor-pointer shadow-sm"
+                          title="Marquer comme parti"
+                        >
+                          <LogOut className="h-[clamp(8px,1.5cqi,12px)] w-[clamp(8px,1.5cqi,12px)]" />
+                        </button>
                       )}
-                    >
-                      {isOccupied ? booking.customer.name : table.label}
-                    </span>
 
-                    <div
-                      className={cn(
-                        "flex items-center gap-0.5 mt-0.5 px-1 py-0.5 rounded-full",
-                        isOccupied ? "bg-white/20 text-white" : "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      <Users className="h-[clamp(6px,1.5cqi,10px)] w-[clamp(6px,1.5cqi,10px)]" />
-                      <span className="text-[clamp(6px,1.2cqi,9px)] font-bold">{isOccupied ? `${booking.guests}` : table.seats}</span>
+                      <span
+                        className={cn(
+                          "font-black leading-tight truncate w-full",
+                          isOccupied ? "text-[clamp(8px,2cqi,14px)]" : "text-[clamp(6px,1.5cqi,11px)] opacity-80",
+                        )}
+                      >
+                        {isOccupied ? booking.customer.name : table.label}
+                      </span>
+
+                      <div
+                        className={cn(
+                          "flex items-center gap-0.5 mt-0.5 px-1 py-0.5 rounded-full",
+                          isOccupied ? "bg-white/20 text-white" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {isOccupied ? (
+                          <>
+                            <Clock className="h-[clamp(6px,1.2cqi,9px)] w-[clamp(6px,1.2cqi,9px)]" />
+                            <span className="text-[clamp(6px,1.2cqi,9px)] font-bold">{format(new Date(booking.bookingDate), "HH:mm")}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Users className="h-[clamp(6px,1.5cqi,10px)] w-[clamp(6px,1.5cqi,10px)]" />
+                            <span className="text-[clamp(6px,1.2cqi,9px)] font-bold">{table.seats}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+
+                if (isOccupied) {
+                  return (
+                    <Tooltip key={table.id}>
+                      <TooltipTrigger asChild>{tableContent}</TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        <div className="space-y-1">
+                          <p className="font-bold">{booking.customer.name}</p>
+                          <p className="text-muted-foreground">
+                            {booking.guests} couvert(s) • Arrivée {format(new Date(booking.bookingDate), "HH:mm")}
+                          </p>
+                          {onDismiss && (
+                            <button
+                              onClick={() => onDismiss(booking._id)}
+                              className="flex items-center gap-1 text-[10px] font-bold text-orange-500 hover:text-orange-600 mt-1"
+                            >
+                              <LogOut className="h-3 w-3" />
+                              Marquer comme parti
+                            </button>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                }
+
+                return tableContent;
+              })}
+            </div>
+          </TooltipProvider>
         </div>
       </CardContent>
     </Card>

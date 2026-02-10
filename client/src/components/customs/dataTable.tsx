@@ -37,6 +37,7 @@ interface DataTableProps<TData, TValue> {
   searchElement: string;
   actions?: string[];
   onSearch?: (query: string) => void;
+  initialSorting?: SortingState;
 }
 
 export function DataTable<TData, TValue>({
@@ -49,9 +50,10 @@ export function DataTable<TData, TValue>({
   searchElement,
   actions = [],
   onSearch,
+  initialSorting = [],
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [pagination, setPagination] = useState({

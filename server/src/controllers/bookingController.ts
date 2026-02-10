@@ -594,6 +594,7 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
 /**
  * @function getRestaurantBookings
  * @description Retrieves all bookings for a restaurant (for collaborators).
+ * Sorted so that upcoming bookings appear first (ascending), then past bookings (descending).
  */
 export const getRestaurantBookings = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -604,7 +605,11 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
     const dateFrom = req.query.dateFrom as string;
     const dateTo = req.query.dateTo as string;
 
-    const query: any = { restaurant: id };
+    const mongoose = await import("mongoose");
+    const restaurantId = mongoose.Types.ObjectId.createFromHexString(id);
+    const now = new Date();
+
+    const query: any = { restaurant: restaurantId };
 
     // Filter by status
     if (status && Object.values(bookingStatus).includes(status as bookingStatus)) {
@@ -624,29 +629,53 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
       query.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
     }
 
-    const bookings = await Booking.find(query)
-      .populate("user", "name forename email avatar")
-      .sort({ bookingDate: -1 })
-      .skip(page * size)
-      .limit(size);
+    // Aggregation: future bookings first (ascending), then past bookings (descending)
+    const bookings = await Booking.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          _isFuture: { $gte: ["$bookingDate", now] },
+          _sortKey: {
+            $cond: {
+              if: { $gte: ["$bookingDate", now] },
+              then: { $toLong: "$bookingDate" },
+              else: { $multiply: [{ $toLong: "$bookingDate" }, -1] },
+            },
+          },
+        },
+      },
+      { $sort: { _isFuture: -1, _sortKey: 1 } },
+      { $skip: page * size },
+      { $limit: size },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+          pipeline: [{ $project: { name: 1, forename: 1, email: 1, avatar: 1 } }],
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      { $project: { _isFuture: 0, _sortKey: 0 } },
+    ]);
 
     const count = await Booking.countDocuments(query);
 
     // Enrich with table labels
     const restaurantDoc = await Restaurant.findById(id).select("zones");
-    const bookingsWithLabels = bookings.map((b) => {
-      const bObj = b.toObject();
-      if (bObj.tableId && restaurantDoc?.zones) {
+    const bookingsWithLabels = bookings.map((b: any) => {
+      if (b.tableId && restaurantDoc?.zones) {
         for (const zone of restaurantDoc.zones) {
-          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
+          const table = zone.tables.find((t: any) => t.id === b.tableId);
           if (table) {
-            (bObj as any).tableLabel = table.label;
-            (bObj as any).zoneName = zone.name;
+            b.tableLabel = table.label;
+            b.zoneName = zone.name;
             break;
           }
         }
       }
-      return bObj;
+      return b;
     });
 
     res.status(200).json({
