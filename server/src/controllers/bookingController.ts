@@ -11,6 +11,7 @@ import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { bookingConfirmationTemplate } from "../templates/bookingConfirmationEmail.js";
 import { bookingCancellationTemplate } from "../templates/bookingCancellationEmail.js";
+import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -256,6 +257,36 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       }
     } catch (mailError) {
       console.error("Booking confirmation email failed", mailError);
+    }
+
+    // Notify Restaurant (if email exists)
+    if (restaurantExists.email) {
+      try {
+        const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const timeStr = new Date(bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+        await sendEmail({
+          email: restaurantExists.email,
+          subject: `Nouvelle réservation - ${customer.name}`,
+          message: restaurantBookingNotificationTemplate({
+            customerName: customer.name,
+            customerEmail: customer.email,
+            customerPhone: customer.phone,
+            date: dateStr,
+            time: timeStr,
+            guests: guests,
+            notes: notes,
+            restaurantName: restaurantExists.name,
+          }),
+        });
+      } catch (restaurantMailError) {
+        console.error("Restaurant notification email failed", restaurantMailError);
+      }
     }
 
     createLog({
