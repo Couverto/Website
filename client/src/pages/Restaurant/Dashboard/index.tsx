@@ -133,6 +133,16 @@ export const RestaurantDashboard = () => {
     }
   };
 
+  const handleDismissBooking = async (bookingId: string) => {
+    try {
+      await api.patch(`/bookings/restaurant/${id}/${bookingId}/dismiss`);
+      toast.success("Table libérée");
+      fetchStats();
+    } catch (error) {
+      toast.error("Erreur lors de la libération de la table");
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "CONFIRMED":
@@ -241,7 +251,9 @@ export const RestaurantDashboard = () => {
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Left Column: Table Plan Map */}
-        {context?.restaurant && <DashboardTablePlan restaurant={context.restaurant} bookings={stats?.activeBookings || []} />}
+        {context?.restaurant && (
+          <DashboardTablePlan restaurant={context.restaurant} bookings={stats?.activeBookings || []} onDismiss={handleDismissBooking} />
+        )}
 
         {/* Right Column: Recent Bookings */}
         <Card className="col-span-1 border-primary/10 shadow-sm overflow-hidden flex flex-col">
@@ -307,7 +319,7 @@ export const RestaurantDashboard = () => {
                                 getStatusColor(booking.status),
                               )}
                             >
-                              {booking.status === "PENDING" ? "Attente" : isConfirmed ? "OK" : isCancelled ? "OFF" : "B?"}
+                              {booking.status === "PENDING" ? "Attente" : isConfirmed ? "Confirmée" : isCancelled ? "Annulée" : "B?"}
                             </Badge>
                           </div>
 
@@ -404,7 +416,9 @@ export const RestaurantDashboard = () => {
               <label className="text-sm font-bold">Sélectionner la nouvelle table</label>
               <Select
                 disabled={isMoving}
-                defaultValue={bookingToMove?.tableId}
+                defaultValue={
+                  bookingToMove?.tableId && bookingToMove?.zoneId ? `${bookingToMove.tableId}|${bookingToMove.zoneId}` : undefined
+                }
                 onValueChange={(val) => {
                   if (bookingToMove) {
                     const [tid, zid] = val.split("|");

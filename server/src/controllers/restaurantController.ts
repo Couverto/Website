@@ -970,13 +970,33 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
 
     // Recent bookings (last 10 received) - for the dashboard feed widget
     // Includes CANCELLED, but excludes dismissed
-    const recentBookings = await Booking.find({
-      restaurant: id,
-      isDismissedByRestaurant: { $ne: true },
-    })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .populate("user", "name forename avatar");
+    // Enrich with table labels (Unified fetch)
+    const restaurantDoc = await Restaurant.findById(id).select("zones");
+
+    const recentBookings = await Promise.all(
+      (
+        await Booking.find({
+          restaurant: id,
+          isDismissedByRestaurant: { $ne: true },
+        })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .populate("user", "name forename avatar")
+      ).map(async (b) => {
+        const bObj = b.toObject();
+        if (bObj.tableId && restaurantDoc?.zones) {
+          for (const zone of restaurantDoc.zones) {
+            const table = zone.tables.find((t: any) => t.id === bObj.tableId);
+            if (table) {
+              (bObj as any).tableLabel = table.label;
+              (bObj as any).zoneName = zone.name;
+              break;
+            }
+          }
+        }
+        return bObj;
+      }),
+    );
 
     // Active bookings for widget (now - 2h to now + 2h)
     const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
@@ -985,10 +1005,9 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       restaurant: id,
       bookingDate: { $gte: twoHoursAgo, $lte: twoHoursFromNow },
       status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+      isDismissedByRestaurant: { $ne: true },
     }).populate("user", "name forename avatar");
 
-    // Enrich with table labels
-    const restaurantDoc = await Restaurant.findById(id).select("zones");
     const upcomingBookings = rawUpcomingBookings.map((b) => {
       const bObj = b.toObject();
       if (bObj.tableId && restaurantDoc?.zones) {
