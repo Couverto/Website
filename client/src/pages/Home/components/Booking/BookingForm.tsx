@@ -190,6 +190,26 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Exceptional Closures Banner */}
+        {restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0 && (
+          <div className="bg-orange-50/50 border border-orange-200 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 text-orange-800 font-medium text-sm">
+              <CalendarIcon className="h-4 w-4" />
+              <span>Fermetures exceptionnelles à venir :</span>
+            </div>
+            <div className="space-y-1">
+              {restaurant.exceptionalClosures.map((closure, idx) => (
+                <div key={idx} className="text-xs text-orange-700/80 ml-6 flex flex-col sm:flex-row sm:gap-1">
+                  <span className="font-semibold">
+                    Du {format(new Date(closure.startDate), "dd/MM/yyyy")} au {format(new Date(closure.endDate), "dd/MM/yyyy")} :
+                  </span>
+                  <span>{closure.reason}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}

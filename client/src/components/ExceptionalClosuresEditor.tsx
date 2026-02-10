@@ -25,15 +25,18 @@ interface ExceptionalClosuresEditorProps {
 
 export const ExceptionalClosuresEditor = ({ value = [], onChange }: ExceptionalClosuresEditorProps) => {
   const [isAdding, setIsAdding] = useState(false);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
   const [newClosure, setNewClosure] = useState<ExceptionalClosure>({
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: tomorrow,
+    endDate: tomorrow,
     reason: "",
   });
 
   const handleAdd = () => {
     // Basic validation
-    if (!newClosure.startDate || !newClosure.endDate) return;
+    if (!newClosure.startDate || !newClosure.endDate || !newClosure.reason?.trim()) return;
 
     // Ensure startDate <= endDate. If not, swap or error? Let's swap for UX.
     let start = new Date(newClosure.startDate);
@@ -53,7 +56,7 @@ export const ExceptionalClosuresEditor = ({ value = [], onChange }: ExceptionalC
 
     onChange([...value, closureToAdd]);
     setIsAdding(false);
-    setNewClosure({ startDate: new Date(), endDate: new Date(), reason: "" });
+    setNewClosure({ startDate: tomorrow, endDate: tomorrow, reason: "" });
   };
 
   const handleDelete = (index: number) => {
@@ -111,6 +114,7 @@ export const ExceptionalClosuresEditor = ({ value = [], onChange }: ExceptionalC
                   onChange={(date: Date | null) => date && setNewClosure({ ...newClosure, startDate: date })}
                   locale="fr"
                   dateFormat="dd/MM/yyyy"
+                  minDate={tomorrow}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   wrapperClassName="w-full"
                 />
@@ -134,7 +138,7 @@ export const ExceptionalClosuresEditor = ({ value = [], onChange }: ExceptionalC
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Raison (optionnel)</Label>
+            <Label className="after:content-['*'] after:ml-0.5 after:text-red-500">Raison</Label>
             <Input
               placeholder="Ex: Vacances annuelles, Rénovation..."
               value={newClosure.reason}
