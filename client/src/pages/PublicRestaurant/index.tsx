@@ -236,9 +236,9 @@ export const PublicRestaurant = () => {
                 size="lg"
                 className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all h-12 md:h-11"
                 onClick={() => setIsBookingOpen(true)}
-                disabled={restaurant.isClosed}
+                disabled={restaurant.isClosed || (restaurant.capacity || 0) <= 0}
               >
-                {restaurant.isClosed ? "Restaurant fermé" : "Réserver une table"}
+                {restaurant.isClosed ? "Restaurant fermé" : (restaurant.capacity || 0) <= 0 ? "Complet" : "Réserver une table"}
               </Button>
             </div>
           </div>
@@ -732,9 +732,9 @@ export const PublicRestaurant = () => {
           size="lg"
           className="w-full shadow-lg font-bold text-lg h-12"
           onClick={() => setIsBookingOpen(true)}
-          disabled={restaurant.isClosed}
+          disabled={restaurant.isClosed || (restaurant.capacity || 0) <= 0}
         >
-          {restaurant.isClosed ? "Fermé" : "Réserver une table"}
+          {restaurant.isClosed ? "Fermé" : (restaurant.capacity || 0) <= 0 ? "Complet" : "Réserver une table"}
         </Button>
       </div>
 

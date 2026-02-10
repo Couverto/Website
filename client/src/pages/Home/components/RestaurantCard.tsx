@@ -142,13 +142,13 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
         <CardFooter className="p-4 pt-0">
           <Button
             className="w-full font-semibold shadow-sm hover:shadow-md transition-all"
-            disabled={restaurant.isClosed}
+            disabled={restaurant.isClosed || (restaurant.capacity || 0) <= 0}
             onClick={(e) => {
               e.stopPropagation();
               setIsBookingOpen(true);
             }}
           >
-            {restaurant.isClosed ? "Restaurant fermé" : "Réserver"}
+            {restaurant.isClosed ? "Restaurant fermé" : (restaurant.capacity || 0) <= 0 ? "Complet" : "Réserver"}
           </Button>
         </CardFooter>
       </Card>
