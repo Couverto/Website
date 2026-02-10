@@ -214,7 +214,23 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                     locale="fr"
                     dateFormat="dd/MM/yyyy"
                     minDate={new Date()}
-                    filterDate={(date) => !closedDays.includes(date.getDay())}
+                    filterDate={(date) => {
+                      const day = date.getDay();
+                      if (closedDays.includes(day)) return false;
+
+                      // Check exceptional closures
+                      if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+                        const dateStr = format(date, "yyyy-MM-dd");
+                        const isClosed = restaurant.exceptionalClosures.some((closure) => {
+                          const start = format(new Date(closure.startDate), "yyyy-MM-dd");
+                          const end = format(new Date(closure.endDate), "yyyy-MM-dd");
+                          return dateStr >= start && dateStr <= end;
+                        });
+                        if (isClosed) return false;
+                      }
+
+                      return true;
+                    }}
                     placeholderText={"Choisir une date"}
                     className={cn(
                       "flex h-12 w-full rounded-xl border border-input bg-background/50 backdrop-blur-sm px-4 py-2 text-base ring-offset-background transition-all hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",

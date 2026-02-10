@@ -41,6 +41,16 @@ const RestaurantSchema = new Schema<IRestaurant>(
     priceRange: { type: String, enum: ["$", "$$", "$$$", "$$$$", "$$$$$"], default: "$$" },
     rating: { type: Number, default: 0 },
     isClosed: { type: Boolean, default: false },
+    exceptionalClosures: {
+      type: [
+        {
+          startDate: { type: Date, required: true },
+          endDate: { type: Date, required: true },
+          reason: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
     collaborators: {
       type: [Schema.Types.ObjectId],
       default: [],

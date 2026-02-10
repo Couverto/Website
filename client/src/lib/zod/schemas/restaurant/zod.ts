@@ -15,5 +15,14 @@ export const getRestaurantSettingsSchema = () =>
           tiktok: z.string().url({ message: "URL Tiktok invalide" }).optional().or(z.literal("")),
         })
         .optional(),
+      exceptionalClosures: z
+        .array(
+          z.object({
+            startDate: z.union([z.string(), z.date()]),
+            endDate: z.union([z.string(), z.date()]),
+            reason: z.string().optional(),
+          }),
+        )
+        .optional(),
     })
     .passthrough(); // Allow additional properties from RestaurantInterface
