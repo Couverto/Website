@@ -8,7 +8,7 @@ import { DraggableTable, TableProps } from "./DraggableTable";
 import { ItemTypes } from "./ItemTypes";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { useParams, useOutletContext } from "react-router-dom";
-import { Loader2, Save, Armchair, Plus, Minus, Copy, Trash2, Edit2, GripVertical, Check, Grid3X3, ForkKnife, Table } from "lucide-react";
+import { Loader2, Save, Plus, Minus, Trash2, Edit2, GripVertical, ForkKnife, Table } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

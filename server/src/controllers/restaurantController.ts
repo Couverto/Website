@@ -816,7 +816,8 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
     // Check availability for each valid slot
     const slotsWithAvailability = validSlots.map((slot) => {
-      if (capacity <= 0) return { time: slot, available: 99 }; // Unlimited if capacity 0? Or just return max.
+      // If capacity is 0 or less (no tables/manual set to 0), no availability
+      if (capacity <= 0) return { time: slot, available: 0 };
 
       // Slot timestamp
       const [h, m] = slot.split(":").map(Number);
