@@ -31,6 +31,11 @@ export interface RestaurantInterface {
   >;
   isOpenNow?: boolean;
   isClosed?: boolean;
+  exceptionalClosures?: {
+    startDate: string | Date;
+    endDate: string | Date;
+    reason?: string;
+  }[];
   cuisineType: string[];
   priceRange: string;
   rating: number;

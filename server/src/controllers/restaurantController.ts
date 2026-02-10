@@ -730,6 +730,28 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
     }
 
     const queryDate = new Date(date as string);
+
+    // Check exceptional closures
+    if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+      const isExceptionallyClosed = restaurant.exceptionalClosures.some((closure: any) => {
+        const start = new Date(closure.startDate);
+        const end = new Date(closure.endDate);
+
+        // Normalize logic: check if queryDate is within closure range
+        // We use string comparison of YYYY-MM-DD to be safe regarding timezones/hours
+        const qStr = queryDate.toISOString().split("T")[0];
+        const sStr = start.toISOString().split("T")[0];
+        const eStr = end.toISOString().split("T")[0];
+
+        return qStr >= sStr && qStr <= eStr;
+      });
+
+      if (isExceptionallyClosed) {
+        res.status(200).json({ slots: [] }); // Or we could send a specific reason/flag
+        return;
+      }
+    }
+
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const dayName = dayNames[queryDate.getDay()];
 
@@ -899,6 +921,28 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
   try {
     // Restaurant is already attached by verifyCollaborator middleware
     const restaurant = await Restaurant.findById(req.params.id).populate("collaborators", "name forename email avatar");
+
+    if (!restaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    // CLEANUP: Remove expired exceptional closures
+    if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const initialCount = restaurant.exceptionalClosures.length;
+
+      const activeClosures = restaurant.exceptionalClosures.filter((closure: any) => {
+        const endStr = new Date(closure.endDate).toISOString().split("T")[0];
+        return endStr >= todayStr;
+      });
+
+      if (activeClosures.length !== initialCount) {
+        restaurant.exceptionalClosures = activeClosures;
+        await restaurant.save();
+        console.log(`[Cleanup] Removed ${initialCount - activeClosures.length} expired closures for ${restaurant.name}`);
+      }
+    }
 
     // Get the requesting user's role for this restaurant
     const userRole = (req as any).restaurantRole || restaurant?.collaboratorRoles.get(req.userId!.toString()) || restaurantRoles.EMPLOYEE;
@@ -1465,6 +1509,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(req.body.paymentMethods && { paymentMethods: req.body.paymentMethods }),
         ...(req.body.socials && { socials: req.body.socials }),
         ...(req.body.capacity !== undefined && { capacity: req.body.capacity }),
+        ...(req.body.exceptionalClosures && { exceptionalClosures: req.body.exceptionalClosures }),
       },
       { new: true },
     );

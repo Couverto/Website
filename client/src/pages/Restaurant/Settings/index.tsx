@@ -64,6 +64,7 @@ import { PriceRangeControl } from "@/components/customs/PriceRangeControl";
 import { CuisineSelector } from "@/components/CuisineSelector";
 import { AddressAutocomplete } from "@/components/customs/AddressAutocomplete";
 import { PhoneInput } from "@/components/customs/phoneInput";
+import { ExceptionalClosuresEditor } from "@/components/ExceptionalClosuresEditor";
 
 export const RestaurantSettings = () => {
   const { id } = useParams();
@@ -461,6 +462,28 @@ export const RestaurantSettings = () => {
               control={control}
               name="openingHours"
               render={({ field }) => <OpeningHoursEditor value={field.value} onChange={field.onChange} />}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Exceptional Closures */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Umbrella className="h-5 w-5" />
+              {"Fermetures Exceptionnelles"}
+            </CardTitle>
+            <CardDescription>
+              {
+                "Définissez les périodes pendant lesquelles votre restaurant sera fermé (vacances, travaux, etc.). Ces dates seront bloquées pour les réservations."
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Controller
+              control={control}
+              name="exceptionalClosures"
+              render={({ field }) => <ExceptionalClosuresEditor value={field.value} onChange={field.onChange} />}
             />
           </CardContent>
         </Card>

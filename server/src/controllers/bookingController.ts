@@ -51,10 +51,30 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // Check exceptional closures
+    if (restaurantExists.exceptionalClosures && restaurantExists.exceptionalClosures.length > 0) {
+      const isExceptionallyClosed = restaurantExists.exceptionalClosures.some((closure: any) => {
+        const start = new Date(closure.startDate);
+        const end = new Date(closure.endDate);
+
+        const bDate = new Date(bookingDate);
+        const bStr = bDate.toISOString().split("T")[0];
+        const sStr = start.toISOString().split("T")[0];
+        const eStr = end.toISOString().split("T")[0];
+
+        return bStr >= sStr && bStr <= eStr;
+      });
+
+      if (isExceptionallyClosed) {
+        res.status(400).json({ error: "Le restaurant est exceptionnellement fermé ce jour-là." });
+        return;
+      }
+    }
+
     // Validate opening hours
     const isValidTime = validateBookingTime(restaurantExists, bookingDate);
     if (!isValidTime) {
-      res.status(400).json({ error: "Le restaurant est fermé" });
+      res.status(400).json({ error: "Le restaurant est fermé à cet horaire." });
       return;
     }
 

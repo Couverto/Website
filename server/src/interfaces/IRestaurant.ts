@@ -35,6 +35,11 @@ export interface IRestaurant extends Document {
   priceRange: string;
   rating: number;
   isClosed: boolean;
+  exceptionalClosures: {
+    startDate: Date;
+    endDate: Date;
+    reason?: string;
+  }[];
   collaborators: Array<mongoose.Types.ObjectId>;
   collaboratorRoles: Map<string, string>;
 
