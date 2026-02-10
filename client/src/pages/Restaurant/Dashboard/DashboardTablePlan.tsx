@@ -82,7 +82,7 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
   }
 
   return (
-    <Card className="col-span-1 lg:col-span-2 overflow-hidden border-primary/10 shadow-sm hover:shadow-md transition-shadow flex flex-col h-fit">
+    <Card className="col-span-1 lg:col-span-2 overflow-hidden border-primary/10 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
       <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -117,11 +117,11 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 bg-muted/20">
+      <CardContent className="p-4 bg-muted/20 flex-1 flex flex-col justify-center min-h-0">
         {/* Aspect Ratio Container */}
         <div
-          className="relative w-full transition-all duration-500 ease-in-out bg-background/50 rounded-xl border border-dashed border-muted-foreground/20 overflow-hidden shadow-inner"
-          style={{ aspectRatio: layout.aspectRatio }}
+          className="relative w-full transition-all duration-500 ease-in-out bg-background/50 rounded-xl border border-dashed border-muted-foreground/20 overflow-hidden shadow-inner mx-auto my-auto"
+          style={{ aspectRatio: layout.aspectRatio, maxHeight: "100%" }}
         >
           {/* Legend - top left, above everything */}
           <div className="absolute top-3 left-3 flex gap-3 z-30 bg-background/90 backdrop-blur-sm p-1.5 px-3 rounded-full border shadow-sm">
@@ -166,20 +166,6 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
                     }}
                   >
                     <div className="flex flex-col items-center justify-center w-full h-full p-1 sm:p-2 relative">
-                      {/* Dismiss button - only on occupied tables */}
-                      {isOccupied && onDismiss && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDismiss(booking._id);
-                          }}
-                          className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-all bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 z-30 cursor-pointer shadow-sm"
-                          title="Marquer comme parti"
-                        >
-                          <LogOut className="h-[clamp(8px,1.5cqi,12px)] w-[clamp(8px,1.5cqi,12px)]" />
-                        </button>
-                      )}
-
                       <span
                         className={cn(
                           "font-black leading-tight truncate w-full",
@@ -191,8 +177,8 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
 
                       <div
                         className={cn(
-                          "flex items-center gap-0.5 mt-0.5 px-1 py-0.5 rounded-full",
-                          isOccupied ? "bg-white/20 text-white" : "bg-muted text-muted-foreground",
+                          "flex items-center gap-0.5 mt-0.5 px-1 py-0.5 rounded-full transition-all",
+                          isOccupied ? "bg-white/20 text-white group-hover:hidden" : "bg-muted text-muted-foreground",
                         )}
                       >
                         {isOccupied ? (
@@ -218,13 +204,13 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
                       <TooltipContent side="top" className="text-xs">
                         <div className="space-y-1">
                           <p className="font-bold">{booking.customer.name}</p>
-                          <p className="text-muted-foreground">
+                          <p className="text-white">
                             {booking.guests} couvert(s) • Arrivée {format(new Date(booking.bookingDate), "HH:mm")}
                           </p>
                           {onDismiss && (
                             <button
                               onClick={() => onDismiss(booking._id)}
-                              className="flex items-center gap-1 text-[10px] font-bold text-orange-500 hover:text-orange-600 mt-1"
+                              className="flex items-center gap-1 text-[10px] font-bold text-orange-500 hover:text-orange-600 mt-1 cursor-pointer"
                             >
                               <LogOut className="h-3 w-3" />
                               Marquer comme parti

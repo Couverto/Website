@@ -6,10 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import DatePicker, { registerLocale } from "react-datepicker";
-
-// Register locale
-registerLocale("fr", fr);
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useEffect, useState, useCallback } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
@@ -33,6 +31,7 @@ import {
 import { format, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import DatePicker from "react-datepicker";
 
 const STATUS_COLORS: Record<BookingStatus, string> = {
   DRAFT: "bg-gray-100 text-gray-800",
@@ -385,6 +384,7 @@ export const AccountBooking = () => {
 
   /* Time slots management */
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<Record<string, number>>({});
   const [loadingSlots, setLoadingSlots] = useState(false);
 
   const fetchSlots = useCallback(
@@ -394,6 +394,7 @@ export const AccountBooking = () => {
         const formattedDate = format(date, "yyyy-MM-dd");
         const { data } = await axiosConfig.get(`/restaurants/public/${restaurantId}/slots?date=${formattedDate}`);
         setTimeSlots(data.slots || []);
+        setAvailability(data.availability || {});
 
         // If current editTime is not in new slots, clear it (unless it's empty)
         if (editTime && !data.slots.includes(editTime)) {
@@ -402,6 +403,7 @@ export const AccountBooking = () => {
       } catch (error) {
         console.error("Error fetching slots:", error);
         setTimeSlots([]);
+        setAvailability({});
       } finally {
         setLoadingSlots(false);
       }
@@ -415,6 +417,10 @@ export const AccountBooking = () => {
       fetchSlots(editDate, selectedBooking.restaurant._id);
     }
   }, [editDate, selectedBooking, editDialogOpen, fetchSlots]);
+
+  // Calculate max guests
+  const maxGuests =
+    editTime && availability[editTime] !== undefined ? availability[editTime] : (selectedBooking?.restaurant as any)?.capacity || 20;
 
   return (
     <>
@@ -504,103 +510,99 @@ export const AccountBooking = () => {
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{"Modifier"}</DialogTitle>
+            <DialogTitle>Modifier la réservation</DialogTitle>
+            <DialogDescription>Modifiez la date, l'heure ou le nombre de couverts.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {/* Date picker */}
-            <div className="space-y-2">
-              <Label>{"Date"}</Label>
-              <div className="relative">
-                <DatePicker
-                  preventOpenOnFocus
-                  selected={editDate}
-                  onChange={(date: Date | null) => setEditDate(date || undefined)}
-                  locale="fr"
-                  dateFormat="dd/MM/yyyy"
-                  minDate={new Date()}
-                  filterDate={(date) => {
-                    if (!selectedBooking?.restaurant) return true;
-                    const h = (selectedBooking.restaurant as any).openingHours;
-                    if (!h) return true; // Default open if no hours? Or closed? Assuming open if missing for now or handle as per logic
-                    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-                    const dayName = dayNames[date.getDay()];
-                    const dayInfo = h[dayName];
-                    const isClosed = !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
-                    return !isClosed;
-                  }}
-                  placeholderText={"Choisir une date"}
-                  className={cn(
-                    "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                    !editDate && "text-muted-foreground",
+          <div className="grid gap-4 py-4">
+            {/* Date Picker */}
+            <div className="flex flex-col space-y-2">
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"outline"} className={cn("justify-start text-left font-normal", !editDate && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editDate ? format(editDate, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editDate}
+                    onSelect={(date) => setEditDate(date || undefined)}
+                    disabled={(date) => {
+                      // Prevent selecting past dates
+                      if (date < startOfDay(new Date())) return true;
+
+                      // Check opening hours
+                      if (!selectedBooking?.restaurant) return false;
+                      const h = (selectedBooking.restaurant as any).openingHours;
+                      if (!h) return false;
+                      const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                      const dayName = dayNames[date.getDay()];
+                      const dayInfo = h[dayName];
+                      return !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
+                    }}
+                    initialFocus
+                    locale={fr}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Time Picker */}
+              <div className="flex flex-col space-y-2">
+                <Label>
+                  Heure{" "}
+                  {editTime && availability[editTime] !== undefined && (
+                    <span className="text-[10px] text-muted-foreground ml-1">({availability[editTime]} dispo)</span>
                   )}
-                  wrapperClassName="w-full"
-                />
-                <CalendarIcon className="pointer-events-none absolute right-3 top-3 h-4 w-4 opacity-50" />
+                </Label>
+                <Select value={editTime} onValueChange={setEditTime} disabled={loadingSlots || !editDate || timeSlots.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={!editDate ? "Date requise" : loadingSlots ? "Wait..." : "Heure"} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px]">
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                    {timeSlots.length === 0 && !loadingSlots && editDate && (
+                      <div className="p-2 text-xs text-muted-foreground text-center">Aucun créneau</div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Guests Picker */}
+              <div className="flex flex-col space-y-2">
+                <Label>Couverts</Label>
+                <Select value={editGuests ? editGuests.toString() : ""} onValueChange={(v) => setEditGuests(parseInt(v))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nb. personnes" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px]">
+                    {Array.from({ length: maxGuests }, (_, i) => i + 1).map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num} {num === 1 ? "pers." : "pers."}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-
-            {/* Time picker */}
-            <div className="space-y-2">
-              <Label>{"Heure"}</Label>
-              <Select value={editTime} onValueChange={setEditTime} disabled={loadingSlots || timeSlots.length === 0}>
-                <SelectTrigger>
-                  <SelectValue placeholder={loadingSlots ? "Chargement..." : timeSlots.length === 0 ? "Fermé ce jour" : undefined} />
-                </SelectTrigger>
-                <SelectContent>
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {timeSlots.length === 0 && editDate && (
-                <p className="text-sm text-destructive">{"Aucun créneau disponible pour cette date"}</p>
-              )}
-            </div>
-
-            {/* Guests */}
-            <div className="space-y-2">
-              <Label>{"Couverts"}</Label>
-              <Select value={editGuests.toString()} onValueChange={(v) => setEditGuests(parseInt(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
-                      {num} {num === 1 ? "Personne" : "Personnes"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              {"Annuler"}
+              Annuler
             </Button>
-            <Button
-              onClick={handleEditBooking}
-              disabled={
-                actionLoading ||
-                !editDate ||
-                !editTime ||
-                (editDate &&
-                  selectedBooking &&
-                  (() => {
-                    const h = (selectedBooking.restaurant as any)?.openingHours;
-                    const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-                    const dayName = dayNames[editDate.getDay()];
-                    const dayInfo = h?.[dayName];
-                    return !dayInfo || dayInfo.isClosed || !dayInfo.periods || dayInfo.periods.length === 0;
-                  })())
-              }
-            >
+            <Button onClick={handleEditBooking} disabled={actionLoading || !editDate || !editTime || !editGuests}>
               {actionLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {"Mettre à jour"}
+              Mettre à jour
             </Button>
           </DialogFooter>
         </DialogContent>

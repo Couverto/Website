@@ -137,9 +137,11 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
         // Automatically select the first available slot if not already set or if previous slot is no longer available
         if (slots.length > 0) {
           const currentTime = form.getValues("time");
-          if (!currentTime || !slots.includes(currentTime)) {
-            form.setValue("time", slots[0]);
+          // Only clear if the currently selected time is not in the new slots
+          if (currentTime && !slots.includes(currentTime)) {
+            form.setValue("time", "");
           }
+          // Do NOT auto-select slots[0] anymore
         } else {
           form.setValue("time", "");
         }

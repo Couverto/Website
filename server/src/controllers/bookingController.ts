@@ -142,7 +142,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       if (restaurantExists.zones && restaurantExists.zones.length > 0) {
         // Get all tables from all zones
         const allTables: any[] = [];
-        restaurantExists.zones.forEach((zone: any) => {
+        restaurantExists.zones.forEach((zone: any, index: number) => {
           if (zone.tables) {
             zone.tables.forEach((table: any) => {
               allTables.push({
@@ -150,6 +150,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
                 seats: table.seats,
                 label: table.label,
                 zoneId: zone.id,
+                zoneIndex: index,
               });
             });
           }
@@ -170,7 +171,14 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         // Find available tables that fit the guests
         const availableFittingTables = allTables
           .filter((table) => !occupiedTableIds.has(table.id) && table.seats >= Number(guests))
-          .sort((a, b) => a.seats - b.seats); // Greedy: pick the smallest table that fits
+          .sort((a, b) => {
+            // Prioritize zones order (fill 1st room first)
+            if (a.zoneIndex !== b.zoneIndex) {
+              return a.zoneIndex - b.zoneIndex;
+            }
+            // Then capacity fit (smallest fitting first)
+            return a.seats - b.seats;
+          });
 
         if (availableFittingTables.length > 0) {
           bookingData.tableId = availableFittingTables[0].id;
@@ -372,11 +380,84 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
     booking.guests = guests || booking.guests;
     booking.notes = notes !== undefined ? notes : booking.notes;
 
-    // Reset status to PENDING if logic requires re-confirmation?
-    // For now, let's keep status unless we want to define that rule.
-    // Usually, modified bookings might need re-approval. Let's keep it simple.
+    // Validate new time if date changed
+    // Validate new time if date changed
+    if (bookingDate) {
+      const restaurantDoc = await Restaurant.findById(booking.restaurant);
+      if (restaurantDoc) {
+        const isValidTime = validateBookingTime(restaurantDoc, bookingDate);
+        if (!isValidTime) {
+          res.status(400).json({ error: "Le restaurant est fermé à cette heure modification impossible" });
+          return;
+        }
+      }
+    }
 
     await booking.save();
+
+    // Fetch restaurant for notifications
+    const restaurantDoc = await Restaurant.findById(booking.restaurant);
+
+    // Emit real-time event
+    try {
+      getIO().to(`restaurant_${booking.restaurant}`).emit("updateBooking", booking);
+      getIO().to(`restaurant_${booking.restaurant}`).emit("newBooking", booking); // Also emit newBooking to trigger stats refresh or sound if specific listeners exist
+    } catch (error) {
+      console.error("Socket emit failed", error);
+    }
+
+    // Email Notifications
+    try {
+      if (restaurantDoc) {
+        const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+        // Notify Customer
+        if (booking.customer?.email) {
+          await sendEmail({
+            email: booking.customer.email,
+            subject: `Modification de réservation - ${restaurantDoc.name}`,
+            message: bookingConfirmationTemplate({
+              customerName: booking.customer.name,
+              restaurantName: restaurantDoc.name,
+              date: dateStr,
+              time: timeStr,
+              guests: booking.guests,
+              status: "Modifiée",
+              isConfirmed: booking.status === bookingStatus.CONFIRMED,
+              address: restaurantDoc.adress,
+            }),
+          });
+        }
+
+        // Notify Restaurant (if email exists)
+        if (restaurantDoc.email) {
+          await sendEmail({
+            email: restaurantDoc.email,
+            subject: `[MODIFICATION] Réservation - ${booking.customer.name}`,
+            message: `
+               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                 <h2 style="color: #333;">Modification de réservation</h2>
+                 <p>La réservation de <strong>${booking.customer.name}</strong> a été modifiée.</p>
+                 <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                   <p style="margin: 5px 0;"><strong>Nouvelle date :</strong> ${dateStr} à ${timeStr}</p>
+                   <p style="margin: 5px 0;"><strong>Couverts :</strong> ${booking.guests} personnes</p>
+                   ${notes ? `<p style="margin: 5px 0;"><strong>Note :</strong> ${notes}</p>` : ""}
+                 </div>
+                 <p style="color: #666; font-size: 14px;">Connectez-vous à votre tableau de bord pour plus de détails.</p>
+               </div>
+             `,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Email notification failed", e);
+    }
 
     createLog({
       message: `Booking ${id} updated`,
@@ -533,7 +614,7 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
 
       // Get all tables from all zones
       const allTables: any[] = [];
-      restaurantExists.zones.forEach((zone: any) => {
+      restaurantExists.zones.forEach((zone: any, index: number) => {
         if (zone.tables) {
           zone.tables.forEach((table: any) => {
             allTables.push({
@@ -541,6 +622,7 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
               seats: table.seats,
               label: table.label,
               zoneId: zone.id,
+              zoneIndex: index,
             });
           });
         }
@@ -569,7 +651,12 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
       // Find available tables that fit the guests
       const availableFittingTables = allTables
         .filter((table) => !occupiedTableIds.has(table.id) && table.seats >= Number(guests))
-        .sort((a, b) => a.seats - b.seats);
+        .sort((a, b) => {
+          if (a.zoneIndex !== b.zoneIndex) {
+            return a.zoneIndex - b.zoneIndex;
+          }
+          return a.seats - b.seats;
+        });
 
       if (availableFittingTables.length > 0) {
         bookingData.tableId = availableFittingTables[0].id;
@@ -699,7 +786,10 @@ export const getRestaurantClients = async (req: Request, res: Response): Promise
     const mongoose = await import("mongoose");
     const restaurantId = mongoose.Types.ObjectId.createFromHexString(id);
 
-    const matchStage: any = { restaurant: restaurantId };
+    const matchStage: any = {
+      restaurant: restaurantId,
+      status: { $ne: "CANCELLED" },
+    };
 
     // Grouping by user if available, otherwise by phone
     const clientsAggregation = await Booking.aggregate([
