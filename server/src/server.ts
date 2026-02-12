@@ -27,7 +27,7 @@ export function initServer() {
   }
 
   // Start the HTTP server on the specified port
-  httpServer.listen(process.env.PORT, () => {
+  httpServer.listen(parseInt(process.env.PORT), "0.0.0.0", () => {
     console.log("Server listening on port", process.env.PORT, "🚀");
   });
 }
