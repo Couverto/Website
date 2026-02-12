@@ -25,14 +25,14 @@ services:
     container_name: couverto-server
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
-      - PORT=3000
+      - PORT=3001
       - MONG_URI=mongodb://mongodb:27017/couverto
       - MONG_URI_TEST=mongodb://mongodb:27017/couverto-test
       - SECRET_ACCESS_TOKEN=${SECRET_ACCESS_TOKEN:-your-secret-token}
       - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:8080}
-      - SELF_URL=${SELF_URL:-http://server:3000}
+      - SELF_URL=${SELF_URL:-http://server:3001}
       # Email Service (Resend)
       - RESEND_API_KEY=${RESEND_API_KEY:-}
       - EMAIL_FROM=${EMAIL_FROM:-onboarding@resend.dev}
@@ -52,7 +52,7 @@ services:
     networks:
       - couverto-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -64,7 +64,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:3001}
         - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY:-}
         - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN:-}
         - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID:-}

@@ -39,7 +39,7 @@ COPY --from=builder /app/dist ./dist
 RUN mkdir -p uploads
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3001
 
 # Start the server
 CMD ["node", "dist/index.js"]
