@@ -9,9 +9,9 @@ import { SocketContextProvider } from "./contexts/socketContext.js";
 import { ConfigProvider } from "./contexts/configContext.js";
 import { AppInitializer } from "./initializer.js";
 
-if (!import.meta.env.VITE_API_URL) {
-  throw new Error("VITE_API_URL is not defined in the environment file");
-}
+// if (!import.meta.env.VITE_API_URL) {
+//   throw new Error("VITE_API_URL is not defined in the environment file");
+// }
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

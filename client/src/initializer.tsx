@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useConfigContext } from "./contexts/configContext.js";
 import { Loading } from "./components/customs/loading.js";
-import { ThemePalette, defaultPalette, getContrastColor } from "./lib/colorUtils.js";
 
 export function AppInitializer({ children }: { children: React.ReactNode }) {
   const { getConfigValue } = useConfigContext();
