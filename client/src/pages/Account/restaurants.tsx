@@ -24,7 +24,7 @@ export const AccountRestaurants = () => {
     const fetchRestaurants = async () => {
       try {
         const { data } = await axiosConfig.get("/restaurants/my");
-        setRestaurants(data.restaurants);
+        setRestaurants(data.restaurants || []);
       } catch (error) {
         console.error("Failed to fetch restaurants", error);
       } finally {

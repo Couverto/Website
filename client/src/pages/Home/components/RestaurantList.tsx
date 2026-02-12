@@ -44,11 +44,11 @@ export const RestaurantList = ({ isPreview = false, filters = {} }: RestaurantLi
       const { data } = await axiosConfig.get(`/restaurants/public?${queryParams.toString()}`);
 
       if (currentPage === 0 || reset) {
-        setRestaurants(data.restaurants);
+        setRestaurants(data.restaurants || []);
       } else {
-        setRestaurants((prev) => [...prev, ...data.restaurants]);
+        setRestaurants((prev) => [...prev, ...(data.restaurants || [])]);
       }
-      setHasMore(data.restaurants.length === (isPreview ? 4 : 8));
+      setHasMore((data.restaurants?.length || 0) === (isPreview ? 4 : 8));
     } catch (error) {
       console.error("Failed to fetch restaurants", error);
     } finally {
