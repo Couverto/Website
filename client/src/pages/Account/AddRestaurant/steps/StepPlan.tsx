@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Plan } from "@/interfaces/Plan";
@@ -15,17 +15,25 @@ interface StepPlanProps {
 
 export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) => {
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [allFeatures, setAllFeatures] = useState<any[]>([]); // Using any[] for now or Feature[] if imported
   const [loading, setLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string>(data.plan || "");
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axiosConfig.get("/plans/public");
-        setPlans(response.data.plans);
-        // Default to the first plan if no plan selected and plans exist
-        if (!data.plan && response.data.plans.length > 0) {
-          setSelectedPlan(response.data.plans[0]._id);
+        const [plansRes, featuresRes] = await Promise.all([axiosConfig.get("/plans/public"), axiosConfig.get("/features/public")]);
+        setPlans(plansRes.data.plans);
+        setAllFeatures(featuresRes.data.features || []);
+
+        // Default to the popular plan if no plan selected and plans exist
+        if (!data.plan && plansRes.data.plans.length > 0) {
+          const popularPlan = plansRes.data.plans.find((p: Plan) => p.isPopular);
+          if (popularPlan) {
+            setSelectedPlan(popularPlan._id);
+          } else {
+            setSelectedPlan(plansRes.data.plans[0]._id);
+          }
         }
       } catch (error) {
         console.error("Error fetching plans", error);
@@ -33,7 +41,7 @@ export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) =>
         setLoading(false);
       }
     };
-    fetchPlans();
+    fetchData();
   }, [data.plan]);
 
   const handleSelect = (planId: string) => {
@@ -69,9 +77,9 @@ export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) =>
         {plans.map((plan) => (
           <Card
             key={plan._id}
-            className={`cursor-pointer transition-all border-2 relative ${
+            className={`cursor-pointer transition-all border-2 relative flex flex-col ${
               selectedPlan === plan._id
-                ? "border-primary bg-primary/5"
+                ? "border-primary bg-primary/5 shadow-md"
                 : plan.isPopular
                   ? "border-primary/60 shadow-md scale-[1.02]"
                   : "border-border hover:border-primary/50"
@@ -83,22 +91,43 @@ export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) =>
                 Populaire
               </div>
             )}
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                {plan.name}
-                {selectedPlan === plan._id && <Check className="w-5 h-5 text-primary" />}
-              </CardTitle>
-              <CardDescription>{plan.description}</CardDescription>
+            <CardHeader className="text-center pb-4 border-b border-border/50">
+              <CardTitle className="flex justify-center items-center mb-2">{plan.name}</CardTitle>
+              <CardDescription className="min-h-[40px]">{plan.description}</CardDescription>
+              <div className="flex items-baseline justify-center gap-1 mt-4">
+                <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
+                <span className="text-muted-foreground font-medium">€ / mois</span>
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold mb-4">{plan.price}€</div>
-              <ul className="space-y-2 text-sm">
-                {plan.features?.map((feature: any, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-500" />
-                    {feature.name}
-                  </li>
-                ))}
+            <CardContent className="flex-1 pt-6">
+              <ul className="space-y-3 text-sm">
+                {allFeatures?.map((feature: any) => {
+                  const isIncluded = plan.features?.some((f: any) => (typeof f === "string" ? f === feature._id : f._id === feature._id));
+                  // Note: Depending on populate, plan.features might be strings or objects. Public Plans usually populate features?
+                  // Let's check IPlan.ts or just handle both. The Pricing component uses `f._id === feature._id`.
+                  // If it doesn't work we might need to adjust.
+
+                  return (
+                    <li
+                      key={feature._id}
+                      className={`flex items-start gap-3 ${isIncluded ? "text-foreground" : "text-muted-foreground/60"}`}
+                    >
+                      <div
+                        className={`flex-shrink-0 h-5 w-5 rounded-full flex items-center justify-center mt-0.5 ${isIncluded ? "bg-accent/10" : "bg-muted/50"}`}
+                      >
+                        {isIncluded ? <Check className="h-3 w-3 text-accent" /> : <Minus className="h-3 w-3 text-muted-foreground/40" />}
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className={`font-medium ${!isIncluded && "line-through decoration-muted-foreground/20"}`}>
+                          {feature.name}
+                        </span>
+                        {isIncluded && feature.description && (
+                          <span className="text-xs text-muted-foreground mt-0.5">{feature.description}</span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </CardContent>
           </Card>

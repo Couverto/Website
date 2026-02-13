@@ -133,8 +133,8 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           return;
         }
 
-        // Create Stripe Customer
-        const customer = await stripeService.createCustomer(creator.email, creator.name || creator.forename || creator.username);
+        // 1. DO NOT Create Stripe Customer yet (avoid ghosts if cancelled)
+        // const customer = await stripeService.createCustomer(creator.email, creator.name || creator.forename || creator.username);
 
         // Store the payload in a PendingTransaction instead of creating the Restaurant
         const pendingTransaction = new PendingTransaction({
@@ -151,7 +151,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
             collaborators,
             collaboratorRoles: Object.fromEntries(collaboratorRoles), // Maps need to be objects in Mixed fields
             plan: planId,
-            stripeCustomerId: customer.id,
+            // stripeCustomerId: customer.id, // Removed: will be created by Session
             referredBy: referrerRestaurant?._id || null,
             subscriptionStartDelay,
             referralCodeUsed: validReferralCode?._id || null,
@@ -162,8 +162,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         await pendingTransaction.save();
 
         // Create Checkout Session with trial period if referred
+        // Pass email instead of customer ID to let Checkout create the customer
         const stripeSession = await stripeService.createCheckoutSession(
-          customer.id,
+          { email: creator.email },
           plan.stripePriceId,
           `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`,
           `${process.env.CORS_ORIGIN}/account/payment-cancel`,

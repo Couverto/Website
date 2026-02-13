@@ -155,3 +155,33 @@ export const getDeleteFeatureSchema = () => {
     }),
   });
 };
+
+export const getAdminUpdateRestaurantSchema = () => {
+  return z.object({
+    name: z.string().min(1, { message: "Le nom est requis" }),
+    slug: z.string().min(1, { message: "Le slug est requis" }),
+    description: z.string().optional(),
+    shortDescription: z.string().optional(),
+    adress: z.string().optional(),
+    city: z.string().optional(),
+    phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
+    website: z.string().url({ message: "URL invalide (doit commencer par https://)" }).optional().or(z.literal("")),
+    email: z.string().email({ message: "Email invalide" }).optional().or(z.literal("")),
+    coverImage: z.string().optional(),
+    priceRange: z.enum(["$", "$$", "$$$"]).optional(),
+    cuisineType: z.array(z.string()).optional(),
+    rating: z.coerce.number().min(0).max(5).optional(),
+    images: z.array(z.string()).optional(),
+    menu: z.array(z.string()).optional(),
+    features: z.array(z.string()).optional(),
+    paymentMethods: z.array(z.string()).optional(),
+    socials: z
+      .object({
+        facebook: z.string().url({ message: "URL invalide (doit commencer par https://)" }).optional().or(z.literal("")),
+        instagram: z.string().url({ message: "URL invalide (doit commencer par https://)" }).optional().or(z.literal("")),
+        tiktok: z.string().url({ message: "URL invalide (doit commencer par https://)" }).optional().or(z.literal("")),
+      })
+      .optional(),
+    openingHours: z.any().optional(),
+  });
+};

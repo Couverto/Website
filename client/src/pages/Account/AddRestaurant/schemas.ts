@@ -34,7 +34,16 @@ export const getDetailsSchema = () =>
         tiktok: z.string().url("URL Tiktok invalide").optional().or(z.literal("")),
       })
       .optional(),
-    website: z.string().url().optional().or(z.literal("")),
+    website: z
+      .string()
+      .trim()
+      .optional()
+      .refine((val) => !val || /^https?:\/\//.test(val), {
+        message: "L'URL doit commencer par http:// ou https://",
+      })
+      .refine((val) => !val || z.string().url().safeParse(val).success, {
+        message: "URL invalide (doit commencer par https://)",
+      }),
   });
 
 export const getMenuSchema = () =>

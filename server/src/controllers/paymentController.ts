@@ -86,7 +86,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       const successUrl = `${process.env.CORS_ORIGIN}/restaurant/${restaurantId}/plan?payment=success&session_id={CHECKOUT_SESSION_ID}`;
       const cancelUrl = `${process.env.CORS_ORIGIN}/restaurant/${restaurantId}/plan?payment=cancelled`;
 
-      const session = await stripeService.createCheckoutSession(customerId, plan.stripePriceId, successUrl, cancelUrl, {
+      const session = await stripeService.createCheckoutSession({ id: customerId }, plan.stripePriceId, successUrl, cancelUrl, {
         restaurantId: restaurantId,
         planId: plan._id.toString(),
         type: "RESUBSCRIPTION",

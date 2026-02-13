@@ -51,6 +51,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
             plan: planId,
             subscriptionEndDate,
             stripeSubscriptionId: session.subscription,
+            stripeCustomerId: session.customer, // Save the customer ID created during checkout
             isClosed: true,
           });
 

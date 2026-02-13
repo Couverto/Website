@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { getAdminUpdateRestaurantSchema } from "@/lib/zod/schemas/admin/zod";
 import { Badge } from "@/components/ui/badge";
 import { OpeningHoursEditor } from "@/components/OpeningHoursEditor";
 import {
@@ -30,8 +32,11 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PRICES, FEATURES_LIST, PAYMENT_METHODS } from "@/constants/restaurantResources";
+import { z } from "zod";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { PriceRangeControl } from "@/components/customs/PriceRangeControl";
+
+type RestaurantFormValues = z.infer<ReturnType<typeof getAdminUpdateRestaurantSchema>>;
 import { CuisineSelector } from "@/components/CuisineSelector";
 import { PhoneInput } from "@/components/customs/phoneInput";
 
@@ -41,7 +46,15 @@ export const AdminRestaurantForm = () => {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  const { register, handleSubmit, control, reset, watch } = useForm<RestaurantInterface>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<RestaurantFormValues>({
+    resolver: zodResolver(getAdminUpdateRestaurantSchema()),
     defaultValues: {
       cuisineType: [],
       features: [],
@@ -56,7 +69,7 @@ export const AdminRestaurantForm = () => {
     const fetchRestaurant = async () => {
       try {
         const response = await api.get(`/restaurants/${id}/details`);
-        reset(response.data.restaurant);
+        reset(response.data.restaurant as any);
       } catch (error) {
         toast.error("Erreur lors du chargement des données");
         navigate("/admin/restaurants");
@@ -67,7 +80,7 @@ export const AdminRestaurantForm = () => {
     if (id) fetchRestaurant();
   }, [id, reset, navigate]);
 
-  const onSubmit = async (data: RestaurantInterface) => {
+  const onSubmit = async (data: RestaurantFormValues) => {
     setSaving(true);
     try {
       // Use the generic update route instead of settings-specific one if needed,
@@ -116,10 +129,12 @@ export const AdminRestaurantForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="name">{"Nom du restaurant"}</Label>
                 <Input id="name" {...register("name")} />
+                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="slug">{"Slug (identifiant URL unique)"}</Label>
                 <Input id="slug" {...register("slug")} />
+                {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -136,6 +151,7 @@ export const AdminRestaurantForm = () => {
               <div className="space-y-2">
                 <Label htmlFor="email">{"Email de contact"}</Label>
                 <Input id="email" type="email" {...register("email")} />
+                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
             </div>
 
@@ -145,6 +161,7 @@ export const AdminRestaurantForm = () => {
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input id="adress" {...register("adress")} className="pl-10" />
               </div>
+              {errors.adress && <p className="text-sm text-destructive">{errors.adress.message}</p>}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -153,6 +170,7 @@ export const AdminRestaurantForm = () => {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input id="city" {...register("city")} className="pl-10" />
                 </div>
+                {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
               </div>
             </div>
             <div className="space-y-2">
@@ -166,6 +184,7 @@ export const AdminRestaurantForm = () => {
             <div className="space-y-2">
               <Label htmlFor="website">{"Site web"}</Label>
               <Input id="website" {...register("website")} placeholder="https://" />
+              {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
             </div>
           </CardContent>
         </Card>
@@ -184,7 +203,7 @@ export const AdminRestaurantForm = () => {
                 <Controller
                   control={control}
                   name="cuisineType"
-                  render={({ field }) => <CuisineSelector value={field.value} onChange={field.onChange} />}
+                  render={({ field }) => <CuisineSelector value={field.value || []} onChange={field.onChange} />}
                 />
               </div>
 
@@ -193,7 +212,7 @@ export const AdminRestaurantForm = () => {
                 <Controller
                   control={control}
                   name="priceRange"
-                  render={({ field }) => <PriceRangeControl value={field.value} onChange={field.onChange} />}
+                  render={({ field }) => <PriceRangeControl value={field.value || "$"} onChange={field.onChange} />}
                 />
               </div>
             </div>
@@ -203,7 +222,7 @@ export const AdminRestaurantForm = () => {
               <Controller
                 control={control}
                 name="features"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {FEATURES_LIST.map((feature) => {
                       const isSelected = field.value?.includes(feature.value);
@@ -211,7 +230,7 @@ export const AdminRestaurantForm = () => {
                         <div
                           key={feature.id}
                           onClick={() => {
-                            const current = field.value || [];
+                            const current = (field.value as string[]) || [];
                             field.onChange(isSelected ? current.filter((f: string) => f !== feature.value) : [...current, feature.value]);
                           }}
                           className={`p-3 border-2 rounded-xl cursor-pointer transition-all flex items-center gap-2 ${

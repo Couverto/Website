@@ -21,8 +21,11 @@ export const stripeService = {
   /**
    * Create a Stripe Checkout Session for subscription
    */
+  /**
+   * Create a Stripe Checkout Session for subscription
+   */
   createCheckoutSession: async (
-    customerId: string,
+    customerData: { id?: string; email?: string },
     priceId: string,
     successUrl: string,
     cancelUrl: string,
@@ -30,7 +33,6 @@ export const stripeService = {
     options?: { trialPeriodDays?: number },
   ) => {
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
-      customer: customerId,
       payment_method_types: ["card"],
       line_items: [
         {
@@ -43,6 +45,12 @@ export const stripeService = {
       cancel_url: cancelUrl,
       metadata,
     };
+
+    if (customerData.id) {
+      sessionConfig.customer = customerData.id;
+    } else if (customerData.email) {
+      sessionConfig.customer_email = customerData.email;
+    }
 
     // Add trial period if specified (for referred restaurants)
     if (options?.trialPeriodDays && options.trialPeriodDays > 0) {

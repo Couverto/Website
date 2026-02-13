@@ -56,12 +56,12 @@ export const Hero = () => {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link to="/register">
+              <a href="#pricing">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 w-full sm:w-auto">
                   {"Découvrir nos offres"}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </Link>
+              </a>
               <a href="#features">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
                   {"Voir les fonctionnalités"}

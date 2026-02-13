@@ -182,7 +182,10 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
         </div>
 
         <div className="space-y-3">
-          <Label htmlFor="website" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <Label
+            htmlFor="website"
+            className={`text-sm font-semibold uppercase tracking-wider text-muted-foreground ${errors?.website ? "text-red-500" : ""}`}
+          >
             {"Site web"}
           </Label>
           <div className="relative group">
@@ -192,9 +195,10 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
               value={data.website || ""}
               onChange={(e) => updateData({ website: e.target.value })}
               placeholder="https://www.votrerestaurant.fr"
-              className="h-12 text-base transition-all border-muted-foreground/20 focus:border-primary shadow-sm"
+              className={`h-12 text-base transition-all ${errors?.website ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
             />
           </div>
+          {errors?.website && <p className="text-xs font-medium text-red-500 px-1">{errors.website}</p>}
         </div>
       </div>
 
