@@ -27,6 +27,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { SEO } from "@/components/SEO";
+import { ImageViewer } from "@/components/customs/ImageViewer";
+import { PriceIndicator } from "@/components/customs/PriceIndicator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MenuMediaItem } from "./components/MenuMediaItem";
 
 interface PublicRestaurant {
   _id: string;
@@ -69,6 +73,8 @@ export const PublicRestaurant = () => {
   const [loadingReviews, setLoadingReviews] = useState(false);
 
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     const fetchRestaurant = async () => {
@@ -130,6 +136,45 @@ export const PublicRestaurant = () => {
     reviewsList.length > 0 ? (reviewsList.reduce((sum, r) => sum + r.rating, 0) / reviewsList.length).toFixed(1) : null;
   const displayRating = computedRating || restaurant.rating || "NEW";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Restaurant",
+    name: restaurant.name,
+    image: restaurant.images || [restaurant.coverImage],
+    description: restaurant.description,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: restaurant.adress,
+      addressLocality: restaurant.city,
+      addressCountry: "FR",
+    },
+    url: `${window.location.origin}/restaurants/infos/${restaurant._id}`,
+    telephone: restaurant.phone,
+    priceRange: restaurant.priceRange,
+    servesCuisine: Array.isArray(restaurant.cuisineType) ? restaurant.cuisineType.join(", ") : restaurant.cuisineType,
+    openingHoursSpecification: restaurant.openingHours
+      ? Object.entries(restaurant.openingHours).flatMap(([day, schedule]) => {
+          if (schedule.isClosed) return [];
+          return schedule.periods.map((p) => ({
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: day,
+            opens: p.open,
+            closes: p.close,
+          }));
+        })
+      : [],
+    menu: restaurant.menu?.[0],
+    acceptsReservations: "True",
+    aggregateRating:
+      reviewsList.length > 0
+        ? {
+            "@type": "AggregateRating",
+            ratingValue: displayRating,
+            reviewCount: reviewsList.length,
+          }
+        : undefined,
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20 relative">
       <SEO
@@ -137,6 +182,7 @@ export const PublicRestaurant = () => {
         description={`Réservez une table chez ${restaurant.name} à ${restaurant.city}. ${Array.isArray(restaurant.cuisineType) ? restaurant.cuisineType.join(", ") : restaurant.cuisineType}. ${restaurant.description?.substring(0, 150) || ""}...`}
         image={restaurant.coverImage}
         url={`/restaurants/infos/${restaurant._id}`}
+        jsonLd={jsonLd}
       />
       {/* Back Button */}
       <Button
@@ -149,7 +195,7 @@ export const PublicRestaurant = () => {
       </Button>
 
       {/* Hero Section */}
-      <div className="relative h-[50vh] md:h-[50vh] w-full">
+      <div className="relative h-[40vh] md:h-[50vh] w-full overflow-hidden">
         {restaurant.coverImage ? (
           <img src={restaurant.coverImage} alt={restaurant.name} className="w-full h-full object-cover" />
         ) : (
@@ -157,7 +203,7 @@ export const PublicRestaurant = () => {
             <span className="text-4xl font-bold text-muted-foreground">{restaurant.name}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -169,17 +215,17 @@ export const PublicRestaurant = () => {
                       <Badge
                         key={idx}
                         variant="secondary"
-                        className="bg-white/90 text-foreground backdrop-blur-sm border-none shadow-sm px-3 py-1 text-xs"
+                        className="bg-background/80 backdrop-blur-md border-none shadow-sm px-3 py-1 text-xs"
                       >
                         {cuisine}
                       </Badge>
                     ))}
                     {restaurant.cuisineType.length > 3 && (
-                      <span className="text-xs text-white/80 font-medium">+{restaurant.cuisineType.length - 3}</span>
+                      <span className="text-xs text-muted-foreground font-medium">+{restaurant.cuisineType.length - 3}</span>
                     )}
                   </>
                 ) : (
-                  <Badge variant="secondary" className="bg-white/90 text-foreground backdrop-blur-sm">
+                  <Badge variant="secondary" className="bg-background/80 backdrop-blur-md">
                     {restaurant.cuisineType || "Cuisine"}
                   </Badge>
                 )}
@@ -193,22 +239,13 @@ export const PublicRestaurant = () => {
                   className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer group"
                 >
                   <MapPin className="h-4 w-4 group-hover:animate-bounce" />
-                  <span className="underline decoration-dotted underline-offset-4">{restaurant.city}</span>
-                </a>
-                <div className="flex items-center gap-1">
-                  <Wallet className="h-4 w-4" />
-                  <span>
-                    {restaurant.priceRange === "$"
-                      ? "Très abordable"
-                      : restaurant.priceRange === "$$"
-                        ? "Abordable"
-                        : restaurant.priceRange === "$$$"
-                          ? "Prix moyen"
-                          : restaurant.priceRange === "$$$$"
-                            ? "Haut de gamme"
-                            : "Luxe"}
+                  <span className="underline decoration-dotted underline-offset-4 font-medium text-foreground/90 shadow-black/10 drop-shadow-md">
+                    {restaurant.adress}, {restaurant.city}
                   </span>
-                </div>
+                </a>
+
+                <PriceIndicator value={restaurant.priceRange || "$"} variant="compact" />
+
                 <div className="flex items-center gap-1 text-yellow-500">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="font-medium text-foreground">{displayRating}</span>
@@ -349,6 +386,10 @@ export const PublicRestaurant = () => {
                           src={img}
                           alt={`Gallery ${idx}`}
                           className="rounded-lg object-cover w-full h-48 hover:opacity-90 transition-opacity cursor-pointer"
+                          onClick={() => {
+                            setCurrentImageIndex(idx);
+                            setIsGalleryOpen(true);
+                          }}
                         />
                       ))}
                     </div>
@@ -387,57 +428,9 @@ export const PublicRestaurant = () => {
                   <CardContent className="pt-6">
                     {restaurant.menu && restaurant.menu.length > 0 ? (
                       <div className="space-y-6">
-                        {restaurant.menu.map((url, idx) => {
-                          const isPdf = url.toLowerCase().endsWith(".pdf");
-                          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                          return (
-                            <div key={idx} className="border rounded-xl overflow-hidden">
-                              <div className="flex items-center justify-between p-3 bg-muted/30 border-b">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-primary" />
-                                  <span className="text-sm font-medium">Voir le menu #{idx + 1}</span>
-                                  <Badge variant="outline" className="text-[10px] uppercase">
-                                    {url.split(".").pop()?.toUpperCase() || "FILE"}
-                                  </Badge>
-                                </div>
-                                <a
-                                  href={url}
-                                  download
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex items-center gap-1 text-xs text-primary hover:underline"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  {"Télécharger"}
-                                </a>
-                              </div>
-                              <div className="bg-muted/10">
-                                {isImage ? (
-                                  <img src={url} alt={`Menu ${idx + 1}`} className="w-full max-h-[600px] object-contain" />
-                                ) : isPdf ? (
-                                  <iframe
-                                    src={`${url}#toolbar=0&navpanes=0`}
-                                    className="w-full h-[600px] border-0"
-                                    title={`Menu ${idx + 1}`}
-                                  />
-                                ) : (
-                                  <div className="p-8 text-center text-muted-foreground">
-                                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                    <p>{"Aperçu non disponible"}</p>
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-primary hover:underline text-sm mt-2 inline-block"
-                                    >
-                                      {"Ouvrir dans un nouvel onglet"}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                        {restaurant.menu.map((url, idx) => (
+                          <MenuMediaItem key={idx} url={url} index={idx} />
+                        ))}
                       </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
@@ -738,7 +731,6 @@ export const PublicRestaurant = () => {
         </Button>
       </div>
 
-      {/* Type assertion needed because PublicRestaurant interface might differ slightly from RestaurantInterface expected by BookingDialog */}
       <BookingDialog
         open={isBookingOpen}
         onOpenChange={setIsBookingOpen}
@@ -747,6 +739,13 @@ export const PublicRestaurant = () => {
           date: searchParams.get("date") || undefined,
           guests: searchParams.get("guests") || undefined,
         }}
+      />
+
+      <ImageViewer
+        images={restaurant.images || []}
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        initialIndex={currentImageIndex}
       />
     </div>
   );

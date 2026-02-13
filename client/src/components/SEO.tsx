@@ -7,6 +7,7 @@ interface SEOProps {
   type?: string;
   url?: string;
   image?: string;
+  jsonLd?: Record<string, any>;
 }
 
 export const SEO = ({
@@ -16,6 +17,7 @@ export const SEO = ({
   type = "website",
   url,
   image = "/logos/logo.svg",
+  ...props
 }: SEOProps) => {
   const siteUrl = "https://couverto.fr";
   const fullUrl = url ? (url.startsWith("http") ? url : `${siteUrl}${url}`) : siteUrl;
@@ -40,6 +42,9 @@ export const SEO = ({
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+
+      {/* Structured Data (JSON-LD) */}
+      {props.jsonLd && <script type="application/ld+json">{JSON.stringify(props.jsonLd)}</script>}
     </Helmet>
   );
 };
