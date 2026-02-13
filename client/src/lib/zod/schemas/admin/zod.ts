@@ -105,6 +105,7 @@ export const getCreatePlanSchema = () => {
     active: z.boolean(),
     position: z.coerce.number(),
     stripePriceId: z.string().optional(),
+    isPopular: z.boolean().default(false),
   });
 };
 
@@ -117,6 +118,7 @@ export const getUpdatePlanSchema = () => {
     active: z.boolean(),
     position: z.coerce.number(),
     stripePriceId: z.string().optional(),
+    isPopular: z.boolean().default(false),
   });
 };
 

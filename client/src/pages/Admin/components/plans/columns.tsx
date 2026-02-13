@@ -28,7 +28,16 @@ export const useColumns = (openEditSheet: (plan: Plan) => void, openDeleteDialog
         );
       },
       cell: ({ row }) => {
-        return <div className="font-semibold text-base">{row.getValue("name")}</div>;
+        return (
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold text-base">{row.getValue("name")}</span>
+            {row.original.isPopular && (
+              <Badge variant="outline" className="w-fit border-primary text-primary text-[10px] h-5 px-1.5 ">
+                Populaire
+              </Badge>
+            )}
+          </div>
+        );
       },
       meta: { label: "Nom" },
     },

@@ -45,6 +45,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       active: true,
       position: 0,
       stripePriceId: "",
+      isPopular: false,
     },
   });
 
@@ -58,6 +59,7 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
       active: plan?.active,
       position: plan?.position,
       stripePriceId: plan?.stripePriceId || "",
+      isPopular: plan?.isPopular || false,
     },
   });
 
@@ -235,6 +237,21 @@ export const PlanForm = ({ dialog, refresh, action, plan }: PlanFormProps) => {
             </FormControl>
             <div className="space-y-1 leading-none">
               <FormLabel>{"Actif"}</FormLabel>
+            </div>
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="isPopular"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-4">
+            <FormControl>
+              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+            </FormControl>
+            <div className="space-y-1 leading-none">
+              <FormLabel>{"Populaire"}</FormLabel>
+              <p className="text-sm text-muted-foreground">{"Ce plan sera mis en avant comme le choix recommandé."}</p>
             </div>
           </FormItem>
         )}

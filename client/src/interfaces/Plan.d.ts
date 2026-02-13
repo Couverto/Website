@@ -9,6 +9,7 @@ export interface Plan {
   active: boolean;
   position: number;
   stripePriceId?: string;
+  isPopular: boolean;
   createdAt: string;
 
   updatedAt: string;

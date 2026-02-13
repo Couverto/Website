@@ -9,6 +9,7 @@ export interface IPlan extends Document {
   active: boolean;
   position: number;
   stripePriceId?: string;
+  isPopular: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

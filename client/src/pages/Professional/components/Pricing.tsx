@@ -65,8 +65,14 @@ export const Pricing = () => {
           {plans.map((plan) => (
             <div
               key={plan._id}
-              className={`relative rounded-2xl bg-background p-6 border border-border flex flex-col shadow-sm hover:shadow-md transition-shadow`}
+              className={`relative rounded-2xl bg-background p-6 border flex flex-col shadow-sm hover:shadow-md transition-shadow 
+                ${plan.isPopular ? "border-primary shadow-md scale-105 z-10" : "border-border"}`}
             >
+              {plan.isPopular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-medium">
+                  Le plus populaire
+                </div>
+              )}
               {/* Plan Header */}
               <div className="text-center mb-8 pb-4 border-b border-border/50">
                 <h3 className="text-xl font-bold text-foreground mb-2">{plan.name}</h3>

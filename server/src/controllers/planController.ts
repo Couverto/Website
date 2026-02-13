@@ -40,6 +40,9 @@ export const getAllPlans = async (req: Request, res: Response): Promise<void> =>
  */
 export const createPlan = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (req.body.isPopular) {
+      await Plan.updateMany({}, { isPopular: false });
+    }
     const plan = await Plan.create(req.body);
     createLog({
       message: `Plan '${plan.name}' created`,
@@ -59,6 +62,9 @@ export const createPlan = async (req: Request, res: Response): Promise<void> => 
 export const updatePlan = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
+    if (req.body.isPopular) {
+      await Plan.updateMany({ _id: { $ne: id } }, { isPopular: false });
+    }
     const plan = await Plan.findByIdAndUpdate(id, req.body, { new: true });
     if (!plan) {
       res.status(404).json({ error: "Ressource introuvable" });

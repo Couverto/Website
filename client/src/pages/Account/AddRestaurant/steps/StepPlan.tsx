@@ -69,11 +69,20 @@ export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) =>
         {plans.map((plan) => (
           <Card
             key={plan._id}
-            className={`cursor-pointer transition-all border-2 ${
-              selectedPlan === plan._id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+            className={`cursor-pointer transition-all border-2 relative ${
+              selectedPlan === plan._id
+                ? "border-primary bg-primary/5"
+                : plan.isPopular
+                  ? "border-primary/60 shadow-md scale-[1.02]"
+                  : "border-border hover:border-primary/50"
             }`}
             onClick={() => handleSelect(plan._id)}
           >
+            {plan.isPopular && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-2 py-0.5 rounded-full text-xs font-medium z-10">
+                Populaire
+              </div>
+            )}
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 {plan.name}

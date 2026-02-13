@@ -10,6 +10,7 @@ const PlanSchema = new Schema<IPlan>(
     active: { type: Boolean, default: true },
     position: { type: Number, default: 0 },
     stripePriceId: { type: String, default: null },
+    isPopular: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
