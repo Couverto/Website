@@ -1,21 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
-import {
-  Loader2,
-  MapPin,
-  Clock,
-  Phone,
-  Globe,
-  Star,
-  ChefHat,
-  Wallet,
-  ChevronLeft,
-  FileText,
-  ExternalLink,
-  Utensils,
-  MessageSquare,
-} from "lucide-react";
+import { Loader2, MapPin, Clock, Phone, Globe, Star, ChefHat, Wallet, ChevronLeft, MessageSquare } from "lucide-react";
 import { BookingDialog } from "../Home/components/Booking/BookingDialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,7 +15,6 @@ import { fr } from "date-fns/locale";
 import { SEO } from "@/components/SEO";
 import { ImageViewer } from "@/components/customs/ImageViewer";
 import { PriceIndicator } from "@/components/customs/PriceIndicator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { MenuMediaItem } from "./components/MenuMediaItem";
 
 interface PublicRestaurant {
@@ -240,7 +225,7 @@ export const PublicRestaurant = () => {
                 >
                   <MapPin className="h-4 w-4 group-hover:animate-bounce" />
                   <span className="underline decoration-dotted underline-offset-4 font-medium text-foreground/90 shadow-black/10 drop-shadow-md">
-                    {restaurant.adress}, {restaurant.city}
+                    {restaurant.city}
                   </span>
                 </a>
 
