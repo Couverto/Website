@@ -1,15 +1,10 @@
-import { useConfigContext } from "@/contexts/configContext";
-
 export const Privacy = () => {
-  const { configValues } = useConfigContext();
-  const appName = configValues["APP_NAME"];
-
   return (
     <article className="prose prose-stone dark:prose-invert max-w-none">
       <h1>Politique de Confidentialité</h1>
 
       <p>
-        La protection de vos données personnelles est une priorité pour {appName}. Cette politique de confidentialité explique comment nous
+        La protection de vos données personnelles est une priorité pour Couverto. Cette politique de confidentialité explique comment nous
         collectons, utilisons et protégeons vos informations.
       </p>
 
