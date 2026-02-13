@@ -42,11 +42,7 @@ export const AccountRestaurants = () => {
             <CardTitle>{"Mes Restaurants"}</CardTitle>
             <CardDescription>{"Gérez vos établissements ici."}</CardDescription>
           </div>
-          <Button
-            onClick={() => navigate("/pro/create-restaurant")}
-            disabled={!isAdmin}
-            title={!isAdmin ? "Réservé aux administrateurs" : ""}
-          >
+          <Button onClick={() => navigate("/pro/create-restaurant")}>
             <Plus className="mr-2 h-4 w-4" />
             {"Ajouter un restaurant"}
           </Button>
@@ -61,11 +57,9 @@ export const AccountRestaurants = () => {
           ) : restaurants.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-muted-foreground mb-4">Vous n'avez pas encore de restaurant.</p>
-              {isAdmin && (
-                <Link to="/pro/create-restaurant">
-                  <Button variant="outline">Créez votre premier établissement</Button>
-                </Link>
-              )}
+              <Link to="/pro/create-restaurant">
+                <Button variant="outline">Créez votre premier établissement</Button>
+              </Link>
             </div>
           ) : (
             <div className="grid gap-6 grid-cols-1 text-card-foreground">

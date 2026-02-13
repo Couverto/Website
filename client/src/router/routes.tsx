@@ -119,7 +119,7 @@ export const Router = () => {
         <Route
           path="/pro/create-restaurant"
           element={
-            <ProtectedRoute authRequired={true} role="admin">
+            <ProtectedRoute authRequired={true}>
               <AddRestaurantWizard />
             </ProtectedRoute>
           }

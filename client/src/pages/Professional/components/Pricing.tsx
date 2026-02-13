@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, Minus } from "lucide-react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { Plan } from "@/interfaces/Plan";
 import { Feature } from "@/interfaces/Feature";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthContext } from "@/contexts/authContext";
 
 export const Pricing = () => {
+  const navigate = useNavigate();
+  const { authUser } = useAuthContext();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [allFeatures, setAllFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,11 +105,19 @@ export const Pricing = () => {
               </ul>
 
               {/* CTA */}
-              <Link to="/register" className="block mt-auto">
-                <Button size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                  {"Choisir cette formule"}
-                </Button>
-              </Link>
+              <Button
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold mt-auto"
+                onClick={() => {
+                  if (authUser) {
+                    navigate("/pro/create-restaurant");
+                  } else {
+                    navigate("/register?redirect=/pro/create-restaurant");
+                  }
+                }}
+              >
+                {"Choisir cette formule"}
+              </Button>
             </div>
           ))}
         </div>

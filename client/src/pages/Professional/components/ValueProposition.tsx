@@ -18,9 +18,9 @@ export const ValueProposition = () => {
       description: "Retrouvez l'historique et les préférences de vos clients en quelques clics.",
     },
     {
-      icon: Zap,
-      title: "Prise en main immédiate",
-      description: "Aucune formation nécessaire. Interface intuitive pensée pour le terrain.",
+      icon: ClipboardList,
+      title: "Plan de salle interactif",
+      description: "Modélisez votre salle, gérez vos tables et suivez l'occupation en temps réel.",
     },
   ];
 

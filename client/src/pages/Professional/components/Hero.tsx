@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, LayoutGrid, Users, Utensils, Clock, Star, ChefHat } from "lucide-react";
 import { useConfigContext } from "@/contexts/configContext";
+import { FakeTablePlan } from "@/components/customs/FakeTablePlan";
 
 export const Hero = () => {
   // const { configValues } = useConfigContext();
@@ -153,33 +154,41 @@ export const Hero = () => {
                     </div>
                   </div>
 
-                  {/* Reservations List */}
-                  <div className="rounded-lg bg-card border border-border p-3">
-                    <div className="text-sm font-medium text-foreground mb-3">{"Prochaines réservations"}</div>
-                    <div className="space-y-2">
-                      {[
-                        { name: "Dupont", time: "19:00", covers: 4, table: "T3" },
-                        { name: "Martin", time: "19:30", covers: 2, table: "T7" },
-                        { name: "Bernard", time: "20:00", covers: 6, table: "T12" },
-                      ].map((reservation, i) => (
-                        <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
-                              {reservation.name.charAt(0)}
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-foreground">{reservation.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {reservation.covers} {"couverts"}
+                  {/* Reservations & Table Plan Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Fake Table Plan (Left) */}
+                    <div className="rounded-lg bg-card border border-border overflow-hidden h-full min-h-[160px]">
+                      <FakeTablePlan className="w-full h-full p-2 scale-90" />
+                    </div>
+
+                    {/* Prochaines réservations (Right) */}
+                    <div className="rounded-lg bg-card border border-border p-3">
+                      <div className="text-sm font-medium text-foreground mb-3">{"Prochaines réservations"}</div>
+                      <div className="space-y-2">
+                        {[
+                          { name: "Dupont", time: "19:00", covers: 4, table: "T3" },
+                          { name: "Martin", time: "19:30", covers: 2, table: "T7" },
+                          { name: "Bernard", time: "20:00", covers: 6, table: "T12" },
+                        ].map((reservation, i) => (
+                          <div key={i} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
+                                {reservation.name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-foreground">{reservation.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {reservation.covers} {"couverts"}
+                                </div>
                               </div>
                             </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-foreground">{reservation.time}</div>
+                              <div className="text-xs text-muted-foreground">{reservation.table}</div>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium text-foreground">{reservation.time}</div>
-                            <div className="text-xs text-muted-foreground">{reservation.table}</div>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
