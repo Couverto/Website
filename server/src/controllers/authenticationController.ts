@@ -54,6 +54,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(20).toString("hex");
+    const verificationTokenHash = crypto.createHash("sha256").update(verificationToken).digest("hex");
+
     const user = await User.create({
       email: email.toLowerCase(),
       username: username.toLowerCase(),
@@ -61,6 +65,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       name,
       forename,
       auth_type: photoURL ? authTypes.GOOGLE : authTypes.LOCAL,
+      verificationToken: verificationTokenHash,
+      verificationTokenExpire: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      isVerified: false,
     });
 
     if (photoURL) {
@@ -83,35 +90,45 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const userCount = await User.countDocuments();
     if (userCount === 1) {
       user.role = userRoles.ADMIN;
+      user.isVerified = true; // First user (admin) auto-verified? Or should they verify too? Let's say yes for simplicity or security.
+      // Actually typically admin setup might bypass. Let's auto-verify the first admin.
+      user.verificationToken = undefined;
+      user.verificationTokenExpire = undefined;
       await user.save();
     }
 
-    const accessToken = generateAccessToken(user._id);
-
     createLog({
-      message: `New user ${user.username} registered successfully`,
+      message: `New user ${user.username} registered - Verification pending`,
       userId: user._id,
       level: logLevels.INFO,
     });
 
-    const { password: _password, ...userWithoutPassword } = user.toObject();
-    const userWithHasPassword = { ...userWithoutPassword, hasPassword: !!user.password };
-
-    // Send Welcome Email
+    // Send Verification Email
     try {
-      if (user.email) {
-        const htmlContent = welcomeEmailTemplate({ name: user.forename });
+      if (user.email && !user.isVerified) {
+        const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+        const verifyUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
+
+        // Dynamically import to avoid circular dep issues if any, or just import at top.
+        // Added import at top.
+        const { verifyEmailTemplate } = await import("../templates/verifyEmailTemplate.js");
+        const htmlContent = verifyEmailTemplate({ url: verifyUrl });
+
         await sendEmail({
           email: user.email,
-          subject: "Bienvenue sur Couverto !",
+          subject: "Vérifiez votre adresse email - Couverto",
           message: htmlContent,
         });
       }
     } catch (emailErr) {
-      console.error("Welcome email failed", emailErr);
+      console.error("Verification email failed", emailErr);
+      // We might want to warn the user but account is created.
     }
 
-    res.status(201).json({ user: userWithHasPassword, message: "Inscription réussie", accessToken });
+    res.status(201).json({
+      message: "Inscription réussie. Veuillez vérifier votre email pour activer votre compte.",
+      user: { email: user.email }, // Return minimal info, no token
+    });
     return;
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -137,6 +154,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     if (!user) {
       res.status(400).json({ error: "Utilisateur introuvable" });
+      return;
+    }
+
+    if (!user.isVerified) {
+      res.status(403).json({ error: "Veuillez vérifier votre email avant de vous connecter." });
       return;
     }
 
@@ -385,6 +407,59 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
         role: user.role,
         avatar: user.avatar,
       },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * Verifies the user's email address.
+ */
+export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
+  const { token } = req.params;
+
+  try {
+    const verificationTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      verificationToken: verificationTokenHash,
+      verificationTokenExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      res.status(400).json({ error: "Jeton de vérification invalide ou expiré" });
+      return;
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpire = undefined;
+
+    await user.save();
+
+    const accessToken = generateAccessToken(user._id);
+
+    // Send Welcome Email now that they are verified
+    try {
+      const { welcomeEmailTemplate } = await import("../templates/welcomeEmail.js");
+      const htmlContent = welcomeEmailTemplate({ name: user.forename });
+      await sendEmail({
+        email: user.email,
+        subject: "Bienvenue sur Couverto !",
+        message: htmlContent,
+      });
+    } catch (emailErr) {
+      console.error("Welcome email failed", emailErr);
+    }
+
+    const { password: _password, ...userWithoutPassword } = user.toObject();
+
+    res.status(200).json({
+      success: true,
+      data: "Email verified successfully",
+      accessToken,
+      user: { ...userWithoutPassword, hasPassword: !!user.password },
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

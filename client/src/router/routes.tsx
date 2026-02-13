@@ -30,6 +30,8 @@ import { AdminPayments } from "@/pages/Admin/components/payments";
 
 import { ForgotPassword } from "@/pages/Authentication/ForgotPassword";
 import { ResetPassword } from "@/pages/Authentication/ResetPassword";
+import { VerifyEmailPending } from "@/pages/Authentication/VerifyEmailPending";
+import { VerifyEmail } from "@/pages/Authentication/VerifyEmail";
 import { Footer } from "@/components/Footer";
 import { NotFound } from "@/pages/NotFound";
 import { AddRestaurantWizard } from "@/pages/Account/AddRestaurant";
@@ -256,6 +258,22 @@ export const Router = () => {
           element={
             <ProtectedRoute authRequired={false}>
               <ResetPassword />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/verify-email-pending"
+          element={
+            <ProtectedRoute authRequired={false}>
+              <VerifyEmailPending />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/verify-email"
+          element={
+            <ProtectedRoute authRequired={false}>
+              <VerifyEmail />
             </ProtectedRoute>
           }
         />

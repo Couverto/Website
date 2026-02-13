@@ -39,12 +39,12 @@ export const Register = () => {
     try {
       setLoading(true);
       const response = await axiosConfig.post("/auth/register", values);
-      toast.success(response.data.message || "Inscription réussie");
-      setAuthUser(response.data.user);
-      localStorage.setItem("accessToken", response.data.accessToken);
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect");
-      navigate(redirect || "/");
+      // toast.success(response.data.message || "Inscription réussie");
+      // setAuthUser(response.data.user);
+      // localStorage.setItem("accessToken", response.data.accessToken);
+      // const params = new URLSearchParams(window.location.search);
+      // const redirect = params.get("redirect");
+      navigate("/verify-email-pending");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {

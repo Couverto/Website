@@ -7,6 +7,7 @@ import {
   signInWithGoogle,
   forgotPassword,
   resetPassword,
+  verifyEmail,
 } from "../controllers/authenticationController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 
@@ -41,6 +42,12 @@ authRouter.post("/forgot-password", forgotPassword);
  * @description Resets the password using a valid token.
  */
 authRouter.post("/reset-password/:resetToken", resetPassword);
+
+/**
+ * @route GET /verify-email/:token
+ * @description Verifies the user's email address.
+ */
+authRouter.get("/verify-email/:token", verifyEmail);
 
 /**
  * @route GET /logout

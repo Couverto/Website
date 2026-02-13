@@ -15,4 +15,7 @@ export interface IUser extends Document {
   fullname?: string; // virtual
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpire?: Date;
 }

@@ -29,7 +29,7 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
 
 interface CreateLogParams {
   message: string;
-  userId: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId;
   level: logLevels;
 }
 

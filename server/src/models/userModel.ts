@@ -16,6 +16,9 @@ const UserSchema = new Schema<IUser>(
     auth_type: { type: String, default: authTypes.LOCAL },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    isVerified: { type: Boolean, default: false },
+    verificationToken: String,
+    verificationTokenExpire: Date,
   },
   { timestamps: true },
 );
