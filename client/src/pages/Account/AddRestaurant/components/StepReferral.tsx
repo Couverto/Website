@@ -60,6 +60,8 @@ export const StepReferral = ({ data, updateData, errors }: StepProps) => {
             referralCode: trimmedCode.toUpperCase(),
             referralCodeValidated: true,
             referrer: response.data.referrer,
+            referralType: response.data.type || "standard",
+            referralDiscount: response.data.discountPercentage,
           });
         }
       } catch (err: any) {
@@ -70,6 +72,7 @@ export const StepReferral = ({ data, updateData, errors }: StepProps) => {
           referralCode: "",
           referralCodeValidated: false,
           referrer: null,
+          referralDiscount: 0,
         });
       } finally {
         setLoading(false);
@@ -92,6 +95,7 @@ export const StepReferral = ({ data, updateData, errors }: StepProps) => {
       referralCode: "",
       referralCodeValidated: false,
       referrer: null,
+      referralDiscount: 0,
     });
   };
 
@@ -150,8 +154,30 @@ export const StepReferral = ({ data, updateData, errors }: StepProps) => {
             </p>
           )}
 
-          {/* Success - Referrer Info */}
-          {validated && referrer && (
+          {/* Success - Referrer OR Sponsor Info */}
+          {validated && (data.referralType === "sponsor" || (!referrer && data.referralType === "sponsor")) ? (
+            <div className="p-6 rounded-xl bg-purple-50 border border-purple-200 animate-in fade-in slide-in-from-bottom-2">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <Sparkles className="h-7 w-7 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-lg text-purple-900">Code Sponsor Validé !</p>
+                  <p className="text-purple-700">
+                    {data.referralDiscount === 100
+                      ? "Vous bénéficiez d'un accès complet et gratuit à vie."
+                      : `Vous bénéficiez de ${data.referralDiscount}% de réduction à vie sur votre abonnement.`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-purple-600 text-white text-sm font-bold shadow-sm">
+                    <Gift className="h-4 w-4 mr-1" />
+                    {data.referralDiscount === 100 ? "100% Offert" : `-${data.referralDiscount}%`}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : validated && referrer ? (
             <div className="p-4 rounded-xl bg-green-50 border border-green-200 animate-in fade-in slide-in-from-bottom-2">
               <div className="flex items-center gap-4">
                 {referrer.coverImage ? (
@@ -172,7 +198,7 @@ export const StepReferral = ({ data, updateData, errors }: StepProps) => {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

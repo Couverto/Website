@@ -30,7 +30,7 @@ export const stripeService = {
     successUrl: string,
     cancelUrl: string,
     metadata: Record<string, string>,
-    options?: { trialPeriodDays?: number },
+    options?: { trialPeriodDays?: number; discounts?: { coupon: string }[] },
   ) => {
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ["card"],
@@ -50,6 +50,11 @@ export const stripeService = {
       sessionConfig.customer = customerData.id;
     } else if (customerData.email) {
       sessionConfig.customer_email = customerData.email;
+    }
+
+    // Add discounts if provided
+    if (options?.discounts) {
+      sessionConfig.discounts = options.discounts;
     }
 
     // Add trial period if specified (for referred restaurants)

@@ -31,8 +31,31 @@ export const validateReferralCode = async (req: Request, res: Response): Promise
       return;
     }
 
+    // Handle Sponsor Code
+    if (referralCode.type === "sponsor") {
+      res.status(200).json({
+        valid: true,
+        type: "sponsor",
+        discountPercentage: referralCode.discountPercentage,
+        benefits: {
+          message:
+            referralCode.discountPercentage === 100
+              ? "Offre Sponsor : Abonnement gratuit à vie et accès complet !"
+              : `Offre Sponsor : ${referralCode.discountPercentage}% de réduction à vie !`,
+        },
+      });
+      return;
+    }
+
+    // Handle Standard Code
+    if (!referralCode.restaurantId) {
+      res.status(404).json({ error: "Code de parrainage invalide" });
+      return;
+    }
+
     res.status(200).json({
       valid: true,
+      type: "standard",
       referrer: {
         id: referralCode.restaurantId._id,
         name: (referralCode.restaurantId as any).name,
@@ -47,6 +70,50 @@ export const validateReferralCode = async (req: Request, res: Response): Promise
   } catch (error) {
     console.error("Error validating referral code:", error);
     res.status(500).json({ error: "Erreur lors de la validation du code" });
+  }
+};
+
+/**
+ * @function generateSponsorCode
+ * @description Generates a new sponsor code (Admin only)
+ */
+export const generateSponsorCode = async (req: Request, res: Response): Promise<void> => {
+  const { description, discountPercentage, maxUsages } = req.body;
+
+  try {
+    const code = await (ReferralCode as any).generateUniqueCode();
+
+    const sponsorCode = new ReferralCode({
+      code,
+      type: "sponsor",
+      isActive: true,
+      description: description || "Code Sponsor",
+      discountPercentage: discountPercentage !== undefined ? discountPercentage : 100,
+      maxUsages: maxUsages || 1,
+      usageCount: 0,
+    });
+
+    await sponsorCode.save();
+
+    createLog({
+      message: `Sponsor code generated: ${code}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    res.status(201).json({ code, message: "Code sponsor généré avec succès" });
+  } catch (error) {
+    console.error("Error generating sponsor code:", error);
+    res.status(500).json({ error: "Erreur lors de la génération du code sponsor" });
+  }
+};
+
+export const getAllSponsorCodes = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const codes = await ReferralCode.find({ type: "sponsor" }).sort({ createdAt: -1 });
+    res.status(200).json(codes);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -192,5 +259,65 @@ export const toggleReferralCode = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error("Error toggling referral code:", error);
     res.status(500).json({ error: "Erreur lors de la modification du code" });
+  }
+};
+
+/**
+ * @function deleteSponsorCode
+ * @description Deletes a sponsor code if it hasn't been used (Admin only)
+ */
+export const deleteSponsorCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const code = await ReferralCode.findById(id);
+    if (!code) {
+      res.status(404).json({ error: "Code introuvable" });
+      return;
+    }
+
+    if (code.type !== "sponsor") {
+      res.status(400).json({ error: "Ce n'est pas un code sponsor" });
+      return;
+    }
+
+    if (code.usageCount > 0) {
+      res.status(400).json({ error: "Impossible de supprimer un code déjà utilisé" });
+      return;
+    }
+
+    await ReferralCode.findByIdAndDelete(id);
+
+    createLog({
+      message: `Sponsor code deleted: ${code.code}`,
+      userId: req.userId,
+      level: logLevels.WARN,
+    });
+
+    res.status(200).json({ message: "Code supprimé avec succès" });
+  } catch (error) {
+    console.error("Error deleting sponsor code:", error);
+    res.status(500).json({ error: "Erreur lors de la suppression du code" });
+  }
+};
+
+/**
+ * @function deleteUnusedSponsorCode
+ * @description Deletes all unused sponsor codes (Admin only)
+ */
+export const deleteUnusedSponsorCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await ReferralCode.deleteMany({ type: "sponsor", usageCount: 0 });
+
+    createLog({
+      message: `Deleted ${result.deletedCount} unused sponsor codes`,
+      userId: req.userId,
+      level: logLevels.WARN,
+    });
+
+    res.status(200).json({ message: `${result.deletedCount} codes supprimés avec succès`, count: result.deletedCount });
+  } catch (error) {
+    console.error("Error deleting unused sponsor codes:", error);
+    res.status(500).json({ error: "Erreur lors de la suppression des codes" });
   }
 };

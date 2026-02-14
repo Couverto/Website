@@ -66,6 +66,8 @@ export const getReferralSchema = () =>
   z.object({
     referralCode: z.string().optional(),
     referralCodeValidated: z.boolean().optional(),
+    referralType: z.enum(["standard", "sponsor"]).optional(),
+    referralDiscount: z.number().optional(),
     referrer: z
       .object({
         id: z.string(),

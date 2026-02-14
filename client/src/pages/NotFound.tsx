@@ -25,13 +25,13 @@ export const NotFound = () => {
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 animate-in slide-in-from-bottom-4 duration-500 delay-400">
-        <Button onClick={() => navigate("/")} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
-          <Home className="w-4 h-4" />
-          {"Retour à l'accueil"}
-        </Button>
         <Button onClick={() => navigate(-1)} variant="outline" size="lg" className="gap-2">
           <ArrowLeft className="w-4 h-4" />
           {"Annuler"}
+        </Button>
+        <Button onClick={() => navigate("/")} size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all">
+          <Home className="w-4 h-4" />
+          {"Retour à l'accueil"}
         </Button>
       </div>
     </div>

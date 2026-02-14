@@ -54,6 +54,7 @@ export interface IRestaurant extends Document {
   // Referral fields
   referralCode?: mongoose.Types.ObjectId;
   referredBy?: mongoose.Types.ObjectId;
+  referralCodeUsed?: mongoose.Types.ObjectId;
   referrals: mongoose.Types.ObjectId[];
   subscriptionStartDelay: number;
   // Table Plan

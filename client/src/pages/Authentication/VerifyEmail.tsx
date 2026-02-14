@@ -36,8 +36,7 @@ export const VerifyEmail = () => {
 
         // Redirect after a short delay
         setTimeout(() => {
-          navigate("/account/dashboard"); // Or home depending on role logic in auth context/provider.
-          // Assuming dashboard is safe default or the auth context handles redirection if already logged in.
+          navigate("/");
         }, 3000);
       } catch (error: any) {
         setStatus("error");

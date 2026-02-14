@@ -79,10 +79,29 @@ export const StepPlan = ({ data, updateData, errors }: StepProps) => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-black">{plan.price}€</span>
-                  <span className="text-muted-foreground font-medium">/mois</span>
-                </div>
+                {data.referralType === "sponsor" && data.referralDiscount ? (
+                  <div>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-lg text-muted-foreground line-through">{plan.price}€</span>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                        -{data.referralDiscount}%
+                      </Badge>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      {data.referralDiscount === 100 ? (
+                        <span className="text-4xl font-black text-emerald-600">Gratuit</span>
+                      ) : (
+                        <span className="text-4xl font-black">{(plan.price * (1 - data.referralDiscount / 100)).toFixed(2)}€</span>
+                      )}
+                      <span className="text-muted-foreground font-medium">/mois</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-black">{plan.price}€</span>
+                    <span className="text-muted-foreground font-medium">/mois</span>
+                  </div>
+                )}
                 <ul className="space-y-3">
                   {plan.features?.map((feature: any, i) => (
                     <li key={i} className="flex items-start gap-3">

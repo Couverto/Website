@@ -176,13 +176,13 @@ export const About = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 max-w-4xl mx-auto">
             {team.map((member, i) => (
               <div
                 key={i}
                 className="group relative bg-background rounded-[2rem] overflow-hidden shadow-lg border hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 h-full flex flex-col"
               >
-                <div className="aspect-[4/3] overflow-hidden relative">
+                <div className="aspect-[3/2] overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
                   <img
                     src={member.image}

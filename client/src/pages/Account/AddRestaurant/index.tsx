@@ -50,6 +50,7 @@ const INITIAL_DATA: WizardData = {
   planId: "",
   referralCode: "",
   referralCodeValidated: false,
+  referralType: "standard",
   referrer: null,
   openingHours: {
     monday: {
@@ -313,7 +314,7 @@ export const AddRestaurantWizard = () => {
                     className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-8 h-11 text-base font-medium shadow-lg transition-all min-w-[160px]"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    {"Payer et Créer"}
+                    {formData.referralType === "sponsor" && formData.referralDiscount === 100 ? "Créer mon restaurant" : "Payer et Créer"}
                   </Button>
                 )}
               </div>

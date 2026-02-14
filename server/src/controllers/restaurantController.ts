@@ -14,6 +14,7 @@ import { Plan } from "../models/planModel.js";
 import { stripeService } from "../services/stripeService.js";
 import { PendingTransaction } from "../models/pendingTransactionModel.js";
 import { ReferralCode } from "../models/referralCodeModel.js";
+import { Feature } from "../models/featureModel.js";
 
 import { isRestaurantOpen, convertOpeningHoursToObject } from "../utils/restaurantUtils.js";
 import { Review } from "../models/reviewModel.js";
@@ -31,7 +32,8 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
 
     const restaurants = await Restaurant.find(query)
       .populate("collaborators", "name forename email avatar")
-      .populate("plan", "name")
+      .populate("plan", "name price")
+      .populate("referralCodeUsed", "code type discountPercentage")
       .sort({ createdAt: -1 })
       .skip(page * size)
       .limit(size);
@@ -90,17 +92,95 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         return;
       }
 
-      // restaurantId is already populated, so it's the full restaurant object
-      referrerRestaurant = validReferralCode.restaurantId as any;
-      if (!referrerRestaurant || !referrerRestaurant._id) {
-        res.status(400).json({ error: "Le restaurant parrain n'existe plus" });
+      if (validReferralCode.type === "sponsor") {
+        console.log(`[createRestaurant] Sponsor code validated: ${validReferralCode.code}`);
+      } else {
+        // restaurantId is already populated, so it's the full restaurant object
+        referrerRestaurant = validReferralCode.restaurantId as any;
+        if (!referrerRestaurant || !referrerRestaurant._id) {
+          res.status(400).json({ error: "Le restaurant parrain n'existe plus" });
+          return;
+        }
+
+        console.log(`[createRestaurant] Referral validated - referrer: ${referrerRestaurant.name} (${referrerRestaurant._id})`);
+
+        // Set 30 days delay for referred restaurants
+        subscriptionStartDelay = 30;
+      }
+    }
+
+    // SPONSOR CODE: Grant full access immediately OR Apply Discount
+    if (validReferralCode?.type === "sponsor") {
+      // Check limits
+      if (validReferralCode.maxUsages > 0 && validReferralCode.usageCount >= validReferralCode.maxUsages) {
+        res.status(400).json({ error: "Ce code sponsor a atteint sa limite d'utilisation" });
         return;
       }
 
-      console.log(`[createRestaurant] Referral validated - referrer: ${referrerRestaurant.name} (${referrerRestaurant._id})`);
+      // 100% Discount logic (Free Forever)
+      if (validReferralCode.discountPercentage === 100) {
+        const allFeatures = await Feature.find({}, "_id");
+        const featureIds = allFeatures.map((f) => f._id); // Grant all features
 
-      // Set 30 days delay for referred restaurants
-      subscriptionStartDelay = 30;
+        const restaurant = new Restaurant({
+          name,
+          slug,
+          adress: address,
+          city,
+          phone,
+          email: otherFields.email || creator.email,
+          website,
+          collaborators,
+          collaboratorRoles,
+          plan: null, // Sponsor restaurants don't have a Plan object but have features manually assigned
+          subscriptionStatus: "active", // Active immediately
+          autoRenew: true,
+          subscriptionEndDate: null, // Forever
+          isClosed: true,
+          features: featureIds,
+          referredBy: null,
+          referralCodeUsed: validReferralCode._id,
+          subscriptionStartDelay: 0,
+          ...otherFields,
+        });
+
+        await restaurant.save();
+
+        // Increment usage count
+        await ReferralCode.findByIdAndUpdate(validReferralCode._id, { $inc: { usageCount: 1 } });
+
+        // Generate referral code for the new restaurant
+        const newReferralCode = await (ReferralCode as any).generateUniqueCode();
+        const referralCodeDoc = new ReferralCode({
+          code: newReferralCode,
+          restaurantId: restaurant._id,
+          isActive: true,
+          discountPercentage: 10,
+        });
+        await referralCodeDoc.save();
+        restaurant.referralCode = referralCodeDoc._id;
+        await restaurant.save();
+
+        createLog({
+          message: `Restaurant '${name}' created via Sponsor Code '${validReferralCode.code}' (100% Free)`,
+          userId: req.userId,
+          level: logLevels.INFO,
+        });
+
+        res.status(201).json({ restaurant, message: "Restaurant créé avec succès (Offre Sponsor 100%)" });
+        return;
+      }
+
+      // Partial Discount Logic ( < 100% ) -> Proceed to Payment with Coupon
+      console.log(`[createRestaurant] Partial Sponsor Discount: ${validReferralCode.discountPercentage}%`);
+
+      // We need a planId for partial discounts to know the base price
+      if (!planId) {
+        res.status(400).json({ error: "Un plan est requis pour ce code sponsor (réduction partielle)." });
+        return;
+      }
+
+      // Fallthrough to standard Stripe flow below, but inject the discount
     }
 
     // Check if plan exists and handle Stripe/Free flow
@@ -161,20 +241,50 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
         await pendingTransaction.save();
 
-        // Create Checkout Session with trial period if referred
-        // Pass email instead of customer ID to let Checkout create the customer
+        await pendingTransaction.save();
+
+        // Prepare Checkout Options
+        const checkoutOptions: any = {
+          transactionId: pendingTransaction._id.toString(),
+          planId: planId.toString(),
+          referrerId: referrerRestaurant?._id?.toString() || "",
+        };
+
+        // Handle Trial (Referral Standard)
+        if (subscriptionStartDelay > 0) {
+          checkoutOptions.trialPeriodDays = subscriptionStartDelay;
+        }
+
+        // Handle Coupon (Sponsor Partial Discount)
+        if (
+          validReferralCode?.type === "sponsor" &&
+          validReferralCode.discountPercentage > 0 &&
+          validReferralCode.discountPercentage < 100
+        ) {
+          // Create a unique coupon for this transaction (or reuse if we had a robust system, but creates are cheap)
+          // We use the createReferralCoupon utility but repurposed for sponsor
+          const coupon = await stripeService.createReferralCoupon(
+            validReferralCode.discountPercentage,
+            "SPONSOR_" + validReferralCode.code,
+          );
+          checkoutOptions.discounts = [{ coupon: coupon.id }];
+        }
+
+        // Create Checkout Session
+        // Metadata: Stripe only accepts strings. We pass minimal info since we have the transaction ID.
+        const stripeMetadata = {
+          transactionId: pendingTransaction._id.toString(),
+          restaurantName: name,
+          email: creator.email,
+        };
+
         const stripeSession = await stripeService.createCheckoutSession(
           { email: creator.email },
           plan.stripePriceId,
           `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`,
           `${process.env.CORS_ORIGIN}/account/payment-cancel`,
-          {
-            transactionId: pendingTransaction._id.toString(),
-            planId: planId.toString(),
-            referrerId: referrerRestaurant?._id?.toString() || "",
-          },
-          // Add 30 days trial for referred restaurants
-          subscriptionStartDelay > 0 ? { trialPeriodDays: subscriptionStartDelay } : undefined,
+          stripeMetadata,
+          checkoutOptions,
         );
 
         // Apply cumulative discount to referrer if applicable

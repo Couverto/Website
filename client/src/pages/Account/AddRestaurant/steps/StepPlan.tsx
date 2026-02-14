@@ -94,9 +94,32 @@ export const StepPlan = ({ data, updateData, onNext, onBack }: StepPlanProps) =>
             <CardHeader className="text-center pb-4 border-b border-border/50">
               <CardTitle className="flex justify-center items-center mb-2">{plan.name}</CardTitle>
               <CardDescription className="min-h-[40px]">{plan.description}</CardDescription>
-              <div className="flex items-baseline justify-center gap-1 mt-4">
-                <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
-                <span className="text-muted-foreground font-medium">€ / mois</span>
+              <div className="flex items-baseline justify-center gap-1 mt-4 flex-col">
+                {data.referralType === "sponsor" && data.referralDiscount ? (
+                  <>
+                    <span className="text-muted-foreground line-through text-lg">{plan.price} € / mois</span>
+                    <div className="flex items-baseline gap-1">
+                      {data.referralDiscount === 100 ? (
+                        <span className="text-4xl font-extrabold text-emerald-600">Gratuit</span>
+                      ) : (
+                        <>
+                          <span className="text-4xl font-extrabold text-foreground">
+                            {(plan.price * (1 - data.referralDiscount / 100)).toFixed(2)}
+                          </span>
+                          <span className="text-muted-foreground font-medium">€ / mois</span>
+                          <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-bold ml-2">
+                            -{data.referralDiscount}%
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
+                    <span className="text-muted-foreground font-medium">€ / mois</span>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="flex-1 pt-6">

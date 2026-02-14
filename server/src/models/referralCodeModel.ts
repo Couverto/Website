@@ -4,9 +4,13 @@ import { IReferralCode } from "../interfaces/IReferralCode.js";
 const ReferralCodeSchema = new Schema<IReferralCode>(
   {
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
-    restaurantId: { type: Schema.Types.ObjectId, ref: "Restaurant", required: true },
+    restaurantId: { type: Schema.Types.ObjectId, ref: "Restaurant", required: false },
     isActive: { type: Boolean, default: true },
     discountPercentage: { type: Number, default: 10, min: 0, max: 100 },
+    type: { type: String, enum: ["standard", "sponsor"], default: "standard" },
+    description: { type: String, required: false },
+    maxUsages: { type: Number, default: 1 },
+    usageCount: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

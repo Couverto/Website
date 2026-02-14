@@ -39,13 +39,19 @@ export interface RestaurantInterface {
   cuisineType: string[];
   priceRange: string;
   rating: number;
-  plan?: { _id: string; name: string } | string;
-  subscriptionStatus?: "active" | "cancelled" | "expired" | "none";
+  plan?: { _id: string; name: string; price: number } | string;
+  subscriptionStatus?: "active" | "cancelled" | "expired" | "none" | "pending_payment";
   collaborators: string[] | any[]; // IDs or Populated Users
 
   // Referral fields
   referralCode?: string;
   referredBy?: string;
+  referralCodeUsed?: {
+    _id: string;
+    code: string;
+    type: "standard" | "sponsor";
+    discountPercentage: number;
+  };
   referrals?: string[];
   subscriptionStartDelay?: number;
 

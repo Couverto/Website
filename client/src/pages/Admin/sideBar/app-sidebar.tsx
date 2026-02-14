@@ -1,5 +1,18 @@
 import * as React from "react";
-import { LayoutDashboard, Users, FileText, Settings, Utensils, House, Paperclip, DollarSign, List, Zap, CreditCard } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Settings,
+  Utensils,
+  House,
+  Paperclip,
+  DollarSign,
+  List,
+  Zap,
+  CreditCard,
+  Gift,
+} from "lucide-react";
 import { NavMain } from "./nav-main";
 
 import { NavUser } from "@/components/nav-user";
@@ -53,6 +66,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Paiements",
         url: "/admin/payments",
         icon: CreditCard,
+        roles: ["admin"],
+      },
+      {
+        title: "Codes Sponsor",
+        url: "/admin/sponsor-codes",
+        icon: Gift,
         roles: ["admin"],
       },
       {

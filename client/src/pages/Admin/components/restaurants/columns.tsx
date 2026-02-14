@@ -140,6 +140,50 @@ export const getColumns = (callback: (action: string, data: any) => void): Colum
     meta: { label: "Abonnement" },
   },
   {
+    header: "Sponsor / Code",
+    accessorKey: "referralCodeUsed",
+    cell: ({ row }) => {
+      const referral = row.original.referralCodeUsed;
+      if (referral) {
+        return (
+          <div className="flex flex-col gap-1">
+            {referral.type === "sponsor" && (
+              <Badge
+                variant="secondary"
+                className="w-fit bg-purple-100 text-purple-700 hover:bg-purple-100 border-purple-200 text-[10px] px-1.5 py-0"
+              >
+                Sponsorisé
+              </Badge>
+            )}
+            <code className="font-mono text-xs font-bold bg-muted px-1.5 py-0.5 rounded w-fit">{referral.code}</code>
+          </div>
+        );
+      }
+      return <span className="text-muted-foreground text-xs">-</span>;
+    },
+    meta: { label: "Sponsor / Code" },
+  },
+  {
+    header: "Prix",
+    accessorKey: "plan.price",
+    cell: ({ row }) => {
+      const restaurant = row.original;
+      const referral = restaurant.referralCodeUsed;
+      const plan = restaurant.plan;
+
+      if (referral && referral.type === "sponsor") {
+        return <span className="font-bold text-emerald-600">Gratuit</span>;
+      }
+
+      if (typeof plan === "object" && plan && "price" in plan) {
+        return <span className="font-medium">{plan.price}€ / mois</span>;
+      }
+
+      return <span className="text-muted-foreground text-xs">-</span>;
+    },
+    meta: { label: "Prix" },
+  },
+  {
     accessorKey: "createdAt",
     header: ({ column }) => (
       <Button

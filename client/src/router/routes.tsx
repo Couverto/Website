@@ -27,6 +27,7 @@ import { AdminRestaurants } from "@/pages/Admin/components/restaurants";
 import { AdminRestaurantStats } from "@/pages/Admin/components/restaurants/restaurantStats";
 import { AdminRestaurantForm } from "@/pages/Admin/components/restaurants/restaurantForm";
 import { AdminPayments } from "@/pages/Admin/components/payments";
+import { SponsorCodes } from "../pages/Admin/SponsorCodes";
 
 import { ForgotPassword } from "@/pages/Authentication/ForgotPassword";
 import { ResetPassword } from "@/pages/Authentication/ResetPassword";
@@ -301,6 +302,7 @@ export const Router = () => {
           <Route path="restaurants/:id/stats" element={<AdminRestaurantStats />} />
           <Route path="restaurants/:id/edit" element={<AdminRestaurantForm />} />
           <Route path="payments" element={<AdminPayments />} />
+          <Route path="sponsor-codes" element={<SponsorCodes />} />
         </Route>
       </Route>
 

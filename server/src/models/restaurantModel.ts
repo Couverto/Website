@@ -102,6 +102,11 @@ const RestaurantSchema = new Schema<IRestaurant>(
       ref: "Restaurant",
       default: null,
     },
+    referralCodeUsed: {
+      type: Schema.Types.ObjectId,
+      ref: "ReferralCode",
+      default: null,
+    },
     referrals: {
       type: [Schema.Types.ObjectId],
       ref: "Restaurant",
