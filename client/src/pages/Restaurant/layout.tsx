@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeChanger } from "@/components/customs/themeChanger";
 import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/customs/loading";
+import { ConfigurationAlert } from "@/components/business/ConfigurationAlert";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -101,6 +102,7 @@ export const RestaurantLayout = () => {
             </div>
           </header>
           <div className="p-6">
+            {restaurant && <ConfigurationAlert restaurant={restaurant} />}
             <Outlet context={{ restaurant, userRole, refreshRestaurant: fetchRestaurant }} />
           </div>
         </main>

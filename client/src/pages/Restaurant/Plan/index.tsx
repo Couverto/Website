@@ -265,14 +265,6 @@ export const RestaurantPlan = () => {
                     </span>
                   </div>
                 )}
-                <ul className="space-y-2 pt-2">
-                  {subscription.plan.features?.map((feature: any, i: number) => (
-                    <li key={i} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-emerald-500" />
-                      {typeof feature === "string" ? feature : feature.name}
-                    </li>
-                  ))}
-                </ul>
               </>
             ) : (
               <div className="py-8 text-center text-muted-foreground">
@@ -335,14 +327,6 @@ export const RestaurantPlan = () => {
                             <span className="text-3xl font-black">{plan.price}€</span>
                             <span className="text-muted-foreground">/mois</span>
                           </div>
-                          <ul className="space-y-2">
-                            {plan.features?.map((feature: any, i: number) => (
-                              <li key={i} className="flex items-start gap-2 text-sm">
-                                <Check className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                                <span className="text-muted-foreground">{typeof feature === "string" ? feature : feature.name}</span>
-                              </li>
-                            ))}
-                          </ul>
                         </CardContent>
                       </Card>
                     );
