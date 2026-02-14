@@ -10,6 +10,7 @@ export const getEssentialsSchema = () =>
     city: z.string().min(2, "La ville est requise."),
     phone: z.string().refine(validatePhone, "Numéro de téléphone invalide."),
     email: z.string().email("Adresse email invalide."),
+    isEmailVerified: z.boolean().optional(),
   });
 
 export const getIdentitySchema = () =>

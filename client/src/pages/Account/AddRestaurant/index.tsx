@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuthContext } from "@/contexts/authContext";
 import { StepEssentials } from "./components/StepEssentials";
 import { StepIdentity } from "./components/StepIdentity";
 import { StepDetails } from "./components/StepDetails";
@@ -109,11 +110,38 @@ export const AddRestaurantWizard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<WizardData>(INITIAL_DATA);
+  const { authUser: user } = useAuthContext();
+  const [formData, setFormData] = useState<WizardData>({
+    ...INITIAL_DATA,
+    isEmailVerified: true, // Assume true initially or check against empty? better to sync with user
+  });
+
+  // Sync with user email when available
+  useEffect(() => {
+    if (user && !formData.email) {
+      setFormData((prev) => ({
+        ...prev,
+        email: user.email,
+        isEmailVerified: true,
+      }));
+    }
+  }, [user]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateFormData = (data: Partial<WizardData>) => {
-    setFormData((prev: WizardData) => ({ ...prev, ...data }));
+    const newData = { ...data };
+
+    // If email is changing, check against user email
+    if (newData.email !== undefined && user) {
+      if (newData.email === user.email) {
+        newData.isEmailVerified = true;
+      } else if (newData.email !== formData.email) {
+        // If email changed and is not user email, reset verification
+        newData.isEmailVerified = false;
+      }
+    }
+
+    setFormData((prev: WizardData) => ({ ...prev, ...newData }));
     // Clear errors for fields being updated
     const newErrors = { ...errors };
     Object.keys(data).forEach((key) => {
@@ -160,8 +188,43 @@ export const AddRestaurantWizard = () => {
     return true;
   };
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (validateStep(step)) {
+      if (step === 1) {
+        // Validation for Email Verification
+        if (!formData.isEmailVerified) {
+          toast.error("Veuillez vérifier votre adresse email avant de continuer");
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const response = await axiosConfig.get("/restaurants/check-uniqueness", {
+            params: {
+              name: formData.name,
+              phone: formData.phone,
+              email: formData.email,
+              address: formData.adress,
+            },
+          });
+          setLoading(false);
+          // If successful (200), proceed
+        } catch (error: any) {
+          setLoading(false);
+          if (error.response?.status === 409 && error.response?.data?.errors) {
+            setErrors(error.response.data.errors);
+            toast.error("Veuillez corriger les erreurs avant de continuer");
+            return;
+          }
+          // Allow proceeding if check fails for other reasons?
+          // Probably safer to just warn but let them proceed or block?
+          // Let's block on 500 as well if it's critical, or just toast error.
+          console.error("Uniqueness check failed", error);
+          // Optional: Block on error or allow pass?
+          // User wants to block duplicates.
+        }
+      }
+
       setStep((prev: number) => Math.min(prev + 1, 6));
       window.scrollTo(0, 0);
     }

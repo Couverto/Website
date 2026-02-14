@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import { Restaurant } from "../models/restaurantModel.js";
 import { Booking } from "../models/bookingModel.js";
 import { User } from "../models/userModel.js";
@@ -67,6 +68,52 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     if (existingRestaurant) {
       res.status(409).json({ error: "Ce slug est déjà utilisé" });
       return;
+    }
+
+    // Check for existing phone or email
+    const existingPhone = await Restaurant.findOne({ phone });
+    if (existingPhone) {
+      res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant" });
+      return;
+    }
+
+    const emailToCheck = otherFields.email || creator.email;
+    const existingEmail = await Restaurant.findOne({ email: emailToCheck });
+    if (existingEmail) {
+      res.status(409).json({ error: "Cette adresse email est déjà associée à un autre restaurant" });
+      return;
+    }
+
+    // Email Verification Logic
+    const restaurantEmail = otherFields.email || creator.email;
+    let isEmailVerified = false;
+    let verificationToken = undefined;
+    let verificationTokenExpire = undefined;
+
+    if (restaurantEmail === creator.email) {
+      isEmailVerified = true;
+    } else {
+      // Generate verification token
+      const rawToken = crypto.randomBytes(20).toString("hex");
+      verificationToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+      verificationTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Send verification email
+      try {
+        const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+        const verifyUrl = `${clientUrl}/verify-restaurant-email/${rawToken}`;
+        // Import dynamically to avoid issues
+        const { verifyRestaurantEmailTemplate } = await import("../templates/verifyRestaurantEmailTemplate.js");
+        const htmlContent = verifyRestaurantEmailTemplate({ url: verifyUrl, restaurantName: name });
+
+        await sendEmail({
+          email: restaurantEmail,
+          subject: "Vérification de l'email de votre restaurant - Couverto",
+          message: htmlContent,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send restaurant verification email", emailErr);
+      }
     }
 
     // Create collaboratorRoles Map with creator as admin
@@ -141,6 +188,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           referredBy: null,
           referralCodeUsed: validReferralCode._id,
           subscriptionStartDelay: 0,
+          isEmailVerified,
+          verificationToken,
+          verificationTokenExpire,
           ...otherFields,
         });
 
@@ -170,9 +220,6 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         res.status(201).json({ restaurant, message: "Restaurant créé avec succès (Offre Sponsor 100%)" });
         return;
       }
-
-      // Partial Discount Logic ( < 100% ) -> Proceed to Payment with Coupon
-      console.log(`[createRestaurant] Partial Sponsor Discount: ${validReferralCode.discountPercentage}%`);
 
       // We need a planId for partial discounts to know the base price
       if (!planId) {
@@ -235,6 +282,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
             referredBy: referrerRestaurant?._id || null,
             subscriptionStartDelay,
             referralCodeUsed: validReferralCode?._id || null,
+            isEmailVerified,
+            verificationToken,
+            verificationTokenExpire,
             ...otherFields,
           },
         });
@@ -348,6 +398,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         isClosed: true,
         referredBy: referrerRestaurant?._id || null,
         subscriptionStartDelay,
+        isEmailVerified,
+        verificationToken,
+        verificationTokenExpire,
         ...otherFields,
       });
 
@@ -400,6 +453,9 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       isClosed: true,
       referredBy: referrerRestaurant?._id || null,
       subscriptionStartDelay,
+      isEmailVerified,
+      verificationToken,
+      verificationTokenExpire,
       ...otherFields,
     });
 
@@ -517,10 +573,62 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       req.body.capacity = totalCapacity;
     }
 
-    const restaurant = await Restaurant.findByIdAndUpdate(
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    // Handle Email Update with Verification
+    if (req.body.email && req.body.email !== restaurant.email) {
+      const newEmail = req.body.email;
+      const emailExists = await Restaurant.findOne({ email: newEmail });
+      if (emailExists) {
+        res.status(409).json({ error: "Cette adresse email est déjà utilisée par un autre restaurant" });
+        return;
+      }
+
+      // Generate verification token
+      const rawToken = crypto.randomBytes(20).toString("hex");
+      const verificationToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+      const verificationTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Update with tempEmail and token
+      restaurant.tempEmail = newEmail;
+      restaurant.verificationToken = verificationToken;
+      restaurant.verificationTokenExpire = verificationTokenExpire;
+
+      // Send verification email
+      try {
+        const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+        const verifyUrl = `${clientUrl}/verify-restaurant-email/${rawToken}`;
+        // Import dynamically
+        const { verifyRestaurantEmailTemplate } = await import("../templates/verifyRestaurantEmailTemplate.js");
+        const htmlContent = verifyRestaurantEmailTemplate({ url: verifyUrl, restaurantName: restaurant.name });
+
+        await sendEmail({
+          email: newEmail,
+          subject: "Vérification de votre nouvelle adresse email - Couverto",
+          message: htmlContent,
+        });
+      } catch (emailErr) {
+        console.error("Failed to send update verification email", emailErr);
+      }
+
+      // Remove email from body to prevent immediate update
+      delete req.body.email;
+    }
+
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(
       id,
       {
         ...req.body,
+        // Explicitly start persisting the tempEmail/token changes if we made them above
+        ...(restaurant.tempEmail && {
+          tempEmail: restaurant.tempEmail,
+          verificationToken: restaurant.verificationToken,
+          verificationTokenExpire: restaurant.verificationTokenExpire,
+        }),
         ...(req.body.address && { adress: req.body.address }), // Handle address mapping
       },
       { new: true },
@@ -722,6 +830,47 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
 };
 
 // Helper functions removed and moved to restaurantUtils.ts
+
+/**
+ * @function verifyRestaurantEmail
+ * @description Verifies a restaurant's email address using a token.
+ */
+export const verifyRestaurantEmail = async (req: Request, res: Response): Promise<void> => {
+  const { token } = req.params;
+
+  try {
+    const verificationTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const restaurant = await Restaurant.findOne({
+      verificationToken: verificationTokenHash,
+      verificationTokenExpire: { $gt: Date.now() },
+    });
+
+    if (!restaurant) {
+      res.status(400).json({ error: "Jeton de vérification invalide ou expiré" });
+      return;
+    }
+
+    if (restaurant.tempEmail) {
+      restaurant.email = restaurant.tempEmail;
+      restaurant.tempEmail = undefined;
+    }
+
+    restaurant.isEmailVerified = true;
+    restaurant.verificationToken = undefined;
+    restaurant.verificationTokenExpire = undefined;
+
+    await restaurant.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Email du restaurant vérifié avec succès !",
+      data: { restaurantId: restaurant._id, name: restaurant.name },
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 /**
  * @function getPublicRestaurants
@@ -1714,6 +1863,127 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
     });
 
     res.status(200).json({ message: "Rôle mis à jour" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+/**
+ * @function checkRestaurantUniqueness
+ * @description Checks if restaurant fields (name/slug, address, phone, email) are unique.
+ */
+export const checkRestaurantUniqueness = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, phone, email, address } = req.query;
+    const errors: Record<string, string> = {};
+
+    if (name) {
+      const slug = (name as string).toLowerCase().replace(/ /g, "-");
+      // Use regex to check if slug starts with the generated slug (since we append timestamp in wizard submit,
+      // but here we just want to warn if the exact name exists or a very similar one)
+      // Actually, since we append timestamp, name uniqueness isn't STRICTLY required for slug,
+      // but it's good practice to avoid confusion.
+      // However, the wizard appends Date.now(), so let's just check exact name match or minimal slug match if we want strictness.
+      // For now, let's just check if a restaurant with this exact name exists, might be less confusing.
+      const nameExists = await Restaurant.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+      if (nameExists) {
+        errors.name = "Ce nom de restaurant est déjà utilisé";
+      }
+    }
+
+    if (phone) {
+      const phoneExists = await Restaurant.findOne({ phone: phone as string });
+      if (phoneExists) {
+        errors.phone = "Ce numéro de téléphone est déjà associé à un autre restaurant";
+      }
+    }
+
+    if (email) {
+      const emailExists = await Restaurant.findOne({ email: email as string });
+      if (emailExists) {
+        errors.email = "Cette adresse email est déjà associée à un autre restaurant";
+      }
+    }
+
+    if (address) {
+      const addressExists = await Restaurant.findOne({ adress: address as string });
+      if (addressExists) {
+        errors.adress = "Cette adresse est déjà utilisée par un autre restaurant";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      res.status(409).json({ unique: false, errors });
+      return;
+    }
+
+    // ... checkRestaurantUniqueness checks ...
+    res.status(200).json({ unique: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+import { VerificationCode } from "../models/verificationCodeModel.js";
+
+/**
+ * @function sendRestaurantVerificationCode
+ * @description Sends a 6-digit verification code to the provided email.
+ */
+export const sendRestaurantVerificationCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: "Email requis" });
+      return;
+    }
+
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store in DB (expires in 5m)
+    await VerificationCode.create({ email, code });
+
+    // Send email
+    try {
+      const { verificationCodeTemplate } = await import("../templates/verificationCodeTemplate.js");
+      const htmlContent = verificationCodeTemplate({ code });
+      await sendEmail({
+        email,
+        subject: "Votre code de vérification - Couverto",
+        message: htmlContent,
+      });
+    } catch (emailErr) {
+      console.error("Failed to send verification code email", emailErr);
+      res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
+      return;
+    }
+
+    res.status(200).json({ message: "Code envoyé" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function verifyRestaurantVerificationCode
+ * @description Verifies the provided code for the email.
+ */
+export const verifyRestaurantVerificationCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code } = req.body;
+
+    // Find the latest code for this email
+    const record = await VerificationCode.findOne({ email, code }).sort({ createdAt: -1 });
+
+    if (!record) {
+      res.status(400).json({ error: "Code invalide ou expiré" });
+      return;
+    }
+
+    // Optionally delete the code after use to prevent reuse (though TTL handles expiration)
+    await VerificationCode.deleteOne({ _id: record._id });
+
+    res.status(200).json({ message: "Code vérifié", verified: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -16,6 +16,9 @@ import {
   toggleRestaurantClosed,
   getRestaurantSlots,
   updateCollaboratorRole,
+  checkRestaurantUniqueness,
+  sendRestaurantVerificationCode,
+  verifyRestaurantVerificationCode,
 } from "../controllers/restaurantController.js";
 import {
   createInvitation,
@@ -37,6 +40,9 @@ export const restaurantRouter = express.Router();
 // Public routes
 restaurantRouter.get("/public", getPublicRestaurants);
 restaurantRouter.get("/public/stats", getPublicStats);
+restaurantRouter.get("/check-uniqueness", checkRestaurantUniqueness);
+restaurantRouter.post("/send-verification-code", verifyToken(), sendRestaurantVerificationCode);
+restaurantRouter.post("/verify-verification-code", verifyToken(), verifyRestaurantVerificationCode);
 restaurantRouter.get("/public/:id", getPublicRestaurantById);
 restaurantRouter.get("/public/:id/slots", getRestaurantSlots);
 
@@ -46,7 +52,7 @@ restaurantRouter.post("/finalize-payment", verifyToken(), finalizePayment);
 
 // Admin routes
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);
-restaurantRouter.post("/", verifyToken({ role: userRoles.ADMIN }), createRestaurant);
+restaurantRouter.post("/", verifyToken(), createRestaurant);
 restaurantRouter.put("/:id", verifyToken({ role: userRoles.ADMIN }), updateRestaurant);
 restaurantRouter.delete("/:id", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), deleteRestaurant);
 

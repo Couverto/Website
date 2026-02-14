@@ -8,7 +8,11 @@ export interface IRestaurant extends Document {
   adress: string;
   city: string;
   phone: string;
-  email?: string;
+  email: string;
+  tempEmail?: string;
+  isEmailVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpire?: Date;
   website?: string;
 
   coverImage?: string;

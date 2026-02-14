@@ -81,6 +81,7 @@ export const RestaurantSettings = () => {
     handleSubmit,
     control,
     setValue,
+    setError,
     reset,
     clearErrors,
     formState: { errors },
@@ -147,6 +148,35 @@ export const RestaurantSettings = () => {
       await api.put(`/restaurants/${id}/settings`, data);
       toast.success("Modifications enregistrées");
     } catch (error: any) {
+      if (error.response?.status === 409) {
+        const errorMessage = error.response?.data?.error || "";
+        const lowerError = errorMessage.toLowerCase();
+
+        if (lowerError.includes("email")) {
+          setError(
+            "email",
+            {
+              type: "manual",
+              message: errorMessage,
+            },
+            { shouldFocus: true },
+          );
+          return;
+        }
+
+        if (lowerError.includes("téléphone") || lowerError.includes("phone")) {
+          setError(
+            "phone",
+            {
+              type: "manual",
+              message: errorMessage,
+            },
+            { shouldFocus: true },
+          );
+          return;
+        }
+      }
+
       toast.error(error.response?.data?.error || "Erreur lors de l'enregistrement");
     } finally {
       setSaving(false);
@@ -202,6 +232,11 @@ export const RestaurantSettings = () => {
             <div className="space-y-2">
               <Label htmlFor="email">{"Email de contact"}</Label>
               <Input id="email" type="email" {...register("email")} placeholder="contact@restaurant.fr" />
+              {errors.email && (
+                <p className="text-xs font-medium text-red-500 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 px-1">
+                  <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
