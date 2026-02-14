@@ -65,6 +65,8 @@ import { CuisineSelector } from "@/components/CuisineSelector";
 import { AddressAutocomplete } from "@/components/customs/AddressAutocomplete";
 import { PhoneInput } from "@/components/customs/phoneInput";
 import { ExceptionalClosuresEditor } from "@/components/ExceptionalClosuresEditor";
+import { Switch } from "@/components/ui/switch";
+import { EmailVerificationSection } from "@/components/business/EmailVerificationSection";
 
 export const RestaurantSettings = () => {
   const { id } = useParams();
@@ -76,6 +78,10 @@ export const RestaurantSettings = () => {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
 
+  // Email verification state
+  const [originalEmail, setOriginalEmail] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
+
   const {
     register,
     handleSubmit,
@@ -83,6 +89,7 @@ export const RestaurantSettings = () => {
     setValue,
     setError,
     reset,
+    watch,
     clearErrors,
     formState: { errors },
   } = useForm<RestaurantInterface>({
@@ -97,11 +104,23 @@ export const RestaurantSettings = () => {
     },
   });
 
+  const currentEmail = watch("email");
+
+  useEffect(() => {
+    if (currentEmail !== originalEmail) {
+      setIsEmailVerified(false);
+    } else {
+      setIsEmailVerified(true);
+    }
+  }, [currentEmail, originalEmail]);
+
   useEffect(() => {
     const fetchRestaurant = async () => {
       try {
         const response = await api.get(`/restaurants/${id}/details`);
         reset(response.data.restaurant);
+        setOriginalEmail(response.data.restaurant.email);
+        setIsEmailVerified(true);
         setIsClosed(response.data.restaurant.isClosed);
       } catch (error) {
         toast.error("Erreur lors du chargement des données");
@@ -144,9 +163,19 @@ export const RestaurantSettings = () => {
 
   const onSubmit = async (data: RestaurantInterface) => {
     setSaving(true);
+
+    if (currentEmail !== originalEmail && !isEmailVerified) {
+      data.email = originalEmail;
+      toast.info("Changement d'email ignoré car non vérifié");
+    }
+
     try {
       await api.put(`/restaurants/${id}/settings`, data);
       toast.success("Modifications enregistrées");
+
+      if (data.email !== originalEmail) {
+        setOriginalEmail(data.email!);
+      }
     } catch (error: any) {
       if (error.response?.status === 409) {
         const errorMessage = error.response?.data?.error || "";
@@ -237,6 +266,26 @@ export const RestaurantSettings = () => {
                   <span className="w-1 h-1 rounded-full bg-red-500" /> {errors.email.message}
                 </p>
               )}
+
+              {!isEmailVerified && currentEmail && !errors.email && (
+                <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                  <EmailVerificationSection email={currentEmail} onSuccess={() => setIsEmailVerified(true)} />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Notifications par email</Label>
+                  <p className="text-sm text-muted-foreground">Recevoir un email à chaque nouvelle réservation ou modification</p>
+                </div>
+                <Controller
+                  control={control}
+                  name="sendBookingEmail"
+                  render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

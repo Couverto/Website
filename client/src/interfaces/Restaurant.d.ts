@@ -8,6 +8,7 @@ export interface RestaurantInterface {
   phone: string;
   email?: string;
   website?: string;
+  sendBookingEmail?: boolean;
 
   coverImage?: string;
   images: string[];

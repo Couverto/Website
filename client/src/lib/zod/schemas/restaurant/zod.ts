@@ -15,6 +15,7 @@ export const getRestaurantSettingsSchema = () =>
           tiktok: z.string().url({ message: "URL Tiktok invalide (doit commencer par https://)" }).optional().or(z.literal("")),
         })
         .optional(),
+      sendBookingEmail: z.boolean().optional(),
       exceptionalClosures: z
         .array(
           z.object({

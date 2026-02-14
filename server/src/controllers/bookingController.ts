@@ -259,8 +259,8 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       console.error("Booking confirmation email failed", mailError);
     }
 
-    // Notify Restaurant (if email exists)
-    if (restaurantExists.email) {
+    // Notify Restaurant (if email exists and setting is enabled)
+    if (restaurantExists.email && restaurantExists.sendBookingEmail) {
       try {
         const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
           weekday: "long",
@@ -486,8 +486,8 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
           });
         }
 
-        // Notify Restaurant (if email exists)
-        if (restaurantDoc.email) {
+        // Notify Restaurant (if email exists and setting is enabled)
+        if (restaurantDoc.email && restaurantDoc.sendBookingEmail) {
           await sendEmail({
             email: restaurantDoc.email,
             subject: `[MODIFICATION] Réservation - ${booking.customer.name}`,

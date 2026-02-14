@@ -14,6 +14,7 @@ export interface IRestaurant extends Document {
   verificationToken?: string;
   verificationTokenExpire?: Date;
   website?: string;
+  sendBookingEmail: boolean;
 
   coverImage?: string;
   images: string[];

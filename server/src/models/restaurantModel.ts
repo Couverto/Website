@@ -15,6 +15,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     verificationToken: { type: String },
     verificationTokenExpire: { type: Date },
     website: { type: String, required: false },
+    sendBookingEmail: { type: Boolean, default: false },
     coverImage: { type: String, default: "" },
     images: { type: [String], default: [] },
     menu: { type: [String], default: [] },
