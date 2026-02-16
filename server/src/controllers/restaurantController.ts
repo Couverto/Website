@@ -56,8 +56,11 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     const { name, slug, address, city, phone, website, planId, referralCode: referralCodeInput, ...otherFields } = req.body;
     const collaborators = [];
 
+    console.log(`[createRestaurant] Starting creation for: ${name}, slug: ${slug}, planId: ${planId}`);
+
     const creator = await User.findById(req.userId);
     if (!creator) {
+      console.log(`[createRestaurant] User not found: ${req.userId}`);
       res.status(400).json({ error: "Utilisateur introuvable" });
       return;
     }
@@ -66,23 +69,50 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
     const existingRestaurant = await Restaurant.findOne({ slug });
     if (existingRestaurant) {
+      console.log(`[createRestaurant] Slug already exists: ${slug}`);
       res.status(409).json({ error: "Ce slug est déjà utilisé" });
       return;
     }
 
-    // Check for existing phone or email
-    const existingPhone = await Restaurant.findOne({ phone });
-    if (existingPhone) {
-      res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant" });
+    // Check for existing phone
+    const existingPhoneConflict = await Restaurant.findOne({
+      phone: phone,
+      collaborators: { $ne: creator._id },
+    });
+
+    if (existingPhoneConflict) {
+      console.log(`[createRestaurant] Phone conflict: ${phone} used by restaurant ${existingPhoneConflict._id}`);
+      res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+      return;
+    }
+
+    // Check for existing address
+    const existingAddressConflict = await Restaurant.findOne({
+      adress: address,
+      collaborators: { $ne: creator._id },
+    });
+
+    if (existingAddressConflict) {
+      console.log(`[createRestaurant] Address conflict: ${address} used by restaurant ${existingAddressConflict._id}`);
+      res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
       return;
     }
 
     const emailToCheck = otherFields.email || creator.email;
-    const existingEmail = await Restaurant.findOne({ email: emailToCheck });
-    if (existingEmail) {
-      res.status(409).json({ error: "Cette adresse email est déjà associée à un autre restaurant" });
+    const existingConflict = await Restaurant.findOne({
+      email: emailToCheck,
+      collaborators: { $ne: creator._id },
+    });
+
+    if (existingConflict) {
+      console.log(
+        `[createRestaurant] Email conflict: ${emailToCheck} used by restaurant ${existingConflict._id} where user ${creator._id} is not collaborator`,
+      );
+      res.status(409).json({ error: "Cette adresse email est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
       return;
     }
+
+    console.log(`[createRestaurant] Validation passed. Checking referral code: ${referralCodeInput}`);
 
     // Email Verification Logic
     const restaurantEmail = otherFields.email || creator.email;
@@ -111,6 +141,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           subject: "Vérification de l'email de votre restaurant - Couverto",
           message: htmlContent,
         });
+        console.log(`[createRestaurant] Verification email sent to ${restaurantEmail}`);
       } catch (emailErr) {
         console.error("Failed to send restaurant verification email", emailErr);
       }
@@ -135,6 +166,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       }).populate("restaurantId");
 
       if (!validReferralCode) {
+        console.log(`[createRestaurant] Invalid referral code: ${referralCodeInput}`);
         res.status(400).json({ error: "Code de parrainage invalide ou inactif" });
         return;
       }
@@ -145,6 +177,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         // restaurantId is already populated, so it's the full restaurant object
         referrerRestaurant = validReferralCode.restaurantId as any;
         if (!referrerRestaurant || !referrerRestaurant._id) {
+          console.log(`[createRestaurant] Referrer restaurant not found for code: ${validReferralCode.code}`);
           res.status(400).json({ error: "Le restaurant parrain n'existe plus" });
           return;
         }
@@ -160,12 +193,14 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     if (validReferralCode?.type === "sponsor") {
       // Check limits
       if (validReferralCode.maxUsages > 0 && validReferralCode.usageCount >= validReferralCode.maxUsages) {
+        console.log(`[createRestaurant] Sponsor code limit reached: ${validReferralCode.code}`);
         res.status(400).json({ error: "Ce code sponsor a atteint sa limite d'utilisation" });
         return;
       }
 
       // 100% Discount logic (Free Forever)
       if (validReferralCode.discountPercentage === 100) {
+        console.log(`[createRestaurant] Applying 100% sponsor discount`);
         const allFeatures = await Feature.find({}, "_id");
         const featureIds = allFeatures.map((f) => f._id); // Grant all features
 
@@ -195,6 +230,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         });
 
         await restaurant.save();
+        console.log(`[createRestaurant] 100% Sponsor Restaurant saved: ${restaurant._id}`);
 
         // Increment usage count
         await ReferralCode.findByIdAndUpdate(validReferralCode._id, { $inc: { usageCount: 1 } });
@@ -228,19 +264,24 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       }
 
       // Fallthrough to standard Stripe flow below, but inject the discount
+      console.log(`[createRestaurant] Partial sponsor discount - Proceeding to Stripe flow`);
     }
 
     // Check if plan exists and handle Stripe/Free flow
     if (planId) {
+      console.log(`[createRestaurant] Checking plan: ${planId}`);
       const plan = await Plan.findById(planId);
       if (!plan) {
+        console.log(`[createRestaurant] Plan not found: ${planId}`);
         res.status(404).json({ error: "Plan introuvable" });
         return;
       }
 
       // If PAID plan: Handle Deferral flow
       if (plan.price > 0) {
+        console.log(`[createRestaurant] Paid plan (${plan.price}€) - Initiating Stripe flow`);
         if (!plan.stripePriceId) {
+          console.log(`[createRestaurant] Plan ${plan.name} missing stripePriceId`);
           res.status(400).json({
             error: "Ce plan n'est pas encore configuré pour le paiement Stripe. Veuillez contacter un administrateur.",
           });
@@ -254,16 +295,11 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           return;
         }
 
-        const addressExists = await Restaurant.findOne({ adress: address });
-        if (addressExists) {
-          res.status(409).json({ error: "cette adresse est déjà utilisée par un autre restaurant" });
-          return;
-        }
-
         // 1. DO NOT Create Stripe Customer yet (avoid ghosts if cancelled)
         // const customer = await stripeService.createCustomer(creator.email, creator.name || creator.forename || creator.username);
 
         // Store the payload in a PendingTransaction instead of creating the Restaurant
+        console.log(`[createRestaurant] Creating PendingTransaction`);
         const pendingTransaction = new PendingTransaction({
           userId: req.userId,
           type: "RESTAURANT_CREATION",
@@ -290,6 +326,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         });
 
         await pendingTransaction.save();
+        console.log(`[createRestaurant] PendingTransaction created: ${pendingTransaction._id}`);
 
         await pendingTransaction.save();
 
@@ -326,7 +363,11 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           transactionId: pendingTransaction._id.toString(),
           restaurantName: name,
           email: creator.email,
+          planId: planId.toString(),
+          referrerId: referrerRestaurant?._id?.toString() || "",
         };
+
+        console.log(`[createRestaurant] Creating Stripe checkout session with metadata:`, stripeMetadata);
 
         const stripeSession = await stripeService.createCheckoutSession(
           { email: creator.email },
@@ -336,6 +377,8 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           stripeMetadata,
           checkoutOptions,
         );
+
+        console.log(`[createRestaurant] Stripe session created: ${stripeSession.id}`);
 
         // Apply cumulative discount to referrer if applicable
         if (referrerRestaurant && validReferralCode) {
@@ -381,6 +424,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       }
 
       // If FREE plan: Activate immediately
+      console.log(`[createRestaurant] Free plan selected - Creating restaurant immediately`);
       const restaurant = new Restaurant({
         name,
         slug,
@@ -405,6 +449,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       });
 
       await restaurant.save();
+      console.log(`[createRestaurant] Restaurant saved: ${restaurant._id}`);
 
       // Handle referral linking after successful creation
       if (referrerRestaurant && validReferralCode) {
@@ -437,6 +482,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     }
 
     // Default Fallback (No planId provided)
+    console.log(`[createRestaurant] No plan selected - Creating restaurant (inactive subscription)`);
     const restaurant = new Restaurant({
       name,
       slug,
@@ -460,6 +506,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     });
 
     await restaurant.save();
+    console.log(`[createRestaurant] Restaurant saved: ${restaurant._id}`);
 
     // Handle referral linking after successful creation
     if (referrerRestaurant && validReferralCode) {
@@ -579,12 +626,40 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
     // Handle Email Update with Verification
     if (req.body.email && req.body.email !== restaurant.email) {
       const newEmail = req.body.email;
-      const emailExists = await Restaurant.findOne({ email: newEmail });
-      if (emailExists) {
-        res.status(409).json({ error: "Cette adresse email est déjà utilisée par un autre restaurant" });
+      const existingConflict = await Restaurant.findOne({
+        email: newEmail,
+        collaborators: { $ne: req.userId },
+      });
+
+      if (existingConflict) {
+        res.status(409).json({ error: "Cette adresse email est déjà utilisée par un autre restaurant dont vous n'êtes pas propriétaire" });
         return;
       }
 
@@ -672,6 +747,30 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
     // PROTECTION BYPASS for Global Admins
     const user = await User.findById(req.userId);
     const isGlobalAdmin = user?.role === userRoles.ADMIN;
@@ -757,6 +856,30 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
+    }
+
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
     }
 
     // Verify user is a collaborator
@@ -987,6 +1110,30 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
+    }
+
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
     }
 
     const queryDate = new Date(date as string);
@@ -1548,6 +1695,30 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
     const isAlreadyCollaborator = restaurant.collaborators.some((collab) => collab.toString() === userId);
 
     if (isAlreadyCollaborator) {
@@ -1602,6 +1773,30 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
+    }
+
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
     }
 
     // Cannot remove the last collaborator
@@ -1818,6 +2013,30 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
+    }
+
+    // Check availability of new phone if changed
+    if (req.body.phone && req.body.phone !== restaurant.phone) {
+      const existingPhoneConflict = await Restaurant.findOne({
+        phone: req.body.phone,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingPhoneConflict) {
+        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
+    }
+
+    // Check availability of new address if changed
+    if (req.body.adress && req.body.adress !== restaurant.adress) {
+      const existingAddressConflict = await Restaurant.findOne({
+        adress: req.body.adress,
+        collaborators: { $ne: req.userId },
+      });
+      if (existingAddressConflict) {
+        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
+        return;
+      }
     }
 
     const isCollaborator = restaurant.collaborators.some((collab) => collab.toString() === collaboratorId);

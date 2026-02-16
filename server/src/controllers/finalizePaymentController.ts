@@ -102,6 +102,7 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
     const pending = await PendingTransaction.findById(transactionId);
 
     if (!pending) {
+      console.log(`[Finalize] Pending Transaction not found or already deleted: ${transactionId}`);
       // Already processed by webhook or doesn't exist
       res.status(200).json({
         message: "Restaurant déjà créé",
@@ -116,8 +117,12 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
     }
 
     // Fetch the plan for payment record
-    const plan = await Plan.findById(planId);
+    const planIdToUse = planId || pending.payload.plan;
+    console.log(`[Finalize] Using planId: ${planIdToUse} (Meta: ${planId}, Pending: ${pending.payload.plan})`);
+
+    const plan = await Plan.findById(planIdToUse);
     if (!plan) {
+      console.error(`[Finalize] Plan not found: ${planIdToUse}`);
       res.status(400).json({ error: "Plan introuvable" });
       return;
     }
@@ -134,16 +139,18 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
     }
 
     // Create the restaurant
+    console.log(`[Finalize] Creating restaurant object...`);
     const restaurant = new Restaurant({
       ...pending.payload,
       subscriptionStatus: "active",
-      plan: planId,
+      plan: plan._id,
       subscriptionEndDate,
       stripeSubscriptionId: session.subscription,
       isClosed: true,
     });
 
     await restaurant.save();
+    console.log(`[Finalize] Restaurant created and saved: ${restaurant._id}`);
 
     // Handle referral linking if restaurant was referred
     const referredBy = pending.payload.referredBy;
@@ -205,6 +212,7 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
 
     // Delete the pending transaction
     await PendingTransaction.findByIdAndDelete(transactionId);
+    console.log(`[Finalize] Pending Transaction deleted: ${transactionId}`);
 
     res.status(201).json({
       restaurant,

@@ -33,6 +33,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         const pending = await PendingTransaction.findById(transactionId);
 
         if (pending && pending.type === "RESTAURANT_CREATION") {
+          console.log(`[Stripe Webhook] Found pending transaction: ${pending._id}`);
           // Retrieve actual subscription details to get the end date
           let subscriptionEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Fallback
           if (session.subscription) {
@@ -48,7 +49,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           const restaurant = new Restaurant({
             ...pending.payload,
             subscriptionStatus: "active",
-            plan: planId,
+            plan: planId || pending.payload.plan,
             subscriptionEndDate,
             stripeSubscriptionId: session.subscription,
             stripeCustomerId: session.customer, // Save the customer ID created during checkout
@@ -56,6 +57,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           });
 
           await restaurant.save();
+          console.log(`[Stripe Webhook] Restaurant created from pending transaction: ${restaurant._id}`);
 
           // Handle referral linking
           const referredBy = pending.payload.referredBy;
@@ -106,6 +108,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
           // Delete the pending transaction after successful creation
           await PendingTransaction.findByIdAndDelete(transactionId);
+          console.log(`[Stripe Webhook] Pending Transaction deleted: ${transactionId}`);
         } else {
           console.error(`Pending transaction not found or invalid: ${transactionId}`);
         }
