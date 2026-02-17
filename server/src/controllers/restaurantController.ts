@@ -16,7 +16,7 @@ import { stripeService } from "../services/stripeService.js";
 import { PendingTransaction } from "../models/pendingTransactionModel.js";
 import { ReferralCode } from "../models/referralCodeModel.js";
 import { Feature } from "../models/featureModel.js";
-
+import { VerificationCode } from "../models/verificationCodeModel.js";
 import { isRestaurantOpen, convertOpeningHoursToObject } from "../utils/restaurantUtils.js";
 import { Review } from "../models/reviewModel.js";
 
@@ -99,6 +99,8 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     }
 
     const emailToCheck = otherFields.email || creator.email;
+
+    // Check email uniqueness
     const existingConflict = await Restaurant.findOne({
       email: emailToCheck,
       collaborators: { $ne: creator._id },
@@ -653,6 +655,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
     // Handle Email Update with Verification
     if (req.body.email && req.body.email !== restaurant.email) {
       const newEmail = req.body.email;
+
       const existingConflict = await Restaurant.findOne({
         email: newEmail,
         collaborators: { $ne: req.userId },
@@ -1879,7 +1882,8 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
 export const updateRestaurantSettings = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   // Note: We use req.body directly for array processing to ensure we catch field presence
-  const { name, description, phone, email, adress, city, website, coverImage, openingHours, cuisineType, priceRange } = req.body;
+  const { name, description, phone, email, adress, city, website, coverImage, openingHours, cuisineType, priceRange, sendBookingEmail } =
+    req.body;
 
   try {
     const currentRestaurant = await Restaurant.findById(id);
@@ -1960,6 +1964,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(openingHours && { openingHours }),
         ...(cuisineType && { cuisineType }),
         ...(priceRange && { priceRange }),
+        ...(sendBookingEmail !== undefined && { sendBookingEmail }),
         ...(req.body.shortDescription !== undefined && { shortDescription: req.body.shortDescription }),
         ...(req.body.features && { features: req.body.features }),
         ...(req.body.paymentMethods && { paymentMethods: req.body.paymentMethods }),
@@ -2141,8 +2146,6 @@ export const checkRestaurantUniqueness = async (req: Request, res: Response): Pr
     res.status(500).json({ error: err.message });
   }
 };
-
-import { VerificationCode } from "../models/verificationCodeModel.js";
 
 /**
  * @function sendRestaurantVerificationCode

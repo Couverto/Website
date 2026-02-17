@@ -40,7 +40,7 @@ export const restaurantRouter = express.Router();
 // Public routes
 restaurantRouter.get("/public", getPublicRestaurants);
 restaurantRouter.get("/public/stats", getPublicStats);
-restaurantRouter.get("/check-uniqueness", checkRestaurantUniqueness);
+restaurantRouter.get("/check-uniqueness", verifyToken(), checkRestaurantUniqueness);
 restaurantRouter.post("/send-verification-code", verifyToken(), sendRestaurantVerificationCode);
 restaurantRouter.post("/verify-verification-code", verifyToken(), verifyRestaurantVerificationCode);
 restaurantRouter.get("/public/:id", getPublicRestaurantById);
