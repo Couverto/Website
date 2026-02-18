@@ -64,6 +64,7 @@ export const RestaurantPlan = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [referralDiscount, setReferralDiscount] = useState<ReferralDiscount | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingPayments, setLoadingPayments] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [changePlanOpen, setChangePlanOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -72,6 +73,7 @@ export const RestaurantPlan = () => {
   const paymentHandled = useRef(false);
 
   const fetchData = async () => {
+    setLoadingPayments(true);
     try {
       const [subRes, payRes, plansRes, refRes] = await Promise.all([
         api.get(`/restaurants/${id}/subscription`),
@@ -97,6 +99,7 @@ export const RestaurantPlan = () => {
       console.error("Error fetching subscription data", error);
     } finally {
       setLoading(false);
+      setLoadingPayments(false);
     }
   };
 
@@ -445,7 +448,7 @@ export const RestaurantPlan = () => {
               data={payments}
               dataCount={payments.length}
               fetchData={() => fetchData()}
-              isLoading={false}
+              isLoading={loadingPayments}
               callback={() => {}}
               searchElement="planName"
             />
