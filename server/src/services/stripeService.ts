@@ -19,6 +19,13 @@ export const stripeService = {
   },
 
   /**
+   * Retrieve a Stripe customer
+   */
+  retrieveCustomer: async (customerId: string) => {
+    return await stripe.customers.retrieve(customerId);
+  },
+
+  /**
    * Create a Stripe Checkout Session for subscription
    */
   /**

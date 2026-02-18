@@ -30,6 +30,45 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       try {
         const { PendingTransaction } = await import("../models/pendingTransactionModel.js");
         const { ReferralCode } = await import("../models/referralCodeModel.js");
+        const { Plan } = await import("../models/planModel.js");
+
+        // Handle RESUBSCRIPTION metadata (sent for existing restaurants changing plans)
+        const { type, restaurantId } = session.metadata || {};
+
+        if (type === "RESUBSCRIPTION" && restaurantId) {
+          console.log(`[Stripe Webhook] Handling RESUBSCRIPTION for restaurant: ${restaurantId}`);
+          const restaurant = await Restaurant.findById(restaurantId);
+          if (restaurant) {
+            restaurant.stripeSubscriptionId = session.subscription;
+            restaurant.stripeCustomerId = session.customer;
+            restaurant.subscriptionStatus = "active";
+            if (planId) restaurant.plan = planId;
+
+            // Update end date if possible
+            if (session.subscription) {
+              try {
+                const subscription = await stripeService.retrieveSubscription(session.subscription);
+                restaurant.subscriptionEndDate = new Date((subscription as any).current_period_end * 1000);
+              } catch (subError) {
+                console.error("[Stripe Webhook] Error retrieving subscription info for resubscription:", subError);
+              }
+            }
+
+            await restaurant.save();
+            console.log(`[Stripe Webhook] Restaurant ${restaurant.name} resubscription updated`);
+
+            createLog({
+              message: `Restaurant '${restaurant.name}' resubscribed/changed plan - Subscription updated`,
+              userId: (restaurant.collaborators?.[0] as any) || restaurant._id,
+              level: logLevels.INFO,
+            });
+          } else {
+            console.error(`[Stripe Webhook] RESUBSCRIPTION: Restaurant not found: ${restaurantId}`);
+          }
+          break; // Done with this event
+        }
+
+        // Handle Original RESTAURANT_CREATION flow
         const pending = await PendingTransaction.findById(transactionId);
 
         if (pending && pending.type === "RESTAURANT_CREATION") {
@@ -61,9 +100,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
           // Handle referral linking
           const referredBy = pending.payload.referredBy;
-          const referralCodeUsed = pending.payload.referralCodeUsed;
-
-          console.log(`[Stripe Webhook] Referral data - referredBy: ${referredBy}, referralCodeUsed: ${referralCodeUsed}`);
 
           if (referredBy) {
             try {
@@ -136,13 +172,41 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         const { Plan } = await import("../models/planModel.js");
 
         // Find restaurant by subscription ID or customer ID
-        const restaurant = await Restaurant.findOne({
+        let restaurant = await Restaurant.findOne({
           $or: [{ stripeSubscriptionId: subscriptionId }, { stripeCustomerId: customerId }],
         });
 
         if (!restaurant) {
+          console.warn(`[Stripe Webhook] Restaurant not found by IDs, searching by customer email for customer ${customerId}`);
+          // Fallback: search by customer email if we can retrieve it
+          try {
+            const stripeCustomer = await stripeService.retrieveCustomer(customerId);
+            if ((stripeCustomer as any).email) {
+              restaurant = await Restaurant.findOne({ email: (stripeCustomer as any).email });
+            }
+          } catch (custErr) {
+            console.error("[Stripe Webhook] Failed to retrieve customer email fallback:", custErr);
+          }
+        }
+
+        if (!restaurant) {
           console.error(`[Stripe Webhook] Restaurant not found for subscription ${subscriptionId} or customer ${customerId}`);
           break;
+        }
+
+        // SYNC: Ensure the restaurant has the correct subscription/customer IDs saved
+        let needsSave = false;
+        if (subscriptionId && restaurant.stripeSubscriptionId !== subscriptionId) {
+          restaurant.stripeSubscriptionId = subscriptionId;
+          needsSave = true;
+        }
+        if (customerId && restaurant.stripeCustomerId !== customerId) {
+          restaurant.stripeCustomerId = customerId;
+          needsSave = true;
+        }
+        if (needsSave) {
+          await restaurant.save();
+          console.log(`[Stripe Webhook] Synchronized Stripe IDs for restaurant ${restaurant.name}`);
         }
 
         // Determine plan from invoice line items

@@ -13,8 +13,19 @@ export const ConfigurationAlert = ({ restaurant }: ConfigurationAlertProps) => {
 
   if (!restaurant.name) missingFields.push("Nom du restaurant");
   if (!restaurant.adress) missingFields.push("Adresse");
+  if (!restaurant.city) missingFields.push("Ville");
   if (!restaurant.phone) missingFields.push("Téléphone");
   if (!restaurant.email) missingFields.push("Email");
+  if (!restaurant.shortDescription && !restaurant.description) missingFields.push("Description");
+  if (!restaurant.cuisineType || restaurant.cuisineType.length === 0) missingFields.push("Type de cuisine");
+  if (!restaurant.images || restaurant.images.length === 0) missingFields.push("Galerie photos");
+
+  const hasOpeningHours =
+    restaurant.openingHours && Object.values(restaurant.openingHours).some((day) => !day.isClosed && day.periods && day.periods.length > 0);
+  if (!hasOpeningHours) missingFields.push("Horaires d'ouverture");
+
+  const hasTables = restaurant.zones && restaurant.zones.some((zone) => zone.tables && zone.tables.length > 0);
+  if (!hasTables) missingFields.push("Plan de salle");
 
   const isSubscriptionActive = restaurant.subscriptionStatus === "active";
   const isConfigured = missingFields.length === 0;
