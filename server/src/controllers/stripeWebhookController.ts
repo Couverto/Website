@@ -154,6 +154,7 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       break;
     }
 
+    case "invoice.paid":
     case "invoice.payment_succeeded": {
       const invoice = event.data.object as any;
       const subscriptionId = invoice.subscription;
@@ -171,18 +172,35 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         const { Payment } = await import("../models/paymentModel.js");
         const { Plan } = await import("../models/planModel.js");
 
-        // Find restaurant by subscription ID or customer ID
-        let restaurant = await Restaurant.findOne({
-          $or: [{ stripeSubscriptionId: subscriptionId }, { stripeCustomerId: customerId }],
-        });
+        // Find restaurant by subscription ID first (most specific), then customer ID, then email
+        let restaurant = null;
 
-        if (!restaurant) {
+        // 1. Try matching by subscriptionId (unique per subscription, most reliable)
+        if (subscriptionId) {
+          restaurant = await Restaurant.findOne({ stripeSubscriptionId: subscriptionId });
+          if (restaurant) {
+            console.log(`[Stripe Webhook] Matched restaurant '${restaurant.name}' by subscriptionId: ${subscriptionId}`);
+          }
+        }
+
+        // 2. Fallback: match by customerId (less specific — a customer can have multiple subscriptions)
+        if (!restaurant && customerId) {
+          restaurant = await Restaurant.findOne({ stripeCustomerId: customerId });
+          if (restaurant) {
+            console.log(`[Stripe Webhook] Matched restaurant '${restaurant.name}' by customerId: ${customerId}`);
+          }
+        }
+
+        // 3. Last resort: match by customer email
+        if (!restaurant && customerId) {
           console.warn(`[Stripe Webhook] Restaurant not found by IDs, searching by customer email for customer ${customerId}`);
-          // Fallback: search by customer email if we can retrieve it
           try {
             const stripeCustomer = await stripeService.retrieveCustomer(customerId);
             if ((stripeCustomer as any).email) {
               restaurant = await Restaurant.findOne({ email: (stripeCustomer as any).email });
+              if (restaurant) {
+                console.log(`[Stripe Webhook] Matched restaurant '${restaurant.name}' by email: ${(stripeCustomer as any).email}`);
+              }
             }
           } catch (custErr) {
             console.error("[Stripe Webhook] Failed to retrieve customer email fallback:", custErr);
