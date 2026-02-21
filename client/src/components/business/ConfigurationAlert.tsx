@@ -45,7 +45,7 @@ export const ConfigurationAlert = ({ restaurant }: ConfigurationAlertProps) => {
               Votre restaurant n'est pas encore visible par les clients. Veuillez souscrire à un abonnement pour activer votre compte.
             </span>
             <Button variant="outline" size="sm" className="bg-white border-red-200 hover:bg-red-100 text-red-900" asChild>
-              <Link to={`/restaurant/${restaurant._id}/billing`}>S'abonner</Link>
+              <Link to={`/restaurant/${restaurant._id}/plan`}>S'abonner</Link>
             </Button>
           </AlertDescription>
         </Alert>
