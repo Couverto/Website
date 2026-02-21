@@ -750,30 +750,6 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Check availability of new phone if changed
-    if (req.body.phone && req.body.phone !== restaurant.phone) {
-      const existingPhoneConflict = await Restaurant.findOne({
-        phone: req.body.phone,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingPhoneConflict) {
-        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
-    // Check availability of new address if changed
-    if (req.body.adress && req.body.adress !== restaurant.adress) {
-      const existingAddressConflict = await Restaurant.findOne({
-        adress: req.body.adress,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingAddressConflict) {
-        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
     // PROTECTION BYPASS for Global Admins
     const user = await User.findById(req.userId);
     const isGlobalAdmin = user?.role === userRoles.ADMIN;
@@ -859,30 +835,6 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
-    }
-
-    // Check availability of new phone if changed
-    if (req.body.phone && req.body.phone !== restaurant.phone) {
-      const existingPhoneConflict = await Restaurant.findOne({
-        phone: req.body.phone,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingPhoneConflict) {
-        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
-    // Check availability of new address if changed
-    if (req.body.adress && req.body.adress !== restaurant.adress) {
-      const existingAddressConflict = await Restaurant.findOne({
-        adress: req.body.adress,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingAddressConflict) {
-        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
     }
 
     // Verify user is a collaborator
@@ -1113,30 +1065,6 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
-    }
-
-    // Check availability of new phone if changed
-    if (req.body.phone && req.body.phone !== restaurant.phone) {
-      const existingPhoneConflict = await Restaurant.findOne({
-        phone: req.body.phone,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingPhoneConflict) {
-        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
-    // Check availability of new address if changed
-    if (req.body.adress && req.body.adress !== restaurant.adress) {
-      const existingAddressConflict = await Restaurant.findOne({
-        adress: req.body.adress,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingAddressConflict) {
-        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
     }
 
     const queryDate = new Date(date as string);
