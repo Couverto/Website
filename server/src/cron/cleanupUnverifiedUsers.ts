@@ -5,13 +5,13 @@ import { logLevels } from "../utils/enums/logLevels.js";
 
 /**
  * Initializes the cleanup job for unverified users.
- * Runs every hour.
+ * Runs once per day at 3:00 AM.
  */
 export const initCleanupUnverifiedUsers = () => {
   console.log("Initializing Cleanup Unverified Users Scheduler 🧹");
 
-  // Cron schedule: "0 * * * *" -> Every hour
-  cron.schedule("0 * * * *", async () => {
+  // Cron schedule: "0 3 * * *" -> Every day at 3:00 AM
+  cron.schedule("0 3 * * *", async () => {
     console.log("Running scheduled Cleanup Unverified Users Job...");
 
     try {

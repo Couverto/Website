@@ -213,10 +213,9 @@ export const getSubscription = async (req: Request, res: Response): Promise<void
   const { id } = req.params;
 
   try {
-    const restaurant = await Restaurant.findById(id).populate({
-      path: "plan",
-      populate: { path: "features" },
-    });
+    const restaurant = await Restaurant.findById(id)
+      .populate({ path: "plan", populate: { path: "features" } })
+      .populate("referralCodeUsed", "code type discountPercentage");
     if (!restaurant) {
       res.status(404).json({ error: "Restaurant introuvable" });
       return;
@@ -227,6 +226,7 @@ export const getSubscription = async (req: Request, res: Response): Promise<void
       subscriptionStatus: restaurant.subscriptionStatus,
       autoRenew: restaurant.autoRenew,
       subscriptionEndDate: restaurant.subscriptionEndDate,
+      referralCodeUsed: restaurant.referralCodeUsed || null,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

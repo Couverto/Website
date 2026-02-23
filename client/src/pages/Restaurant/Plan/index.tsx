@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/customs/dataTable";
 import { columns } from "./columns";
 import { toast } from "sonner";
-import { Check, CreditCard, Calendar, RefreshCw, Loader2, XCircle } from "lucide-react";
+import { Check, CreditCard, Calendar, RefreshCw, Loader2, XCircle, Gift, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Plan } from "@/interfaces/Plan";
@@ -41,6 +41,12 @@ interface Subscription {
   subscriptionStatus: "active" | "cancelled" | "expired" | "none";
   autoRenew: boolean;
   subscriptionEndDate: string | null;
+  referralCodeUsed?: {
+    _id: string;
+    code: string;
+    type: "standard" | "sponsor";
+    discountPercentage: number;
+  } | null;
 }
 
 interface RestaurantContext {
@@ -221,6 +227,11 @@ export const RestaurantPlan = () => {
 
   const status = subscription?.subscriptionStatus || "none";
   const statusDisplay = statusConfig[status];
+  const isSponsor = subscription?.referralCodeUsed?.type === "sponsor" && subscription?.referralCodeUsed?.discountPercentage === 100;
+  const isPartialSponsor =
+    subscription?.referralCodeUsed?.type === "sponsor" &&
+    (subscription?.referralCodeUsed?.discountPercentage ?? 0) > 0 &&
+    (subscription?.referralCodeUsed?.discountPercentage ?? 0) < 100;
 
   return (
     <div className="space-y-8">
@@ -237,8 +248,53 @@ export const RestaurantPlan = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {subscription?.plan ? (
+            {isSponsor ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                    <Gift className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <span className="text-2xl font-black text-foreground">Offre Sponsor</span>
+                    <p className="text-sm text-muted-foreground">Code : {subscription?.referralCodeUsed?.code}</p>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-emerald-600" />
+                    <span className="font-semibold text-emerald-800">Accès gratuit et illimité</span>
+                  </div>
+                  <p className="text-sm text-emerald-700">
+                    Votre restaurant bénéficie d'un accès complet à toutes les fonctionnalités grâce à un code sponsor administrateur. Aucun
+                    abonnement payant n'est nécessaire.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4 text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span className="font-bold text-emerald-600 text-lg">Gratuit</span>
+                    <Badge className="bg-emerald-500/15 text-emerald-600 text-xs">-100% Sponsor</Badge>
+                  </div>
+                </div>
+              </div>
+            ) : subscription?.plan ? (
               <>
+                {isPartialSponsor && (
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-emerald-600" />
+                      <span className="font-semibold text-emerald-800">Offre Sponsor</span>
+                      <Badge className="bg-emerald-500/15 text-emerald-600 text-xs">
+                        -{subscription?.referralCodeUsed?.discountPercentage}%
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-emerald-700">
+                      Votre abonnement bénéficie d'une réduction de {subscription?.referralCodeUsed?.discountPercentage}% grâce au code
+                      sponsor <strong>{subscription?.referralCodeUsed?.code}</strong>. Cette réduction est appliquée automatiquement sur
+                      chaque facture.
+                    </p>
+                  </div>
+                )}
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black">{subscription.plan.name}</span>
                 </div>
@@ -250,7 +306,7 @@ export const RestaurantPlan = () => {
                         <span className="font-semibold text-muted-foreground line-through">{subscription.plan.price}€</span>
                         <span className="font-bold text-emerald-600">{referralDiscount.priceAfterDiscount.toFixed(2)}€</span>
                         <Badge className="bg-emerald-500/15 text-emerald-600 text-xs">
-                          -{referralDiscount.totalDiscountPercentage}% parrainage
+                          -{referralDiscount.totalDiscountPercentage}% {isPartialSponsor ? "sponsor" : "parrainage"}
                         </Badge>
                       </>
                     ) : (
@@ -276,159 +332,163 @@ export const RestaurantPlan = () => {
               </div>
             )}
 
-            <Dialog open={changePlanOpen} onOpenChange={setChangePlanOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Changer de plan
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Changer de plan</DialogTitle>
-                  <DialogDescription>
-                    Sélectionnez votre nouveau plan d'abonnement. Le premier mois sera facturé immédiatement.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-6">
-                  {plans.map((plan) => {
-                    const isCurrentPlan = subscription?.plan?._id === plan._id;
-                    return (
-                      <Card
-                        key={plan._id}
-                        className={`cursor-pointer transition-all border-2 rounded-xl ${
-                          selectedPlan === plan._id
-                            ? "border-primary bg-primary/5 shadow-lg"
-                            : isCurrentPlan
-                              ? "border-muted bg-muted/30 opacity-60"
-                              : "border-border hover:border-primary/50 hover:shadow-md"
-                        }`}
-                        onClick={() => !isCurrentPlan && setSelectedPlan(plan._id)}
-                      >
-                        <CardHeader>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <CardTitle className="text-xl font-bold flex items-center gap-2">
-                                {plan.name}
-                                {isCurrentPlan && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    Actuel
-                                  </Badge>
-                                )}
-                              </CardTitle>
-                              <CardDescription className="mt-1">{plan.description}</CardDescription>
-                            </div>
-                            {selectedPlan === plan._id && !isCurrentPlan && (
-                              <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                                <Check className="w-4 h-4 text-primary-foreground" />
+            {!isSponsor && (
+              <Dialog open={changePlanOpen} onOpenChange={setChangePlanOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Changer de plan
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Changer de plan</DialogTitle>
+                    <DialogDescription>
+                      Sélectionnez votre nouveau plan d'abonnement. Le premier mois sera facturé immédiatement.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 py-6">
+                    {plans.map((plan) => {
+                      const isCurrentPlan = subscription?.plan?._id === plan._id;
+                      return (
+                        <Card
+                          key={plan._id}
+                          className={`cursor-pointer transition-all border-2 rounded-xl ${
+                            selectedPlan === plan._id
+                              ? "border-primary bg-primary/5 shadow-lg"
+                              : isCurrentPlan
+                                ? "border-muted bg-muted/30 opacity-60"
+                                : "border-border hover:border-primary/50 hover:shadow-md"
+                          }`}
+                          onClick={() => !isCurrentPlan && setSelectedPlan(plan._id)}
+                        >
+                          <CardHeader>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                  {plan.name}
+                                  {isCurrentPlan && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Actuel
+                                    </Badge>
+                                  )}
+                                </CardTitle>
+                                <CardDescription className="mt-1">{plan.description}</CardDescription>
                               </div>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-black">{plan.price}€</span>
-                            <span className="text-muted-foreground">/mois</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-                {selectedPlan && selectedPlan !== subscription?.plan?._id && (
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
-                    <p className="text-sm font-medium text-primary">
-                      💳 En confirmant, vous serez facturé de {plans.find((p) => p._id === selectedPlan)?.price}€ pour le premier mois.
-                    </p>
+                              {selectedPlan === plan._id && !isCurrentPlan && (
+                                <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                                  <Check className="w-4 h-4 text-primary-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-3xl font-black">{plan.price}€</span>
+                              <span className="text-muted-foreground">/mois</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
-                )}
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setChangePlanOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button onClick={handleChangePlan} disabled={updating || !selectedPlan || selectedPlan === subscription?.plan?._id}>
-                    {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Confirmer et payer
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-
-        {/* Renewal Settings */}
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle className="text-xl">Paramètres de renouvellement</CardTitle>
-            <CardDescription>Gérez le renouvellement automatique de votre abonnement</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
-              <div className="space-y-1">
-                <Label htmlFor="auto-renew" className="font-semibold">
-                  Renouvellement automatique
-                </Label>
-                <p className="text-sm text-muted-foreground">Votre abonnement sera renouvelé automatiquement chaque mois</p>
-              </div>
-              <Switch
-                id="auto-renew"
-                checked={subscription?.autoRenew ?? true}
-                onCheckedChange={handleAutoRenewToggle}
-                disabled={updating || !subscription?.plan}
-              />
-            </div>
-
-            {subscription?.autoRenew === false && subscription?.subscriptionEndDate && (
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
-                <p className="text-sm font-medium">
-                  ⚠️ Votre abonnement ne sera pas renouvelé et expirera le{" "}
-                  {format(new Date(subscription.subscriptionEndDate), "dd MMMM yyyy", { locale: fr })}
-                </p>
-              </div>
-            )}
-
-            {/* Cancel Subscription */}
-            {subscription?.plan && (
-              <div className="pt-4 border-t">
-                <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full gap-2">
-                      <XCircle className="h-4 w-4" />
-                      Résilier l'abonnement
+                  {selectedPlan && selectedPlan !== subscription?.plan?._id && (
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
+                      <p className="text-sm font-medium text-primary">
+                        💳 En confirmant, vous serez facturé de {plans.find((p) => p._id === selectedPlan)?.price}€ pour le premier mois.
+                      </p>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setChangePlanOpen(false)}>
+                      Annuler
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Résilier l'abonnement ?</AlertDialogTitle>
-                      <AlertDialogDescription asChild>
-                        <div className="text-sm text-muted-foreground space-y-3">
-                          <span className="block">
-                            Cette action va <strong>immédiatement fermer votre restaurant</strong> et le rendre invisible aux clients.
-                          </span>
-                          <span className="block p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium">
-                            💡 Conseil : Pour <strong>profiter du mois en cours</strong> sans être débité le mois prochain, il suffit de{" "}
-                            <strong>désactiver le renouvellement automatique</strong> ci-dessus.
-                          </span>
-                          <span className="block">Vous pourrez le réactiver à tout moment en souscrivant à un nouveau plan.</span>
-                          <span className="block p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-                            ⚠️ Attention : Toutes les réservations futures seront annulées.
-                          </span>
-                        </div>
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleCancelPlan} className="bg-destructive hover:bg-destructive/90">
-                        {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                        Confirmer la résiliation
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+                    <Button onClick={handleChangePlan} disabled={updating || !selectedPlan || selectedPlan === subscription?.plan?._id}>
+                      {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Confirmer et payer
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
           </CardContent>
         </Card>
+
+        {/* Renewal Settings — Hidden for sponsor restaurants */}
+        {!isSponsor && (
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="text-xl">Paramètres de renouvellement</CardTitle>
+              <CardDescription>Gérez le renouvellement automatique de votre abonnement</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+                <div className="space-y-1">
+                  <Label htmlFor="auto-renew" className="font-semibold">
+                    Renouvellement automatique
+                  </Label>
+                  <p className="text-sm text-muted-foreground">Votre abonnement sera renouvelé automatiquement chaque mois</p>
+                </div>
+                <Switch
+                  id="auto-renew"
+                  checked={subscription?.autoRenew ?? true}
+                  onCheckedChange={handleAutoRenewToggle}
+                  disabled={updating || !subscription?.plan}
+                />
+              </div>
+
+              {subscription?.autoRenew === false && subscription?.subscriptionEndDate && (
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                  <p className="text-sm font-medium">
+                    ⚠️ Votre abonnement ne sera pas renouvelé et expirera le{" "}
+                    {format(new Date(subscription.subscriptionEndDate), "dd MMMM yyyy", { locale: fr })}
+                  </p>
+                </div>
+              )}
+
+              {/* Cancel Subscription */}
+              {subscription?.plan && (
+                <div className="pt-4 border-t">
+                  <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" className="w-full gap-2">
+                        <XCircle className="h-4 w-4" />
+                        Résilier l'abonnement
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Résilier l'abonnement ?</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                          <div className="text-sm text-muted-foreground space-y-3">
+                            <span className="block">
+                              Cette action va <strong>immédiatement fermer votre restaurant</strong> et le rendre invisible aux clients.
+                            </span>
+                            <span className="block p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium">
+                              💡 Conseil : Pour <strong>profiter du mois en cours</strong> sans être débité le mois prochain, il suffit de{" "}
+                              <strong>désactiver le renouvellement automatique</strong> ci-dessus.
+                            </span>
+                            <span className="block">Vous pourrez le réactiver à tout moment en souscrivant à un nouveau plan.</span>
+                            <span className="block p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                              ⚠️ Attention : Toutes les réservations futures seront annulées.
+                            </span>
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCancelPlan} className="bg-destructive hover:bg-destructive/90">
+                          {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          Confirmer la résiliation
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Payment History */}
