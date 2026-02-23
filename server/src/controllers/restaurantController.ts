@@ -1037,16 +1037,46 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
     const restaurantsWithStatus = restaurants.map((r) => {
       const restaurantObj = r.toObject();
       const ratingData = ratingsMap.get(r._id.toString());
+      const openingHoursObj = convertOpeningHoursToObject(r.openingHours);
+      const openNow = isRestaurantOpen(r.openingHours);
+
+      // Determine if it opens later today
+      let opensLaterToday = false;
+      if (!openNow) {
+        const now = new Date();
+        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const todayName = dayNames[now.getDay()];
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const todaySchedule = openingHoursObj[todayName];
+
+        if (todaySchedule && !todaySchedule.isClosed && todaySchedule.periods?.length > 0) {
+          opensLaterToday = todaySchedule.periods.some((p: { open: string; close: string }) => {
+            const [h, m] = p.open.split(":").map(Number);
+            return h * 60 + m > currentMinutes;
+          });
+        }
+      }
+
       return {
         ...restaurantObj,
-        openingHours: convertOpeningHoursToObject(r.openingHours),
-        isOpenNow: isRestaurantOpen(r.openingHours),
+        openingHours: openingHoursObj,
+        isOpenNow: openNow,
         rating: ratingData ? parseFloat(ratingData.avgRating.toFixed(1)) : 0,
         reviewCount: ratingData?.reviewCount || 0,
+        _openPriority: openNow ? 0 : opensLaterToday ? 1 : 2,
       };
     });
 
-    res.status(200).json({ restaurants: restaurantsWithStatus, count });
+    // Sort: open → opens later today → closed today, then by rating desc
+    restaurantsWithStatus.sort((a, b) => {
+      if (a._openPriority !== b._openPriority) return a._openPriority - b._openPriority;
+      return (b.rating || 0) - (a.rating || 0);
+    });
+
+    // Remove internal sort field before sending
+    const result = restaurantsWithStatus.map(({ _openPriority, ...rest }) => rest);
+
+    res.status(200).json({ restaurants: result, count });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

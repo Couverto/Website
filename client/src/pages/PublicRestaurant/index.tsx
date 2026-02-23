@@ -16,6 +16,7 @@ import { SEO } from "@/components/SEO";
 import { ImageViewer } from "@/components/customs/ImageViewer";
 import { PriceIndicator } from "@/components/customs/PriceIndicator";
 import { MenuMediaItem } from "./components/MenuMediaItem";
+import { getNextOpeningText } from "@/utils/getNextOpening";
 
 interface PublicRestaurant {
   _id: string;
@@ -120,6 +121,8 @@ export const PublicRestaurant = () => {
   const computedRating =
     reviewsList.length > 0 ? (reviewsList.reduce((sum, r) => sum + r.rating, 0) / reviewsList.length).toFixed(1) : null;
   const displayRating = computedRating || restaurant.rating || "NEW";
+
+  const nextOpeningText = !restaurant.isClosed && !restaurant.isOpenNow ? getNextOpeningText(restaurant.openingHours) : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -244,10 +247,16 @@ export const PublicRestaurant = () => {
                 ) : (
                   restaurant.isOpenNow !== undefined && (
                     <Badge
-                      variant={restaurant.isOpenNow ? "default" : "destructive"}
-                      className={`mt-4 text-sm py-1 px-3 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                      variant={restaurant.isOpenNow ? "default" : "outline"}
+                      className={`mt-4 text-sm py-1 px-3 ${
+                        restaurant.isOpenNow
+                          ? "bg-green-500 hover:bg-green-600"
+                          : nextOpeningText?.startsWith("Ouvre")
+                            ? "bg-primary/10 text-primary/80 border-primary/20 hover:bg-primary/15"
+                            : "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/15 dark:text-amber-400"
+                      }`}
                     >
-                      {restaurant.isOpenNow ? "Ouvert maintenant" : "Fermé actuellement"}
+                      {restaurant.isOpenNow ? "Ouvert maintenant" : nextOpeningText || "Fermé actuellement"}
                     </Badge>
                   )
                 )}
@@ -314,10 +323,16 @@ export const PublicRestaurant = () => {
             ) : (
               restaurant.isOpenNow !== undefined && (
                 <Badge
-                  variant={restaurant.isOpenNow ? "default" : "destructive"}
-                  className={`text-[10px] py-0 px-2 ${restaurant.isOpenNow ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                  variant={restaurant.isOpenNow ? "default" : "outline"}
+                  className={`text-[10px] py-0 px-2 ${
+                    restaurant.isOpenNow
+                      ? "bg-green-500 hover:bg-green-600"
+                      : nextOpeningText?.startsWith("Ouvre")
+                        ? "bg-primary/10 text-primary/80 border-primary/20 hover:bg-primary/15"
+                        : "bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/15 dark:text-amber-400"
+                  }`}
                 >
-                  {restaurant.isOpenNow ? "Ouvert maintenant" : "Fermé actuellement"}
+                  {restaurant.isOpenNow ? "Ouvert maintenant" : nextOpeningText || "Fermé actuellement"}
                 </Badge>
               )
             )}

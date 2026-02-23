@@ -10,8 +10,10 @@ import { BookingDialog } from "./Booking/BookingDialog";
 import { useState } from "react";
 import { RestaurantCardProps } from "@/interfaces/Components";
 import { PriceIndicator } from "@/components/customs/PriceIndicator";
+import { getNextOpeningText } from "@/utils/getNextOpening";
 
 export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => {
+  const nextOpeningText = !restaurant.isClosed && !restaurant.isOpenNow ? getNextOpeningText(restaurant.openingHours) : null;
   const navigate = useNavigate();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -129,11 +131,21 @@ export const RestaurantCard = ({ restaurant, filters }: RestaurantCardProps) => 
                 className={`flex items-center gap-2 text-xs font-medium p-2 rounded border mt-auto ${
                   restaurant.isOpenNow
                     ? "text-emerald-600 bg-emerald-50/50 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/50"
-                    : "text-red-600 bg-red-50/50 border-red-100 dark:bg-red-950/20 dark:border-red-900/50"
+                    : nextOpeningText?.startsWith("Ouvre")
+                      ? "text-primary/80 bg-primary/5 border-primary/15 dark:bg-primary/10 dark:border-primary/20"
+                      : "text-amber-600 bg-amber-50/50 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/50"
                 }`}
               >
-                <div className={`w-2 h-2 rounded-full ${restaurant.isOpenNow ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
-                {restaurant.isOpenNow ? "Ouvert maintenant" : "Fermé actuellement"}
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    restaurant.isOpenNow
+                      ? "bg-emerald-500 animate-pulse"
+                      : nextOpeningText?.startsWith("Ouvre")
+                        ? "bg-primary/60"
+                        : "bg-amber-500"
+                  }`}
+                />
+                {restaurant.isOpenNow ? "Ouvert maintenant" : nextOpeningText || "Fermé actuellement"}
               </div>
             )
           )}
