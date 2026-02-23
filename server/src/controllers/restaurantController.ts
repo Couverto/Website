@@ -312,6 +312,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
             city,
             phone,
             email: otherFields.email || creator.email,
+            isClosed: true,
             website,
             collaborators,
             collaboratorRoles: Object.fromEntries(collaboratorRoles), // Maps need to be objects in Mixed fields

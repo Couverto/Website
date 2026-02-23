@@ -155,10 +155,10 @@ export const Navbar = () => {
               }
             }}
           >
-            <div className="h-9 w-9 md:h-10 md:w-10 rounded-xl bg-primary/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+            <div className="hidden md:flex h-9 w-9 md:h-10 md:w-10 rounded-xl bg-primary/5 items-center justify-center group-hover:bg-primary/10 transition-colors">
               <img src="/logos/logo.svg" alt="Couverto" className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <span className="hidden md:block text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
+            <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
 
           {/* Desktop Navigation */}

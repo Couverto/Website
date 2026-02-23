@@ -45,7 +45,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     cuisineType: { type: [String], default: [] },
     priceRange: { type: String, enum: ["$", "$$", "$$$", "$$$$", "$$$$$"], default: "$$" },
     rating: { type: Number, default: 0 },
-    isClosed: { type: Boolean, default: false },
+    isClosed: { type: Boolean, default: true },
     exceptionalClosures: {
       type: [
         {
