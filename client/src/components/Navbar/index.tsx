@@ -192,7 +192,7 @@ export const Navbar = () => {
                 <DropdownMenuTrigger asChild className="cursor-pointer">
                   <Button
                     variant="ghost"
-                    className="hidden md:inline-flex relative h-10 w-10 rounded-full p-0 overflow-hidden ring-2 ring-transparent hover:ring-primary/20 transition-colors"
+                    className="hidden md:inline-flex relative h-10 w-10 rounded-full p-0 ring-2 ring-transparent hover:ring-primary/20 transition-colors"
                   >
                     <AvatarWithStatusCell user={authUser} />
                   </Button>
