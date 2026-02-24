@@ -59,14 +59,15 @@ export const AddressAutocomplete = ({
   }, []);
 
   const searchAddress = async (query: string) => {
-    if (!query || query.length < 3) {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery || trimmedQuery.length < 3) {
       setSuggestions([]);
       return;
     }
 
     setLoading(true);
     try {
-      let url = `https://api-adresse.data.gouv.fr/search/?q=${query}&limit=5`;
+      let url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(trimmedQuery)}&limit=5`;
       if (searchType === "municipality") {
         url += "&type=municipality";
       }
