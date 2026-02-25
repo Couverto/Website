@@ -5,6 +5,7 @@ export interface IFeature extends Document {
   description?: string;
   active: boolean;
   position: number;
+  associatedPages?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

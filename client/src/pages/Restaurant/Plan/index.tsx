@@ -52,6 +52,7 @@ interface Subscription {
 interface RestaurantContext {
   restaurant: any;
   userRole: string;
+  refreshRestaurant: () => Promise<void>;
 }
 
 interface ReferralDiscount {
@@ -64,7 +65,7 @@ interface ReferralDiscount {
 export const RestaurantPlan = () => {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { userRole } = useOutletContext<RestaurantContext>();
+  const { userRole, refreshRestaurant } = useOutletContext<RestaurantContext>();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -145,12 +146,15 @@ export const RestaurantPlan = () => {
   }, [id]);
 
   const handleAutoRenewToggle = async (checked: boolean) => {
+    // Optimistic UI Update
+    setSubscription((prev) => (prev ? { ...prev, autoRenew: checked } : null));
     setUpdating(true);
     try {
       await api.put(`/restaurants/${id}/subscription`, { autoRenew: checked });
-      setSubscription((prev) => (prev ? { ...prev, autoRenew: checked } : null));
       toast.success(checked ? "Renouvellement automatique activé" : "Renouvellement automatique désactivé");
     } catch (error) {
+      // Revert Optimistic UI Update on error
+      setSubscription((prev) => (prev ? { ...prev, autoRenew: !checked } : null));
       toast.error("Erreur lors de la mise à jour");
     } finally {
       setUpdating(false);
@@ -180,11 +184,16 @@ export const RestaurantPlan = () => {
 
       if (response.data.reopened) {
         toast.success(`Abonnement renouvelé - Votre restaurant est à nouveau ouvert ! 🎉`);
+      } else if (response.data.updated) {
+        toast.success(`Abonnement changé vers le ${newPlan.name} avec succès ! Le montant sera ajusté sur votre prochaine facture Stripe.`);
       } else {
         toast.success(`Plan changé vers ${newPlan.name} - Paiement de ${newPlan.price}€ effectué`);
       }
       setChangePlanOpen(false);
-      fetchData();
+      await fetchData();
+      if (refreshRestaurant) {
+        await refreshRestaurant();
+      }
     } catch (error) {
       toast.error("Erreur lors du changement de plan");
     } finally {
@@ -395,7 +404,12 @@ export const RestaurantPlan = () => {
                   {selectedPlan && selectedPlan !== subscription?.plan?._id && (
                     <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 mb-4">
                       <p className="text-sm font-medium text-primary">
-                        💳 En confirmant, vous serez facturé de {plans.find((p) => p._id === selectedPlan)?.price}€ pour le premier mois.
+                        {subscription?.plan?.price &&
+                        subscription.plan.price > 0 &&
+                        plans.find((p) => p._id === selectedPlan)?.price !== undefined &&
+                        plans.find((p) => p._id === selectedPlan)!.price > 0
+                          ? `💳 En confirmant, votre abonnement sera modifié. Le montant sera ajusté au prorata sur votre prochaine facture Stripe.`
+                          : `💳 En confirmant, vous serez facturé de ${plans.find((p) => p._id === selectedPlan)?.price}€ pour le premier mois.`}
                       </p>
                     </div>
                   )}
@@ -446,8 +460,8 @@ export const RestaurantPlan = () => {
                 </div>
               )}
 
-              {/* Cancel Subscription */}
-              {subscription?.plan && (
+              {/* Cancel Subscription - Moved outside so sponsors can cancel too */}
+              {subscription?.plan && !isSponsor && (
                 <div className="pt-4 border-t">
                   <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
                     <AlertDialogTrigger asChild>
@@ -486,6 +500,48 @@ export const RestaurantPlan = () => {
                   </AlertDialog>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sponsor Cancel Subscription */}
+        {isSponsor && subscription?.plan && (
+          <Card className="border-2 border-red-100">
+            <CardHeader>
+              <CardTitle className="text-xl text-red-600">Fermer le restaurant</CardTitle>
+              <CardDescription>Rendre le restaurant invisible aux clients</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full gap-2">
+                    <XCircle className="h-4 w-4" />
+                    Fermer le restaurant
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Fermer le restaurant ?</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div className="text-sm text-muted-foreground space-y-3">
+                        <span className="block">
+                          Cette action va <strong>immédiatement fermer votre restaurant</strong> et le rendre invisible aux clients.
+                        </span>
+                        <span className="block p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                          ⚠️ Attention : Toutes les réservations futures seront annulées.
+                        </span>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCancelPlan} className="bg-destructive hover:bg-destructive/90">
+                      {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Confirmer la fermeture
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         )}

@@ -36,9 +36,10 @@ interface RestaurantSidebarProps {
     isClosed?: boolean;
   };
   userRole?: string;
+  availablePages?: string[];
 }
 
-export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: RestaurantSidebarProps) => {
+export const RestaurantSidebar = ({ restaurant, userRole = "employee", availablePages = [] }: RestaurantSidebarProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { authUser } = useAuthContext();
@@ -115,7 +116,26 @@ export const RestaurantSidebar = ({ restaurant, userRole = "employee" }: Restaur
     },
   ];
 
-  const filteredNavItems = navItems.filter((item) => item.roles.includes(role));
+  const filteredNavItems = navItems.filter((item) => {
+    // Basic role check
+    if (!item.roles.includes(role)) return false;
+
+    // Feature requirement check based on the URL suffix matchingAVAILABLE_PAGES
+    const pageKey = item.url.split("/").pop(); // e.g. "stats", "gallery"
+
+    // Core pages that do not require explicit feature unlock
+    const corePages = ["plan"];
+    if (pageKey && corePages.includes(pageKey)) return true;
+
+    // If the path ends with a known feature page, check if the restaurant's plan unlocked it
+    if (pageKey && !availablePages.includes(pageKey)) {
+      // Small manual exception if the URL is "table-plan" but the feature is named "tablePlan"
+      if (pageKey === "table-plan" && availablePages.includes("tablePlan")) return true;
+      return false;
+    }
+
+    return true;
+  });
 
   const { pathname } = useLocation();
   const isActive = (path: string) => pathname.startsWith(path);

@@ -32,6 +32,7 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
+import { verifyFeatureAccess } from "../middlewares/verifyFeatureAccess.js";
 
 import { finalizePayment } from "../controllers/finalizePaymentController.js";
 
@@ -63,8 +64,20 @@ restaurantRouter.get(
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
   getRestaurantById,
 );
-restaurantRouter.get("/:id/stats", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), getRestaurantStats);
-restaurantRouter.put("/:id/settings", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), updateRestaurantSettings);
+restaurantRouter.get(
+  "/:id/stats",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  verifyFeatureAccess(["stats", "dashboard"]),
+  getRestaurantStats,
+);
+restaurantRouter.put(
+  "/:id/settings",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN]),
+  verifyFeatureAccess("settings"),
+  updateRestaurantSettings,
+);
 restaurantRouter.patch(
   "/:id/toggle-closed",
   verifyToken(),
@@ -77,24 +90,28 @@ restaurantRouter.get(
   "/:id/collaborators",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  verifyFeatureAccess("collaborators"),
   getCollaborators,
 );
 restaurantRouter.post(
   "/:id/collaborators",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  verifyFeatureAccess("collaborators"),
   addCollaborator,
 );
 restaurantRouter.patch(
   "/:id/collaborators/:collaboratorId/role",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN]),
+  verifyFeatureAccess("collaborators"),
   updateCollaboratorRole,
 );
 restaurantRouter.delete(
   "/:id/collaborators/:collaboratorId",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  verifyFeatureAccess("collaborators"),
   removeCollaborator,
 );
 
@@ -103,18 +120,21 @@ restaurantRouter.post(
   "/:id/invitations",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  verifyFeatureAccess("collaborators"),
   createInvitation,
 );
 restaurantRouter.get(
   "/:id/invitations",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  verifyFeatureAccess("collaborators"),
   getInvitations,
 );
 restaurantRouter.delete(
   "/:id/invitations/:invitationId",
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  verifyFeatureAccess("collaborators"),
   deleteInvitation,
 );
 

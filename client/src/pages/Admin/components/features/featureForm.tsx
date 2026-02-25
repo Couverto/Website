@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Feature } from "@/interfaces/Feature";
 import { getCreateFeatureSchema, getDeleteFeatureSchema, getUpdateFeatureSchema } from "@/lib/zod/schemas/admin/zod";
 
+const AVAILABLE_PAGES = [
+  { value: "dashboard", label: "Tableau de bord" },
+  { value: "bookings", label: "Réservations" },
+  { value: "clients", label: "Clients" },
+  { value: "tablePlan", label: "Plan de salle" },
+  { value: "collaborators", label: "Équipe" },
+  { value: "reviews", label: "Avis" },
+  { value: "gallery", label: "Galerie" },
+  { value: "stats", label: "Statistiques" },
+  { value: "plan", label: "Abonnement" },
+  { value: "referral", label: "Parrainage" },
+  { value: "settings", label: "Paramètres" },
+];
+
 interface FeatureFormProps {
   dialog: (open: boolean) => void;
   refresh: () => void;
@@ -21,6 +35,31 @@ interface FeatureFormProps {
 
 export const FeatureForm = ({ dialog, refresh, action, feature }: FeatureFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [takenPages, setTakenPages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (action === "create" || action === "update") {
+      const fetchFeatures = async () => {
+        try {
+          const response = await axiosConfig.get("/features");
+          const featuresData: Feature[] = response.data.features;
+          const taken: Record<string, string> = {};
+          featuresData.forEach((f) => {
+            if (feature?._id && f._id === feature._id) return;
+            if (f.associatedPages) {
+              f.associatedPages.forEach((p) => {
+                taken[p] = f.name;
+              });
+            }
+          });
+          setTakenPages(taken);
+        } catch (error) {
+          console.error("Failed to fetch features for validation", error);
+        }
+      };
+      fetchFeatures();
+    }
+  }, [action, feature?._id]);
 
   const createSchema = getCreateFeatureSchema();
   const updateSchema = getUpdateFeatureSchema();
@@ -33,6 +72,7 @@ export const FeatureForm = ({ dialog, refresh, action, feature }: FeatureFormPro
       description: "",
       active: true,
       position: 0,
+      associatedPages: [],
     },
   });
 
@@ -43,6 +83,7 @@ export const FeatureForm = ({ dialog, refresh, action, feature }: FeatureFormPro
       description: feature?.description || "",
       active: feature?.active,
       position: feature?.position,
+      associatedPages: feature?.associatedPages || [],
     },
   });
 
@@ -56,7 +97,8 @@ export const FeatureForm = ({ dialog, refresh, action, feature }: FeatureFormPro
   const onCreateSubmit: SubmitHandler<any> = async (values) => {
     try {
       setLoading(true);
-      const response = await axiosConfig.post("/features", values);
+      const payload = { ...values, associatedPages: values.associatedPages || [] };
+      const response = await axiosConfig.post("/features", payload);
       toast.success(response.data.message || "Fonctionnalité créée");
       dialog(false);
       refresh();
@@ -71,7 +113,8 @@ export const FeatureForm = ({ dialog, refresh, action, feature }: FeatureFormPro
   const onUpdateSubmit: SubmitHandler<any> = async (values) => {
     try {
       setLoading(true);
-      const response = await axiosConfig.put(`/features/${feature?._id}`, values);
+      const payload = { ...values, associatedPages: values.associatedPages || [] };
+      const response = await axiosConfig.put(`/features/${feature?._id}`, payload);
       toast.success(response.data.message || "Fonctionnalité mise à jour");
       dialog(false);
       refresh();
@@ -153,6 +196,46 @@ export const FeatureForm = ({ dialog, refresh, action, feature }: FeatureFormPro
             <div className="space-y-1 leading-none">
               <FormLabel>{"Actif"}</FormLabel>
             </div>
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="associatedPages"
+        render={() => (
+          <FormItem>
+            <div className="mb-4">
+              <FormLabel className="text-base">Mettre à disposition les pages suivantes (Optionnel)</FormLabel>
+            </div>
+            {AVAILABLE_PAGES.map((item) => (
+              <FormField
+                key={item.value}
+                control={form.control}
+                name="associatedPages"
+                render={({ field }) => {
+                  return (
+                    <FormItem key={item.value} className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value?.includes(item.value)}
+                          disabled={!!takenPages[item.value]}
+                          onCheckedChange={(checked) => {
+                            return checked
+                              ? field.onChange([...(field.value || []), item.value])
+                              : field.onChange(field.value?.filter((value: string) => value !== item.value));
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className={`font-normal ${takenPages[item.value] ? "text-muted-foreground" : ""}`}>
+                        {item.label}
+                        {takenPages[item.value] && <span className="text-xs italic ml-2">(Déjà utilisé par {takenPages[item.value]})</span>}
+                      </FormLabel>
+                    </FormItem>
+                  );
+                }}
+              />
+            ))}
+            <FormMessage />
           </FormItem>
         )}
       />

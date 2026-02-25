@@ -136,6 +136,7 @@ export const getCreateFeatureSchema = () => {
     description: z.string().optional(),
     active: z.boolean().default(true),
     position: z.coerce.number().default(0),
+    associatedPages: z.array(z.string()).optional(),
   });
 };
 
@@ -145,6 +146,7 @@ export const getUpdateFeatureSchema = () => {
     description: z.string().optional(),
     active: z.boolean(),
     position: z.coerce.number(),
+    associatedPages: z.array(z.string()).optional(),
   });
 };
 

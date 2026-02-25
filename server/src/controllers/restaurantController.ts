@@ -216,7 +216,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           website,
           collaborators,
           collaboratorRoles,
-          plan: null, // Sponsor restaurants don't have a Plan object but have features manually assigned
+          plan: planId || null, // Save the selected plan (sponsor overrides the price, but keeps the plan)
           subscriptionStatus: "active", // Active immediately
           autoRenew: true,
           subscriptionEndDate: null, // Forever
@@ -1291,7 +1291,14 @@ export const getMyRestaurants = async (req: Request, res: Response): Promise<voi
 export const getRestaurantById = async (req: Request, res: Response): Promise<void> => {
   try {
     // Restaurant is already attached by verifyCollaborator middleware
-    const restaurant = await Restaurant.findById(req.params.id).populate("collaborators", "name forename email avatar");
+    const restaurant = await Restaurant.findById(req.params.id)
+      .populate("collaborators", "name forename email avatar")
+      .populate({
+        path: "plan",
+        populate: {
+          path: "features",
+        },
+      });
 
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
@@ -1318,7 +1325,28 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
     // Get the requesting user's role for this restaurant
     const userRole = (req as any).restaurantRole || restaurant?.collaboratorRoles.get(req.userId!.toString()) || restaurantRoles.EMPLOYEE;
 
-    res.status(200).json({ restaurant, userRole });
+    // Compute available pages based on active features
+    const availablePages = new Set<string>();
+
+    if (restaurant.plan && (restaurant.plan as any).features) {
+      (restaurant.plan as any).features.forEach((f: any) => {
+        if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
+          f.associatedPages.forEach((p: string) => availablePages.add(p));
+        }
+      });
+    }
+
+    if (restaurant.features && restaurant.features.length > 0) {
+      const { Feature } = await import("../models/featureModel.js");
+      const extraFeatures = await Feature.find({ _id: { $in: restaurant.features }, active: true });
+      extraFeatures.forEach((f) => {
+        if (f.associatedPages && Array.isArray(f.associatedPages)) {
+          f.associatedPages.forEach((p: string) => availablePages.add(p));
+        }
+      });
+    }
+
+    res.status(200).json({ restaurant, userRole, availablePages: Array.from(availablePages) });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

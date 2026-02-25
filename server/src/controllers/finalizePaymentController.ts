@@ -9,8 +9,10 @@ import { logLevels } from "../utils/enums/logLevels.js";
 
 /**
  * @function finalizePayment
- * @description Fallback endpoint to complete restaurant creation after Stripe payment.
- * Used when webhook doesn't fire (e.g., local development without Stripe CLI).
+ * @description Fallback endpoint to complete restaurant creation/resubscription after Stripe payment.
+ * Webhooks (checkout.session.completed) are the primary source of truth, but this provides a fast
+ * synchronous fallback for the frontend UI so users don't have to wait for the webhook to process.
+ * Used when webhook is delayed or doesn't fire (e.g., local development without Stripe CLI).
  */
 export const finalizePayment = async (req: Request, res: Response): Promise<void> => {
   const { sessionId } = req.body;
@@ -98,8 +100,8 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // Check if already processed
-    const pending = await PendingTransaction.findById(transactionId);
+    // Atomically find and delete to prevent race conditions during restaurant creation
+    const pending = await PendingTransaction.findByIdAndDelete(transactionId);
 
     if (!pending) {
       console.log(`[Finalize] Pending Transaction not found or already deleted: ${transactionId}`);
@@ -210,9 +212,8 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
       level: logLevels.INFO,
     });
 
-    // Delete the pending transaction
-    await PendingTransaction.findByIdAndDelete(transactionId);
-    console.log(`[Finalize] Pending Transaction deleted: ${transactionId}`);
+    // The pending transaction is already deleted at the beginning of this function
+    console.log(`[Finalize] Finished processing transaction: ${transactionId}`);
 
     res.status(201).json({
       restaurant,

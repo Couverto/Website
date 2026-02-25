@@ -68,8 +68,8 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           break; // Done with this event
         }
 
-        // Handle Original RESTAURANT_CREATION flow
-        const pending = await PendingTransaction.findById(transactionId);
+        // Atomically find and delete to prevent race conditions
+        const pending = await PendingTransaction.findByIdAndDelete(transactionId);
 
         if (pending && pending.type === "RESTAURANT_CREATION") {
           console.log(`[Stripe Webhook] Found pending transaction: ${pending._id}`);
@@ -142,9 +142,8 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
             level: logLevels.INFO,
           });
 
-          // Delete the pending transaction after successful creation
-          await PendingTransaction.findByIdAndDelete(transactionId);
-          console.log(`[Stripe Webhook] Pending Transaction deleted: ${transactionId}`);
+          // The pending transaction was already deleted at the beginning of this block
+          console.log(`[Stripe Webhook] Successfully processed transaction: ${transactionId}`);
         } else {
           console.error(`Pending transaction not found or invalid: ${transactionId}`);
         }

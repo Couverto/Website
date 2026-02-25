@@ -44,6 +44,25 @@ export const getAllFeatures = async (req: Request, res: Response): Promise<void>
  */
 export const createFeature = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { associatedPages, ...otherFields } = req.body;
+
+    if (associatedPages && Array.isArray(associatedPages) && associatedPages.length > 0) {
+      // Check if any of these pages are already claimed by an existing feature
+      const conflictingFeature = await Feature.findOne({
+        associatedPages: { $in: associatedPages },
+      });
+
+      if (conflictingFeature) {
+        // Find which pages specifically conflict to return a clear error
+        const conflicts = associatedPages.filter((p) => conflictingFeature.associatedPages?.includes(p));
+        const conflictStr = conflicts.join(", ");
+        res.status(400).json({
+          error: `Impossible de lier ces pages. La fonctionnalité '${conflictingFeature.name}' utilise déjà les pages suivantes : ${conflictStr}`,
+        });
+        return;
+      }
+    }
+
     const feature = await Feature.create(req.body);
     createLog({
       message: `Feature '${feature.name}' created`,
@@ -63,6 +82,25 @@ export const createFeature = async (req: Request, res: Response): Promise<void> 
 export const updateFeature = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
+    const { associatedPages } = req.body;
+
+    if (associatedPages && Array.isArray(associatedPages) && associatedPages.length > 0) {
+      // Check if any of these pages are already claimed by an existing feature (other than the current one)
+      const conflictingFeature = await Feature.findOne({
+        _id: { $ne: id },
+        associatedPages: { $in: associatedPages },
+      });
+
+      if (conflictingFeature) {
+        const conflicts = associatedPages.filter((p) => conflictingFeature.associatedPages?.includes(p));
+        const conflictStr = conflicts.join(", ");
+        res.status(400).json({
+          error: `Impossible de lier ces pages. La fonctionnalité '${conflictingFeature.name}' utilise déjà les pages suivantes : ${conflictStr}`,
+        });
+        return;
+      }
+    }
+
     const feature = await Feature.findByIdAndUpdate(id, req.body, { new: true });
     if (!feature) {
       res.status(404).json({ error: "Ressource introuvable" });

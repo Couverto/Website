@@ -7,6 +7,7 @@ const FeatureSchema = new Schema<IFeature>(
     description: { type: String },
     active: { type: Boolean, default: true },
     position: { type: Number, default: 0 },
+    associatedPages: { type: [String], default: [] },
   },
   { timestamps: true },
 );

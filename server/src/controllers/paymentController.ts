@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { Payment } from "../models/paymentModel.js";
 import { Restaurant } from "../models/restaurantModel.js";
 import { Plan } from "../models/planModel.js";
+import { Booking } from "../models/bookingModel.js";
+import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { stripeService } from "../services/stripeService.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
@@ -66,6 +68,45 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
 
     // Check if Stripe is configured
     const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
+
+    // If active Stripe subscription exists, UPDATE it instead of creating a new checkout session
+    if (restaurant.stripeSubscriptionId && stripeConfigured) {
+      if (plan.stripePriceId) {
+        try {
+          const subscription = await stripeService.retrieveSubscription(restaurant.stripeSubscriptionId);
+          const subscriptionItemId = (subscription as any).items?.data?.[0]?.id;
+
+          if (subscriptionItemId) {
+            // Update the subscription item with the new price
+            await stripeService.updateSubscriptionItem(subscriptionItemId, plan.stripePriceId);
+
+            restaurant.plan = plan._id as any;
+            await restaurant.save();
+
+            createLog({
+              message: `Subscription updated to ${plan.name} for restaurant ${restaurant.name} via createPayment`,
+              userId: req.userId,
+              level: logLevels.INFO,
+            });
+
+            res.status(200).json({ message: "Abonnement mis à jour avec succès", requiresStripe: false, updated: true });
+            return;
+          }
+        } catch (stripeError: any) {
+          res.status(500).json({ error: "Erreur lors de la mise à jour Stripe: " + stripeError.message });
+          return;
+        }
+      } else {
+        // User downgrades to a free plan (no stripePriceId)
+        try {
+          await stripeService.cancelSubscription(restaurant.stripeSubscriptionId);
+          restaurant.stripeSubscriptionId = null as any;
+        } catch (stripeError: any) {
+          res.status(500).json({ error: "Erreur lors de l'annulation Stripe: " + stripeError.message });
+          return;
+        }
+      }
+    }
 
     // If no active Stripe subscription and plan requires payment, launch Stripe checkout (if configured)
     if (!restaurant.stripeSubscriptionId && plan.price > 0 && plan.stripePriceId && stripeConfigured) {
@@ -266,6 +307,18 @@ export const cancelSubscription = async (req: Request, res: Response): Promise<v
     restaurant.stripeSubscriptionId = null as any; // Clear the subscription ID
 
     await restaurant.save();
+
+    // Cancel all future pending or confirmed bookings
+    await Booking.updateMany(
+      {
+        restaurant: id,
+        bookingDate: { $gte: new Date() },
+        status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
+      },
+      {
+        $set: { status: bookingStatus.CANCELLED },
+      },
+    );
 
     createLog({
       message: `Subscription cancelled for restaurant ${restaurant.name} - Restaurant is now closed and billing stopped`,
