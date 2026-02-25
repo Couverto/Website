@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 interface SEOProps {
   title?: string;
   description?: string;
+  keywords?: string;
   name?: string;
   type?: string;
   url?: string;
@@ -13,6 +14,7 @@ interface SEOProps {
 export const SEO = ({
   title = "Couverto - Gestion de restaurant simplifiée",
   description = "Boostez votre restaurant avec Couverto. La solution de gestion tout-en-un pour simplifier vos réservations, fidéliser vos clients et optimiser votre service.",
+  keywords,
   name = "Couverto",
   type = "website",
   url,
@@ -27,6 +29,7 @@ export const SEO = ({
       {/* Standard metadata tags */}
       <title>{title}</title>
       <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={fullUrl} />
 
       {/* Facebook tags */}

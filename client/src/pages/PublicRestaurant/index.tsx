@@ -163,11 +163,20 @@ export const PublicRestaurant = () => {
         : undefined,
   };
 
+  const keywords = `${restaurant.name}, restaurant, ${restaurant.city}, réservation, table${
+    Array.isArray(restaurant.cuisineType) && restaurant.cuisineType.length > 0
+      ? ", " + restaurant.cuisineType.join(", ")
+      : restaurant.cuisineType
+        ? ", " + restaurant.cuisineType
+        : ""
+  }`.trim();
+
   return (
     <div className="min-h-screen bg-background pb-20 relative">
       <SEO
         title={`${restaurant.name} - ${restaurant.city} - Réservation Couverto`}
         description={`Réservez une table chez ${restaurant.name} à ${restaurant.city}. ${Array.isArray(restaurant.cuisineType) ? restaurant.cuisineType.join(", ") : restaurant.cuisineType}. ${restaurant.description?.substring(0, 150) || ""}...`}
+        keywords={keywords}
         image={restaurant.coverImage}
         url={`/restaurants/infos/${restaurant._id}`}
         jsonLd={jsonLd}

@@ -11,10 +11,12 @@ export const LayoutWrapper = ({ withLayout = true }: LayoutWrapperProps) => {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
+  const isPublicRestaurant = location.pathname.startsWith("/restaurants/infos");
+
   return (
     <div className="flex flex-col min-h-screen">
       {withLayout && <Navbar />}
-      <main className={cn("flex-1", withLayout && !isHomePage && "pt-24")}>
+      <main className={cn("flex-1", withLayout && !isHomePage && !isPublicRestaurant && "pt-24")}>
         <Outlet />
       </main>
       {withLayout && <Footer />}
