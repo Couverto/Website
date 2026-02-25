@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, MessageSquare, Send, User } from "lucide-react";
+import { CopySlash, Mail, MessageSquare, Send, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ const contactSchema = z.object({
   email: z.string().email("Email invalide"),
   reason: z.string().min(1, "Ce champ est requis"),
   message: z.string().min(10, "Le message doit faire au moins 10 caractères"),
+  captchaAnswer: z.string().min(1, "Veuillez répondre à la question"),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -24,6 +25,8 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 export const Contact = () => {
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [num1, setNum1] = useState(Math.floor(Math.random() * 10) + 1);
+  const [num2, setNum2] = useState(Math.floor(Math.random() * 10) + 1);
 
   // Initialize form with default values
   const form = useForm<ContactFormValues>({
@@ -33,6 +36,7 @@ export const Contact = () => {
       email: "",
       reason: "",
       message: "",
+      captchaAnswer: "",
     },
   });
 
@@ -44,26 +48,44 @@ export const Contact = () => {
   }, [location.state, form]);
 
   const onSubmit = async (data: ContactFormValues) => {
+    // Validate captcha manually as zod validation operates on strings
+    if (parseInt(data.captchaAnswer) !== num1 + num2) {
+      form.setError("captchaAnswer", {
+        type: "manual",
+        message: "Réponse incorrecte",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("https://formspree.io/f/xreeorzo", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          reason: data.reason,
+          message: data.message,
+        }),
       });
 
       if (response.ok) {
         toast.success("Message envoyé ! Nous vous répondrons dans les plus brefs délais.");
         form.reset();
+        // Reset captcha for next potential submission
+        setNum1(Math.floor(Math.random() * 10) + 1);
+        setNum2(Math.floor(Math.random() * 10) + 1);
       } else {
-        throw new Error("Erreur lors de l'envoi");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "Erreur lors de l'envoi");
       }
-    } catch (error) {
-      toast.error("Une erreur est survenue lors de l'envoi du message. Veuillez réessayer.");
+    } catch (error: any) {
+      toast.error(error.message || "Une erreur est survenue lors de l'envoi du message. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -190,6 +212,22 @@ export const Contact = () => {
                           <FormLabel>{"Message"}</FormLabel>
                           <FormControl>
                             <Textarea placeholder={"Dites-nous en plus..."} className="min-h-[120px] resize-y" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="captchaAnswer"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{`Combien font ${num1} + ${num2} ?`}</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input className="pl-3" placeholder={"Votre réponse..."} type="number" {...field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
