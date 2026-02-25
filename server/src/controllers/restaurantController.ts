@@ -1338,7 +1338,8 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
 
     if (restaurant.features && restaurant.features.length > 0) {
       const { Feature } = await import("../models/featureModel.js");
-      const extraFeatures = await Feature.find({ _id: { $in: restaurant.features }, active: true });
+      // restaurant.features contains strings like "Terrasse", "Wifi"
+      const extraFeatures = await Feature.find({ name: { $in: restaurant.features }, active: true });
       extraFeatures.forEach((f) => {
         if (f.associatedPages && Array.isArray(f.associatedPages)) {
           f.associatedPages.forEach((p: string) => availablePages.add(p));
