@@ -1,29 +1,38 @@
-import { Constants } from "../constants/constants.js";
+import { baseEmailLayout } from "./baseEmail.js";
 
-export const verifyRestaurantEmailTemplate = ({ url, restaurantName }: { url: string; restaurantName: string }) => `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .button { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-    .footer { margin-top: 20px; font-size: 12px; color: #777; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2>Vérification de l'email de votre restaurant</h2>
-    <p>Bonjour,</p>
-    <p>Vous avez créé le restaurant <strong>${restaurantName}</strong> sur Couverto avec cette adresse email.</p>
-    <p>Pour finaliser la configuration et prouver que vous avez bien accès à cette boîte mail, veuillez cliquer sur le bouton ci-dessous :</p>
-    <p><a href="${url}" class="button">Vérifier mon email restaurant</a></p>
-    <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
-    <p>${url}</p>
-    <div class="footer">
-      <p>L'équipe Couverto</p>
+export const verifyRestaurantEmailTemplate = ({ url, restaurantName }: { url: string; restaurantName: string }) => {
+  const content = `
+    <h2>Bienvenue sur Couverto ! 🎉</h2>
+    
+    <p>Vous avez créé le restaurant suivant avec cette adresse email :</p>
+    
+    <div class="text-center my-4">
+      <p class="restaurant-name">${restaurantName}</p>
     </div>
-  </div>
-</body>
-</html>
-`;
+    
+    <div class="highlight-box">
+      <p>⚠️ Action requise : Veuillez vérifier votre email</p>
+    </div>
+    
+    <p>Pour finaliser la configuration et prouver que vous avez bien accès à cette boîte mail, veuillez cliquer sur le bouton ci-dessous :</p>
+    
+    <div class="text-center my-6">
+      <a href="${url}" class="button">
+        ✅ Vérifier mon adresse
+      </a>
+    </div>
+    
+    <p style="font-size: 14px; color: #6b7280; text-align: center;">
+      Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br/>
+      <a href="${url}" style="word-break: break-all;">${url}</a>
+    </p>
+    
+    <div class="divider"></div>
+    
+    <p style="font-size: 13px; color: #9ca3af; text-align: center;">
+      Merci d'avoir choisi Couverto pour la gestion de votre restaurant.
+    </p>
+  `;
+
+  return baseEmailLayout(content, `Vérification de l'email de votre restaurant - ${restaurantName}`);
+};
