@@ -146,6 +146,12 @@ export const AddRestaurantWizard = () => {
     const newErrors = { ...errors };
     Object.keys(data).forEach((key) => {
       delete newErrors[key];
+      // Also delete any nested keys starting with this key (e.g., 'socials.facebook')
+      Object.keys(newErrors).forEach((errKey) => {
+        if (errKey.startsWith(`${key}.`)) {
+          delete newErrors[errKey];
+        }
+      });
     });
     setErrors(newErrors);
   };

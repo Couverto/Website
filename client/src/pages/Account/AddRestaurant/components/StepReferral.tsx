@@ -30,9 +30,9 @@ export const StepReferral = ({ data, updateData, errors }: StepProps) => {
 
     const trimmedCode = code.trim();
 
-    // Reset if code is empty or too short
-    if (!trimmedCode || trimmedCode.length < 6) {
-      if (validated || referrer) {
+    // Reset if code is empty
+    if (!trimmedCode) {
+      if (validated || referrer || error) {
         setValidated(false);
         setReferrer(null);
         setError("");
