@@ -106,9 +106,19 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
   const { name, forename, email, username, password, role } = req.body;
 
   try {
-    if (email) {
+    const targetUser = await User.findById(id);
+    if (!targetUser) {
+      res.status(404).json({ error: "Utilisateur introuvable" });
+      return;
+    }
+
+    if (email && email.toLowerCase() !== targetUser.email) {
+      if (targetUser.auth_type === authTypes.GOOGLE) {
+        res.status(400).json({ error: "Impossible de modifier l'adresse email d'un compte lié à Google." });
+        return;
+      }
+
       const existingUserByEmail = await User.findOne({ email: email.toLowerCase(), _id: { $ne: id } });
-      console.log(email.toLowerCase());
       if (existingUserByEmail) {
         res.status(409).json({ error: "Cet email est déjà utilisé" });
         return;

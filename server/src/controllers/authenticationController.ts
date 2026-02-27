@@ -282,6 +282,21 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
         userId: user._id,
         level: logLevels.INFO,
       });
+    } else if (user.auth_type !== authTypes.GOOGLE) {
+      // Link the account to Google Auth permanently
+      user.auth_type = authTypes.GOOGLE;
+      if (!user.isVerified) {
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpire = undefined;
+      }
+      await user.save();
+
+      createLog({
+        message: `User ${user.username} linked their local account with Google`,
+        userId: user._id,
+        level: logLevels.INFO,
+      });
     }
 
     const accessToken = generateAccessToken(user._id);
