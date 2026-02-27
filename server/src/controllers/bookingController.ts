@@ -1079,3 +1079,289 @@ export const updateBookingTable = async (req: Request, res: Response): Promise<v
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function getAdminBookings
+ * @description Retrieves all bookings for the admin dashboard with pagination and search.
+ */
+export const getAdminBookings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { page, size } = getPaginationParams(req, 20);
+    const search = req.query.search as string;
+    const status = req.query.status as string;
+
+    const query: any = {};
+
+    if (status && Object.values(bookingStatus).includes(status as bookingStatus)) {
+      query.status = status;
+    }
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+      query.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
+    }
+
+    // Populate restaurant and user data
+    const bookings = await Booking.find(query)
+      .populate("restaurant", "name coverImage logo")
+      .populate("user", "name forename email avatar")
+      .sort({ createdAt: -1 })
+      .skip(page * size)
+      .limit(size);
+
+    const count = await Booking.countDocuments(query);
+
+    res.status(200).json({
+      bookings,
+      count,
+      page,
+      size,
+      totalPages: Math.ceil(count / size),
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function deleteBookingAdmin
+ * @description Deletes a booking from the database completely (admin only).
+ */
+export const deleteBookingAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable" });
+      return;
+    }
+
+    const restaurantDoc = await Restaurant.findById(booking.restaurant).select("name adress phone website");
+    const customerEmail = booking.customer?.email;
+
+    if (customerEmail && restaurantDoc && booking.status !== bookingStatus.CANCELLED) {
+      const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+      const { bookingCancellationTemplate } = await import("../templates/bookingCancellationEmail.js");
+      const htmlContent = bookingCancellationTemplate({
+        customerName: booking.customer.name,
+        restaurantName: restaurantDoc.name,
+        date: dateStr,
+        time: timeStr,
+        reason: "Suppression définitive par un administrateur",
+        address: restaurantDoc.adress,
+        phone: restaurantDoc.phone,
+        website: restaurantDoc.website,
+      });
+
+      const subject = `Réservation Supprimée - ${restaurantDoc.name}`;
+
+      await sendEmail({
+        email: customerEmail,
+        subject,
+        message: htmlContent,
+      });
+    }
+
+    await Booking.findByIdAndDelete(id);
+
+    // Attempt to notify the restaurant via socket if needed
+    try {
+      getIO()
+        .to(`restaurant_${booking.restaurant}`)
+        .emit("updateBooking", { ...booking.toObject(), status: "DELETED" });
+    } catch (e) {
+      // Ignore
+    }
+
+    createLog({
+      message: `Booking ${id} deleted by ADMIN`,
+      userId: req.userId,
+      level: logLevels.WARN,
+    });
+
+    res.status(200).json({ message: "Réservation supprimée définitivement" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function updateBookingNoteAdmin
+ * @description Updates the note of a booking (admin only).
+ */
+export const updateBookingNoteAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable" });
+      return;
+    }
+
+    booking.notes = notes;
+    await booking.save();
+
+    res.status(200).json({ booking, message: "Note mise à jour" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function sendBookingEmailAdmin
+ * @description Resends a confirmation/cancellation email to the client for the booking (admin only)
+ */
+export const sendBookingEmailAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable" });
+      return;
+    }
+
+    const restaurantDoc = await Restaurant.findById(booking.restaurant).select("name adress phone website");
+    const customerEmail = booking.customer?.email;
+
+    if (customerEmail && restaurantDoc) {
+      const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+      const isCancelled = booking.status === bookingStatus.CANCELLED;
+
+      let htmlContent = "";
+      let subject = "";
+
+      if (isCancelled) {
+        htmlContent = bookingCancellationTemplate({
+          customerName: booking.customer.name,
+          restaurantName: restaurantDoc.name,
+          date: dateStr,
+          time: timeStr,
+          reason: "Annulation - (Rappel Admin)",
+          address: restaurantDoc.adress,
+          phone: restaurantDoc.phone,
+          website: restaurantDoc.website,
+        });
+        subject = `Rappel d'annulation - ${restaurantDoc.name}`;
+      } else {
+        htmlContent = bookingConfirmationTemplate({
+          customerName: booking.customer.name,
+          restaurantName: restaurantDoc.name,
+          date: dateStr,
+          time: timeStr,
+          guests: booking.guests,
+          status: booking.status === bookingStatus.CONFIRMED ? "Confirmée" : "En attente",
+          isConfirmed: booking.status === bookingStatus.CONFIRMED,
+          address: restaurantDoc.adress,
+          phone: restaurantDoc.phone,
+          website: restaurantDoc.website,
+        });
+        subject = `Rappel de réservation - ${restaurantDoc.name}`;
+      }
+
+      await sendEmail({
+        email: customerEmail,
+        subject,
+        message: htmlContent,
+      });
+
+      res.status(200).json({ message: "Email envoyé avec succès" });
+    } else {
+      res.status(400).json({ error: "Impossible d'envoyer l'email : adresse email client ou informations du restaurant manquantes." });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function cancelBookingAdmin
+ * @description Cancels a booking and sends a cancellation email to the client (admin only)
+ */
+export const cancelBookingAdmin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable" });
+      return;
+    }
+
+    if (booking.status === bookingStatus.CANCELLED) {
+      res.status(400).json({ error: "Cette réservation est déjà annulée" });
+      return;
+    }
+
+    booking.status = bookingStatus.CANCELLED;
+    await booking.save();
+
+    const restaurantDoc = await Restaurant.findById(booking.restaurant).select("name adress phone website");
+    const customerEmail = booking.customer?.email;
+
+    if (customerEmail && restaurantDoc) {
+      const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+      const htmlContent = bookingCancellationTemplate({
+        customerName: booking.customer.name,
+        restaurantName: restaurantDoc.name,
+        date: dateStr,
+        time: timeStr,
+        reason: "Annulation par un administrateur",
+        address: restaurantDoc.adress,
+        phone: restaurantDoc.phone,
+        website: restaurantDoc.website,
+      });
+
+      const subject = `Réservation Annulée - ${restaurantDoc.name}`;
+
+      await sendEmail({
+        email: customerEmail,
+        subject,
+        message: htmlContent,
+      });
+    }
+
+    // Attempt to notify the restaurant via socket if needed
+    try {
+      getIO().to(`restaurant_${booking.restaurant}`).emit("updateBooking", booking);
+    } catch (e) {
+      // Ignore
+    }
+
+    createLog({
+      message: `Booking ${id} status cancelled by ADMIN`,
+      userId: req.userId,
+      level: logLevels.WARN,
+    });
+
+    res.status(200).json({ booking, message: "Réservation annulée avec succès" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

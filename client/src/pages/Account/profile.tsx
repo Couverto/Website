@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DeleteAccountForm } from "./components/deleteAccountForm";
+import { EmailVerificationSection } from "@/components/business/EmailVerificationSection";
 
 export const AccountProfile = () => {
   const { authUser, setAuthUser, loading } = useAuthContext();
@@ -33,6 +34,7 @@ export const AccountProfile = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [openUpdatePasswordDialog, setOpenUpdatePasswordDialog] = useState(false);
   const [openDeleteAccountDialog, setOpenDeleteAccountDialog] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(true);
 
   const updateAccountSchema = getUpdateAccountSchema();
   const updateForm = useForm<z.infer<typeof updateAccountSchema>>({
@@ -46,12 +48,23 @@ export const AccountProfile = () => {
     },
   });
 
+  const currentEmail = updateForm.watch("email");
+  const emailChanged = currentEmail !== authUser?.email;
+
   const onUpdateSubmit: SubmitHandler<z.infer<typeof updateAccountSchema>> = async (values) => {
+    if (emailChanged && !isEmailVerified) {
+      toast.error("Veuillez vérifier votre nouvelle adresse email avant d'enregistrer.");
+      return;
+    }
+
     try {
       setUpdateLoading(true);
       const response = await axiosConfig.put(`/users/${authUser?._id}`, values);
       toast.success(response.data.message || "Compte mis à jour");
       setAuthUser(response.data.user);
+      if (emailChanged) {
+        setIsEmailVerified(true);
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Une erreur est survenue");
     } finally {
@@ -203,11 +216,29 @@ export const AccountProfile = () => {
                     <FormControl>
                       <Input
                         placeholder="jean.dupont@gmail.com"
+                        disabled={authUser?.auth_type === "google"}
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (e.target.value !== authUser?.email) {
+                            setIsEmailVerified(false);
+                          } else {
+                            setIsEmailVerified(true);
+                          }
+                        }}
                         className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
                       />
                     </FormControl>
+                    {authUser?.auth_type === "google" && (
+                      <p className="text-sm text-foreground/60 mt-2">Votre email est lié à votre compte Google et ne peut être modifié.</p>
+                    )}
                     <FormMessage />
+
+                    {emailChanged && !isEmailVerified && currentEmail && !updateForm.formState.errors.email && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                        <EmailVerificationSection email={currentEmail} onSuccess={() => setIsEmailVerified(true)} context="account" />
+                      </div>
+                    )}
                   </FormItem>
                 )}
               />
@@ -251,7 +282,7 @@ export const AccountProfile = () => {
             <div className="pt-6">
               <Button
                 type="submit"
-                disabled={updateLoading}
+                disabled={updateLoading || (emailChanged && !isEmailVerified)}
                 className="w-full h-14 text-base font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
               >
                 {updateLoading ? "Mise à jour..." : "Enregistrer les modifications"}

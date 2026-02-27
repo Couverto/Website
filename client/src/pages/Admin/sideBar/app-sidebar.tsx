@@ -12,6 +12,7 @@ import {
   Zap,
   CreditCard,
   Gift,
+  CalendarDays,
 } from "lucide-react";
 import { NavMain } from "./nav-main";
 
@@ -42,6 +43,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Utilisateurs",
         url: "/admin/users",
         icon: Users,
+        roles: ["admin"],
+      },
+      {
+        title: "Réservations",
+        url: "/admin/bookings",
+        icon: CalendarDays,
         roles: ["admin"],
       },
       {

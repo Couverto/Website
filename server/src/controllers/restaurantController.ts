@@ -2142,10 +2142,21 @@ export const checkRestaurantUniqueness = async (req: Request, res: Response): Pr
  */
 export const sendRestaurantVerificationCode = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email } = req.body;
+    const { email, context = "restaurant" } = req.body;
     if (!email) {
       res.status(400).json({ error: "Email requis" });
       return;
+    }
+
+    if (context === "account") {
+      const userExists = await User.findOne({
+        email: email.toLowerCase(),
+        _id: { $ne: req.userId },
+      });
+      if (userExists) {
+        res.status(409).json({ error: "Cet email est déjà utilisé par un autre compte" });
+        return;
+      }
     }
 
     // Generate 6-digit code
@@ -2157,7 +2168,7 @@ export const sendRestaurantVerificationCode = async (req: Request, res: Response
     // Send email
     try {
       const { verificationCodeTemplate } = await import("../templates/verificationCodeTemplate.js");
-      const htmlContent = verificationCodeTemplate({ code });
+      const htmlContent = verificationCodeTemplate({ code, context });
       await sendEmail({
         email,
         subject: "Votre code de vérification - Couverto",

@@ -8,9 +8,10 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 interface EmailVerificationSectionProps {
   email: string;
   onSuccess: () => void;
+  context?: "restaurant" | "account";
 }
 
-export const EmailVerificationSection = ({ email, onSuccess }: EmailVerificationSectionProps) => {
+export const EmailVerificationSection = ({ email, onSuccess, context = "restaurant" }: EmailVerificationSectionProps) => {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState("");
@@ -19,7 +20,7 @@ export const EmailVerificationSection = ({ email, onSuccess }: EmailVerification
   const handleSendCode = async () => {
     setLoading(true);
     try {
-      await axiosConfig.post("/restaurants/send-verification-code", { email });
+      await axiosConfig.post("/restaurants/send-verification-code", { email, context });
       setSent(true);
       toast.success("Code envoyés à " + email);
     } catch (error: any) {

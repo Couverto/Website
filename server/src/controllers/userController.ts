@@ -52,16 +52,16 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     const existingUserByUsername = await User.findOne({ username: username.toLowerCase() });
 
     if (existingUserByEmail) {
-      res.status(409).json({ error: "server.users.errors.email_taken" });
+      res.status(409).json({ error: "Cet email est déjà utilisé" });
       return;
     }
     if (existingUserByUsername) {
-      res.status(409).json({ error: "server.users.errors.username_taken" });
+      res.status(409).json({ error: "Ce nom d'utilisateur est déjà pris" });
       return;
     }
 
     if (role && !Object.values(userRoles).includes(role)) {
-      res.status(400).json({ error: "server.users.errors.invalid_role" });
+      res.status(400).json({ error: "Rôle invalide" });
       return;
     }
 
@@ -110,7 +110,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       const existingUserByEmail = await User.findOne({ email: email.toLowerCase(), _id: { $ne: id } });
       console.log(email.toLowerCase());
       if (existingUserByEmail) {
-        res.status(409).json({ error: "server.users.errors.email_taken" });
+        res.status(409).json({ error: "Cet email est déjà utilisé" });
         return;
       }
     }
@@ -118,7 +118,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     if (username) {
       const existingUserByUsername = await User.findOne({ username: username.toLowerCase(), _id: { $ne: id } });
       if (existingUserByUsername) {
-        res.status(409).json({ error: "server.users.errors.username_taken" });
+        res.status(409).json({ error: "Ce nom d'utilisateur est déjà pris" });
         return;
       }
     }
@@ -127,7 +127,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     if (actionUser.role == userRoles.ADMIN) {
       if (role && !Object.values(userRoles).includes(role)) {
-        res.status(400).json({ error: "server.users.errors.invalid_role" });
+        res.status(400).json({ error: "Rôle invalide" });
         return;
       }
 

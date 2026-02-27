@@ -7,6 +7,7 @@ import React from "react";
 const segmentLabels: Record<string, string> = {
   dashboard: "Tableau de bord",
   users: "Utilisateurs",
+  bookings: "Réservations",
   restaurants: "Restaurants",
   plans: "Abonnements",
   features: "Fonctionnalités",
