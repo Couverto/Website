@@ -172,8 +172,8 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
             <Input
               id="capacity"
               type="number"
-              value={data.capacity}
-              onChange={(e) => updateData({ capacity: parseInt(e.target.value) || 0 })}
+              value={data.capacity || ""}
+              onChange={(e) => updateData({ capacity: e.target.value === "" ? ("" as any) : parseInt(e.target.value) })}
               placeholder="50"
               className={`pl-10 h-12 text-base transition-all ${errors?.capacity ? "border-red-500 bg-red-50/30" : "border-muted-foreground/20 focus:border-primary shadow-sm"}`}
             />
@@ -217,34 +217,45 @@ export const StepDetails = ({ data, updateData, errors }: StepProps) => {
             <div className="relative">
               <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
-                className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
+                className={`pl-10 h-11 transition-all shadow-sm ${errors?.["socials.facebook"] || (errors?.socials as any)?.facebook ? "border-red-500 bg-red-50/30" : "border-muted-foreground/10 focus:border-primary"}`}
                 placeholder="URL Facebook"
                 value={data.socials?.facebook || ""}
                 onChange={(e) => updateSocial("facebook", e.target.value)}
               />
             </div>
+            {(errors?.["socials.facebook"] || (errors?.socials as any)?.facebook) && (
+              <p className="text-xs font-medium text-red-500 px-1">{errors?.["socials.facebook"] || (errors?.socials as any)?.facebook}</p>
+            )}
           </div>
           <div className="space-y-2 group">
             <div className="relative">
               <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
-                className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
+                className={`pl-10 h-11 transition-all shadow-sm ${errors?.["socials.instagram"] || (errors?.socials as any)?.instagram ? "border-red-500 bg-red-50/30" : "border-muted-foreground/10 focus:border-primary"}`}
                 placeholder="URL Instagram"
                 value={data.socials?.instagram || ""}
                 onChange={(e) => updateSocial("instagram", e.target.value)}
               />
             </div>
+            {(errors?.["socials.instagram"] || (errors?.socials as any)?.instagram) && (
+              <p className="text-xs font-medium text-red-500 px-1">
+                {errors?.["socials.instagram"] || (errors?.socials as any)?.instagram}
+              </p>
+            )}
           </div>
           <div className="space-y-2 group">
             <div className="relative">
               <Music2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
-                className="pl-10 h-11 border-muted-foreground/10 focus:border-primary transition-all shadow-sm"
+                className={`pl-10 h-11 transition-all shadow-sm ${errors?.["socials.tiktok"] || (errors?.socials as any)?.tiktok ? "border-red-500 bg-red-50/30" : "border-muted-foreground/10 focus:border-primary"}`}
                 placeholder="URL Tiktok"
                 value={data.socials?.tiktok || ""}
                 onChange={(e) => updateSocial("tiktok", e.target.value)}
               />
             </div>
+            {(errors?.["socials.tiktok"] || (errors?.socials as any)?.tiktok) && (
+              <p className="text-xs font-medium text-red-500 px-1">{errors?.["socials.tiktok"] || (errors?.socials as any)?.tiktok}</p>
+            )}
           </div>
         </div>
       </div>

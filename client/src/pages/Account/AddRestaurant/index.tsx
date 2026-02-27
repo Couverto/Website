@@ -179,7 +179,7 @@ export const AddRestaurantWizard = () => {
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
-        fieldErrors[issue.path[0] as string] = issue.message;
+        fieldErrors[issue.path.join(".")] = issue.message;
       });
       setErrors(fieldErrors);
       toast.error("Veuillez corriger les erreurs avant de continuer");

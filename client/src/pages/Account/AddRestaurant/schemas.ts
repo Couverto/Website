@@ -27,7 +27,7 @@ export const getDetailsSchema = () =>
   z.object({
     features: z.array(z.string()).optional(),
     paymentMethods: z.array(z.string()).min(1, "Veuillez sélectionner au moins un moyen de paiement."),
-    capacity: z.number().min(1, "Au moins 1 couvert requis."),
+    capacity: z.coerce.number({ invalid_type_error: "La capacité doit être un nombre." }).min(1, "Au moins 1 couvert requis."),
     socials: z
       .object({
         facebook: z.string().url("URL Facebook invalide").optional().or(z.literal("")),
