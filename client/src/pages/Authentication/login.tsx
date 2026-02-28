@@ -125,8 +125,8 @@ export const Login = () => {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <Link to="/" className="lg:hidden flex items-center justify-center gap-3 mb-8 hover:opacity-80 transition-opacity">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-              <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6 text-primary-foreground" />
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <img src="/logos/logo.svg" alt="Couverto" className="h-6 w-6" />
             </div>
             <span className="text-3xl font-bold text-primary font-logo tracking-tight">Couverto</span>
           </Link>
