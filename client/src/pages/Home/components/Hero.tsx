@@ -121,11 +121,11 @@ export const Hero = () => {
         </div>
 
         <div className="flex flex-wrap justify-center gap-4 pt-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full whitespace-nowrap">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full whitespace-nowrap">
             <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
             Confirmation instantanée
           </div>
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/50 backdrop-blur-sm px-4 py-2 rounded-full">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground/80 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full">
             <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
             Sans frais de réservation
           </div>
