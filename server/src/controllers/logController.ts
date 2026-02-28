@@ -43,7 +43,16 @@ interface CreateLogParams {
  */
 export const createLog = async ({ message, userId, level }: CreateLogParams): Promise<void> => {
   try {
-    await Log.create({ message, user: userId, level });
+    const log = await Log.create({ message, user: userId, level });
+    const populatedLog = await log.populate("user");
+
+    import("../sockets/socket.js").then(({ getIO }) => {
+      try {
+        getIO().emit("newLog", populatedLog);
+      } catch (e) {
+        // io might not be initialized yet
+      }
+    });
   } catch (err: any) {
     console.error("createLog: Error creating log", err);
   }

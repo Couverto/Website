@@ -1,14 +1,17 @@
 import { axiosConfig } from "@/config/axiosConfig";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getColumns } from "./columns";
 import { DataTable } from "@/components/customs/dataTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSocketContext } from "@/contexts/socketContext";
 
 export const Logs = () => {
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [logCount, setLogCount] = useState(0);
+
+  const { socket } = useSocketContext();
 
   async function fetchAllLogs(page: number = 0, size: number = 10) {
     setLoading(true);
@@ -22,6 +25,19 @@ export const Logs = () => {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("newLog", (newLog: any) => {
+      setLogs((prevLogs) => [newLog, ...prevLogs]);
+      setLogCount((prevCount) => prevCount + 1);
+    });
+
+    return () => {
+      socket.off("newLog");
+    };
+  }, [socket]);
 
   async function deleteLog(logId: string) {
     try {
