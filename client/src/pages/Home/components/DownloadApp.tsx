@@ -47,42 +47,43 @@ export const DownloadApp = () => {
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
           {/* Content Side */}
           <div className="flex-1 space-y-8 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sm font-medium backdrop-blur-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-sm font-medium backdrop-blur-sm">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
               </span>
-              Disponible sur iOS & Android
+              <span className="text-amber-200 font-semibold tracking-wide">En cours de développement</span>
             </div>
 
             <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-white">
-              Téléchargez <span className="font-logo font-bold">Couverto</span> sur votre téléphone{" "}
+              Couverto arrive <span className="bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent">bientôt</span>
             </h2>
             <p className="max-w-[600px] mx-auto lg:mx-0 text-white/80 text-xl leading-relaxed">
-              <span className="font-logo font-bold">Couverto</span> est disponible sur votre portable gratuitement.
+              Nous préparons une expérience mobile sur-mesure. Bientôt, vous pourrez réserver vos tables préférées directement depuis votre
+              poche.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button
                 variant="secondary"
                 size="lg"
-                className="h-16 px-8 rounded-2xl gap-3 text-lg font-bold shadow-xl hover:scale-105 transition-transform"
+                className="h-16 px-8 rounded-2xl gap-3 text-lg font-bold shadow-xl opacity-80 cursor-default bg-white/5 border border-white/10 hover:bg-white/5 pointer-events-none"
               >
-                <Smartphone className="h-6 w-6" />
+                <Smartphone className="h-6 w-6 text-amber-400/80" />
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[10px] font-medium uppercase opacity-70 tracking-wider">Télécharger sur</span>
-                  <span className="text-lg leading-none font-bold">App Store</span>
+                  <span className="text-[10px] font-medium uppercase opacity-70 tracking-wider text-amber-200/80">Prochainement sur</span>
+                  <span className="text-lg leading-none font-bold text-white/90">App Store</span>
                 </div>
               </Button>
               <Button
                 variant="secondary"
                 size="lg"
-                className="h-16 px-8 rounded-2xl gap-3 text-lg font-bold shadow-xl hover:scale-105 transition-transform"
+                className="h-16 px-8 rounded-2xl gap-3 text-lg font-bold shadow-xl opacity-80 cursor-default bg-white/5 border border-white/10 hover:bg-white/5 pointer-events-none"
               >
-                <Smartphone className="h-6 w-6" />
+                <Smartphone className="h-6 w-6 text-amber-400/80" />
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="text-[10px] font-medium uppercase opacity-70 tracking-wider">DISPONIBLE SUR</span>
-                  <span className="text-lg leading-none font-bold">Google Play</span>
+                  <span className="text-[10px] font-medium uppercase opacity-70 tracking-wider text-amber-200/80">Prochainement sur</span>
+                  <span className="text-lg leading-none font-bold text-white/90">Google Play</span>
                 </div>
               </Button>
             </div>
