@@ -14,6 +14,8 @@ interface ImageUploadProps {
   aspectRatio?: "square" | "video" | "wide" | "auto";
   showPreview?: boolean;
   endpoint?: string;
+  multiple?: boolean;
+  onMultipleChange?: (urls: string[]) => void;
 }
 
 export const ImageUpload = ({
@@ -24,41 +26,88 @@ export const ImageUpload = ({
   aspectRatio = "auto",
   showPreview = true,
   endpoint = "/uploads/image",
+  multiple = false,
+  onMultipleChange,
 }: ImageUploadProps) => {
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      processFiles(files);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      processFiles(files);
+    }
+  };
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Veuillez sélectionner une image valide");
+  const processFiles = async (files: FileList) => {
+    const fileArray = Array.from(files);
+
+    // Validate files
+    const validFiles = fileArray.filter((file) => file.type.startsWith("image/") && file.size <= 5 * 1024 * 1024);
+
+    if (validFiles.length === 0) {
+      toast.error("Veuillez sélectionner des images valides (max 5MB)");
       return;
     }
 
-    // Validate file size (e.g. 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("L'image est trop volumineuse (max 5MB)");
-      return;
+    if (validFiles.length < fileArray.length) {
+      toast.error("Certaines images ont été ignorées (invalides ou trop volumineuses)");
     }
+
+    const filesToUpload = multiple ? validFiles : [validFiles[0]];
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append("image", file);
 
     try {
-      const response = await axiosConfig.post(endpoint, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      onChange(response.data.url);
-      toast.success("Image téléchargée avec succès");
+      if (multiple && onMultipleChange) {
+        const uploadPromises = filesToUpload.map(async (file) => {
+          const formData = new FormData();
+          formData.append("image", file);
+          const response = await axiosConfig.post(endpoint, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          return response.data.url;
+        });
+
+        const urls = await Promise.all(uploadPromises);
+        onMultipleChange(urls);
+        toast.success(`${urls.length} image(s) téléchargée(s) avec succès`);
+      } else {
+        const formData = new FormData();
+        formData.append("image", filesToUpload[0]);
+        const response = await axiosConfig.post(endpoint, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        onChange(response.data.url);
+        toast.success("Image téléchargée avec succès");
+      }
     } catch (error: any) {
       console.error("Upload failed", error);
-      toast.error("Erreur lors du téléchargement de l'image");
+      toast.error("Erreur lors du téléchargement");
     } finally {
       setLoading(false);
       if (fileInputRef.current) {
@@ -79,6 +128,7 @@ export const ImageUpload = ({
         onChange={handleFileChange}
         className="hidden"
         accept="image/png, image/jpeg, image/jpg, image/webp"
+        multiple={multiple}
       />
 
       {showPreview && value ? (
@@ -109,8 +159,12 @@ export const ImageUpload = ({
       ) : (
         <div
           onClick={triggerUpload}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
           className={cn(
-            "border-2 border-dashed border-muted-foreground/20 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-all group",
+            "border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group",
+            isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:bg-muted/50 hover:border-primary/50",
             aspectRatio === "square"
               ? "aspect-square"
               : aspectRatio === "video"

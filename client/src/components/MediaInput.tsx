@@ -12,6 +12,8 @@ interface MediaInputProps {
   placeholder?: string;
   endpoint?: string;
   aspectRatio?: "square" | "video" | "wide" | "auto";
+  multiple?: boolean;
+  onMultipleFileChange?: (urls: string[]) => void;
 }
 
 export const MediaInput = ({
@@ -22,6 +24,8 @@ export const MediaInput = ({
   placeholder = "Image",
   endpoint,
   aspectRatio = "auto",
+  multiple = false,
+  onMultipleFileChange,
 }: MediaInputProps) => {
   return (
     <Tabs defaultValue="upload" className="w-full">
@@ -43,7 +47,9 @@ export const MediaInput = ({
           aspectRatio={aspectRatio}
           showPreview={false} // We might want to handle preview outside or make it conditional
           endpoint={endpoint}
-          className="h-32" // Force compacter height
+          className="h-full min-h-[128px]" // Fills container if larger, else defaults to equivalent of h-32
+          multiple={multiple}
+          onMultipleChange={onMultipleFileChange}
         />
       </TabsContent>
 

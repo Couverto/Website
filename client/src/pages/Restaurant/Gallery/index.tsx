@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
-import { Loader2, ImageIcon, FileText, Trash2, X } from "lucide-react";
+import { Loader2, ImageIcon, FileText, X } from "lucide-react";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { MediaInput } from "@/components/MediaInput";
+import { RestaurantCard } from "@/pages/Home/components/RestaurantCard";
 
 export const RestaurantGallery = () => {
   const { id } = useParams();
@@ -18,6 +19,14 @@ export const RestaurantGallery = () => {
   // We use useForm mainly to hold the state and easy watch/setValue access
   const { setValue, watch, reset } = useForm<RestaurantInterface>({
     defaultValues: {
+      name: "",
+      city: "",
+      priceRange: "2",
+      rating: 0,
+      cuisineType: [],
+      shortDescription: "",
+      features: [],
+      isClosed: false,
       images: [],
       menu: [],
       coverImage: "",
@@ -103,6 +112,20 @@ export const RestaurantGallery = () => {
     );
   }
 
+  const mockRestaurant: any = {
+    ...watch(),
+    _id: id || "preview",
+    name: watch("name") || "Nom du restaurant",
+    city: watch("city") || "Ville",
+    priceRange: watch("priceRange") || "2",
+    rating: watch("rating") || 0,
+    cuisineType: watch("cuisineType")?.length ? watch("cuisineType") : ["Cuisine"],
+    shortDescription: watch("shortDescription") || "Description courte de votre établissement.",
+    features: watch("features") || [],
+    isClosed: watch("isClosed") || false,
+    isOpenNow: true,
+  };
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-20">
       <div>
@@ -137,31 +160,30 @@ export const RestaurantGallery = () => {
                 />
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground uppercase font-bold tracking-widest pl-1">Aperçu actuel</Label>
-                  <div className="relative aspect-video rounded-xl overflow-hidden bg-muted border shadow-sm group">
-                    {watch("coverImage") ? (
-                      <>
-                        <img
-                          src={watch("coverImage")}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          alt="Cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="h-[200px] w-full">
+                    <div className="relative rounded-xl overflow-hidden bg-muted border shadow-sm group h-full w-full flex items-center justify-center">
+                      {watch("coverImage") ? (
+                        <>
+                          <div className="pointer-events-none w-full h-full">
+                            <RestaurantCard restaurant={mockRestaurant as any} />
+                          </div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                           <Button
+                            type="button"
                             variant="destructive"
-                            size="sm"
+                            size="icon"
                             onClick={() => handleAutoSave("coverImage", "")}
-                            className="translate-y-4 group-hover:translate-y-0 transition-transform"
+                            className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 z-10"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Supprimer
+                            <X className="h-4 w-4" />
                           </Button>
+                        </>
+                      ) : (
+                        <div className="flex items-center justify-center text-muted-foreground w-full py-8">
+                          <ImageIcon className="h-12 w-12 opacity-20" />
                         </div>
-                      </>
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-muted-foreground">
-                        <ImageIcon className="h-12 w-12 opacity-20" />
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -181,6 +203,11 @@ export const RestaurantGallery = () => {
                     Ajouter une photo
                   </Label>
                   <MediaInput
+                    multiple={true}
+                    onMultipleFileChange={(urls) => {
+                      const current = watch("images") || [];
+                      handleAutoSave("images", [...current, ...urls]);
+                    }}
                     onFileChange={(url) => {
                       if (url) {
                         const current = watch("images") || [];
@@ -204,13 +231,16 @@ export const RestaurantGallery = () => {
                         className="relative group aspect-square bg-muted rounded-lg overflow-hidden border shadow-sm hover:shadow-md transition-all"
                       >
                         <img src={url} className="w-full h-full object-cover" alt="Gallery" />
-                        <button
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+                        <Button
                           type="button"
+                          variant="destructive"
+                          size="icon"
                           onClick={() => removeImage(idx)}
-                          className="absolute top-1 right-1 bg-black/50 hover:bg-destructive text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100"
+                          className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 z-10"
                         >
-                          <X className="h-3 w-3" />
-                        </button>
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                     {(!watch("images") || watch("images")?.length === 0) && (
@@ -237,6 +267,11 @@ export const RestaurantGallery = () => {
                     Ajouter une page
                   </Label>
                   <MediaInput
+                    multiple={true}
+                    onMultipleFileChange={(urls) => {
+                      const current = watch("menu") || [];
+                      handleAutoSave("menu", [...current, ...urls]);
+                    }}
                     onFileChange={(url) => {
                       if (url) {
                         const current = watch("menu") || [];
@@ -272,17 +307,16 @@ export const RestaurantGallery = () => {
                             </div>
                           )}
 
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="h-6 w-6 rounded-full"
-                              onClick={() => removeMenu(idx)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => removeMenu(idx)}
+                            className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 z-10"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
                       );
                     })}

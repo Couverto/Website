@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CopySlash, Mail, MessageSquare, Send, User } from "lucide-react";
+import { CopySlash, Mail, MessageSquare, Send, User, Linkedin } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,12 @@ const contactSchema = z.object({
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
+
+const DiscordIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" fill="currentColor" stroke="none" className={className}>
+    <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.2,46,96.09,53,91.08,65.69,84.69,65.69Z" />
+  </svg>
+);
 
 export const Contact = () => {
   const location = useLocation();
@@ -113,6 +119,44 @@ export const Contact = () => {
                   <div className="space-y-1 relative z-10">
                     <h3 className="font-semibold text-lg">{"Email"}</h3>
                     <p className="text-muted-foreground">contact@couverto.fr</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#5865F2]/5 border-[#5865F2]/10 shadow-sm relative overflow-hidden group hover:bg-[#5865F2]/10 transition-colors">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className="bg-[#5865F2]/20 p-3 rounded-full text-[#5865F2] shrink-0 group-hover:scale-110 transition-transform">
+                    <DiscordIcon className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1 relative z-10 flex flex-col justify-center">
+                    <h3 className="font-semibold text-lg text-[#5865F2]">{"Discord"}</h3>
+                    <a
+                      href="https://discord.gg/wfCgbEVM"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-[#5865F2] transition-colors mt-1 font-medium"
+                    >
+                      Rejoignez notre communauté
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#0077b5]/5 border-[#0077b5]/10 shadow-sm relative overflow-hidden group hover:bg-[#0077b5]/10 transition-colors">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className="bg-[#0077b5]/20 p-3 rounded-full text-[#0077b5] shrink-0 group-hover:scale-110 transition-transform">
+                    <Linkedin className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1 relative z-10 flex flex-col justify-center">
+                    <h3 className="font-semibold text-lg text-[#0077b5]">{"LinkedIn"}</h3>
+                    <a
+                      href="https://www.linkedin.com/company/couverto/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-[#0077b5] transition-colors mt-1 font-medium"
+                    >
+                      Suivez notre actualité
+                    </a>
                   </div>
                 </CardContent>
               </Card>
