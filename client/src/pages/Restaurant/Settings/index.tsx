@@ -290,6 +290,48 @@ export const RestaurantSettings = () => {
               </div>
             </div>
 
+            <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-base flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-primary" />
+                    Empreinte Bancaire (Stripe)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">Exiger une empreinte bancaire lors de la réservation en ligne.</p>
+                </div>
+                <Controller
+                  control={control}
+                  name="isBankImprintEnabled"
+                  render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+                />
+              </div>
+
+              {watch("isBankImprintEnabled") && (
+                <div className="pt-4 border-t border-primary/10 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-2 max-w-sm">
+                    <Label htmlFor="bankImprintAmount">Montant par personne (€)</Label>
+                    <div className="relative">
+                      <Input
+                        id="bankImprintAmount"
+                        type="number"
+                        {...register("bankImprintAmount")}
+                        placeholder="Ex: 10"
+                        className="pl-8"
+                      />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                    </div>
+                    {errors.bankImprintAmount && (
+                      <p className="text-xs font-medium text-red-500 mt-1">{errors.bankImprintAmount.message}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
+                      <span className="w-1 h-1 rounded-full bg-primary" />
+                      Sera bloqué via pré-autorisation Stripe. Aucun vrai débit sauf en cas de No-Show.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="adress">{"Adresse"}</Label>
               <Controller

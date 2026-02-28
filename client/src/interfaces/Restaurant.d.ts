@@ -23,6 +23,8 @@ export interface RestaurantInterface {
     tiktok?: string;
   };
   capacity: number;
+  isBankImprintEnabled?: boolean;
+  bankImprintAmount?: number;
   openingHours: Record<
     string,
     {

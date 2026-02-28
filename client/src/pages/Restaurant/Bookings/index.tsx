@@ -134,12 +134,12 @@ export const RestaurantBookings = () => {
 
   /* Dialogs State */
   const [selectedBooking, setSelectedBooking] = useState<BookingInterface | null>(null);
-  const [actionType, setActionType] = useState<"CONFIRM" | "CANCEL" | null>(null);
+  const [actionType, setActionType] = useState<"CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT" | null>(null);
   const [cancellationReason, setCancellationReason] = useState(
     "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
 
-  const handleAction = useCallback((action: "CONFIRM" | "CANCEL", booking: BookingInterface) => {
+  const handleAction = useCallback((action: "CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT", booking: BookingInterface) => {
     setSelectedBooking(booking);
     setActionType(action);
   }, []);
@@ -168,7 +168,35 @@ export const RestaurantBookings = () => {
     }
   };
 
-  const columns = useMemo(() => getColumns(handleAction, hasTablePlan), [handleAction, hasTablePlan]);
+  const handleCaptureImprint = async () => {
+    if (!selectedBooking) return;
+    try {
+      await api.post(`/bookings/restaurant/${id}/${selectedBooking._id}/capture-imprint`);
+      toast.success("Empreinte encaissée avec succès");
+      setBookings((prev) => prev.map((b) => (b._id === selectedBooking._id ? { ...b, bankImprintStatus: "captured" } : b)));
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Erreur lors de l'encaissement");
+    } finally {
+      setSelectedBooking(null);
+      setActionType(null);
+    }
+  };
+
+  const handleReleaseImprint = async () => {
+    if (!selectedBooking) return;
+    try {
+      await api.post(`/bookings/restaurant/${id}/${selectedBooking._id}/release-imprint`);
+      toast.success("Empreinte libérée");
+      setBookings((prev) => prev.map((b) => (b._id === selectedBooking._id ? { ...b, bankImprintStatus: "released" } : b)));
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Erreur lors de la libération");
+    } finally {
+      setSelectedBooking(null);
+      setActionType(null);
+    }
+  };
+
+  const columns = useMemo(() => getColumns(handleAction), [handleAction]);
 
   return (
     <div className="space-y-6">
@@ -255,6 +283,64 @@ export const RestaurantBookings = () => {
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Annuler la réservation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Capture Imprint Dialog */}
+      <AlertDialog open={actionType === "CAPTURE_IMPRINT"} onOpenChange={(open) => !open && setActionType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Encaisser l'empreinte bancaire ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous êtes sur le point d'encaisser l'empreinte de <strong>{selectedBooking?.bankImprintAmount}€</strong> pour la réservation
+              de{" "}
+              <strong>
+                {selectedBooking?.user
+                  ? `${selectedBooking?.user.forename} ${selectedBooking?.user.name}`
+                  : selectedBooking?.customer?.name}
+              </strong>
+              . Cette action est irréversible et doit être justifiée (ex: No-Show).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleCaptureImprint();
+              }}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmer l'encaissement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Release Imprint Dialog */}
+      <AlertDialog open={actionType === "RELEASE_IMPRINT"} onOpenChange={(open) => !open && setActionType(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Libérer l'empreinte bancaire ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous êtes sur le point d'annuler et libérer l'empreinte de <strong>{selectedBooking?.bankImprintAmount}€</strong>. Le client
+              ne sera pas débité.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleReleaseImprint();
+              }}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Libérer la caution
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

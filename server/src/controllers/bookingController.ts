@@ -12,6 +12,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 import { bookingConfirmationTemplate } from "../templates/bookingConfirmationEmail.js";
 import { bookingCancellationTemplate } from "../templates/bookingCancellationEmail.js";
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
+import { stripeService } from "../services/stripeService.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -36,19 +37,69 @@ function validateBookingTime(restaurant: any, bookingDate: string): boolean {
 }
 
 /**
+ * @function createSetupIntent
+ * @description Creates a Stripe SetupIntent for bank imprints before finalizing the booking.
+ */
+export const createSetupIntent = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { restaurantId, email, name } = req.body;
+
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      res.status(404).json({ error: "Restaurant introuvable" });
+      return;
+    }
+
+    if (!restaurant.isBankImprintEnabled) {
+      res.status(400).json({ error: "L'empreinte bancaire n'est pas activée pour ce restaurant." });
+      return;
+    }
+
+    // Attempt to find or create customer
+    let stripeCustomer;
+    try {
+      // Create a customer just for this imprint (we might reuse via user profile later)
+      stripeCustomer = await stripeService.createCustomer(email || "", name || "Client Couverto");
+    } catch (err) {
+      console.error("Failed to create Stripe Customer", err);
+      res.status(500).json({ error: "Erreur lors de la création du client Stripe" });
+      return;
+    }
+
+    const setupIntent = await stripeService.createSetupIntent(stripeCustomer.id, {
+      restaurantId: restaurant._id.toString(),
+      type: "bank_imprint",
+    });
+
+    res.status(200).json({
+      clientSecret: setupIntent.client_secret,
+      customerId: stripeCustomer.id,
+    });
+  } catch (error) {
+    console.error("Error creating SetupIntent:", error);
+    res.status(500).json({ error: "Erreur lors de l'initialisation du paiement sécurisé" });
+  }
+};
+
+/**
  * @function createBooking
  * @description Creates a new booking.
  * Handles both authenticated and guest users.
  */
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { restaurant, bookingDate, guests, customer, notes } = req.body;
+    const { restaurant, bookingDate, guests, customer, notes, stripeSetupIntentId, bankImprintAmount, stripeCustomerId } = req.body;
     const userId = req.userId; // Middleware should populate this if token present
 
     // Validate restaurant existence
     const restaurantExists = await Restaurant.findById(restaurant);
     if (!restaurantExists) {
       res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    if (restaurantExists.isBankImprintEnabled && !stripeSetupIntentId) {
+      res.status(400).json({ error: "Une empreinte bancaire est requise pour réserver dans cet établissement." });
       return;
     }
 
@@ -87,6 +138,10 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       customer,
       notes,
       user: userId || null,
+      stripeSetupIntentId: stripeSetupIntentId || undefined,
+      stripeCustomerId: stripeCustomerId || undefined,
+      bankImprintAmount: bankImprintAmount || undefined,
+      bankImprintStatus: stripeSetupIntentId ? "secured" : "none",
     };
 
     // If authenticated, we can optionally override customer info with user profile if not provided,
@@ -1392,5 +1447,91 @@ export const cancelBookingAdmin = async (req: Request, res: Response): Promise<v
     res.status(200).json({ booking, message: "Réservation annulée avec succès" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function captureBankImprint
+ * @description Capture the bank imprint for a No-Show
+ */
+export const captureBankImprint = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, bookingId } = req.params; // restaurant ID and booking ID
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable" });
+      return;
+    }
+
+    if (booking.restaurant.toString() !== id) {
+      res.status(403).json({ error: "Non autorisé" });
+      return;
+    }
+
+    if (
+      booking.bankImprintStatus !== "secured" ||
+      !booking.stripeSetupIntentId ||
+      !booking.bankImprintAmount ||
+      !booking.stripeCustomerId
+    ) {
+      res.status(400).json({ error: "Empreinte bancaire non valide pour cette réservation" });
+      return;
+    }
+
+    // Capture with Stripe
+    const paymentIntent = await stripeService.captureSetupIntent(
+      booking.stripeSetupIntentId,
+      booking.bankImprintAmount,
+      booking.stripeCustomerId,
+      {
+        bookingId: booking._id.toString(),
+        restaurantId: booking.restaurant.toString(),
+      },
+    );
+
+    booking.bankImprintStatus = "captured";
+    await booking.save();
+
+    res.status(200).json({ message: "Empreinte bancaire encaissée avec succès", booking });
+  } catch (error: any) {
+    console.error("Erreur lors de l'encaissement de l'empreinte:", error);
+    res.status(500).json({ error: error.message || "Erreur serveur" });
+  }
+};
+
+/**
+ * @function releaseBankImprint
+ * @description Release or cancel the bank imprint (e.g. customer showed up)
+ */
+export const releaseBankImprint = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable" });
+      return;
+    }
+
+    if (booking.restaurant.toString() !== id) {
+      res.status(403).json({ error: "Non autorisé" });
+      return;
+    }
+
+    if (booking.bankImprintStatus !== "secured" || !booking.stripeSetupIntentId) {
+      res.status(400).json({ error: "Empreinte bancaire non valide ou déjà traitée" });
+      return;
+    }
+
+    await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+
+    booking.bankImprintStatus = "released";
+    await booking.save();
+
+    res.status(200).json({ message: "Empreinte bancaire libérée avec succès", booking });
+  } catch (error: any) {
+    console.error("Erreur lors de la libération de l'empreinte:", error);
+    res.status(500).json({ error: error.message || "Erreur serveur" });
   }
 };

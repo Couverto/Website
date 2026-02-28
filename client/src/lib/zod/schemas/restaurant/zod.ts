@@ -16,6 +16,8 @@ export const getRestaurantSettingsSchema = () =>
         })
         .optional(),
       sendBookingEmail: z.boolean().optional(),
+      isBankImprintEnabled: z.boolean().optional(),
+      bankImprintAmount: z.coerce.number().min(0, { message: "Le montant ne peut pas être négatif." }).optional(),
       exceptionalClosures: z
         .array(
           z.object({

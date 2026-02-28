@@ -19,5 +19,9 @@ export interface IBooking {
   isDismissedByRestaurant?: boolean;
   reviewRequestSent?: boolean;
   createdAt?: Date;
+  stripeSetupIntentId?: string;
+  stripeCustomerId?: string;
+  bankImprintAmount?: number;
+  bankImprintStatus?: "none" | "secured" | "captured" | "released" | "in_progress";
   updatedAt?: Date;
 }

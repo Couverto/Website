@@ -31,6 +31,9 @@ export interface BookingInterface {
   tableLabel?: string;
   zoneName?: string;
   notes?: string;
+  bankImprintAmount?: number;
+  bankImprintStatus?: "none" | "secured" | "captured" | "released" | "in_progress";
+  stripeSetupIntentId?: string;
   isDismissedByRestaurant?: boolean;
   createdAt: string;
   updatedAt: string;

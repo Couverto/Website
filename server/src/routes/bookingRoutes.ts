@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createBooking,
+  createSetupIntent,
   getMyBookings,
   getBookingById,
   updateBooking,
@@ -11,11 +12,20 @@ import {
   updateBookingStatus,
   dismissBooking,
   updateBookingTable,
+  captureBankImprint,
+  releaseBankImprint,
 } from "../controllers/bookingController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 
 export const bookingRouter = express.Router();
+
+/**
+ * @route POST /api/bookings/setup-intent
+ * @desc Create a SetupIntent for a Bank Imprint
+ * @access Public
+ */
+bookingRouter.post("/setup-intent", createSetupIntent);
 
 /**
  * @route POST /api/bookings
@@ -124,4 +134,28 @@ bookingRouter.patch(
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
   updateBookingTable,
+);
+
+/**
+ * @route POST /api/bookings/restaurant/:id/:bookingId/capture-imprint
+ * @desc Capture a bank imprint
+ * @access Private (Collaborator)
+ */
+bookingRouter.post(
+  "/restaurant/:id/:bookingId/capture-imprint",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  captureBankImprint,
+);
+
+/**
+ * @route POST /api/bookings/restaurant/:id/:bookingId/release-imprint
+ * @desc Release a bank imprint
+ * @access Private (Collaborator)
+ */
+bookingRouter.post(
+  "/restaurant/:id/:bookingId/release-imprint",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER, restaurantRoles.EMPLOYEE]),
+  releaseBankImprint,
 );

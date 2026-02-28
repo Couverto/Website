@@ -29,6 +29,8 @@ const RestaurantSchema = new Schema<IRestaurant>(
       tiktok: { type: String, default: "" },
     },
     capacity: { type: Number, default: 0 },
+    isBankImprintEnabled: { type: Boolean, default: false },
+    bankImprintAmount: { type: Number, default: 0 },
     openingHours: {
       type: Map,
       of: {

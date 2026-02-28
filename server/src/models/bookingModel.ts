@@ -63,6 +63,20 @@ const bookingSchema = new Schema<IBooking>(
       default: false,
       index: true,
     },
+    stripeSetupIntentId: {
+      type: String,
+    },
+    stripeCustomerId: {
+      type: String,
+    },
+    bankImprintAmount: {
+      type: Number,
+    },
+    bankImprintStatus: {
+      type: String,
+      enum: ["none", "secured", "captured", "released", "in_progress"],
+      default: "none",
+    },
   },
   { timestamps: true },
 );

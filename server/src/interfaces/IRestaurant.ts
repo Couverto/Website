@@ -29,6 +29,8 @@ export interface IRestaurant extends Document {
     tiktok?: string;
   };
   capacity: number;
+  isBankImprintEnabled?: boolean;
+  bankImprintAmount?: number;
   openingHours: Record<
     string,
     {

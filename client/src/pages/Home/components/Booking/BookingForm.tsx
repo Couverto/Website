@@ -17,9 +17,14 @@ import { useAuthContext } from "@/contexts/authContext";
 import { useEffect, useState, useMemo } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DatePicker, { registerLocale } from "react-datepicker";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import { StripeImprintForm } from "./StripeImprintForm";
 
 // Register locale
 registerLocale("fr", fr);
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || "");
 
 interface BookingFormProps {
   restaurant: RestaurantInterface;
@@ -36,6 +41,11 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
   const [availability, setAvailability] = useState<Record<string, number>>({});
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [closedDays, setClosedDays] = useState<number[]>([]); // 0 = Sunday, 6 = Saturday
+
+  // Stripe Imprint states
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+  const [bookingPayload, setBookingPayload] = useState<any>(null);
 
   const form = useForm<CreateBookingSchema>({
     resolver: zodResolver(createBookingSchema),
@@ -177,6 +187,23 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
         notes: values.notes,
       };
 
+      if (restaurant.isBankImprintEnabled) {
+        try {
+          const setupRes = await axiosConfig.post("/bookings/setup-intent", {
+            restaurantId: restaurant._id,
+            email: values.customer.email,
+            name: values.customer.name,
+          });
+          setClientSecret(setupRes.data.clientSecret);
+          setStripeCustomerId(setupRes.data.customerId);
+          setBookingPayload(payload);
+          return; // Stop here, render Stripe
+        } catch (setupError: any) {
+          toast.error(setupError.response?.data?.error || "Erreur lors de l'initialisation du paiement sécurisé.");
+          return;
+        }
+      }
+
       const endpoint = user ? "/bookings" : "/bookings/guest";
       await axiosConfig.post(endpoint, payload);
       toast.success("Réservation créée avec succès !");
@@ -186,6 +213,37 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
       toast.error(error.response?.data?.error || "Erreur lors de la création de la réservation. Veuillez réessayer.");
     }
   };
+
+  if (clientSecret && bookingPayload && restaurant.isBankImprintEnabled) {
+    const totalAmount = (restaurant.bankImprintAmount || 0) * bookingPayload.guests;
+    return (
+      <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+        <StripeImprintForm
+          amount={totalAmount}
+          onCancel={() => {
+            setClientSecret(null);
+            setBookingPayload(null);
+          }}
+          onSuccess={async (setupIntentId) => {
+            try {
+              const finalPayload = {
+                ...bookingPayload,
+                stripeSetupIntentId: setupIntentId,
+                stripeCustomerId: stripeCustomerId,
+                bankImprintAmount: totalAmount,
+              };
+              const endpoint = user ? "/bookings" : "/bookings/guest";
+              await axiosConfig.post(endpoint, finalPayload);
+              toast.success("Réservation confirmée avec succès !");
+              onSuccess();
+            } catch (error: any) {
+              toast.error(error.response?.data?.error || "Erreur lors de l'enregistrement final de la réservation.");
+            }
+          }}
+        />
+      </Elements>
+    );
+  }
 
   return (
     <Form {...form}>

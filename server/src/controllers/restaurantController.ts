@@ -1997,6 +1997,8 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(req.body.socials && { socials: req.body.socials }),
         ...(req.body.capacity !== undefined && { capacity: req.body.capacity }),
         ...(req.body.exceptionalClosures && { exceptionalClosures: req.body.exceptionalClosures }),
+        ...(req.body.isBankImprintEnabled !== undefined && { isBankImprintEnabled: req.body.isBankImprintEnabled }),
+        ...(req.body.bankImprintAmount !== undefined && { bankImprintAmount: req.body.bankImprintAmount }),
       },
       { new: true },
     );

@@ -1,7 +1,21 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { MoreHorizontal, Check, X, Users, User as UserIcon, Calendar, Clock, Phone, ArrowUpDown, Loader2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  Check,
+  X,
+  Users,
+  User as UserIcon,
+  Calendar,
+  Clock,
+  Phone,
+  ArrowUpDown,
+  Loader2,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldBan,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,8 +31,7 @@ import { cn } from "@/lib/utils";
 import { BookingInterface } from "@/interfaces/Booking";
 
 export const getColumns = (
-  onAction: (action: "CONFIRM" | "CANCEL", booking: BookingInterface) => void,
-  hasTablePlan: boolean,
+  onAction: (action: "CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT", booking: BookingInterface) => void,
 ): ColumnDef<BookingInterface>[] => [
   {
     id: "name",
@@ -177,6 +190,8 @@ export const getColumns = (
     ),
     cell: ({ row }) => {
       const status = row.original.status;
+      const bankImprintStatus = row.original.bankImprintStatus;
+      const bankImprintAmount = row.original.bankImprintAmount;
       let colorClass = "bg-gray-500/10 text-gray-600 border-gray-500/20";
 
       switch (status) {
@@ -192,9 +207,33 @@ export const getColumns = (
       }
 
       return (
-        <Badge variant="secondary" className={cn("text-[10px] uppercase font-bold tracking-wider", colorClass)}>
-          {status === "PENDING" ? "En attente" : status === "CONFIRMED" ? "Confirmée" : status === "CANCELLED" ? "Annulée" : "Brouillon"}
-        </Badge>
+        <div className="flex flex-col gap-1.5 items-start">
+          <Badge variant="secondary" className={cn("text-[10px] uppercase font-bold tracking-wider", colorClass)}>
+            {status === "PENDING" ? "En attente" : status === "CONFIRMED" ? "Confirmée" : status === "CANCELLED" ? "Annulée" : "Brouillon"}
+          </Badge>
+
+          {bankImprintStatus && bankImprintStatus !== "none" && (
+            <Badge variant="outline" className="text-[9px] uppercase tracking-wider flex items-center gap-1 bg-background">
+              {bankImprintStatus === "secured" && (
+                <>
+                  <ShieldCheck className="h-3 w-3 text-blue-500" />{" "}
+                  <span className="text-blue-600 font-semibold">Caution : {bankImprintAmount}€</span>
+                </>
+              )}
+              {bankImprintStatus === "captured" && (
+                <>
+                  <ShieldAlert className="h-3 w-3 text-orange-500" />{" "}
+                  <span className="text-orange-600 font-semibold">Encaissée : {bankImprintAmount}€</span>
+                </>
+              )}
+              {bankImprintStatus === "released" && (
+                <>
+                  <ShieldBan className="h-3 w-3 text-muted-foreground" /> <span className="text-muted-foreground">Libérée</span>
+                </>
+              )}
+            </Badge>
+          )}
+        </div>
       );
     },
     meta: { label: "Statut" },
@@ -216,6 +255,30 @@ export const getColumns = (
           <DropdownMenuContent align="end" className="w-[160px]">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
+
+            {booking.bankImprintStatus === "secured" && (
+              <>
+                <DropdownMenuLabel className="p-0 py-1.5 px-2 text-[10px] text-muted-foreground uppercase font-bold flex items-center gap-2">
+                  <ShieldCheck className="h-3 w-3" />
+                  Empreinte Bancaire
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => setTimeout(() => onAction("CAPTURE_IMPRINT", booking), 100)}
+                  className="text-orange-600 focus:text-orange-700 focus:bg-orange-50/50 cursor-pointer text-xs"
+                >
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  Encaisser ({booking.bankImprintAmount}€)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTimeout(() => onAction("RELEASE_IMPRINT", booking), 100)}
+                  className="cursor-pointer text-muted-foreground focus:bg-muted/50 text-xs"
+                >
+                  <ShieldBan className="h-4 w-4 mr-2" />
+                  Libérer la caution
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
 
             {booking.status !== "CONFIRMED" && (
               <DropdownMenuItem

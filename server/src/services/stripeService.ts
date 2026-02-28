@@ -203,6 +203,66 @@ export const stripeService = {
   },
 
   /**
+   * Create a SetupIntent for securing a Bank Imprint.
+   */
+  createSetupIntent: async (customerId: string, metadata?: Record<string, string>) => {
+    return await stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ["card"],
+      metadata,
+    });
+  },
+
+  /**
+   * Create a PaymentIntent (to capture an imprint later)
+   */
+  createPaymentIntent: async (amount: number, customerId: string, paymentMethodId: string, metadata?: Record<string, string>) => {
+    return await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Stripe expects amounts in cents
+      currency: "eur",
+      customer: customerId,
+      payment_method: paymentMethodId,
+      off_session: true,
+      confirm: true,
+      metadata,
+    });
+  },
+
+  /**
+   * Capture a SetupIntent by creating a PaymentIntent
+   */
+  captureSetupIntent: async (setupIntentId: string, amount: number, customerId: string, metadata?: Record<string, string>) => {
+    // First, retrieve the setupIntent to get the payment method
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+    if (!setupIntent.payment_method) {
+      throw new Error("Aucun moyen de paiement lié à cette empreinte.");
+    }
+    const paymentMethodId = typeof setupIntent.payment_method === "string" ? setupIntent.payment_method : setupIntent.payment_method.id;
+
+    // Create and confirm a PaymentIntent using the saved payment method
+    return await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100),
+      currency: "eur",
+      customer: customerId,
+      payment_method: paymentMethodId,
+      off_session: true,
+      confirm: true,
+      metadata,
+    });
+  },
+
+  /**
+   * Cancel a SetupIntent (release the imprint)
+   */
+  cancelSetupIntent: async (setupIntentId: string) => {
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+    if (setupIntent.status === "requires_payment_method" || setupIntent.status === "requires_confirmation") {
+      return await stripe.setupIntents.cancel(setupIntentId);
+    }
+    return setupIntent; // Already succeeded or cancelled
+  },
+
+  /**
    * Construct webhook event
    */
   constructEvent: (payload: string | Buffer, sig: string, webhookSecret: string) => {
