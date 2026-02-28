@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useConfigContext } from "@/contexts/configContext";
 import { Linkedin } from "lucide-react";
 
@@ -12,6 +12,23 @@ export const Footer = () => {
   // const { configValues } = useConfigContext();
   const appName = "Couverto";
   const currentYear = new Date().getFullYear();
+  const { pathname } = useLocation();
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.includes("#")) {
+      const [path, hash] = href.split("#");
+      if (pathname === path || pathname === path + "/") {
+        e.preventDefault();
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+          window.history.pushState(null, "", href);
+        }
+      }
+    } else if (pathname === href || pathname === href + "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const footerLinks = {
     product: {
@@ -64,7 +81,11 @@ export const Footer = () => {
                 {section.links.map((link) => (
                   <li key={link.label}>
                     {link.href.startsWith("/") ? (
-                      <Link to={link.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={(e) => handleLinkClick(e, link.href)}
+                      >
                         {link.label}
                       </Link>
                     ) : (

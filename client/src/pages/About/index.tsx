@@ -58,7 +58,7 @@ export const About = () => {
   const team = [
     {
       name: "Axel Elias",
-      role: "CEO & Co-Founder",
+      role: "Directeur Général & Co-Fondateur",
       image: "/images/about/axel.jpeg",
       bio: "Étudiant à l’IMT Nord Europe en alternance au département du Nord en qualité de Data Engineer. Axel apporte sa vision technique et stratégique au projet.",
       links: {
@@ -69,7 +69,7 @@ export const About = () => {
     },
     {
       name: "Téo Villet",
-      role: "CTO & Co-Founder",
+      role: "Président & Co-Fondateur",
       image: "/images/about/teo.png",
       bio: "Développeur fullstack freelance basé à Grenoble, Téo apporte son expertise technique pour bâtir une plateforme performante et intuitive.",
       links: {

@@ -111,55 +111,51 @@ export const Contact = () => {
             </div>
 
             <div className="grid gap-6">
-              <Card className="bg-primary/5 border-primary/10 shadow-sm relative overflow-hidden group hover:bg-primary/10 transition-colors">
-                <CardContent className="p-6 flex items-start gap-4">
-                  <div className="bg-primary/20 p-3 rounded-full text-primary shrink-0 group-hover:scale-110 transition-transform">
-                    <Mail className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1 relative z-10">
-                    <h3 className="font-semibold text-lg">{"Email"}</h3>
-                    <p className="text-muted-foreground">contact@couverto.fr</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <a href="mailto:contact@couverto.fr" className="block outline-none">
+                <Card className="bg-primary/5 border-primary/10 shadow-sm relative overflow-hidden group hover:bg-primary/10 transition-colors">
+                  <CardContent className="p-6 flex items-start gap-4">
+                    <div className="bg-primary/20 p-3 rounded-full text-primary shrink-0 group-hover:scale-110 transition-transform">
+                      <Mail className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1 relative z-10 flex flex-col justify-center">
+                      <h3 className="font-semibold text-lg">{"Email"}</h3>
+                      <p className="text-muted-foreground">contact@couverto.fr</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
 
-              <Card className="bg-[#5865F2]/5 border-[#5865F2]/10 shadow-sm relative overflow-hidden group hover:bg-[#5865F2]/10 transition-colors">
-                <CardContent className="p-6 flex items-start gap-4">
-                  <div className="bg-[#5865F2]/20 p-3 rounded-full text-[#5865F2] shrink-0 group-hover:scale-110 transition-transform">
-                    <DiscordIcon className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1 relative z-10 flex flex-col justify-center">
-                    <h3 className="font-semibold text-lg text-[#5865F2]">{"Discord"}</h3>
-                    <a
-                      href="https://discord.gg/wfCgbEVM"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-[#5865F2] transition-colors mt-1 font-medium"
-                    >
-                      Rejoignez notre communauté
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
+              <a href="https://discord.gg/wfCgbEVM" target="_blank" rel="noopener noreferrer" className="block outline-none">
+                <Card className="bg-[#5865F2]/5 border-[#5865F2]/10 shadow-sm relative overflow-hidden group hover:bg-[#5865F2]/10 transition-colors">
+                  <CardContent className="p-6 flex items-start gap-4">
+                    <div className="bg-[#5865F2]/20 p-3 rounded-full text-[#5865F2] shrink-0 group-hover:scale-110 transition-transform">
+                      <DiscordIcon className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1 relative z-10 flex flex-col justify-center">
+                      <h3 className="font-semibold text-lg text-[#5865F2]">{"Discord"}</h3>
+                      <span className="text-muted-foreground group-hover:text-[#5865F2] transition-colors mt-1 font-medium">
+                        Rejoignez notre communauté
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
 
-              <Card className="bg-[#0077b5]/5 border-[#0077b5]/10 shadow-sm relative overflow-hidden group hover:bg-[#0077b5]/10 transition-colors">
-                <CardContent className="p-6 flex items-start gap-4">
-                  <div className="bg-[#0077b5]/20 p-3 rounded-full text-[#0077b5] shrink-0 group-hover:scale-110 transition-transform">
-                    <Linkedin className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1 relative z-10 flex flex-col justify-center">
-                    <h3 className="font-semibold text-lg text-[#0077b5]">{"LinkedIn"}</h3>
-                    <a
-                      href="https://www.linkedin.com/company/couverto/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-[#0077b5] transition-colors mt-1 font-medium"
-                    >
-                      Suivez notre actualité
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
+              <a href="https://www.linkedin.com/company/couverto/" target="_blank" rel="noopener noreferrer" className="block outline-none">
+                <Card className="bg-[#0077b5]/5 border-[#0077b5]/10 shadow-sm relative overflow-hidden group hover:bg-[#0077b5]/10 transition-colors">
+                  <CardContent className="p-6 flex items-start gap-4">
+                    <div className="bg-[#0077b5]/20 p-3 rounded-full text-[#0077b5] shrink-0 group-hover:scale-110 transition-transform">
+                      <Linkedin className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1 relative z-10 flex flex-col justify-center">
+                      <h3 className="font-semibold text-lg text-[#0077b5]">{"LinkedIn"}</h3>
+                      <span className="text-muted-foreground group-hover:text-[#0077b5] transition-colors mt-1 font-medium">
+                        Suivez notre actualité
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </a>
 
               <div className="bg-gradient-to-br from-primary to-primary/60 rounded-3xl p-8 text-primary-foreground relative overflow-hidden shadow-xl">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
