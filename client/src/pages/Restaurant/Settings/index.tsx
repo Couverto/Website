@@ -74,9 +74,11 @@ export const RestaurantSettings = () => {
   const [saving, setSaving] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [toggling, setToggling] = useState(false);
-  const { refreshRestaurant } = useOutletContext<{ refreshRestaurant: () => void }>();
+  const { refreshRestaurant, availablePages } = useOutletContext<{ refreshRestaurant: () => void; availablePages: string[] }>();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+
+  const hasTablePlan = availablePages?.includes("tablePlan");
 
   // Email verification state
   const [originalEmail, setOriginalEmail] = useState("");
@@ -353,22 +355,32 @@ export const RestaurantSettings = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-80">
                       <p className="text-xs text-muted-foreground">
-                        {
-                          "La capacité totale est calculée automatiquement à partir de la somme des sièges de toutes vos tables dans votre plan de salle."
-                        }
+                        {hasTablePlan
+                          ? "La capacité totale est calculée automatiquement à partir de la somme des sièges de toutes vos tables dans votre plan de salle."
+                          : "Définissez le nombre maximum de couverts que votre restaurant peut accueillir simultanément."}
                       </p>
                     </PopoverContent>
                   </Popover>
                 </Label>
                 <div className="relative">
-                  <Input id="capacity" type="number" {...register("capacity")} disabled className="bg-muted cursor-not-allowed pr-10" />
-                  <div className="absolute inset-y-0 right-3 flex items-center">
-                    <Check className="h-4 w-4 text-green-500" />
-                  </div>
+                  <Input
+                    id="capacity"
+                    type="number"
+                    {...register("capacity", { valueAsNumber: true })}
+                    disabled={hasTablePlan}
+                    className={hasTablePlan ? "bg-muted cursor-not-allowed pr-10" : "pr-10"}
+                  />
+                  {hasTablePlan && (
+                    <div className="absolute inset-y-0 right-3 flex items-center">
+                      <Check className="h-4 w-4 text-green-500" />
+                    </div>
+                  )}
                 </div>
                 <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                   <span className="w-1 h-1 rounded-full bg-primary" />
-                  {"Géré automatiquement via le plan de salle"}
+                  {hasTablePlan
+                    ? "Géré automatiquement via le plan de salle"
+                    : "Cette limite empêche de recevoir des réservations au-delà de la capacité de votre restaurant"}
                 </p>
               </div>
             </div>

@@ -16,7 +16,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { BookingInterface } from "@/interfaces/Booking";
 
-export const getColumns = (onAction: (action: "CONFIRM" | "CANCEL", booking: BookingInterface) => void): ColumnDef<BookingInterface>[] => [
+export const getColumns = (
+  onAction: (action: "CONFIRM" | "CANCEL", booking: BookingInterface) => void,
+  hasTablePlan: boolean,
+): ColumnDef<BookingInterface>[] => [
   {
     id: "name",
     accessorFn: (row) => (row.user ? `${row.user.forename} ${row.user.name}` : row.customer.name),
@@ -136,30 +139,34 @@ export const getColumns = (onAction: (action: "CONFIRM" | "CANCEL", booking: Boo
     },
     meta: { label: "Couverts" },
   },
-  {
-    id: "table",
-    accessorFn: (row) => row.tableLabel || "Non assignée",
-    header: ({ column }) => (
-      <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-        {"Table"}
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const booking = row.original;
-      if (!booking.tableLabel) {
-        return <span className="text-xs text-muted-foreground italic tracking-tight">Non assignée</span>;
-      }
+  ...(hasTablePlan
+    ? [
+        {
+          id: "table",
+          accessorFn: (row: BookingInterface) => row.tableLabel || "Non assignée",
+          header: ({ column }: any) => (
+            <Button variant="ghost" className="hover:text-primary" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+              {"Table"}
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          ),
+          cell: ({ row }: any) => {
+            const booking = row.original;
+            if (!booking.tableLabel) {
+              return <span className="text-xs text-muted-foreground italic tracking-tight">Non assignée</span>;
+            }
 
-      return (
-        <div className="flex flex-col">
-          <span className="font-semibold text-primary/80 text-sm">{booking.tableLabel}</span>
-          {booking.zoneName && <span className="text-[10px] text-muted-foreground uppercase font-medium">{booking.zoneName}</span>}
-        </div>
-      );
-    },
-    meta: { label: "Table" },
-  },
+            return (
+              <div className="flex flex-col">
+                <span className="font-semibold text-primary/80 text-sm">{booking.tableLabel}</span>
+                {booking.zoneName && <span className="text-[10px] text-muted-foreground uppercase font-medium">{booking.zoneName}</span>}
+              </div>
+            );
+          },
+          meta: { label: "Table" },
+        } as ColumnDef<BookingInterface>,
+      ]
+    : []),
   {
     accessorKey: "status",
     header: ({ column }) => (

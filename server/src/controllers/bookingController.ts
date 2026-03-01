@@ -159,8 +159,37 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       // Auto-confirm if within capacity
       bookingData.status = bookingStatus.CONFIRMED;
 
+      // Extract available pages to check for tablePlan feature
+      const availablePages = new Set<string>();
+
+      // Populate is not needed directly here if we just do a separate lookup, but restaurantExists isn't populated with plan.
+      // Let's do a quick lookup if there's a plan
+      if (restaurantExists.plan) {
+        const { Plan } = await import("../models/planModel.js");
+        const plan = await Plan.findById(restaurantExists.plan).populate("features");
+        if (plan && plan.features) {
+          (plan as any).features.forEach((f: any) => {
+            if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
+              f.associatedPages.forEach((p: string) => availablePages.add(p));
+            }
+          });
+        }
+      }
+
+      if (restaurantExists.features && restaurantExists.features.length > 0) {
+        const { Feature } = await import("../models/featureModel.js");
+        const extraFeatures = await Feature.find({ name: { $in: restaurantExists.features }, active: true });
+        extraFeatures.forEach((f) => {
+          if (f.associatedPages && Array.isArray(f.associatedPages)) {
+            f.associatedPages.forEach((p: string) => availablePages.add(p));
+          }
+        });
+      }
+
+      const hasTablePlanFeature = availablePages.has("tablePlan");
+
       // Table Auto-Assignment Logic
-      if (restaurantExists.zones && restaurantExists.zones.length > 0) {
+      if (hasTablePlanFeature && restaurantExists.zones && restaurantExists.zones.length > 0) {
         // Get all tables from all zones
         const allTables: any[] = [];
         restaurantExists.zones.forEach((zone: any, index: number) => {

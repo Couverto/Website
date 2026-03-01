@@ -832,7 +832,12 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
 export const toggleRestaurantClosed = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
-    const restaurant = await Restaurant.findById(id);
+    const restaurant = await Restaurant.findById(id).populate({
+      path: "plan",
+      populate: {
+        path: "features",
+      },
+    });
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
@@ -876,15 +881,47 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
         return;
       }
 
-      // Check for table plan in zones (preferred) or legacy tablePlan
-      const hasTablesInZones = restaurant.zones && restaurant.zones.some((z) => z.tables && z.tables.length > 0);
-      const hasLegacyTables = restaurant.tablePlan && restaurant.tablePlan.length > 0;
+      // Compute available pages
+      const availablePages = new Set<string>();
 
-      if (!hasTablesInZones && !hasLegacyTables) {
-        res.status(400).json({
-          error: "Impossible d'ouvrir le restaurant. Vous devez d'abord configurer votre plan de salle avec au moins une table.",
+      if (restaurant.plan && (restaurant.plan as any).features) {
+        (restaurant.plan as any).features.forEach((f: any) => {
+          if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
+            f.associatedPages.forEach((p: string) => availablePages.add(p));
+          }
         });
-        return;
+      }
+
+      if (restaurant.features && restaurant.features.length > 0) {
+        const { Feature } = await import("../models/featureModel.js");
+        const extraFeatures = await Feature.find({ name: { $in: restaurant.features }, active: true });
+        extraFeatures.forEach((f) => {
+          if (f.associatedPages && Array.isArray(f.associatedPages)) {
+            f.associatedPages.forEach((p: string) => availablePages.add(p));
+          }
+        });
+      }
+
+      const hasTablePlanFeature = availablePages.has("tablePlan");
+
+      if (hasTablePlanFeature) {
+        // Check for table plan in zones (preferred) or legacy tablePlan
+        const hasTablesInZones = restaurant.zones && restaurant.zones.some((z) => z.tables && z.tables.length > 0);
+        const hasLegacyTables = restaurant.tablePlan && restaurant.tablePlan.length > 0;
+
+        if (!hasTablesInZones && !hasLegacyTables) {
+          res.status(400).json({
+            error: "Impossible d'ouvrir le restaurant. Vous devez d'abord configurer votre plan de salle avec au moins une table.",
+          });
+          return;
+        }
+      } else {
+        if (!restaurant.capacity || restaurant.capacity <= 0) {
+          res.status(400).json({
+            error: "Impossible d'ouvrir le restaurant. Vous devez d'abord définir la capacité de votre restaurant dans les Paramètres.",
+          });
+          return;
+        }
       }
     }
 

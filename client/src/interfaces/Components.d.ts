@@ -19,6 +19,8 @@ export interface CuisineSelectorProps {
 
 export interface RestaurantContext {
   restaurant: RestaurantInterface;
+  availablePages?: string[];
+  refreshRestaurant?: () => void;
 }
 
 export interface BookingDialogProps {

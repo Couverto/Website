@@ -16,6 +16,7 @@ import {
   Layout,
   MessageSquare,
   MoveHorizontal,
+  Phone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -59,6 +60,8 @@ export const RestaurantDashboard = () => {
   const [cancellationReason, setCancellationReason] = useState(
     "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
+
+  const hasTablePlan = context?.availablePages?.includes("tablePlan");
 
   const fetchStats = useCallback(async () => {
     try {
@@ -286,12 +289,12 @@ export const RestaurantDashboard = () => {
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Left Column: Table Plan Map */}
-        {context?.restaurant && (
+        {hasTablePlan && context?.restaurant && (
           <DashboardTablePlan restaurant={context.restaurant} bookings={stats?.activeBookings || []} onDismiss={handleDismissBooking} />
         )}
 
         {/* Right Column: Recent Bookings */}
-        <Card className="col-span-1 border-primary/10 shadow-sm overflow-hidden flex flex-col">
+        <Card className={cn("border-primary/10 shadow-sm overflow-hidden flex flex-col", hasTablePlan ? "col-span-1" : "lg:col-span-3")}>
           <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
             <div className="flex items-center justify-between">
               <div>
@@ -309,7 +312,14 @@ export const RestaurantDashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0 flex-1 overflow-hidden">
-            <div className="divide-y max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20">
+            <div
+              className={cn(
+                "max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20",
+                hasTablePlan
+                  ? "divide-y"
+                  : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-4 min-h-[300px] content-start",
+              )}
+            >
               {recentBookings.length === 0 ? (
                 <div className="text-center py-20 px-4">
                   <Info className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
@@ -326,8 +336,15 @@ export const RestaurantDashboard = () => {
                     <div
                       key={booking._id}
                       className={cn(
-                        "group flex flex-col p-4 gap-3 hover:bg-muted/20 transition-all border-l-4",
-                        newBookingIds.has(booking._id) ? "bg-primary/5 border-l-primary" : "border-l-transparent",
+                        "group flex flex-col transition-all relative overflow-hidden",
+                        hasTablePlan
+                          ? "p-4 gap-3 border-l-4 hover:bg-muted/20"
+                          : "p-4 gap-4 rounded-xl border bg-card/60 shadow-sm hover:shadow hover:bg-muted/10 border-l-4",
+                        newBookingIds.has(booking._id)
+                          ? "bg-primary/5 border-l-primary"
+                          : hasTablePlan
+                            ? "border-l-transparent"
+                            : "border-l-muted-foreground/20",
                         isPending && "border-l-yellow-500",
                         isConfirmed && "border-l-green-500",
                         isCancelled && "border-l-red-500 opacity-60",
@@ -363,7 +380,13 @@ export const RestaurantDashboard = () => {
                               <Users className="h-3 w-3" />
                               {booking.guests}
                             </span>
-                            {booking.tableLabel && (
+                            {!hasTablePlan && booking.customer.phone && (
+                              <span className="flex items-center gap-1 font-medium text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded border border-muted/50">
+                                <Phone className="h-3 w-3" />
+                                {booking.customer.phone}
+                              </span>
+                            )}
+                            {hasTablePlan && booking.tableLabel && (
                               <span className="flex items-center gap-1 text-primary font-bold bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
                                 <Armchair className="h-3 w-3" />
                                 {booking.tableLabel}
@@ -404,7 +427,7 @@ export const RestaurantDashboard = () => {
                             <X className="h-3 w-3 mr-1" />
                             {isPending ? "Refuser" : "Annuler"}
                           </Button>
-                          {isConfirmed && (
+                          {hasTablePlan && isConfirmed && (
                             <Button
                               size="sm"
                               variant="outline"
