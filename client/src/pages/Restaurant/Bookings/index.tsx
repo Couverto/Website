@@ -1,21 +1,14 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Search, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSocketContext } from "@/contexts/socketContext";
 import { BookingInterface, BookingStatus } from "@/interfaces/Booking";
 import { RestaurantContext } from "@/interfaces/Components";
-import { cn } from "@/lib/utils";
 import { DataTable } from "@/components/customs/dataTable";
 import { getColumns } from "./columns";
+import { useOutletContext } from "react-router-dom";
 import { useOutletContext } from "react-router-dom";
 
 import {
@@ -32,6 +25,7 @@ import {
 export const RestaurantBookings = () => {
   const { id } = useParams();
   const { availablePages } = useOutletContext<RestaurantContext>();
+  const { availablePages } = useOutletContext<RestaurantContext>();
   const { socket } = useSocketContext();
   const [bookings, setBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +33,8 @@ export const RestaurantBookings = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [count, setCount] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+
+  const hasTablePlan = availablePages?.includes("tablePlan") ?? false;
 
   const hasTablePlan = availablePages?.includes("tablePlan") ?? false;
 
@@ -196,7 +192,7 @@ export const RestaurantBookings = () => {
     }
   };
 
-  const columns = useMemo(() => getColumns(handleAction), [handleAction]);
+  const columns = useMemo(() => getColumns(handleAction, hasTablePlan), [handleAction, hasTablePlan]);
 
   return (
     <div className="space-y-6">
@@ -225,6 +221,7 @@ export const RestaurantBookings = () => {
             <AlertDialogTitle>Confirmer la réservation ?</AlertDialogTitle>
             <AlertDialogDescription>
               Cette action changera le statut de la réservation à "Confirmée" et informera le client.
+              {hasTablePlan && selectedBooking?.tableLabel && (
               {hasTablePlan && selectedBooking?.tableLabel && (
                 <div className="mt-2 p-2 bg-primary/5 border border-primary/10 rounded-md">
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">Table assignée:</span>

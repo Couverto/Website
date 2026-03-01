@@ -32,6 +32,7 @@ import { BookingInterface } from "@/interfaces/Booking";
 
 export const getColumns = (
   onAction: (action: "CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT", booking: BookingInterface) => void,
+  hasTablePlan: boolean,
 ): ColumnDef<BookingInterface>[] => [
   {
     id: "name",
