@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useConfigContext } from "@/contexts/configContext";
-import { Linkedin } from "lucide-react";
+import { Linkedin, Github } from "lucide-react";
 
 const DiscordIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" fill="currentColor" stroke="none" className={className}>
@@ -123,6 +123,15 @@ export const Footer = () => {
             >
               <Linkedin className="h-5 w-5" />
               <span className="sr-only">LinkedIn</span>
+            </a>
+            <a
+              href="https://github.com/Couverto"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Github className="h-5 w-5" />
+              <span className="sr-only">GitHub</span>
             </a>
           </div>
           <p>{"Fait avec soin pour les restaurateurs indépendants 🇫🇷"}</p>
