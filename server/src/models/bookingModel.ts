@@ -77,6 +77,10 @@ const bookingSchema = new Schema<IBooking>(
       enum: ["none", "secured", "captured", "released", "in_progress"],
       default: "none",
     },
+    bankImprintTransferred: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );

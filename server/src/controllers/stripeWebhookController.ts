@@ -285,6 +285,33 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       }
       break;
     }
+
+    case "account.updated": {
+      const account = event.data.object as any;
+      console.log(`[Stripe Webhook] Connect Account updated: ${account.id}`);
+
+      // Check if onboarding is complete
+      if (account.charges_enabled && account.details_submitted) {
+        try {
+          const restaurant = await Restaurant.findOne({ stripeAccountId: account.id });
+          if (restaurant && !restaurant.stripeConnectEnabled) {
+            restaurant.stripeConnectEnabled = true;
+            await restaurant.save();
+            console.log(`[Stripe Webhook] Restaurant ${restaurant.name} fully onboarded to Stripe Connect`);
+
+            createLog({
+              message: `Restaurant '${restaurant.name}' a terminé son intégration Stripe Connect`,
+              userId: (restaurant.collaborators?.[0] as any) || restaurant._id,
+              level: logLevels.INFO,
+            });
+          }
+        } catch (error) {
+          console.error("[Stripe Webhook] Error updating restaurant Connect status:", error);
+        }
+      }
+      break;
+    }
+
     default:
       console.log(`Unhandled event type ${event.type}`);
   }

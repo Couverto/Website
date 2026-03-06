@@ -57,6 +57,8 @@ export interface RestaurantInterface {
   };
   referrals?: string[];
   subscriptionStartDelay?: number;
+  stripeAccountId?: string;
+  stripeConnectEnabled?: boolean;
 
   zones: {
     id: string;

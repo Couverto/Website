@@ -4,6 +4,7 @@ import { connectToDatabase } from "./database/connectToDB.js";
 import { initSockets } from "./sockets/socket.js";
 import { initReviewScheduler } from "./cron/reviewScheduler.js";
 import { initCleanupUnverifiedUsers } from "./cron/cleanupUnverifiedUsers.js";
+import { initBankImprintTransfer } from "./cron/bankImprintTransfer.js";
 
 /**
  * Initializes the HTTP server, connects to the database, and sets up WebSockets.
@@ -21,6 +22,7 @@ export function initServer() {
   // Initialize Cron Jobs
   initReviewScheduler();
   initCleanupUnverifiedUsers();
+  initBankImprintTransfer();
 
   // Ensure the PORT environment variable is defined
   if (!process.env.PORT) {

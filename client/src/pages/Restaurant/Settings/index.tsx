@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useParams, useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,6 +79,20 @@ export const RestaurantSettings = () => {
   const [deleting, setDeleting] = useState(false);
 
   const hasTablePlan = availablePages?.includes("tablePlan");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const connectStatus = searchParams.get("connect");
+    if (connectStatus === "return") {
+      toast.success("Retour de Stripe Connect. Vos informations sont en cours de validation.");
+      searchParams.delete("connect");
+      setSearchParams(searchParams, { replace: true });
+    } else if (connectStatus === "refresh") {
+      toast.error("Configuration Stripe interrompue. Veuillez réessayer.");
+      searchParams.delete("connect");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Email verification state
   const [originalEmail, setOriginalEmail] = useState("");
@@ -295,15 +309,33 @@ export const RestaurantSettings = () => {
                 <div className="space-y-0.5">
                   <Label className="text-base flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-primary" />
-                    Empreinte Bancaire (Stripe)
+                    Empreinte Bancaire
                   </Label>
                   <p className="text-sm text-muted-foreground">Exiger une empreinte bancaire lors de la réservation en ligne.</p>
                 </div>
-                <Controller
-                  control={control}
-                  name="isBankImprintEnabled"
-                  render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-                />
+                {watch("stripeConnectEnabled") ? (
+                  <Controller
+                    control={control}
+                    name="isBankImprintEnabled"
+                    render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+                  />
+                ) : (
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const res = await api.post(`/restaurants/${id}/stripe-connect`);
+                        window.location.href = res.data.url;
+                      } catch (error: any) {
+                        toast.error(error.response?.data?.error || "Erreur de connexion à Stripe");
+                      }
+                    }}
+                  >
+                    Configurer Stripe
+                  </Button>
+                )}
               </div>
 
               {watch("isBankImprintEnabled") && (

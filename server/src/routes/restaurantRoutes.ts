@@ -20,6 +20,7 @@ import {
   sendRestaurantVerificationCode,
   verifyRestaurantVerificationCode,
 } from "../controllers/restaurantController.js";
+import { createConnectAccountLink } from "../controllers/stripeConnectController.js";
 import {
   createInvitation,
   getInvitations,
@@ -84,6 +85,7 @@ restaurantRouter.patch(
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
   toggleRestaurantClosed,
 );
+restaurantRouter.post("/:id/stripe-connect", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), createConnectAccountLink);
 
 // Collaborator management
 restaurantRouter.get(

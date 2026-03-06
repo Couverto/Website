@@ -268,4 +268,50 @@ export const stripeService = {
   constructEvent: (payload: string | Buffer, sig: string, webhookSecret: string) => {
     return stripe.webhooks.constructEvent(payload, sig, webhookSecret);
   },
+
+  /**
+   * Create a Stripe Connect Express account for a restaurant
+   */
+  createConnectAccount: async (email: string) => {
+    return await stripe.accounts.create({
+      type: "express",
+      email,
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      business_type: "company",
+    });
+  },
+
+  /**
+   * Retrieve a Connect Account
+   */
+  retrieveAccount: async (accountId: string) => {
+    return await stripe.accounts.retrieve(accountId);
+  },
+
+  /**
+   * Create an Account Link for onboarding a Connect account
+   */
+  createAccountLink: async (accountId: string, refreshUrl: string, returnUrl: string) => {
+    return await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+      type: "account_onboarding",
+    });
+  },
+
+  /**
+   * Transfer funds to a Connected account
+   */
+  createTransfer: async (amount: number, destinationAccountId: string, metadata?: Record<string, string>) => {
+    return await stripe.transfers.create({
+      amount: Math.round(amount * 100), // in cents
+      currency: "eur",
+      destination: destinationAccountId,
+      metadata,
+    });
+  },
 };

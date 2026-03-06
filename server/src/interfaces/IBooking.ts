@@ -23,5 +23,6 @@ export interface IBooking {
   stripeCustomerId?: string;
   bankImprintAmount?: number;
   bankImprintStatus?: "none" | "secured" | "captured" | "released" | "in_progress";
+  bankImprintTransferred?: boolean;
   updatedAt?: Date;
 }

@@ -97,6 +97,14 @@ const RestaurantSchema = new Schema<IRestaurant>(
       type: String,
       default: null,
     },
+    stripeAccountId: {
+      type: String,
+      default: null,
+    },
+    stripeConnectEnabled: {
+      type: Boolean,
+      default: false,
+    },
 
     // Referral fields
     referralCode: {

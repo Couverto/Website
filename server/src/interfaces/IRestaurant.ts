@@ -57,6 +57,8 @@ export interface IRestaurant extends Document {
   subscriptionEndDate?: Date;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+  stripeAccountId?: string;
+  stripeConnectEnabled?: boolean;
 
   // Referral fields
   referralCode?: mongoose.Types.ObjectId;
