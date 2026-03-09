@@ -24,6 +24,7 @@ const AVAILABLE_PAGES = [
   { value: "plan", label: "Abonnement" },
   { value: "referral", label: "Parrainage" },
   { value: "settings", label: "Paramètres" },
+  { value: "bankImprint", label: "Empreinte Bancaire" },
 ];
 
 interface FeatureFormProps {

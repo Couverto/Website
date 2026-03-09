@@ -45,6 +45,7 @@ import {
   MapPin,
   Code,
   Files,
+  Lock,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -79,6 +80,7 @@ export const RestaurantSettings = () => {
   const [deleting, setDeleting] = useState(false);
 
   const hasTablePlan = availablePages?.includes("tablePlan");
+  const hasBankImprint = availablePages?.includes("bankImprint");
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -304,7 +306,22 @@ export const RestaurantSettings = () => {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <div className={`space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4 relative overflow-hidden ${!hasBankImprint ? 'pointer-events-none' : ''}`}>
+              {!hasBankImprint && (
+                <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center pointer-events-auto">
+                  <div className="bg-muted w-12 h-12 flex items-center justify-center rounded-full mb-3">
+                    <Lock className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-semibold text-lg mb-1">Fonctionnalité Verrouillée</h3>
+                  <p className="text-sm text-muted-foreground max-w-[280px] mb-4">
+                    Passez à un abonnement supérieur pour activer l'empreinte bancaire.
+                  </p>
+                  <Button size="sm" onClick={() => navigate(`/restaurant/${id}/plan`)}>
+                    Voir les abonnements
+                  </Button>
+                </div>
+              )}
+              
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-base flex items-center gap-2">

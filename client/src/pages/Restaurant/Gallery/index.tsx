@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 import { Loader2, ImageIcon, FileText, X } from "lucide-react";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { MediaInput } from "@/components/MediaInput";
-import { RestaurantCard } from "@/pages/Home/components/RestaurantCard";
 
 export const RestaurantGallery = () => {
   const { id } = useParams();
@@ -112,20 +111,6 @@ export const RestaurantGallery = () => {
     );
   }
 
-  const mockRestaurant: any = {
-    ...watch(),
-    _id: id || "preview",
-    name: watch("name") || "Nom du restaurant",
-    city: watch("city") || "Ville",
-    priceRange: watch("priceRange") || "2",
-    rating: watch("rating") || 0,
-    cuisineType: watch("cuisineType")?.length ? watch("cuisineType") : ["Cuisine"],
-    shortDescription: watch("shortDescription") || "Description courte de votre établissement.",
-    features: watch("features") || [],
-    isClosed: watch("isClosed") || false,
-    isOpenNow: true,
-  };
-
   return (
     <div className="space-y-8 max-w-5xl mx-auto pb-20">
       <div>
@@ -165,7 +150,7 @@ export const RestaurantGallery = () => {
                       {watch("coverImage") ? (
                         <>
                           <div className="pointer-events-none w-full h-full">
-                            <RestaurantCard restaurant={mockRestaurant as any} />
+                            <img src={watch("coverImage")} alt="Aperçu couverture" className="w-full h-full object-cover rounded-xl" />
                           </div>
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                           <Button
