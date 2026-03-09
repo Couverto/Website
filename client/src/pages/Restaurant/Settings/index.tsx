@@ -310,32 +310,60 @@ export const RestaurantSettings = () => {
                   <Label className="text-base flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-primary" />
                     Empreinte Bancaire
+                    {watch("stripeConnectEnabled") ? (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                        Configuré
+                      </Badge>
+                    ) : watch("stripeAccountId") ? (
+                      <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20">
+                        En cours de validation
+                      </Badge>
+                    ) : null}
                   </Label>
                   <p className="text-sm text-muted-foreground">Exiger une empreinte bancaire lors de la réservation en ligne.</p>
                 </div>
-                {watch("stripeConnectEnabled") ? (
-                  <Controller
-                    control={control}
-                    name="isBankImprintEnabled"
-                    render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-                  />
-                ) : (
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        const res = await api.post(`/restaurants/${id}/stripe-connect`);
-                        window.location.href = res.data.url;
-                      } catch (error: any) {
-                        toast.error(error.response?.data?.error || "Erreur de connexion à Stripe");
-                      }
-                    }}
-                  >
-                    Configurer Stripe
-                  </Button>
-                )}
+                <div className="flex items-center gap-4">
+                  {watch("stripeAccountId") ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const res = await api.post(`/restaurants/${id}/stripe-connect`);
+                            window.location.href = res.data.url;
+                          } catch (error: any) {
+                            toast.error(error.response?.data?.error || "Erreur de connexion à Stripe");
+                          }
+                        }}
+                      >
+                        Gérer le compte
+                      </Button>
+                      <Controller
+                        control={control}
+                        name="isBankImprintEnabled"
+                        render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
+                      />
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="default"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const res = await api.post(`/restaurants/${id}/stripe-connect`);
+                          window.location.href = res.data.url;
+                        } catch (error: any) {
+                          toast.error(error.response?.data?.error || "Erreur de connexion à Stripe");
+                        }
+                      }}
+                    >
+                      Configurer Stripe
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {watch("isBankImprintEnabled") && (
