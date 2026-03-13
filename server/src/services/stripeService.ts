@@ -231,7 +231,13 @@ export const stripeService = {
   /**
    * Capture a SetupIntent by creating a PaymentIntent
    */
-  captureSetupIntent: async (setupIntentId: string, amount: number, customerId: string, metadata?: Record<string, string>) => {
+  captureSetupIntent: async (
+    setupIntentId: string,
+    amount: number,
+    customerId: string,
+    connectedAccountId: string,
+    metadata?: Record<string, string>
+  ) => {
     // First, retrieve the setupIntent to get the payment method
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
     if (!setupIntent.payment_method) {
@@ -247,6 +253,9 @@ export const stripeService = {
       payment_method: paymentMethodId,
       off_session: true,
       confirm: true,
+      transfer_data: {
+        destination: connectedAccountId,
+      },
       metadata,
     });
   },

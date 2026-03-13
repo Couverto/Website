@@ -1479,11 +1479,18 @@ export const captureBankImprint = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant || !restaurant.stripeAccountId) {
+      res.status(400).json({ error: "Le restaurant n'a pas de compte Stripe lié." });
+      return;
+    }
+
     // Capture with Stripe
     const paymentIntent = await stripeService.captureSetupIntent(
       booking.stripeSetupIntentId,
       booking.bankImprintAmount,
       booking.stripeCustomerId,
+      restaurant.stripeAccountId,
       {
         bookingId: booking._id.toString(),
         restaurantId: booking.restaurant.toString(),
@@ -1524,7 +1531,11 @@ export const releaseBankImprint = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+    try {
+      await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+    } catch (e) {
+      console.warn("Could not explicitly cancel SetupIntent in Stripe, continuing...", e);
+    }
 
     booking.bankImprintStatus = "released";
     await booking.save();

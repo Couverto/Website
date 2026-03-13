@@ -13,6 +13,7 @@ import { saveAvatarFromUrl } from "../utils/saveAvatarFromUrl.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
+import { sendDiscordNotification } from "../utils/discordUtils.js";
 
 /**
  * Registers a new user.
@@ -65,9 +66,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       name,
       forename,
       auth_type: photoURL ? authTypes.GOOGLE : authTypes.LOCAL,
-      verificationToken: verificationTokenHash,
-      verificationTokenExpire: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      isVerified: false,
+      verificationToken: photoURL ? undefined : verificationTokenHash,
+      verificationTokenExpire: photoURL ? undefined : new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      isVerified: photoURL ? true : false,
     });
 
     if (photoURL) {
@@ -103,14 +104,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       level: logLevels.INFO,
     });
 
-    // Send Verification Email
+    sendDiscordNotification(`🆕 **Nvel utilisateur inscrit** : ${user.forename} ${user.name} (@${user.username}) - ${user.email}`);
+
+    // Send Verification Email if not verified (Google users are auto-verified)
     try {
       if (user.email && !user.isVerified) {
         const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
         const verifyUrl = `${clientUrl}/verify-email?token=${verificationToken}`;
 
-        // Dynamically import to avoid circular dep issues if any, or just import at top.
-        // Added import at top.
         const { verifyEmailTemplate } = await import("../templates/verifyEmailTemplate.js");
         const htmlContent = verifyEmailTemplate({ url: verifyUrl });
 
@@ -119,14 +120,26 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           subject: "Vérifiez votre adresse email - Couverto",
           message: htmlContent,
         });
+      } else if (user.email && user.isVerified && user.auth_type === authTypes.GOOGLE) {
+        // Send Welcome Email directly for Google users since they are auto-verified
+        try {
+          const { welcomeEmailTemplate } = await import("../templates/welcomeEmail.js");
+          const htmlContent = welcomeEmailTemplate({ name: user.forename });
+          await sendEmail({
+            email: user.email,
+            subject: "Bienvenue sur Couverto !",
+            message: htmlContent,
+          });
+        } catch (emailErr) {
+          console.error("Welcome email failed for Google user", emailErr);
+        }
       }
     } catch (emailErr) {
-      console.error("Verification email failed", emailErr);
-      // We might want to warn the user but account is created.
+      console.error("Email process failed", emailErr);
     }
 
     res.status(201).json({
-      message: "Inscription réussie. Veuillez vérifier votre email pour activer votre compte.",
+      message: user.isVerified ? "Inscription réussie." : "Inscription réussie. Veuillez vérifier votre email pour activer votre compte.",
       user: { email: user.email }, // Return minimal info, no token
     });
     return;
@@ -263,6 +276,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
         forename: forename,
         auth_type: authTypes.GOOGLE,
         avatar: photoURL || "",
+        isVerified: true,
       });
 
       if (photoURL) {
@@ -282,6 +296,21 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
         userId: user._id,
         level: logLevels.INFO,
       });
+
+      sendDiscordNotification(`🚀 **Nouvel utilisateur (Google)** : ${user.forename} ${user.name} (@${user.username})`);
+
+      // Send Welcome Email for new Google users
+      try {
+        const { welcomeEmailTemplate } = await import("../templates/welcomeEmail.js");
+        const htmlContent = welcomeEmailTemplate({ name: user.forename });
+        await sendEmail({
+          email: user.email,
+          subject: "Bienvenue sur Couverto !",
+          message: htmlContent,
+        });
+      } catch (emailErr) {
+        console.error("Welcome email failed for Google user (signInWithGoogle)", emailErr);
+      }
     } else if (user.auth_type !== authTypes.GOOGLE) {
       // Link the account to Google Auth permanently
       user.auth_type = authTypes.GOOGLE;
