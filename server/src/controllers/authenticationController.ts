@@ -104,7 +104,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       level: logLevels.INFO,
     });
 
-    sendDiscordNotification(`🆕 **Nvel utilisateur inscrit** : ${user.forename} ${user.name} (@${user.username}) - ${user.email}`);
+    sendDiscordNotification(`🆕 **Nouvel utilisateur inscrit** : ${user.forename} ${user.name} (@${user.username}) - ${user.email}`);
 
     // Send Verification Email if not verified (Google users are auto-verified)
     try {
@@ -297,7 +297,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
         level: logLevels.INFO,
       });
 
-      sendDiscordNotification(`🚀 **Nouvel utilisateur (Google)** : ${user.forename} ${user.name} (@${user.username})`);
+      sendDiscordNotification(`🚀 **Nouvel utilisateur (Google)** : ${user.forename} ${user.name} (@${user.username}) - ${user.email}`);
 
       // Send Welcome Email for new Google users
       try {
