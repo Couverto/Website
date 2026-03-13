@@ -17,13 +17,28 @@ import { stripeService } from "../services/stripeService.js";
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
   const date = new Date(bookingDate);
-  const dayIndex = getDay(date); // 0 (Sunday) - 6 (Saturday)
-  const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const dayName = days[dayIndex];
+
+  // Use Intl.DateTimeFormat to get French local time parts
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Paris",
+    hour: "numeric",
+    minute: "numeric",
+    weekday: "long",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+
+  const dayName = partMap.weekday.toLowerCase();
+  const hour = parseInt(partMap.hour);
+  const minute = parseInt(partMap.minute);
+
   const dayInfo = restaurant.openingHours?.get ? restaurant.openingHours.get(dayName) : restaurant.openingHours?.[dayName];
   if (!dayInfo) return false;
   if (dayInfo.isClosed) return false;
-  const timeMinutes = date.getHours() * 60 + date.getMinutes();
+
+  const timeMinutes = hour * 60 + minute;
   for (const period of dayInfo.periods) {
     const [openH, openM] = period.open.split(":").map(Number);
     const [closeH, closeM] = period.close.split(":").map(Number);

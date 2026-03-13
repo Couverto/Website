@@ -5,10 +5,20 @@
 export const isRestaurantOpen = (openingHours: any) => {
   if (!openingHours) return false;
 
-  const now = new Date();
-  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const currentDay = dayNames[now.getDay()];
-  const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+  // Use Intl.DateTimeFormat to get French local time regardless of server timezone
+  const formatter = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    hour: "2-digit",
+    minute: "2-digit",
+    weekday: "long",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(new Date());
+  const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+
+  const currentDay = partMap.weekday.toLowerCase();
+  const currentTime = `${partMap.hour}:${partMap.minute}`;
 
   // Handle Mongoose Map or plain object
   const daySchedule = openingHours.get ? openingHours.get(currentDay) : openingHours[currentDay];
