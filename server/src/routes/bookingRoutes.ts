@@ -14,6 +14,7 @@ import {
   updateBookingTable,
   captureBankImprint,
   releaseBankImprint,
+  cancelBookingByToken,
 } from "../controllers/bookingController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
@@ -62,6 +63,13 @@ bookingRouter.put("/:id", verifyToken(), updateBooking);
  * @access Private
  */
 bookingRouter.patch("/:id/cancel", verifyToken(), cancelBooking);
+
+/**
+ * @route PATCH /api/bookings/public/cancel/:token
+ * @desc Cancel a booking via public token (guest)
+ * @access Public
+ */
+bookingRouter.patch("/public/cancel/:token", cancelBookingByToken);
 
 /**
  * @route POST /api/bookings/manual

@@ -113,7 +113,7 @@ export const AddRestaurantWizard = () => {
   const { authUser: user } = useAuthContext();
   const [formData, setFormData] = useState<WizardData>({
     ...INITIAL_DATA,
-    isEmailVerified: true, // Assume true initially or check against empty? better to sync with user
+    isVerified: true, // Assume true initially or check against empty? better to sync with user
   });
 
   // Sync with user email when available
@@ -122,7 +122,7 @@ export const AddRestaurantWizard = () => {
       setFormData((prev) => ({
         ...prev,
         email: user.email,
-        isEmailVerified: true,
+        isVerified: true,
       }));
     }
   }, [user]);
@@ -134,10 +134,10 @@ export const AddRestaurantWizard = () => {
     // If email is changing, check against user email
     if (newData.email !== undefined && user) {
       if (newData.email === user.email) {
-        newData.isEmailVerified = true;
+        newData.isVerified = true;
       } else if (newData.email !== formData.email) {
         // If email changed and is not user email, reset verification
-        newData.isEmailVerified = false;
+        newData.isVerified = false;
       }
     }
 
@@ -198,7 +198,7 @@ export const AddRestaurantWizard = () => {
     if (validateStep(step)) {
       if (step === 1) {
         // Validation for Email Verification
-        if (!formData.isEmailVerified) {
+        if (!formData.isVerified) {
           toast.error("Veuillez vérifier votre adresse email avant de continuer");
           return;
         }

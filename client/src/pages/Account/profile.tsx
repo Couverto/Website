@@ -34,7 +34,7 @@ export const AccountProfile = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [openUpdatePasswordDialog, setOpenUpdatePasswordDialog] = useState(false);
   const [openDeleteAccountDialog, setOpenDeleteAccountDialog] = useState(false);
-  const [isEmailVerified, setIsEmailVerified] = useState(true);
+  const [isVerified, setIsVerified] = useState(true);
 
   const updateAccountSchema = getUpdateAccountSchema();
   const updateForm = useForm<z.infer<typeof updateAccountSchema>>({
@@ -52,7 +52,7 @@ export const AccountProfile = () => {
   const emailChanged = currentEmail !== authUser?.email;
 
   const onUpdateSubmit: SubmitHandler<z.infer<typeof updateAccountSchema>> = async (values) => {
-    if (emailChanged && !isEmailVerified) {
+    if (emailChanged && !isVerified) {
       toast.error("Veuillez vérifier votre nouvelle adresse email avant d'enregistrer.");
       return;
     }
@@ -63,7 +63,7 @@ export const AccountProfile = () => {
       toast.success(response.data.message || "Compte mis à jour");
       setAuthUser(response.data.user);
       if (emailChanged) {
-        setIsEmailVerified(true);
+        setIsVerified(true);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Une erreur est survenue");
@@ -221,9 +221,9 @@ export const AccountProfile = () => {
                         onChange={(e) => {
                           field.onChange(e);
                           if (e.target.value !== authUser?.email) {
-                            setIsEmailVerified(false);
+                            setIsVerified(false);
                           } else {
-                            setIsEmailVerified(true);
+                            setIsVerified(true);
                           }
                         }}
                         className="h-12 rounded-xl bg-background/50 border-input transition-all focus-visible:ring-primary/20"
@@ -234,9 +234,9 @@ export const AccountProfile = () => {
                     )}
                     <FormMessage />
 
-                    {emailChanged && !isEmailVerified && currentEmail && !updateForm.formState.errors.email && (
+                    {emailChanged && !isVerified && currentEmail && !updateForm.formState.errors.email && (
                       <div className="pt-2 animate-in fade-in slide-in-from-top-2">
-                        <EmailVerificationSection email={currentEmail} onSuccess={() => setIsEmailVerified(true)} context="account" />
+                        <EmailVerificationSection email={currentEmail} onSuccess={() => setIsVerified(true)} context="account" />
                       </div>
                     )}
                   </FormItem>
@@ -282,7 +282,7 @@ export const AccountProfile = () => {
             <div className="pt-6">
               <Button
                 type="submit"
-                disabled={updateLoading || (emailChanged && !isEmailVerified)}
+                disabled={updateLoading || (emailChanged && !isVerified)}
                 className="w-full h-14 text-base font-bold rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
               >
                 {updateLoading ? "Mise à jour..." : "Enregistrer les modifications"}

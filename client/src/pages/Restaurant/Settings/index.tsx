@@ -98,7 +98,7 @@ export const RestaurantSettings = () => {
 
   // Email verification state
   const [originalEmail, setOriginalEmail] = useState("");
-  const [isEmailVerified, setIsEmailVerified] = useState(true);
+  const [isVerified, setIsVerified] = useState(true);
 
   const {
     register,
@@ -126,9 +126,9 @@ export const RestaurantSettings = () => {
 
   useEffect(() => {
     if (currentEmail !== originalEmail) {
-      setIsEmailVerified(false);
+      setIsVerified(false);
     } else {
-      setIsEmailVerified(true);
+      setIsVerified(true);
     }
   }, [currentEmail, originalEmail]);
 
@@ -138,7 +138,7 @@ export const RestaurantSettings = () => {
         const response = await api.get(`/restaurants/${id}/details`);
         reset(response.data.restaurant);
         setOriginalEmail(response.data.restaurant.email);
-        setIsEmailVerified(true);
+        setIsVerified(true);
         setIsClosed(response.data.restaurant.isClosed);
       } catch (error) {
         toast.error("Erreur lors du chargement des données");
@@ -182,7 +182,7 @@ export const RestaurantSettings = () => {
   const onSubmit = async (data: RestaurantInterface) => {
     setSaving(true);
 
-    if (currentEmail !== originalEmail && !isEmailVerified) {
+    if (currentEmail !== originalEmail && !isVerified) {
       data.email = originalEmail;
       toast.info("Changement d'email ignoré car non vérifié");
     }
@@ -285,9 +285,9 @@ export const RestaurantSettings = () => {
                 </p>
               )}
 
-              {!isEmailVerified && currentEmail && !errors.email && (
+              {!isVerified && currentEmail && !errors.email && (
                 <div className="pt-2 animate-in fade-in slide-in-from-top-2">
-                  <EmailVerificationSection email={currentEmail} onSuccess={() => setIsEmailVerified(true)} />
+                  <EmailVerificationSection email={currentEmail} onSuccess={() => setIsVerified(true)} />
                 </div>
               )}
             </div>

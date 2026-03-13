@@ -81,6 +81,10 @@ const bookingSchema = new Schema<IBooking>(
       type: Boolean,
       default: false,
     },
+    cancellationCode: {
+      type: String,
+      index: true,
+    },
   },
   { timestamps: true },
 );

@@ -111,9 +111,9 @@ export const StepEssentials = ({ data, updateData, errors }: StepProps) => {
         )}
 
         {/* OTP Verification UI */}
-        {!data.isEmailVerified && !errors?.email && data.email && (
+        {!data.isVerified && !errors?.email && data.email && (
           <div className="pt-2 animate-in fade-in slide-in-from-top-2">
-            <EmailVerificationSection email={data.email} onSuccess={() => updateData({ isEmailVerified: true })} />
+            <EmailVerificationSection email={data.email} onSuccess={() => updateData({ isVerified: true })} />
           </div>
         )}
       </div>

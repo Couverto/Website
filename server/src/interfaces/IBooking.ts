@@ -24,5 +24,6 @@ export interface IBooking {
   bankImprintAmount?: number;
   bankImprintStatus?: "none" | "secured" | "captured" | "released" | "in_progress";
   bankImprintTransferred?: boolean;
+  cancellationCode?: string;
   updatedAt?: Date;
 }

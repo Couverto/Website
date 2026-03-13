@@ -118,12 +118,12 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
     // Email Verification Logic
     const restaurantEmail = otherFields.email || creator.email;
-    let isEmailVerified = false;
+    let isVerified = false;
     let verificationToken = undefined;
     let verificationTokenExpire = undefined;
 
     if (restaurantEmail === creator.email) {
-      isEmailVerified = true;
+      isVerified = true;
     } else {
       // Generate verification token
       const rawToken = crypto.randomBytes(20).toString("hex");
@@ -225,7 +225,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           referredBy: null,
           referralCodeUsed: validReferralCode._id,
           subscriptionStartDelay: 0,
-          isEmailVerified,
+          isVerified,
           verificationToken,
           verificationTokenExpire,
           ...otherFields,
@@ -321,7 +321,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
             referredBy: referrerRestaurant?._id || null,
             subscriptionStartDelay,
             referralCodeUsed: validReferralCode?._id || null,
-            isEmailVerified,
+            isVerified,
             verificationToken,
             verificationTokenExpire,
             ...otherFields,
@@ -445,7 +445,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         isClosed: true,
         referredBy: referrerRestaurant?._id || null,
         subscriptionStartDelay,
-        isEmailVerified,
+        isVerified,
         verificationToken,
         verificationTokenExpire,
         ...otherFields,
@@ -502,7 +502,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
       isClosed: true,
       referredBy: referrerRestaurant?._id || null,
       subscriptionStartDelay,
-      isEmailVerified,
+      isVerified,
       verificationToken,
       verificationTokenExpire,
       ...otherFields,
@@ -973,7 +973,7 @@ export const verifyRestaurantEmail = async (req: Request, res: Response): Promis
       restaurant.tempEmail = undefined;
     }
 
-    restaurant.isEmailVerified = true;
+    restaurant.isVerified = true;
     restaurant.verificationToken = undefined;
     restaurant.verificationTokenExpire = undefined;
 

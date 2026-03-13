@@ -11,7 +11,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     phone: { type: String, required: true },
     email: { type: String, required: true },
     tempEmail: { type: String },
-    isEmailVerified: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
     verificationToken: { type: String },
     verificationTokenExpire: { type: Date },
     website: { type: String, required: false },

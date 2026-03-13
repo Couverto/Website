@@ -60,6 +60,7 @@ import { LegalLayout } from "@/pages/Legal/Layout";
 import { MentionsLegales } from "@/pages/Legal/MentionsLegales";
 import { Privacy } from "@/pages/Legal/Privacy";
 import { Terms } from "@/pages/Legal/Terms";
+import { CancelBooking } from "@/pages/CancelBooking";
 
 export const Router = () => {
   return (
@@ -142,6 +143,9 @@ export const Router = () => {
           <Route path="confidentialite" element={<Privacy />} />
           <Route path="cgu" element={<Terms />} />
         </Route>
+
+        {/* Public Cancellation */}
+        <Route path="/cancel-booking/:token" element={<CancelBooking />} />
       </Route>
 
       {/* Authenticated Application/Dashboard Routes */}

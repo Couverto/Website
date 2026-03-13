@@ -10,7 +10,7 @@ export interface IRestaurant extends Document {
   phone: string;
   email: string;
   tempEmail?: string;
-  isEmailVerified: boolean;
+  isVerified: boolean;
   verificationToken?: string;
   verificationTokenExpire?: Date;
   website?: string;

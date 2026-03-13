@@ -12,6 +12,7 @@ interface BookingConfirmationProps {
   phone?: string;
   website?: string;
   restaurantId?: string;
+  cancellationCode?: string;
 }
 
 export const bookingConfirmationTemplate = ({
@@ -26,6 +27,7 @@ export const bookingConfirmationTemplate = ({
   phone,
   website,
   restaurantId,
+  cancellationCode,
 }: BookingConfirmationProps): string => {
   const statusBadgeClass = isConfirmed ? "status-success" : "status-pending";
   const statusIcon = isConfirmed ? "✅" : "⏳";
@@ -86,6 +88,19 @@ export const bookingConfirmationTemplate = ({
         📋 Voir ma réservation
       </a>
     </div>
+
+    ${
+      cancellationCode
+        ? `
+    <div style="text-align: center; margin-top: 20px;">
+      <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Vous ne pouvez pas venir ?</p>
+      <a href="${process.env.CORS_ORIGIN || "#"}/cancel-booking/${cancellationCode}" style="color: #666; text-decoration: underline; font-size: 14px;">
+        Annuler ma réservation
+      </a>
+    </div>
+    `
+        : ""
+    }
   `;
   return baseEmailLayout(content, `Réservation ${status} - ${restaurantName}`);
 };

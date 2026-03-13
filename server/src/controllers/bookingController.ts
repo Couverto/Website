@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import { Booking } from "../models/bookingModel.js";
 import { Restaurant } from "../models/restaurantModel.js";
 import { User } from "../models/userModel.js";
@@ -157,6 +158,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       stripeCustomerId: stripeCustomerId || undefined,
       bankImprintAmount: bankImprintAmount || undefined,
       bankImprintStatus: stripeSetupIntentId ? "secured" : "none",
+      cancellationCode: crypto.randomBytes(16).toString("hex"),
     };
 
     // If authenticated, we can optionally override customer info with user profile if not provided,
@@ -346,6 +348,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
           status: statusSubject,
           isConfirmed: isConfirmed,
           address: restaurantExists.adress, // Assuming 'adress' property exists
+          cancellationCode: newBooking.cancellationCode,
         });
 
         await sendEmail({
@@ -654,6 +657,117 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(200).json({ message: "Réservation annulée" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function cancelBookingByToken
+ * @description Cancels a booking using a unique cancellation token (for guests).
+ */
+export const cancelBookingByToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.params;
+
+    const booking = await Booking.findOne({ cancellationCode: token });
+
+    if (!booking) {
+      res.status(404).json({ error: "Réservation introuvable ou lien invalide" });
+      return;
+    }
+
+    if (booking.status === bookingStatus.CANCELLED) {
+      res.status(400).json({ error: "Cette réservation est déjà annulée" });
+      return;
+    }
+
+    // Optional: check if booking is in the past
+    if (new Date(booking.bookingDate) < new Date()) {
+      res.status(400).json({ error: "Impossible d'annuler une réservation passée" });
+      return;
+    }
+
+    booking.status = bookingStatus.CANCELLED;
+
+    // Handle bank imprint release if secured
+    if (booking.bankImprintStatus === "secured" && booking.stripeSetupIntentId) {
+      try {
+        await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+        booking.bankImprintStatus = "released";
+      } catch (stripeErr) {
+        console.error("Failed to release bank imprint during guest cancellation", stripeErr);
+      }
+    }
+
+    await booking.save();
+
+    // Fetch restaurant for notifications
+    const restaurantDoc = await Restaurant.findById(booking.restaurant);
+
+    // Emit real-time event
+    try {
+      getIO().to(`restaurant_${booking.restaurant}`).emit("updateBooking", booking);
+    } catch (error) {
+      console.error("Socket emit failed", error);
+    }
+
+    // Email Notifications
+    try {
+      if (restaurantDoc && booking.customer?.email) {
+        const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+        // Notify Customer
+        await sendEmail({
+          email: booking.customer.email,
+          subject: `Réservation Annulée - ${restaurantDoc.name}`,
+          message: bookingCancellationTemplate({
+            customerName: booking.customer.name,
+            restaurantName: restaurantDoc.name,
+            date: dateStr,
+            time: timeStr,
+            reason: "Annulation par le client via le mail de confirmation",
+            address: restaurantDoc.adress,
+            phone: restaurantDoc.phone,
+            website: restaurantDoc.website,
+          }),
+        });
+
+        // Notify Restaurant (if email exists and setting is enabled)
+        if (restaurantDoc.email && restaurantDoc.sendBookingEmail) {
+          await sendEmail({
+            email: restaurantDoc.email,
+            subject: `[ANNULATION] Réservation - ${booking.customer.name}`,
+            message: `
+               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                 <h2 style="color: #d32f2f;">Réservation Annulée</h2>
+                 <p>La réservation de <strong>${booking.customer.name}</strong> a été annulée par le client.</p>
+                 <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                   <p style="margin: 5px 0;"><strong>Date :</strong> ${dateStr} à ${timeStr}</p>
+                   <p style="margin: 5px 0;"><strong>Nombre de personnes :</strong> ${booking.guests}</p>
+                 </div>
+                 <p style="color: #666; font-size: 14px;">Cette table est désormais de nouveau disponible.</p>
+               </div>
+             `,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Email notification failed", e);
+    }
+
+    createLog({
+      message: `Booking ${booking._id} cancelled by guest via token`,
+      level: logLevels.INFO,
+    });
+
+    res.status(200).json({ message: "Réservation annulée avec succès" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
