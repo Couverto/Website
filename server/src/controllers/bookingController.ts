@@ -12,6 +12,7 @@ import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { bookingConfirmationTemplate } from "../templates/bookingConfirmationEmail.js";
 import { bookingCancellationTemplate } from "../templates/bookingCancellationEmail.js";
+import { bookingSelfCancellationTemplate } from "../templates/bookingSelfCancellationEmail.js";
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
 import { stripeService } from "../services/stripeService.js";
 
@@ -641,13 +642,74 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
     }
 
     booking.status = bookingStatus.CANCELLED;
+
+    // Handle bank imprint release if secured
+    if (booking.bankImprintStatus === "secured" && booking.stripeSetupIntentId) {
+      try {
+        await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+        booking.bankImprintStatus = "released";
+      } catch (stripeErr) {
+        console.error("Failed to release bank imprint during user cancellation", stripeErr);
+      }
+    }
+
     await booking.save();
+
+    // Fetch restaurant for notifications
+    const restaurantDoc = await Restaurant.findById(booking.restaurant);
 
     // Emit real-time event to restaurant room
     try {
       getIO().to(`restaurant_${booking.restaurant}`).emit("updateBooking", booking);
     } catch (error) {
       console.error("Socket emit failed", error);
+    }
+
+    // Email Notification to client (Self-cancellation)
+    try {
+      if (restaurantDoc && booking.customer?.email) {
+        const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+        await sendEmail({
+          email: booking.customer.email,
+          subject: `Confirmation d'annulation - ${restaurantDoc.name}`,
+          message: bookingSelfCancellationTemplate({
+            customerName: booking.customer.name,
+            restaurantName: restaurantDoc.name,
+            date: dateStr,
+            time: timeStr,
+            address: restaurantDoc.adress,
+            phone: restaurantDoc.phone,
+            website: restaurantDoc.website,
+          }),
+        });
+
+        // Notify Restaurant
+        if (restaurantDoc.email && restaurantDoc.sendBookingEmail) {
+          await sendEmail({
+            email: restaurantDoc.email,
+            subject: `[ANNULATION] Réservation - ${booking.customer.name}`,
+            message: `
+               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                 <h2 style="color: #666;">Réservation Annulée par le client</h2>
+                 <p>La réservation de <strong>${booking.customer.name}</strong> a été annulée par le client via son compte.</p>
+                 <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                   <p style="margin: 5px 0;"><strong>Date :</strong> ${dateStr} à ${timeStr}</p>
+                   <p style="margin: 5px 0;"><strong>Nombre de personnes :</strong> ${booking.guests}</p>
+                 </div>
+               </div>
+             `,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Cancellation notification emails failed", e);
     }
 
     createLog({
@@ -723,16 +785,15 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
         });
         const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-        // Notify Customer
+        // Notify Customer (Self-cancellation)
         await sendEmail({
           email: booking.customer.email,
-          subject: `Réservation Annulée - ${restaurantDoc.name}`,
-          message: bookingCancellationTemplate({
+          subject: `Confirmation d'annulation - ${restaurantDoc.name}`,
+          message: bookingSelfCancellationTemplate({
             customerName: booking.customer.name,
             restaurantName: restaurantDoc.name,
             date: dateStr,
             time: timeStr,
-            reason: "Annulation par le client via le mail de confirmation",
             address: restaurantDoc.adress,
             phone: restaurantDoc.phone,
             website: restaurantDoc.website,
@@ -1164,6 +1225,17 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     }
 
     booking.status = status;
+
+    // Release bank imprint if status changed to CANCELLED
+    if (status === bookingStatus.CANCELLED && booking.bankImprintStatus === "secured" && booking.stripeSetupIntentId) {
+      try {
+        await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+        booking.bankImprintStatus = "released";
+      } catch (stripeErr) {
+        console.error("Failed to release bank imprint during status update cancellation", stripeErr);
+      }
+    }
+
     await booking.save();
 
     // Send Cancellation Email if status is CANCELLED (Restaurant initiated)
@@ -1526,6 +1598,17 @@ export const cancelBookingAdmin = async (req: Request, res: Response): Promise<v
     }
 
     booking.status = bookingStatus.CANCELLED;
+
+    // Handle bank imprint release if secured
+    if (booking.bankImprintStatus === "secured" && booking.stripeSetupIntentId) {
+      try {
+        await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+        booking.bankImprintStatus = "released";
+      } catch (stripeErr) {
+        console.error("Failed to release bank imprint during admin cancellation", stripeErr);
+      }
+    }
+
     await booking.save();
 
     const restaurantDoc = await Restaurant.findById(booking.restaurant).select("name adress phone website");
