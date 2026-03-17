@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { MediaInput } from "@/components/MediaInput";
 
 export const RestaurantGallery = () => {
   const { id } = useParams();
+  const { refreshRestaurant } = useOutletContext<{ refreshRestaurant: () => void }>();
   const [loading, setLoading] = useState(true);
   const isFetched = useRef(false);
 
@@ -63,6 +64,7 @@ export const RestaurantGallery = () => {
       const updateData = { [field]: value };
       await api.put(`/restaurants/${id}/settings`, updateData);
       toast.success("Modifications enregistrées");
+      refreshRestaurant();
     } catch (error: any) {
       // Revert optimization
       setValue(field, previousValue);

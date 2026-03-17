@@ -17,16 +17,17 @@ export const RestaurantBreadcrumb = ({ restaurant }: RestaurantBreadcrumbProps) 
   const location = useLocation();
   const { id } = useParams();
 
-  // Map paths to translation keys
   const getPageTitle = (pathname: string) => {
     if (pathname.includes("/dashboard")) return "Tableau de bord";
     if (pathname.includes("/bookings")) return "Réservations";
     if (pathname.includes("/clients")) return "Clients";
     if (pathname.includes("/collaborators")) return "Collaborateurs";
     if (pathname.includes("/stats")) return "Statistiques";
+    if (pathname.includes("/table-plan")) return "Plan de salle";
     if (pathname.includes("/plan")) return "Abonnement";
     if (pathname.includes("/referral")) return "Parrainage";
     if (pathname.includes("/settings")) return "Paramètres";
+    if (pathname.includes("/gallery")) return "Galerie & Médias";
     return "";
   };
 

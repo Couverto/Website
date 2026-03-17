@@ -9,26 +9,31 @@ interface ConfigurationAlertProps {
 }
 
 export const ConfigurationAlert = ({ restaurant }: ConfigurationAlertProps) => {
-  const missingFields = [];
-
-  if (!restaurant.name) missingFields.push("Nom du restaurant");
-  if (!restaurant.adress) missingFields.push("Adresse");
-  if (!restaurant.city) missingFields.push("Ville");
-  if (!restaurant.phone) missingFields.push("Téléphone");
-  if (!restaurant.email) missingFields.push("Email");
-  if (!restaurant.shortDescription && !restaurant.description) missingFields.push("Description");
-  if (!restaurant.cuisineType || restaurant.cuisineType.length === 0) missingFields.push("Type de cuisine");
-  if (!restaurant.images || restaurant.images.length === 0) missingFields.push("Galerie photos");
+  const settingsMissing = [];
+  if (!restaurant.name) settingsMissing.push("Nom");
+  if (!restaurant.adress) settingsMissing.push("Adresse");
+  if (!restaurant.city) settingsMissing.push("Ville");
+  if (!restaurant.phone) settingsMissing.push("Téléphone");
+  if (!restaurant.email) settingsMissing.push("Email");
+  if (!restaurant.shortDescription && !restaurant.description) settingsMissing.push("Description");
+  if (!restaurant.cuisineType || restaurant.cuisineType.length === 0) settingsMissing.push("Type de cuisine");
 
   const hasOpeningHours =
-    restaurant.openingHours && Object.values(restaurant.openingHours).some((day) => !day.isClosed && day.periods && day.periods.length > 0);
-  if (!hasOpeningHours) missingFields.push("Horaires d'ouverture");
+    restaurant.openingHours &&
+    Object.values(restaurant.openingHours).some(
+      (day: any) => !day.isClosed && day.periods && day.periods.length > 0
+    );
+  if (!hasOpeningHours) settingsMissing.push("Horaires");
 
-  const hasTables = restaurant.zones && restaurant.zones.some((zone) => zone.tables && zone.tables.length > 0);
-  if (!hasTables) missingFields.push("Plan de salle");
+  const coverImageMissing = !restaurant.coverImage;
+  const imagesMissing = !restaurant.images || restaurant.images.length === 0;
+  const menuMissing = !restaurant.menu || restaurant.menu.length === 0;
+  const galleryMissing = coverImageMissing || imagesMissing || menuMissing;
+
+  const tablePlanMissing = !restaurant.zones || !restaurant.zones.some((zone: any) => zone.tables && zone.tables.length > 0);
 
   const isSubscriptionActive = restaurant.subscriptionStatus === "active";
-  const isConfigured = missingFields.length === 0;
+  const isConfigured = settingsMissing.length === 0 && !galleryMissing && !tablePlanMissing;
 
   if (isSubscriptionActive && isConfigured) {
     return null;
@@ -55,16 +60,45 @@ export const ConfigurationAlert = ({ restaurant }: ConfigurationAlertProps) => {
         <Alert className="bg-yellow-50 border-yellow-200 text-yellow-900">
           <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertTitle>Configuration incomplète</AlertTitle>
-          <AlertDescription className="flex items-center justify-between">
-            <span>
-              Certaines informations essentielles sont manquantes : <strong>{missingFields.join(", ")}</strong>.
-            </span>
-            <Button variant="outline" size="sm" className="bg-white border-yellow-200 hover:bg-yellow-100 text-yellow-900" asChild>
-              <Link to={`/restaurant/${restaurant._id}/settings`}>
-                <Settings className="h-3 w-3 mr-2" />
-                Configurer
-              </Link>
-            </Button>
+          <AlertDescription className="flex flex-col gap-4">
+            <p>Certaines informations essentielles sont manquantes pour rendre votre restaurant public :</p>
+            <div className="flex flex-wrap gap-2">
+              {settingsMissing.length > 0 && (
+                <Button variant="outline" size="sm" className="bg-white border-yellow-200 hover:bg-yellow-100 text-yellow-900 h-auto py-2 text-left flex flex-col items-start gap-1" asChild>
+                  <Link to={`/restaurant/${restaurant._id}/settings`}>
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-3 w-3" />
+                      <span className="font-bold uppercase text-[10px] tracking-wider">Réglages</span>
+                    </div>
+                    <span className="text-[11px] font-normal opacity-70">Manque : {settingsMissing.join(", ")}</span>
+                  </Link>
+                </Button>
+              )}
+              {galleryMissing && (
+                <Button variant="outline" size="sm" className="bg-white border-yellow-200 hover:bg-yellow-100 text-yellow-900 h-auto py-2 text-left flex flex-col items-start gap-1" asChild>
+                  <Link to={`/restaurant/${restaurant._id}/gallery`}>
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-3 w-3" />
+                      <span className="font-bold uppercase text-[10px] tracking-wider">Galerie & Médias</span>
+                    </div>
+                    <span className="text-[11px] font-normal opacity-70">
+                      {[coverImageMissing && "Couverture", imagesMissing && "Photos", menuMissing && "Menu"].filter(Boolean).join(", ") + " manquant(s)"}
+                    </span>
+                  </Link>
+                </Button>
+              )}
+              {tablePlanMissing && (
+                <Button variant="outline" size="sm" className="bg-white border-yellow-200 hover:bg-yellow-100 text-yellow-900 h-auto py-2 text-left flex flex-col items-start gap-1" asChild>
+                  <Link to={`/restaurant/${restaurant._id}/table-plan`}>
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-3 w-3" />
+                      <span className="font-bold uppercase text-[10px] tracking-wider">Plan de salle</span>
+                    </div>
+                    <span className="text-[11px] font-normal opacity-70">Aucune table configurée</span>
+                  </Link>
+                </Button>
+              )}
+            </div>
           </AlertDescription>
         </Alert>
       )}

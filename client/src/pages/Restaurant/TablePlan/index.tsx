@@ -314,9 +314,10 @@ function TablePlanContent() {
       });
       toast.success("Plan de salle sauvegardé !");
       refreshRestaurant();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Erreur lors de la sauvegarde");
+      const errorMessage = error.response?.data?.error || "Erreur lors de la sauvegarde";
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

@@ -568,6 +568,91 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    // Prevent removing required fields if the restaurant is currently OPEN
+    if (!currentRestaurant.isClosed) {
+      const missingFields = [];
+      const newName = req.body.name !== undefined ? req.body.name : currentRestaurant.name;
+      const newAdress = req.body.adress !== undefined ? req.body.adress : currentRestaurant.adress;
+      const newPhone = req.body.phone !== undefined ? req.body.phone : currentRestaurant.phone;
+      const newCoverImage = req.body.coverImage !== undefined ? req.body.coverImage : currentRestaurant.coverImage;
+      const newImages = req.body.images !== undefined ? req.body.images : currentRestaurant.images;
+      const newMenu = req.body.menu !== undefined ? req.body.menu : currentRestaurant.menu;
+
+      if (!newName) missingFields.push("Nom");
+      if (!newAdress) missingFields.push("Adresse");
+      if (!newPhone) missingFields.push("Téléphone");
+      if (!newCoverImage) missingFields.push("Image de couverture");
+      if (!newImages || (Array.isArray(newImages) && newImages.length === 0)) missingFields.push("Galerie photos");
+      if (!newMenu || (Array.isArray(newMenu) && newMenu.length === 0)) missingFields.push("Menu");
+
+      if (missingFields.length > 0) {
+        // If they uploaded a NEW cover image but the overall update is rejected (e.g. because they also deleted the name),
+        // we should ideally clean up the newly uploaded files. The frontend might re-upload them or abandon them.
+        // But the main issue here is preventing DELETION of the CURRENT files. 
+        res.status(400).json({
+          error: `Impossible de retirer ces informations car le restaurant est ouvert. Fermez-le d'abord. (Manquant : ${missingFields.join(", ")})`,
+        });
+        return;
+      }
+
+      // Check Table Plan requirements if the restaurant uses it
+      // Compute available pages to check if they have tablePlan
+      const availablePages = new Set<string>();
+      
+      const planPopulated = await Restaurant.findById(id).populate({
+        path: "plan",
+        populate: { path: "features" },
+      });
+      
+      if (planPopulated?.plan && (planPopulated.plan as any).features) {
+        (planPopulated.plan as any).features.forEach((f: any) => {
+          if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
+            f.associatedPages.forEach((p: string) => availablePages.add(p));
+          }
+        });
+      }
+      if (planPopulated?.features && planPopulated.features.length > 0) {
+        const { Feature } = await import("../models/featureModel.js");
+        const extraFeatures = await Feature.find({ name: { $in: planPopulated.features }, active: true });
+        extraFeatures.forEach((f) => {
+          if (f.associatedPages && Array.isArray(f.associatedPages)) {
+            f.associatedPages.forEach((p: string) => availablePages.add(p));
+          }
+        });
+      }
+
+      const hasTablePlanFeature = availablePages.has("tablePlan");
+
+      if (hasTablePlanFeature) {
+        // If they are specifically updating zones or tablePlan
+        if (req.body.zones !== undefined || req.body.tablePlan !== undefined) {
+          const newZones = req.body.zones !== undefined ? req.body.zones : currentRestaurant.zones;
+          const newLegacyTablePlan = req.body.tablePlan !== undefined ? req.body.tablePlan : currentRestaurant.tablePlan;
+          
+          const hasTablesInZones = newZones && newZones.some((z: any) => z.tables && z.tables.length > 0);
+          const hasLegacyTables = newLegacyTablePlan && newLegacyTablePlan.length > 0;
+
+          if (!hasTablesInZones && !hasLegacyTables) {
+            res.status(400).json({
+              error: "Impossible de supprimer toutes les tables car le restaurant est ouvert. Fermez-le d'abord.",
+            });
+            return;
+          }
+        }
+      } else {
+        // Feature disabled, relies on capacity
+        if (req.body.capacity !== undefined) {
+          const newCapacity = req.body.capacity;
+          if (!newCapacity || newCapacity <= 0) {
+            res.status(400).json({
+              error: "Impossible de définir une capacité nulle car le restaurant est ouvert. Fermez-le d'abord.",
+            });
+            return;
+          }
+        }
+      }
+    }
+
     // Handle Cover Image: Delete old if changed
     if (req.body.coverImage !== undefined && req.body.coverImage !== currentRestaurant.coverImage) {
       if (currentRestaurant.coverImage) {
@@ -1916,6 +2001,31 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
     if (!currentRestaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
+    }
+
+    // Prevent removing required fields if the restaurant is currently OPEN
+    if (!currentRestaurant.isClosed) {
+      const missingFields = [];
+      const newName = req.body.name !== undefined ? req.body.name : currentRestaurant.name;
+      const newAdress = req.body.adress !== undefined ? req.body.adress : currentRestaurant.adress;
+      const newPhone = req.body.phone !== undefined ? req.body.phone : currentRestaurant.phone;
+      const newCoverImage = req.body.coverImage !== undefined ? req.body.coverImage : currentRestaurant.coverImage;
+      const newImages = req.body.images !== undefined ? req.body.images : currentRestaurant.images;
+      const newMenu = req.body.menu !== undefined ? req.body.menu : currentRestaurant.menu;
+
+      if (!newName) missingFields.push("Nom");
+      if (!newAdress) missingFields.push("Adresse");
+      if (!newPhone) missingFields.push("Téléphone");
+      if (!newCoverImage) missingFields.push("Image de couverture");
+      if (!newImages || (Array.isArray(newImages) && newImages.length === 0)) missingFields.push("Galerie photos");
+      if (!newMenu || (Array.isArray(newMenu) && newMenu.length === 0)) missingFields.push("Menu");
+
+      if (missingFields.length > 0) {
+        res.status(400).json({
+          error: `Impossible de retirer ces informations car le restaurant est ouvert. Fermez-le d'abord. (Manquant : ${missingFields.join(", ")})`,
+        });
+        return;
+      }
     }
 
     // Handle Cover Image: Delete old if changed
