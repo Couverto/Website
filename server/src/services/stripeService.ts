@@ -214,6 +214,14 @@ export const stripeService = {
   },
 
   /**
+   * Retrieve a SetupIntent
+   */
+  retrieveSetupIntent: async (setupIntentId: string) => {
+    return await stripe.setupIntents.retrieve(setupIntentId);
+  },
+
+
+  /**
    * Create a PaymentIntent (to capture an imprint later)
    */
   createPaymentIntent: async (amount: number, customerId: string, paymentMethodId: string, metadata?: Record<string, string>) => {

@@ -115,9 +115,47 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (restaurantExists.isBankImprintEnabled && !stripeSetupIntentId) {
-      res.status(400).json({ error: "Une empreinte bancaire est requise pour réserver dans cet établissement." });
-      return;
+    let finalStripeSetupIntentId = stripeSetupIntentId;
+    let finalBankImprintAmount = bankImprintAmount;
+    let finalStripeCustomerId = stripeCustomerId;
+
+    if (restaurantExists.isBankImprintEnabled) {
+      if (!stripeSetupIntentId) {
+        res.status(400).json({ error: "Une empreinte bancaire est requise pour réserver dans cet établissement." });
+        return;
+      }
+
+      try {
+        const setupIntent = await stripeService.retrieveSetupIntent(stripeSetupIntentId);
+        if (setupIntent.status !== 'succeeded') {
+          res.status(400).json({ error: "L'empreinte bancaire n'est pas validée." });
+          return;
+        }
+        if (setupIntent.metadata?.restaurantId !== restaurantExists._id.toString()) {
+           res.status(400).json({ error: "L'empreinte bancaire est invalide pour ce restaurant." });
+           return;
+        }
+
+        // Prevent SetupIntent reuse (preventing a user from booking out the restaurant with 1 SetupIntent)
+        const existingBooking = await Booking.findOne({ 
+          stripeSetupIntentId, 
+          status: { $ne: bookingStatus.CANCELLED } 
+        });
+        if (existingBooking) {
+           res.status(400).json({ error: "Cette empreinte bancaire a déjà été utilisée." });
+           return;
+        }
+      } catch (err) {
+        res.status(400).json({ error: "Erreur lors de la vérification de l'empreinte bancaire." });
+        return;
+      }
+
+      // Security: Force server-side amount calculation
+      finalBankImprintAmount = restaurantExists.bankImprintAmount * guests;
+    } else {
+      finalStripeSetupIntentId = undefined;
+      finalBankImprintAmount = undefined;
+      finalStripeCustomerId = undefined;
     }
 
     // Check exceptional closures
@@ -155,10 +193,10 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       customer,
       notes,
       user: userId || null,
-      stripeSetupIntentId: stripeSetupIntentId || undefined,
-      stripeCustomerId: stripeCustomerId || undefined,
-      bankImprintAmount: bankImprintAmount || undefined,
-      bankImprintStatus: stripeSetupIntentId ? "secured" : "none",
+      stripeSetupIntentId: finalStripeSetupIntentId || undefined,
+      stripeCustomerId: finalStripeCustomerId || undefined,
+      bankImprintAmount: finalBankImprintAmount || undefined,
+      bankImprintStatus: finalStripeSetupIntentId ? "secured" : "none",
       cancellationCode: crypto.randomBytes(16).toString("hex"),
     };
 
@@ -528,6 +566,14 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
     if (booking.status === bookingStatus.CANCELLED) {
       res.status(400).json({ error: "Impossible de modifier une réservation annulée" });
       return;
+    }
+
+    // Calculate if guests changed to update bank imprint
+    if (guests && guests !== booking.guests && booking.bankImprintStatus === "secured") {
+      const restaurantDoc = await Restaurant.findById(booking.restaurant);
+      if (restaurantDoc && restaurantDoc.isBankImprintEnabled) {
+        booking.bankImprintAmount = restaurantDoc.bankImprintAmount * guests;
+      }
     }
 
     booking.bookingDate = bookingDate || booking.bookingDate;
@@ -1456,6 +1502,15 @@ export const deleteBookingAdmin = async (req: Request, res: Response): Promise<v
       });
     }
 
+    // Attempt to release the bank imprint before deleting
+    if (booking.bankImprintStatus === "secured" && booking.stripeSetupIntentId) {
+      try {
+        await stripeService.cancelSetupIntent(booking.stripeSetupIntentId);
+      } catch (stripeErr) {
+        console.error("Failed to release bank imprint during admin hard-delete", stripeErr);
+      }
+    }
+
     await Booking.findByIdAndDelete(id);
 
     // Attempt to notify the restaurant via socket if needed
@@ -1710,6 +1765,7 @@ export const captureBankImprint = async (req: Request, res: Response): Promise<v
     );
 
     booking.bankImprintStatus = "captured";
+    booking.bankImprintTransferred = true;
     await booking.save();
 
     res.status(200).json({ message: "Empreinte bancaire encaissée avec succès", booking });
