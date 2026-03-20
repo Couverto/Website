@@ -15,6 +15,7 @@ import { fr } from "date-fns/locale";
 import { SEO } from "@/components/SEO";
 import { ImageViewer } from "@/components/customs/ImageViewer";
 import { PriceIndicator } from "@/components/customs/PriceIndicator";
+import { ImageWithSkeleton } from "@/components/customs/ImageWithSkeleton";
 import { MenuMediaItem } from "./components/MenuMediaItem";
 import { getNextOpeningText } from "@/utils/getNextOpening";
 
@@ -194,7 +195,12 @@ export const PublicRestaurant = () => {
       {/* Hero Section */}
       <div className="relative h-[40vh] md:h-[50vh] w-full overflow-hidden">
         {restaurant.coverImage ? (
-          <img src={restaurant.coverImage} alt={restaurant.name} className="w-full h-full object-cover" />
+          <ImageWithSkeleton 
+            src={restaurant.coverImage} 
+            alt={restaurant.name} 
+            wrapperClassName="absolute inset-0 w-full h-full"
+            className="w-full h-full object-cover" 
+          />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <span className="text-4xl font-bold text-muted-foreground">{restaurant.name}</span>
@@ -390,11 +396,12 @@ export const PublicRestaurant = () => {
                     <h2 className="text-2xl font-semibold mb-4">{"Photos"}</h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {restaurant.images.map((img, idx) => (
-                        <img
+                        <ImageWithSkeleton
                           key={idx}
                           src={img}
                           alt={`Gallery ${idx}`}
-                          className="rounded-lg object-cover w-full h-48 hover:opacity-90 transition-opacity cursor-pointer"
+                          wrapperClassName="rounded-lg w-full h-48 cursor-pointer overflow-hidden"
+                          className="w-full h-full object-cover hover:opacity-90 transition-opacity"
                           onClick={() => {
                             setCurrentImageIndex(idx);
                             setIsGalleryOpen(true);
