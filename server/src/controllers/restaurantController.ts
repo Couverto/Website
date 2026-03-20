@@ -568,6 +568,42 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    // Compute available pages to check features globally
+    const availablePages = new Set<string>();
+    
+    const planPopulated = await Restaurant.findById(id).populate({
+      path: "plan",
+      populate: { path: "features" },
+    });
+    
+    if (planPopulated?.plan && (planPopulated.plan as any).features) {
+      (planPopulated.plan as any).features.forEach((f: any) => {
+        if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
+          f.associatedPages.forEach((p: string) => availablePages.add(p));
+        }
+      });
+    }
+    if (planPopulated?.features && planPopulated.features.length > 0) {
+      const { Feature } = await import("../models/featureModel.js");
+      const extraFeatures = await Feature.find({ name: { $in: planPopulated.features }, active: true });
+      extraFeatures.forEach((f) => {
+        if (f.associatedPages && Array.isArray(f.associatedPages)) {
+          f.associatedPages.forEach((p: string) => availablePages.add(p));
+        }
+      });
+    }
+
+    const hasTablePlanFeature = availablePages.has("tablePlan");
+    const hasBankImprintFeature = availablePages.has("bankImprint");
+
+    // Security Gate: Check if user attempts to enable Bank Imprint without the feature
+    if (req.body.isBankImprintEnabled !== undefined && req.body.isBankImprintEnabled !== currentRestaurant.isBankImprintEnabled) {
+      if (req.body.isBankImprintEnabled === true && !hasBankImprintFeature) {
+        res.status(403).json({ error: "Votre plan actuel ne permet pas d'activer l'empreinte bancaire." });
+        return;
+      }
+    }
+
     // Prevent removing required fields if the restaurant is currently OPEN
     if (!currentRestaurant.isClosed) {
       const missingFields = [];
@@ -595,33 +631,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
         return;
       }
 
-      // Check Table Plan requirements if the restaurant uses it
-      // Compute available pages to check if they have tablePlan
-      const availablePages = new Set<string>();
-      
-      const planPopulated = await Restaurant.findById(id).populate({
-        path: "plan",
-        populate: { path: "features" },
-      });
-      
-      if (planPopulated?.plan && (planPopulated.plan as any).features) {
-        (planPopulated.plan as any).features.forEach((f: any) => {
-          if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
-            f.associatedPages.forEach((p: string) => availablePages.add(p));
-          }
-        });
-      }
-      if (planPopulated?.features && planPopulated.features.length > 0) {
-        const { Feature } = await import("../models/featureModel.js");
-        const extraFeatures = await Feature.find({ name: { $in: planPopulated.features }, active: true });
-        extraFeatures.forEach((f) => {
-          if (f.associatedPages && Array.isArray(f.associatedPages)) {
-            f.associatedPages.forEach((p: string) => availablePages.add(p));
-          }
-        });
-      }
 
-      const hasTablePlanFeature = availablePages.has("tablePlan");
 
       if (hasTablePlanFeature) {
         // If they are specifically updating zones or tablePlan
