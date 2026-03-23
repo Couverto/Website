@@ -357,11 +357,22 @@ export const RestaurantSettings = () => {
                       >
                         Gérer le compte
                       </Button>
-                      <Controller
-                        control={control}
-                        name="isBankImprintEnabled"
-                        render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-                      />
+                      <div className="flex flex-col items-end gap-1">
+                        <Controller
+                          control={control}
+                          name="isBankImprintEnabled"
+                          render={({ field }) => (
+                            <Switch 
+                              checked={field.value} 
+                              disabled={!watch("stripeConnectEnabled")}
+                              onCheckedChange={field.onChange} 
+                            />
+                          )}
+                        />
+                        {!watch("stripeConnectEnabled") && (
+                          <span className="text-[10px] text-muted-foreground mr-1">Vérification requise</span>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <Button

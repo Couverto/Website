@@ -596,11 +596,17 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
     const hasTablePlanFeature = availablePages.has("tablePlan");
     const hasBankImprintFeature = availablePages.has("bankImprint");
 
-    // Security Gate: Check if user attempts to enable Bank Imprint without the feature
+    // Security Gate: Check if user attempts to enable Bank Imprint without the feature or stripe verification
     if (req.body.isBankImprintEnabled !== undefined && req.body.isBankImprintEnabled !== currentRestaurant.isBankImprintEnabled) {
-      if (req.body.isBankImprintEnabled === true && !hasBankImprintFeature) {
-        res.status(403).json({ error: "Votre plan actuel ne permet pas d'activer l'empreinte bancaire." });
-        return;
+      if (req.body.isBankImprintEnabled === true) {
+        if (!hasBankImprintFeature) {
+          res.status(403).json({ error: "Votre plan actuel ne permet pas d'activer l'empreinte bancaire." });
+          return;
+        }
+        if (!currentRestaurant.stripeConnectEnabled) {
+          res.status(403).json({ error: "Vous devez finaliser la vérification de votre compte Stripe avant d'activer l'empreinte bancaire." });
+          return;
+        }
       }
     }
 
