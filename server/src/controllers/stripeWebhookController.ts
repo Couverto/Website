@@ -152,8 +152,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       }
       break;
     }
-
-    case "invoice.paid":
     case "invoice.payment_succeeded": {
       const invoice = event.data.object as any;
       const subscriptionId = invoice.subscription;
@@ -285,7 +283,6 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
       }
       break;
     }
-
     case "account.updated": {
       const account = event.data.object as any;
       console.log(`[Stripe Webhook] Connect Account updated: ${account.id}`);
@@ -314,6 +311,10 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
 
     default:
       console.log(`Unhandled event type ${event.type}`);
+      createLog({
+        message: `Unhandled stripe event type ${event.type}`,
+        level: logLevels.INFO,
+      });
   }
 
   // Return a 200 response to acknowledge receipt of the event

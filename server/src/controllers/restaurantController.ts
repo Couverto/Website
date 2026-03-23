@@ -570,12 +570,12 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
 
     // Compute available pages to check features globally
     const availablePages = new Set<string>();
-    
+
     const planPopulated = await Restaurant.findById(id).populate({
       path: "plan",
       populate: { path: "features" },
     });
-    
+
     if (planPopulated?.plan && (planPopulated.plan as any).features) {
       (planPopulated.plan as any).features.forEach((f: any) => {
         if (f.active && f.associatedPages && Array.isArray(f.associatedPages)) {
@@ -604,7 +604,9 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
           return;
         }
         if (!currentRestaurant.stripeConnectEnabled) {
-          res.status(403).json({ error: "Vous devez finaliser la vérification de votre compte Stripe avant d'activer l'empreinte bancaire." });
+          res
+            .status(403)
+            .json({ error: "Vous devez finaliser la vérification de votre compte Stripe avant d'activer l'empreinte bancaire." });
           return;
         }
       }
@@ -630,21 +632,19 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       if (missingFields.length > 0) {
         // If they uploaded a NEW cover image but the overall update is rejected (e.g. because they also deleted the name),
         // we should ideally clean up the newly uploaded files. The frontend might re-upload them or abandon them.
-        // But the main issue here is preventing DELETION of the CURRENT files. 
+        // But the main issue here is preventing DELETION of the CURRENT files.
         res.status(400).json({
           error: `Impossible de retirer ces informations car le restaurant est ouvert. Fermez-le d'abord. (Manquant : ${missingFields.join(", ")})`,
         });
         return;
       }
 
-
-
       if (hasTablePlanFeature) {
         // If they are specifically updating zones or tablePlan
         if (req.body.zones !== undefined || req.body.tablePlan !== undefined) {
           const newZones = req.body.zones !== undefined ? req.body.zones : currentRestaurant.zones;
           const newLegacyTablePlan = req.body.tablePlan !== undefined ? req.body.tablePlan : currentRestaurant.tablePlan;
-          
+
           const hasTablesInZones = newZones && newZones.some((z: any) => z.tables && z.tables.length > 0);
           const hasLegacyTables = newLegacyTablePlan && newLegacyTablePlan.length > 0;
 
@@ -1441,6 +1441,20 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
       return;
+    }
+
+    // CLEANUP: Sync Stripe Connect Status if it's marked as incomplete
+    if (restaurant.stripeAccountId && !restaurant.stripeConnectEnabled) {
+      try {
+        const stripeAccount = await stripeService.retrieveAccount(restaurant.stripeAccountId);
+        if (stripeAccount.charges_enabled && stripeAccount.details_submitted) {
+          restaurant.stripeConnectEnabled = true;
+          await restaurant.save();
+          console.log(`[getRestaurantById] Synced Connect Account for ${restaurant.name} - now fully onboarded`);
+        }
+      } catch (err) {
+        console.error("[getRestaurantById] Error fetching stripe connect account for sync", err);
+      }
     }
 
     // CLEANUP: Remove expired exceptional closures
