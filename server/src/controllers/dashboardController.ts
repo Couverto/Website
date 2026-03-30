@@ -98,12 +98,6 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     const totalGuests = totalGuestsAgg[0]?.totalGuests || 0;
     const totalRevenue = (totalRevenueAgg as any)[0]?.totalRevenue || 0;
 
-    createLog({
-      message: `Admin dashboard statistics accessed`,
-      userId: req.userId,
-      level: logLevels.INFO,
-    });
-
     res.status(200).json({
       users: {
         total: totalUsers,
