@@ -19,6 +19,8 @@ import {
   checkRestaurantUniqueness,
   sendRestaurantVerificationCode,
   verifyRestaurantVerificationCode,
+  generateApiKey,
+  revokeApiKey,
 } from "../controllers/restaurantController.js";
 import { createConnectAccountLink } from "../controllers/stripeConnectController.js";
 import {
@@ -86,6 +88,10 @@ restaurantRouter.patch(
   toggleRestaurantClosed,
 );
 restaurantRouter.post("/:id/stripe-connect", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), createConnectAccountLink);
+
+// API Key management
+restaurantRouter.post("/:id/api-key", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), generateApiKey);
+restaurantRouter.delete("/:id/api-key", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), revokeApiKey);
 
 // Collaborator management
 restaurantRouter.get(

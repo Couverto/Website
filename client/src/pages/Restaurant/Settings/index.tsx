@@ -46,6 +46,9 @@ import {
   Code,
   Files,
   Lock,
+  Key,
+  RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -68,6 +71,7 @@ import { PhoneInput } from "@/components/customs/phoneInput";
 import { ExceptionalClosuresEditor } from "@/components/ExceptionalClosuresEditor";
 import { Switch } from "@/components/ui/switch";
 import { EmailVerificationSection } from "@/components/business/EmailVerificationSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const RestaurantSettings = () => {
   const { id } = useParams();
@@ -82,6 +86,11 @@ export const RestaurantSettings = () => {
   const hasTablePlan = availablePages?.includes("tablePlan");
   const hasBankImprint = availablePages?.includes("bankImprint");
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // API Key state
+  const [apiKeyCreatedAt, setApiKeyCreatedAt] = useState<string | null>(null);
+  const [generatedApiKey, setGeneratedApiKey] = useState<string | null>(null);
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
 
   useEffect(() => {
     const connectStatus = searchParams.get("connect");
@@ -140,6 +149,7 @@ export const RestaurantSettings = () => {
         setOriginalEmail(response.data.restaurant.email);
         setIsVerified(true);
         setIsClosed(response.data.restaurant.isClosed);
+        setApiKeyCreatedAt(response.data.restaurant.apiKeyCreatedAt || null);
       } catch (error) {
         toast.error("Erreur lors du chargement des données");
       } finally {
@@ -148,6 +158,34 @@ export const RestaurantSettings = () => {
     };
     if (id) fetchRestaurant();
   }, [id, reset]);
+
+  const handleGenerateApiKey = async () => {
+    setApiKeyLoading(true);
+    try {
+      const response = await api.post(`/restaurants/${id}/api-key`);
+      setGeneratedApiKey(response.data.apiKey);
+      setApiKeyCreatedAt(response.data.createdAt);
+      toast.success("Clé API générée avec succès");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Erreur lors de la génération de la clé API");
+    } finally {
+      setApiKeyLoading(false);
+    }
+  };
+
+  const handleRevokeApiKey = async () => {
+    setApiKeyLoading(true);
+    try {
+      await api.delete(`/restaurants/${id}/api-key`);
+      setApiKeyCreatedAt(null);
+      setGeneratedApiKey(null);
+      toast.success("Clé API révoquée");
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Erreur lors de la révocation de la clé API");
+    } finally {
+      setApiKeyLoading(false);
+    }
+  };
 
   const handleToggleClosed = async () => {
     setToggling(true);
@@ -721,36 +759,248 @@ export const RestaurantSettings = () => {
               <Code className="h-5 w-5" />
               {"Intégration"}
             </CardTitle>
-            <CardDescription>{"Copiez ce code pour ajouter un bouton de réservation sur votre site web personnel"}</CardDescription>
+            <CardDescription>{"Intégrez Couverto à votre site web via un bouton ou directement via l'API"}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative">
-              <div className="absolute top-2 right-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    const code = `<a href="${window.location.origin}/restaurants/infos/${id}" target="_blank" style="background-color: #2d5a43; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">Réserver sur Couverto</a>`;
-                    navigator.clipboard.writeText(code);
-                    toast.success("Code copié dans le presse-papier");
-                  }}
-                >
-                  <Files className="h-4 w-4 mr-2" />
-                  Copier
-                </Button>
-              </div>
-              <pre className="p-4 rounded-lg bg-muted font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
-                <code>{`<a href="${window.location.origin}/restaurants/infos/${id}" 
-                  target="_blank" 
-                  style="background-color: #2d5a43; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">
-                  Réserver sur Couverto
-                      </a>`}</code>
-              </pre>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {"Ce code affichera un bouton 'Réserver sur Couverto' qui redirigera vos clients vers votre page de réservation."}
-            </p>
+            <Tabs defaultValue="widget" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="widget" className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  Widget
+                </TabsTrigger>
+                <TabsTrigger value="api" className="flex items-center gap-2">
+                  <Key className="h-4 w-4" />
+                  API
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Widget Tab */}
+              <TabsContent value="widget" className="space-y-4 pt-4">
+                <div className="relative">
+                  <div className="absolute top-2 right-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        const code = `<a href="${window.location.origin}/restaurants/infos/${id}" target="_blank" style="background-color: #2d5a43; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">Réserver sur Couverto</a>`;
+                        navigator.clipboard.writeText(code);
+                        toast.success("Code copié dans le presse-papier");
+                      }}
+                    >
+                      <Files className="h-4 w-4 mr-2" />
+                      Copier
+                    </Button>
+                  </div>
+                  <pre className="p-4 rounded-lg bg-muted font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all">
+                    <code>{`<a href="${window.location.origin}/restaurants/infos/${id}" 
+                   target="_blank" 
+                   style="background-color: #2d5a43; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-family: sans-serif; font-weight: bold;">
+                   Réserver sur Couverto
+                       </a>`}</code>
+                  </pre>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {"Ce code affichera un bouton 'Réserver sur Couverto' qui redirigera vos clients vers votre page de réservation."}
+                </p>
+              </TabsContent>
+
+              {/* API Tab */}
+              <TabsContent value="api" className="space-y-6 pt-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Intégration API</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Si vous avez déjà un formulaire de réservation sur votre site, utilisez l'API pour transmettre les réservations directement à Couverto sans ajouter de bouton.
+                  </p>
+                </div>
+
+                {/* API Key Management */}
+                <div className="space-y-4 rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base flex items-center gap-2">
+                        <Key className="h-4 w-4 text-primary" />
+                        Clé API
+                      </Label>
+                      {apiKeyCreatedAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Générée le {new Date(apiKeyCreatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {apiKeyCreatedAt ? (
+                        <>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button type="button" variant="outline" size="sm" disabled={apiKeyLoading}>
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Régénérer
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Régénérer la clé API ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  L'ancienne clé sera immédiatement invalidée. Toute intégration utilisant l'ancienne clé cessera de fonctionner.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleGenerateApiKey}>Régénérer</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button type="button" variant="outline" size="sm" className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground" disabled={apiKeyLoading}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Révoquer
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Révoquer la clé API ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  L'accès API sera désactivé immédiatement. Vous pourrez en générer une nouvelle à tout moment.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleRevokeApiKey} className="bg-destructive hover:bg-destructive/90">Révoquer</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      ) : (
+                        <Button type="button" variant="default" size="sm" onClick={handleGenerateApiKey} disabled={apiKeyLoading}>
+                          {apiKeyLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Key className="h-4 w-4 mr-2" />}
+                          Générer une clé API
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Show generated key once */}
+                  {generatedApiKey && (
+                    <div className="animate-in fade-in slide-in-from-top-2 space-y-2 p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-primary flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4" />
+                          Conservez cette clé précieusement !
+                        </p>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(generatedApiKey);
+                            toast.success("Clé API copiée dans le presse-papier");
+                          }}
+                        >
+                          <Files className="h-4 w-4 mr-2" />
+                          Copier
+                        </Button>
+                      </div>
+                      <pre className="p-3 rounded-md bg-muted font-mono text-xs overflow-x-auto break-all">
+                        {generatedApiKey}
+                      </pre>
+                      <p className="text-xs text-destructive font-medium">
+                        Cette clé ne sera plus jamais affichée. Notez-la maintenant.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* API Documentation */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Documentation
+                  </h4>
+
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>Envoyez une requête <code className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">POST</code> à l'endpoint suivant :</p>
+                    <pre className="p-3 rounded-lg bg-muted font-mono text-xs overflow-x-auto">
+                      {`${window.location.origin.replace(/:\d+$/, ':3000')}/api/external/bookings`}
+                    </pre>
+                  </div>
+
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium">En-têtes requis :</p>
+                    <div className="rounded-lg bg-muted p-3 font-mono text-xs space-y-1">
+                      <p><span className="text-primary">Content-Type:</span> application/json</p>
+                      <p><span className="text-primary">X-API-Key:</span> {"<votre-clé-api>"}</p>
+                      <p><span className="text-primary">X-Restaurant-Id:</span> {id}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium">Corps de la requête (JSON) :</p>
+                    <pre className="p-3 rounded-lg bg-muted font-mono text-xs overflow-x-auto whitespace-pre">
+{`{
+  "bookingDate": "2026-04-01T19:00:00.000Z",
+  "guests": 2,
+  "customer": {
+    "name": "Jean Dupont",
+    "phone": "+33612345678",
+    "email": "jean@exemple.fr"
+  },
+  "notes": "Anniversaire"
+}`}
+                    </pre>
+                  </div>
+
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium">Exemple cURL :</p>
+                    <div className="relative">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2 h-7 px-2"
+                        onClick={() => {
+                          const curlCmd = `curl -X POST ${window.location.origin.replace(/:\d+$/, ':3000')}/api/external/bookings \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: VOTRE_CLE_API" \\\n  -H "X-Restaurant-Id: ${id}" \\\n  -d '{"bookingDate":"2026-04-01T19:00:00.000Z","guests":2,"customer":{"name":"Jean Dupont","phone":"+33612345678","email":"jean@exemple.fr"}}'`;
+                          navigator.clipboard.writeText(curlCmd);
+                          toast.success("Commande cURL copiée");
+                        }}
+                      >
+                        <Files className="h-3 w-3" />
+                      </Button>
+                      <pre className="p-3 rounded-lg bg-muted font-mono text-xs overflow-x-auto whitespace-pre">
+{`curl -X POST ${window.location.origin.replace(/:\d+$/, ':3000')}/api/external/bookings \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: VOTRE_CLE_API" \\
+  -H "X-Restaurant-Id: ${id}" \\
+  -d '{
+    "bookingDate": "2026-04-01T19:00:00.000Z",
+    "guests": 2,
+    "customer": {
+      "name": "Jean Dupont",
+      "phone": "+33612345678",
+      "email": "jean@exemple.fr"
+    }
+  }'`}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground space-y-1">
+                    <p className="font-semibold text-foreground flex items-center gap-1.5">
+                      <Info className="h-3.5 w-3.5 text-primary" />
+                      Champs requis
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5 pl-1">
+                      <li><code className="font-mono text-primary">bookingDate</code> — Date/heure en format ISO 8601</li>
+                      <li><code className="font-mono text-primary">guests</code> — Nombre de couverts (minimum 1)</li>
+                      <li><code className="font-mono text-primary">customer.name</code> — Nom du client</li>
+                      <li><code className="font-mono text-primary">customer.phone</code> — Téléphone du client</li>
+                    </ul>
+                    <p className="pt-1">Les champs <code className="font-mono">customer.email</code> et <code className="font-mono">notes</code> sont optionnels.</p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 

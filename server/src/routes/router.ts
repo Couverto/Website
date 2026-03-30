@@ -14,6 +14,7 @@ import { featureRouter } from "./featureRoutes.js";
 import { reviewRoutes } from "./reviewRoutes.js";
 import { referralRouter } from "./referralRoutes.js";
 import { contactRouter } from "./contactRoutes.js";
+import { externalApiRouter } from "./externalApiRoutes.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -36,6 +37,7 @@ router.use("/api/referral", referralRouter); // Referral routes
 router.use("/api/admin", adminRouter); // Admin routes
 router.use("/api/contact", contactRouter); // Contact routes
 router.use("/api", paymentRouter); // Payment routes
+router.use("/api/external", externalApiRouter); // External API routes (restaurant integrations)
 
 // // UPLOADS routes
 router.use("/api/uploads", uploadRouter); // File upload routes

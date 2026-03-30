@@ -66,6 +66,10 @@ export interface IRestaurant extends Document {
   referralCodeUsed?: mongoose.Types.ObjectId;
   referrals: mongoose.Types.ObjectId[];
   subscriptionStartDelay: number;
+
+  // External API
+  apiKey?: string;
+  apiKeyCreatedAt?: Date;
   // Table Plan
   zones: {
     id: string;

@@ -60,6 +60,10 @@ export interface RestaurantInterface {
   stripeAccountId?: string;
   stripeConnectEnabled?: boolean;
 
+  // External API
+  apiKey?: string;
+  apiKeyCreatedAt?: string;
+
   zones: {
     id: string;
     name: string;

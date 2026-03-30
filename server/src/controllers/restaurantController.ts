@@ -2389,3 +2389,81 @@ export const verifyRestaurantVerificationCode = async (req: Request, res: Respon
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function generateApiKey
+ * @description Generates a new API key for the restaurant (external booking integration).
+ * Returns the plain key ONCE — only the HMAC-SHA256 hash is stored.
+ */
+export const generateApiKey = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Restaurant introuvable" });
+      return;
+    }
+
+    // Generate a random 32-byte key
+    const plainKey = crypto.randomBytes(32).toString("hex");
+
+    // Hash it with HMAC-SHA256 for storage
+    const hashedKey = crypto
+      .createHmac("sha256", process.env.API_KEY_SECRET || "couverto-api-key-secret")
+      .update(plainKey)
+      .digest("hex");
+
+    restaurant.apiKey = hashedKey;
+    restaurant.apiKeyCreatedAt = new Date();
+    await restaurant.save();
+
+    createLog({
+      message: `API key generated for restaurant ${id}`,
+      userId: req.userId,
+      level: logLevels.INFO,
+    });
+
+    // Return the plain key — it will never be retrievable again
+    res.status(200).json({
+      apiKey: plainKey,
+      createdAt: restaurant.apiKeyCreatedAt,
+      message: "Clé API générée. Conservez-la précieusement, elle ne sera plus affichée.",
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function revokeApiKey
+ * @description Revokes the restaurant's API key, disabling external API access.
+ */
+export const revokeApiKey = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Restaurant introuvable" });
+      return;
+    }
+
+    restaurant.apiKey = undefined as any;
+    restaurant.apiKeyCreatedAt = undefined as any;
+    await restaurant.save();
+
+    // Use $unset to properly remove the fields from MongoDB
+    await Restaurant.updateOne({ _id: id }, { $unset: { apiKey: 1, apiKeyCreatedAt: 1 } });
+
+    createLog({
+      message: `API key revoked for restaurant ${id}`,
+      userId: req.userId,
+      level: logLevels.WARN,
+    });
+
+    res.status(200).json({ message: "Clé API révoquée" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

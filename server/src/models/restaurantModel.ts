@@ -132,6 +132,16 @@ const RestaurantSchema = new Schema<IRestaurant>(
       default: 0, // Days of delay before subscription starts
     },
 
+    // External API key (hashed)
+    apiKey: {
+      type: String,
+      default: null,
+    },
+    apiKeyCreatedAt: {
+      type: Date,
+      default: null,
+    },
+
     zones: {
       type: [
         {
