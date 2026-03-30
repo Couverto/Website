@@ -9,7 +9,6 @@ import { RestaurantContext } from "@/interfaces/Components";
 import { DataTable } from "@/components/customs/dataTable";
 import { getColumns } from "./columns";
 import { useOutletContext } from "react-router-dom";
-import { useOutletContext } from "react-router-dom";
 
 import {
   AlertDialog,
@@ -25,7 +24,6 @@ import {
 export const RestaurantBookings = () => {
   const { id } = useParams();
   const { availablePages } = useOutletContext<RestaurantContext>();
-  const { availablePages } = useOutletContext<RestaurantContext>();
   const { socket } = useSocketContext();
   const [bookings, setBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,8 +31,6 @@ export const RestaurantBookings = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [count, setCount] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-
-  const hasTablePlan = availablePages?.includes("tablePlan") ?? false;
 
   const hasTablePlan = availablePages?.includes("tablePlan") ?? false;
 
@@ -221,7 +217,6 @@ export const RestaurantBookings = () => {
             <AlertDialogTitle>Confirmer la réservation ?</AlertDialogTitle>
             <AlertDialogDescription>
               Cette action changera le statut de la réservation à "Confirmée" et informera le client.
-              {hasTablePlan && selectedBooking?.tableLabel && (
               {hasTablePlan && selectedBooking?.tableLabel && (
                 <div className="mt-2 p-2 bg-primary/5 border border-primary/10 rounded-md">
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary">Table assignée:</span>
