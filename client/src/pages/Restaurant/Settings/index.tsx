@@ -1035,8 +1035,9 @@ export const RestaurantSettings = () => {
                       <li><code className="font-mono text-primary">guests</code> — Nombre de couverts (minimum 1)</li>
                       <li><code className="font-mono text-primary">customer.name</code> — Nom du client</li>
                       <li><code className="font-mono text-primary">customer.phone</code> — Téléphone du client</li>
+                      <li><code className="font-mono text-primary">customer.email</code> — Email du client</li>
                     </ul>
-                    <p className="pt-1">Les champs <code className="font-mono">customer.email</code> et <code className="font-mono">notes</code> sont optionnels.</p>
+                    <p className="pt-1">Le champ <code className="font-mono">notes</code> est optionnel.</p>
                   </div>
                 </div>
               </TabsContent>

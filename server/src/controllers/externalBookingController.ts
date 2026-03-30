@@ -58,10 +58,10 @@ export const createExternalBooking = async (req: Request, res: Response): Promis
     const { bookingDate, guests, customer, notes } = req.body;
 
     // Validate required fields
-    if (!bookingDate || !guests || !customer?.name || !customer?.phone) {
+    if (!bookingDate || !guests || !customer?.name || !customer?.phone || !customer?.email) {
       res.status(400).json({
         error: "Champs requis manquants",
-        required: { bookingDate: "ISO 8601", guests: "number", customer: { name: "string", phone: "string", email: "string (optionnel)" } },
+        required: { bookingDate: "ISO 8601", guests: "number", customer: { name: "string", phone: "string", email: "string" } },
       });
       return;
     }
