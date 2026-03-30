@@ -77,20 +77,28 @@ export const ValueProps = () => {
             icon={<Clock className="h-7 w-7" />}
             className="md:col-span-2 row-span-2 bg-gradient-to-br from-background to-muted/30"
           >
-            {/* Hero Image / Mockup - Panoramic Version */}
-            <div className="my-8 relative group/image">
+            {/* UI Mockup replacing image */}
+            <div className="my-8 relative group/ui">
               <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full" />
-              <div className="relative rounded-2xl overflow-hidden border bg-background/50 shadow-xl transition-transform duration-500 group-hover/image:scale-[1.01]">
-                <img
-                  src="/images/illustrations/instant_confirmation_panoramic.png"
-                  alt="Confirmation immédiate"
-                  className="w-full h-32 md:h-48 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent flex items-bottom p-4">
-                  <div className="mt-auto flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse transition-all group-hover/image:scale-125 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Système en direct</span>
+              <div className="relative h-32 md:h-48 rounded-2xl overflow-hidden border bg-gradient-to-br from-green-500/5 to-primary/5 shadow-xl transition-all duration-500 group-hover/ui:scale-[1.01] flex flex-col items-center justify-center p-4">
+                {/* Background styling equivalent */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                
+                {/* Notification Widget Mockup */}
+                <div className="relative z-10 w-full max-w-sm bg-background/95 backdrop-blur-md border border-border/50 rounded-2xl p-4 shadow-xl flex items-center gap-4 transform transition-all duration-500 group-hover/ui:-translate-y-1 group-hover/ui:shadow-2xl">
+                  <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0 relative">
+                    <PartyPopper className="h-6 w-6 text-green-600 dark:text-green-500" />
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm md:text-base font-bold text-foreground truncate">Réservation confirmée !</h4>
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">Ce soir à 20h00 pour 2 pers.</p>
+                  </div>
+                </div>
+
+                {/* Status Indicator at bottom left */}
+                <div className="absolute bottom-3 left-4 flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse transition-all group-hover/ui:scale-125 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Système en direct</span>
                 </div>
               </div>
             </div>
