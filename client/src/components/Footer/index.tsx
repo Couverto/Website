@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useConfigContext } from "@/contexts/configContext";
-import { Linkedin, Github } from "lucide-react";
+import { Linkedin, Github, Instagram } from "lucide-react";
 
 const DiscordIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" fill="currentColor" stroke="none" className={className}>
@@ -102,9 +102,7 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>
-            © {currentYear} {appName}. Tous droits réservés.
-          </p>
+          <p>© {currentYear} Couverto. Tous droits réservés.</p>
           <div className="flex items-center gap-4">
             <a
               href="https://discord.gg/wfCgbEVM"
@@ -125,13 +123,13 @@ export const Footer = () => {
               <span className="sr-only">LinkedIn</span>
             </a>
             <a
-              href="https://github.com/Couverto"
+              href="https://www.instagram.com/couverto_"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-[#E1306C] transition-colors"
             >
-              <Github className="h-5 w-5" />
-              <span className="sr-only">GitHub</span>
+              <Instagram className="h-5 w-5" />
+              <span className="sr-only">Instagram</span>
             </a>
           </div>
           <p>{"Fait avec soin pour les restaurateurs indépendants 🇫🇷"}</p>
