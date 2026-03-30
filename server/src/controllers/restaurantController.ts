@@ -35,6 +35,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
       .populate("collaborators", "name forename email avatar")
       .populate("plan", "name price")
       .populate("referralCodeUsed", "code type discountPercentage")
+      .select("-menu -zones -exceptionalClosures -apiKey -stripeAccountId -stripeConnectEnabled -collaboratorRoles")
       .sort({ createdAt: -1 })
       .skip(page * size)
       .limit(size);
@@ -1443,35 +1444,43 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // CLEANUP: Sync Stripe Connect Status if it's marked as incomplete
+    // NON-BLOCKING CLEANUP: Sync Stripe Connect Status if it's marked as incomplete
     if (restaurant.stripeAccountId && !restaurant.stripeConnectEnabled) {
-      try {
-        const stripeAccount = await stripeService.retrieveAccount(restaurant.stripeAccountId);
+      stripeService.retrieveAccount(restaurant.stripeAccountId).then((stripeAccount) => {
         if (stripeAccount.charges_enabled && stripeAccount.details_submitted) {
-          restaurant.stripeConnectEnabled = true;
-          await restaurant.save();
-          console.log(`[getRestaurantById] Synced Connect Account for ${restaurant.name} - now fully onboarded`);
+          Restaurant.findById(restaurant._id).then(freshResto => {
+            if (freshResto) {
+              freshResto.stripeConnectEnabled = true;
+              freshResto.save().then(() => {
+                console.log(`[getRestaurantById] Synced Connect Account for ${restaurant.name} - now fully onboarded`);
+              }).catch(console.error);
+            }
+          });
         }
-      } catch (err) {
+      }).catch(err => {
         console.error("[getRestaurantById] Error fetching stripe connect account for sync", err);
-      }
+      });
     }
 
-    // CLEANUP: Remove expired exceptional closures
+    // NON-BLOCKING CLEANUP: Remove expired exceptional closures
     if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
-      const todayStr = new Date().toISOString().split("T")[0];
-      const initialCount = restaurant.exceptionalClosures.length;
+      Promise.resolve().then(async () => {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const initialCount = restaurant.exceptionalClosures.length;
+        const activeClosures = restaurant.exceptionalClosures.filter((closure: any) => {
+          const endStr = new Date(closure.endDate).toISOString().split("T")[0];
+          return endStr >= todayStr;
+        });
 
-      const activeClosures = restaurant.exceptionalClosures.filter((closure: any) => {
-        const endStr = new Date(closure.endDate).toISOString().split("T")[0];
-        return endStr >= todayStr;
-      });
-
-      if (activeClosures.length !== initialCount) {
-        restaurant.exceptionalClosures = activeClosures;
-        await restaurant.save();
-        console.log(`[Cleanup] Removed ${initialCount - activeClosures.length} expired closures for ${restaurant.name}`);
-      }
+        if (activeClosures.length !== initialCount) {
+          const freshResto = await Restaurant.findById(restaurant._id);
+          if (freshResto) {
+            freshResto.exceptionalClosures = activeClosures;
+            await freshResto.save();
+            console.log(`[Cleanup] Removed ${initialCount - activeClosures.length} expired closures for ${restaurant.name}`);
+          }
+        }
+      }).catch(console.error);
     }
 
     // Get the requesting user's role for this restaurant
@@ -1524,235 +1533,78 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Today's bookings
-    const todayBookings = await Booking.countDocuments({
-      restaurant: id,
-      bookingDate: { $gte: startOfToday, $lt: endOfToday },
-      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
-    });
-
-    // Today's guests
-    const todayGuests = await Booking.aggregate([
-      {
-        $match: {
-          restaurant: new (await import("mongoose")).Types.ObjectId(id),
-          bookingDate: { $gte: startOfToday },
-          status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
-        },
-      },
-      { $group: { _id: null, total: { $sum: "$guests" } } },
-    ]);
-
-    // This week's bookings
-    const weekBookings = await Booking.countDocuments({
-      restaurant: id,
-      bookingDate: { $gte: startOfWeek },
-      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
-    });
-
-    // This month's bookings
-    const monthBookings = await Booking.countDocuments({
-      restaurant: id,
-      bookingDate: { $gte: startOfMonth },
-      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
-    });
-
-    // Upcoming bookings (next 7 days)
-    const rawUpcomingBookings = await Booking.find({
-      restaurant: id,
-      bookingDate: { $gte: now },
-      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
-      isDismissedByRestaurant: { $ne: true },
-    })
-      .sort({ bookingDate: 1 })
-      .populate("user", "name forename avatar");
-
-    // Recent bookings (last 10 received) - for the dashboard feed widget
-    // Includes CANCELLED, but excludes dismissed
-    // Enrich with table labels (Unified fetch)
-    const restaurantDoc = await Restaurant.findById(id).select("zones");
-
-    const recentBookings = await Promise.all(
-      (
-        await Booking.find({
-          restaurant: id,
-          isDismissedByRestaurant: { $ne: true },
-        })
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .populate("user", "name forename avatar")
-      ).map(async (b) => {
-        const bObj = b.toObject();
-        if (bObj.tableId && restaurantDoc?.zones) {
-          for (const zone of restaurantDoc.zones) {
-            const table = zone.tables.find((t: any) => t.id === bObj.tableId);
-            if (table) {
-              (bObj as any).tableLabel = table.label;
-              (bObj as any).zoneName = zone.name;
-              break;
-            }
-          }
-        }
-        return bObj;
-      }),
-    );
-
-    // Active bookings for widget (now - 2h to now + 2h)
     const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
     const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-    const rawActiveBookings = await Booking.find({
-      restaurant: id,
-      bookingDate: { $gte: twoHoursAgo, $lte: twoHoursFromNow },
-      status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] },
-      isDismissedByRestaurant: { $ne: true },
-    }).populate("user", "name forename avatar");
-
-    const upcomingBookings = rawUpcomingBookings.map((b) => {
-      const bObj = b.toObject();
-      if (bObj.tableId && restaurantDoc?.zones) {
-        for (const zone of restaurantDoc.zones) {
-          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
-          if (table) {
-            (bObj as any).tableLabel = table.label;
-            (bObj as any).zoneName = zone.name;
-            break;
-          }
-        }
-      }
-      return bObj;
-    });
-
-    const activeBookings = rawActiveBookings.map((b) => {
-      const bObj = b.toObject();
-      if (bObj.tableId && restaurantDoc?.zones) {
-        for (const zone of restaurantDoc.zones) {
-          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
-          if (table) {
-            (bObj as any).tableLabel = table.label;
-            (bObj as any).zoneName = zone.name;
-            break;
-          }
-        }
-      }
-      return bObj;
-    });
-
-    // Daily stats for the last 7 days
     const sevenDaysAgo = new Date(startOfToday);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const dailyStats = await Booking.aggregate([
-      {
-        $match: {
-          restaurant: new (await import("mongoose")).Types.ObjectId(id),
-          bookingDate: { $gte: sevenDaysAgo },
-        },
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: 1 } },
+    // Execute all independent database queries concurrently
+    const [
+      todayBookings,
+      todayGuestsAgg,
+      weekBookings,
+      monthBookings,
+      rawUpcomingBookings,
+      restaurantDoc,
+      rawRecentBookings,
+      rawActiveBookings,
+      dailyStats,
+      hourlyStats,
+      statusBreakdown,
+      uniqueClients,
+      guestDistributionAgg,
+      totalBookingsAllTime,
+      cancelledBookingsAllTime,
+      averageGuestsResult,
+      leadTimeResult,
+      busyDays
+    ] = await Promise.all([
+      Booking.countDocuments({ restaurant: id, bookingDate: { $gte: startOfToday, $lt: endOfToday }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: startOfToday }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } } }, { $group: { _id: null, total: { $sum: "$guests" } } }]),
+      Booking.countDocuments({ restaurant: id, bookingDate: { $gte: startOfWeek }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }),
+      Booking.countDocuments({ restaurant: id, bookingDate: { $gte: startOfMonth }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }),
+      Booking.find({ restaurant: id, bookingDate: { $gte: now }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] }, isDismissedByRestaurant: { $ne: true } }).sort({ bookingDate: 1 }).populate("user", "name forename avatar"),
+      Restaurant.findById(id).select("zones"),
+      Booking.find({ restaurant: id, isDismissedByRestaurant: { $ne: true } }).sort({ createdAt: -1 }).limit(10).populate("user", "name forename avatar"),
+      Booking.find({ restaurant: id, bookingDate: { $gte: twoHoursAgo, $lte: twoHoursFromNow }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] }, isDismissedByRestaurant: { $ne: true } }).populate("user", "name forename avatar"),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: sevenDaysAgo } } }, { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000) } } }, { $group: { _id: { $hour: "$bookingDate" }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
+      Booking.distinct("customer.phone", { restaurant: id }),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } }, { $project: { range: { $switch: { branches: [{ case: { $lte: ["$guests", 2] }, then: "1-2" }, { case: { $lte: ["$guests", 4] }, then: "3-4" }, { case: { $lte: ["$guests", 6] }, then: "5-6" }], default: "7+" } } } }, { $group: { _id: "$range", count: { $sum: 1 } } }]),
+      Booking.countDocuments({ restaurant: id, status: { $ne: bookingStatus.DRAFT } }),
+      Booking.countDocuments({ restaurant: id, status: bookingStatus.CANCELLED }),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $group: { _id: null, avg: { $avg: "$guests" } } }]),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $project: { leadTime: { $subtract: ["$bookingDate", "$createdAt"] } } }, { $group: { _id: null, avgLeadTime: { $avg: "$leadTime" } } }]),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $group: { _id: { $dayOfWeek: "$bookingDate" }, count: { $sum: 1 } } }, { $sort: { count: -1 } }])
     ]);
 
-    // Hourly distribution for today
-    const hourlyStats = await Booking.aggregate([
-      {
-        $match: {
-          restaurant: new (await import("mongoose")).Types.ObjectId(id),
-          bookingDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000) },
-        },
-      },
-      {
-        $group: {
-          _id: { $hour: "$bookingDate" },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { _id: 1 } },
-    ]);
-
-    // Status breakdown
-    const statusBreakdown = await Booking.aggregate([
-      {
-        $match: {
-          restaurant: new (await import("mongoose")).Types.ObjectId(id),
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    // Total unique clients
-    const uniqueClients = await Booking.distinct("customer.phone", { restaurant: id });
-
-    // Guest Distribution
-    const guestDistribution = await Booking.aggregate([
-      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } },
-      {
-        $project: {
-          range: {
-            $switch: {
-              branches: [
-                { case: { $lte: ["$guests", 2] }, then: "1-2" },
-                { case: { $lte: ["$guests", 4] }, then: "3-4" },
-                { case: { $lte: ["$guests", 6] }, then: "5-6" },
-              ],
-              default: "7+",
-            },
-          },
-        },
-      },
-      { $group: { _id: "$range", count: { $sum: 1 } } },
-    ]).then((res) => res.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}));
-
-    // Cancellation Rate
-    const totalBookingsAllTime = await Booking.countDocuments({
-      restaurant: id,
-      status: { $ne: bookingStatus.DRAFT },
-    });
-    const cancelledBookingsAllTime = await Booking.countDocuments({
-      restaurant: id,
-      status: bookingStatus.CANCELLED,
-    });
+    const todayGuests = todayGuestsAgg;
+    const guestDistribution = guestDistributionAgg.reduce((acc: any, curr: any) => ({ ...acc, [curr._id]: curr.count }), {});
+    
+    // Post-process table labels
+    const resolveTableInfo = (b: any) => {
+      const bObj = b.toObject();
+      if (bObj.tableId && restaurantDoc?.zones) {
+        for (const zone of restaurantDoc.zones) {
+          const table = zone.tables.find((t: any) => t.id === bObj.tableId);
+          if (table) {
+            (bObj as any).tableLabel = table.label;
+            (bObj as any).zoneName = zone.name;
+            break;
+          }
+        }
+      }
+      return bObj;
+    };
+    
+    const recentBookings = rawRecentBookings.map(resolveTableInfo);
+    const upcomingBookings = rawUpcomingBookings.map(resolveTableInfo);
+    const activeBookings = rawActiveBookings.map(resolveTableInfo);
+    
     const cancellationRate = totalBookingsAllTime > 0 ? (cancelledBookingsAllTime / totalBookingsAllTime) * 100 : 0;
-
-    // Average Guests
-    const averageGuestsResult = await Booking.aggregate([
-      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } },
-      { $group: { _id: null, avg: { $avg: "$guests" } } },
-    ]);
     const averageGuests = averageGuestsResult[0]?.avg || 0;
-
-    // Average Lead Time
-    const leadTimeResult = await Booking.aggregate([
-      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } },
-      {
-        $project: {
-          leadTime: { $subtract: ["$bookingDate", "$createdAt"] },
-        },
-      },
-      { $group: { _id: null, avgLeadTime: { $avg: "$leadTime" } } },
-    ]);
     const averageLeadTime = leadTimeResult[0]?.avgLeadTime ? leadTimeResult[0].avgLeadTime / (1000 * 60 * 60 * 24) : 0;
-
-    // Busiest Days
-    const busyDays = await Booking.aggregate([
-      { $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } },
-      {
-        $group: {
-          _id: { $dayOfWeek: "$bookingDate" },
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
 
     res.status(200).json({
       stats: {

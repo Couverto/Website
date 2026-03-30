@@ -89,4 +89,8 @@ const bookingSchema = new Schema<IBooking>(
   { timestamps: true },
 );
 
+// Compound indexes for optimized dashboard queries
+bookingSchema.index({ restaurant: 1, bookingDate: 1, status: 1 });
+bookingSchema.index({ restaurant: 1, isDismissedByRestaurant: 1 });
+
 export const Booking = model<IBooking>("Booking", bookingSchema);
