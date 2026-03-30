@@ -46,6 +46,7 @@ import {
   Code,
   Files,
   Lock,
+  Settings2,
   Key,
   RefreshCw,
   BookOpen,
@@ -277,13 +278,34 @@ export const RestaurantSettings = () => {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-20">
+    <div className="space-y-6 max-w-5xl mx-auto pb-20">
       <div>
         <h1 className="text-3xl font-bold">{"Paramètres"}</h1>
         <p className="text-muted-foreground">{"Configurez les informations de votre restaurant"}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Général
+            </TabsTrigger>
+            <TabsTrigger value="hours" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Horaires
+            </TabsTrigger>
+            <TabsTrigger value="integration" className="flex items-center gap-2">
+              <Code className="h-4 w-4" />
+              Intégration
+            </TabsTrigger>
+            <TabsTrigger value="advanced" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Avancé
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general" className="space-y-8">
         {/* Basic Info */}
         <Card>
           <CardHeader>
@@ -713,6 +735,15 @@ export const RestaurantSettings = () => {
           </CardContent>
         </Card>
 
+        <div className="sticky bottom-4 flex justify-end z-50">
+          <Button type="submit" disabled={saving} size="lg" className="shadow-lg">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {"Enregistrer les modifications"}
+          </Button>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="hours" className="space-y-8">
         {/* Opening Hours */}
         <Card>
           <CardHeader>
@@ -752,6 +783,15 @@ export const RestaurantSettings = () => {
           </CardContent>
         </Card>
 
+        <div className="sticky bottom-4 flex justify-end z-50">
+          <Button type="submit" disabled={saving} size="lg" className="shadow-lg">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {"Enregistrer les modifications"}
+          </Button>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="integration" className="space-y-8">
         {/* Widget Integration */}
         <Card>
           <CardHeader>
@@ -1003,7 +1043,9 @@ export const RestaurantSettings = () => {
             </Tabs>
           </CardContent>
         </Card>
+      </TabsContent>
 
+      <TabsContent value="advanced" className="space-y-8">
         {/* Danger Zone */}
         <Card className="border-destructive/30 bg-destructive/5">
           <CardHeader>
@@ -1086,13 +1128,8 @@ export const RestaurantSettings = () => {
             </div>
           </CardContent>
         </Card>
-
-        <div className="sticky bottom-4 flex justify-end">
-          <Button type="submit" disabled={saving} size="lg" className="shadow-lg">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            {"Enregistrer les modifications"}
-          </Button>
-        </div>
+      </TabsContent>
+      </Tabs>
       </form>
     </div>
   );
