@@ -1,7 +1,6 @@
-import { Github, Globe, Linkedin, Mail, Heart, Zap, Award, Users, TrendingUp } from "lucide-react";
+import { Github, Globe, Linkedin, Heart, Zap, Award, Users, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useConfigContext } from "@/contexts/configContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
