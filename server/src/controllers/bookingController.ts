@@ -15,6 +15,7 @@ import { bookingCancellationTemplate } from "../templates/bookingCancellationEma
 import { bookingSelfCancellationTemplate } from "../templates/bookingSelfCancellationEmail.js";
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
 import { stripeService } from "../services/stripeService.js";
+import { formatBookingDate, formatBookingTime, formatShortDate } from "../utils/dateFormatter.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -364,16 +365,8 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     // Send confirmation email
     try {
       if (customer.email) {
-        const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        const timeStr = new Date(bookingDate).toLocaleTimeString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        const dateStr = formatBookingDate(bookingDate);
+        const timeStr = formatBookingTime(bookingDate);
 
         const statusSubject = newBooking.status === bookingStatus.CONFIRMED ? "Confirmée" : "En attente";
         const isConfirmed = newBooking.status === bookingStatus.CONFIRMED;
@@ -403,13 +396,8 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     // Notify Restaurant (if email exists and setting is enabled)
     if (restaurantExists.email && restaurantExists.sendBookingEmail) {
       try {
-        const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        const timeStr = new Date(bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = formatBookingDate(bookingDate);
+        const timeStr = formatBookingTime(bookingDate);
 
         await sendEmail({
           email: restaurantExists.email,
@@ -609,13 +597,8 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
     // Email Notifications
     try {
       if (restaurantDoc) {
-        const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = formatBookingDate(booking.bookingDate);
+        const timeStr = formatBookingTime(booking.bookingDate);
 
         // Notify Customer
         if (booking.customer?.email) {
@@ -823,13 +806,8 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
     // Email Notifications
     try {
       if (restaurantDoc && booking.customer?.email) {
-        const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = formatBookingDate(booking.bookingDate);
+        const timeStr = formatBookingTime(booking.bookingDate);
 
         // Notify Customer (Self-cancellation)
         await sendEmail({
@@ -1291,8 +1269,8 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
         const customerEmail = booking.customer?.email;
 
         if (customerEmail && restaurantDoc) {
-          const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR");
-          const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+          const dateStr = formatShortDate(booking.bookingDate);
+          const timeStr = formatBookingTime(booking.bookingDate);
 
           const htmlContent = bookingCancellationTemplate({
             customerName: booking.customer.name,
@@ -1321,13 +1299,8 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
         const customerEmail = booking.customer?.email;
 
         if (customerEmail && restaurantDoc) {
-          const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          });
-          const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+          const dateStr = formatBookingDate(booking.bookingDate);
+          const timeStr = formatBookingTime(booking.bookingDate);
 
           const htmlContent = bookingConfirmationTemplate({
             customerName: booking.customer.name,
@@ -1473,13 +1446,8 @@ export const deleteBookingAdmin = async (req: Request, res: Response): Promise<v
     const customerEmail = booking.customer?.email;
 
     if (customerEmail && restaurantDoc && booking.status !== bookingStatus.CANCELLED) {
-      const dateStr = new Date(booking.bookingDate).toLocaleDateString("fr-FR", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const timeStr = new Date(booking.bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+      const dateStr = formatBookingDate(booking.bookingDate);
+      const timeStr = formatBookingTime(booking.bookingDate);
 
       const { bookingCancellationTemplate } = await import("../templates/bookingCancellationEmail.js");
       const htmlContent = bookingCancellationTemplate({

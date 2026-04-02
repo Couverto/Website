@@ -9,6 +9,7 @@ import { getIO } from "../sockets/socket.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { bookingConfirmationTemplate } from "../templates/bookingConfirmationEmail.js";
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
+import { formatBookingDate, formatBookingTime } from "../utils/dateFormatter.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -233,16 +234,8 @@ export const createExternalBooking = async (req: Request, res: Response): Promis
     // Send confirmation email to customer
     try {
       if (customer.email) {
-        const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        const timeStr = new Date(bookingDate).toLocaleTimeString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        const dateStr = formatBookingDate(bookingDate);
+        const timeStr = formatBookingTime(bookingDate);
 
         const statusSubject = newBooking.status === bookingStatus.CONFIRMED ? "Confirmée" : "En attente";
         const isConfirmed = newBooking.status === bookingStatus.CONFIRMED;
@@ -272,13 +265,8 @@ export const createExternalBooking = async (req: Request, res: Response): Promis
     // Notify restaurant by email
     if (restaurantExists.email && restaurantExists.sendBookingEmail) {
       try {
-        const dateStr = new Date(bookingDate).toLocaleDateString("fr-FR", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-        const timeStr = new Date(bookingDate).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = formatBookingDate(bookingDate);
+        const timeStr = formatBookingTime(bookingDate);
 
         await sendEmail({
           email: restaurantExists.email,
