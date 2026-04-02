@@ -373,8 +373,11 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
         console.log(`[createRestaurant] Creating Stripe checkout session with metadata:`, stripeMetadata);
 
+        // Create Stripe Customer first to avoid "Accounts V2" error (requires customer ID in test mode)
+        const stripeCustomer = await stripeService.createCustomer(creator.email, creator.fullname);
+
         const stripeSession = await stripeService.createCheckoutSession(
-          { email: creator.email },
+          { id: stripeCustomer.id },
           plan.stripePriceId,
           `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`,
           `${process.env.CORS_ORIGIN}/account/payment-cancel`,
