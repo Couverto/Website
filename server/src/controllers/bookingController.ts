@@ -411,6 +411,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             guests: guests,
             notes: notes,
             restaurantName: restaurantExists.name,
+            restaurantId: restaurantExists._id.toString(),
           }),
         });
       } catch (restaurantMailError) {

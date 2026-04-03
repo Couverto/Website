@@ -280,6 +280,7 @@ export const createExternalBooking = async (req: Request, res: Response): Promis
             guests: guests,
             notes: notes,
             restaurantName: restaurantExists.name,
+            restaurantId: restaurantExists._id.toString(),
           }),
         });
       } catch (restaurantMailError) {
