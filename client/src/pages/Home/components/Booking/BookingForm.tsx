@@ -260,8 +260,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                 const start = new Date(closure.startDate);
                 const end = new Date(closure.endDate);
                 const isSameDay = format(start, "yyyy-MM-dd") === format(end, "yyyy-MM-dd");
-                const isFullDay = start.getUTCHours() === 0 && start.getUTCMinutes() === 0 &&
-                                 end.getUTCHours() >= 23 && end.getUTCMinutes() >= 59;
+                const isFullDay = start.getUTCHours() === 0 && end.getUTCHours() >= 23;
 
                 return (
                   <div key={idx} className="text-xs text-orange-700/80 ml-6 flex flex-col sm:flex-row sm:gap-1">
@@ -269,10 +268,16 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                       {isSameDay ? (
                         <>Le {format(start, "dd/MM/yyyy")}</>
                       ) : (
-                        <>Du {format(start, "dd/MM/yyyy")} au {format(end, "dd/MM/yyyy")}</>
+                        <>
+                          Du {format(start, "dd/MM/yyyy")} au {format(end, "dd/MM/yyyy")}
+                        </>
                       )}
                       {!isFullDay && (
-                        <> ({start.getUTCHours().toString().padStart(2, "0")}:{start.getUTCMinutes().toString().padStart(2, "0")} - {end.getUTCHours().toString().padStart(2, "0")}:{end.getUTCMinutes().toString().padStart(2, "0")})</>
+                        <>
+                          {" "}
+                          ({start.getUTCHours().toString().padStart(2, "0")}:{start.getUTCMinutes().toString().padStart(2, "0")} -{" "}
+                          {end.getUTCHours().toString().padStart(2, "0")}:{end.getUTCMinutes().toString().padStart(2, "0")})
+                        </>
                       )}
                       :
                     </span>
@@ -326,11 +331,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                             if (dateStr > sStr && dateStr < eStr) return true;
 
                             // If it's a boundary day, check if it's a full day closure
-                            const isFullDay =
-                              start.getUTCHours() === 0 &&
-                              start.getUTCMinutes() === 0 &&
-                              end.getUTCHours() >= 23 &&
-                              end.getUTCMinutes() >= 59;
+                            const isFullDay = start.getUTCHours() === 0 && end.getUTCHours() >= 23;
 
                             return isFullDay;
                           }

@@ -24,6 +24,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useSocketContext } from "@/contexts/socketContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export const RestaurantDashboard = () => {
   const { id } = useParams();
@@ -61,6 +65,7 @@ export const RestaurantDashboard = () => {
   const [stats, setStats] = useState<RestaurantStats | null>(null);
   const [upcomingBookings, setUpcomingBookings] = useState<BookingInterface[]>([]);
   const [recentBookings, setRecentBookings] = useState<BookingInterface[]>([]);
+  const [dayBookings, setDayBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [newBookingIds, setNewBookingIds] = useState<Set<string>>(new Set());
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
@@ -70,6 +75,8 @@ export const RestaurantDashboard = () => {
   const [cancellationReason, setCancellationReason] = useState(
     "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedService, setSelectedService] = useState<string | null>("all");
 
   const hasTablePlan = context?.availablePages?.includes("tablePlan");
 
@@ -89,14 +96,14 @@ export const RestaurantDashboard = () => {
   const todayServices = useMemo(() => {
     if (!context?.restaurant?.openingHours) return [];
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const todayName = dayNames[new Date().getDay()];
+    const dayName = dayNames[selectedDate.getDay()];
     // @ts-ignore - handle potential map or object
     const schedule = context.restaurant.openingHours instanceof Map 
-      ? context.restaurant.openingHours.get(todayName)
-      : (context.restaurant.openingHours as any)[todayName];
+      ? context.restaurant.openingHours.get(dayName)
+      : (context.restaurant.openingHours as any)[dayName];
     if (!schedule || schedule.isClosed || !schedule.periods) return [];
     return schedule.periods;
-  }, [context?.restaurant?.openingHours]);
+  }, [context?.restaurant?.openingHours, selectedDate]);
 
   const getServiceStatus = useCallback((period: { open: string; close: string }) => {
     if (!context?.restaurant?.exceptionalClosures) return "open";
@@ -134,27 +141,90 @@ export const RestaurantDashboard = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await api.get(`/restaurants/${id}/stats`);
+      setLoading(true);
+      const response = await api.get(`/restaurants/${id}/stats`, {
+        params: { date: format(selectedDate, "yyyy-MM-dd") }
+      });
       setStats(response.data.stats);
       setUpcomingBookings(response.data.upcomingBookings);
       setRecentBookings(response.data.recentBookings || []);
+      setDayBookings(response.data.dayBookings || []);
     } catch (error) {
-      console.error("Failed to fetch stats", error);
+      console.error("Failed to fetch stats:", error);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, selectedDate]);
 
+  const filteredStats = useMemo(() => {
+    if (!stats) return null;
+    if (selectedService === "all") return stats.today;
+
+    const [start, end] = selectedService!.split("-");
+    const filtered = upcomingBookings.filter(b => {
+      const bDate = new Date(b.bookingDate);
+      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      return time >= start && time <= end;
+    });
+
+    return {
+      bookings: filtered.length,
+      guests: filtered.reduce((acc, b) => acc + b.guests, 0),
+    };
+  }, [stats, selectedService, upcomingBookings]);
+
+  const filteredUpcomingBookings = useMemo(() => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    let base = upcomingBookings.filter(b => b.bookingDate.startsWith(dateStr));
+    
+    if (selectedService === "all") return base;
+    const [start, end] = selectedService!.split("-");
+    return base.filter(b => {
+      const bDate = new Date(b.bookingDate);
+      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      return time >= start && time <= end;
+    });
+  }, [upcomingBookings, selectedService, selectedDate]);
+
+  const filteredRecentBookings = useMemo(() => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    let base = recentBookings.filter(b => b.bookingDate.startsWith(dateStr));
+
+    if (selectedService === "all") return base;
+    const [start, end] = selectedService!.split("-");
+    return base.filter(b => {
+      const bDate = new Date(b.bookingDate);
+      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      return time >= start && time <= end;
+    });
+  }, [recentBookings, selectedService, selectedDate]);
+
+  const filteredDayBookings = useMemo(() => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    let base = dayBookings.filter(b => b.bookingDate.startsWith(dateStr));
+
+    if (selectedService === "all") return base;
+    const [start, end] = selectedService!.split("-");
+    return base.filter(b => {
+      const bDate = new Date(b.bookingDate);
+      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      return time >= start && time <= end;
+    });
+  }, [dayBookings, selectedService, selectedDate]);
+
+  // Refresh Logic
   useEffect(() => {
-    if (id) {
-      fetchStats();
-      // Refresh every minute to keep "Active Bookings" live
-      const interval = setInterval(fetchStats, 60000);
-      return () => clearInterval(interval);
-    }
+    fetchStats();
+    // Refresh every minute to keep "Active Bookings" live
+    const interval = setInterval(fetchStats, 60000);
+    return () => clearInterval(interval);
   }, [id, fetchStats]);
 
-  // Socket Logic
+  // Reset selected service when date changes
+  useEffect(() => {
+    setSelectedService("all");
+  }, [selectedDate]);
+
   // Socket Logic
   useEffect(() => {
     if (socket && id) {
@@ -231,7 +301,7 @@ export const RestaurantDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-20 w-full" />
@@ -248,12 +318,16 @@ export const RestaurantDashboard = () => {
   return (
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">{"Tableau de bord"}</h1>
-          <p className="text-muted-foreground">{"Vue d'ensemble de votre restaurant"}</p>
+        <div className="flex flex-col">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">{"Tableau de Bord"}</h2>
+          <p className="text-muted-foreground">
+            {selectedDate.toDateString() === new Date().toDateString() 
+              ? "Aperçu de votre activité pour aujourd'hui." 
+              : `Aperçu de votre activité pour le ${format(selectedDate, "dd MMMM yyyy", { locale: fr })}.`}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {context?.restaurant && (
+            {context?.restaurant && (
             <>
               {todayServices.length > 1 ? (
                 <DropdownMenu>
@@ -369,8 +443,8 @@ export const RestaurantDashboard = () => {
             <CalendarDays className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{stats?.today.bookings || 0}</div>
-            <p className="text-xs text-muted-foreground">{stats?.today.guests || 0} couvert(s) prévus aujourd'hui</p>
+            <div className="text-2xl font-bold text-primary">{filteredStats?.bookings || 0}</div>
+            <p className="text-xs text-muted-foreground">{filteredStats?.guests || 0} couvert(s) prévus</p>
           </CardContent>
         </Card>
 
@@ -434,7 +508,11 @@ export const RestaurantDashboard = () => {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Left Column: Table Plan Map */}
         {hasTablePlan && context?.restaurant && (
-          <DashboardTablePlan restaurant={context.restaurant} bookings={stats?.activeBookings || []} onDismiss={handleDismissBooking} />
+          <DashboardTablePlan 
+            restaurant={context.restaurant} 
+            bookings={selectedService !== "all" || selectedDate.toDateString() !== new Date().toDateString() ? filteredDayBookings : stats?.activeBookings || []} 
+            onDismiss={handleDismissBooking} 
+          />
         )}
 
         {/* Right Column: Recent Bookings */}
@@ -442,9 +520,11 @@ export const RestaurantDashboard = () => {
           <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">Dernières réservations</CardTitle>
+                <CardTitle className="text-lg font-bold">
+                  {selectedService !== "all" ? "Réservations du service" : "Dernières réservations"}
+                </CardTitle>
                 <CardDescription className="text-[10px] uppercase tracking-wider font-semibold opacity-70">
-                  Les 10 dernières
+                  {selectedService !== "all" ? "Pour le service sélectionné" : "Les 10 dernières"}
                 </CardDescription>
               </div>
               <Button variant="ghost" size="sm" asChild className="h-8 px-2 hover:bg-primary/5 hover:text-primary">
@@ -464,14 +544,18 @@ export const RestaurantDashboard = () => {
                   : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-4 min-h-[300px] content-start",
               )}
             >
-              {recentBookings.length === 0 ? (
+              {filteredRecentBookings.length === 0 ? (
                 <div className="text-center py-20 px-4">
                   <Info className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
-                  <p className="text-muted-foreground font-medium">Aucune réservation récente</p>
-                  <p className="text-sm text-muted-foreground mt-1">Les nouvelles réservations apparaîtront ici</p>
+                  <p className="text-muted-foreground font-medium">Aucune réservation</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedService !== "all" 
+                      ? "Aucune réservation pour ce service" 
+                      : "Les nouvelles réservations apparaîtront ici"}
+                  </p>
                 </div>
               ) : (
-                recentBookings.map((booking) => {
+                filteredRecentBookings.map((booking: any) => {
                   const isPending = booking.status === "PENDING";
                   const isConfirmed = booking.status === "CONFIRMED";
                   const isCancelled = booking.status === "CANCELLED";
@@ -591,6 +675,55 @@ export const RestaurantDashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Floating Agenda Menu */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-background/60 backdrop-blur-xl border border-primary/20 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:bg-background/80 hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] group">
+        <div className="flex items-center gap-1 pl-2 pr-1 border-r border-primary/10">
+          <CalendarDays className="h-4 w-4 text-primary opacity-70" />
+          <span className="text-xs font-bold text-primary/80 uppercase tracking-wider px-1">Agenda</span>
+        </div>
+
+        <div className="px-2">
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date: Date | null) => date && setSelectedDate(date)}
+            dateFormat="dd MMM"
+            locale={fr}
+            popperPlacement="top"
+            customInput={
+              <button className="h-9 px-4 rounded-full font-semibold hover:bg-primary/10 hover:text-primary transition-colors text-sm">
+                {format(selectedDate, "dd MMM", { locale: fr })}
+              </button>
+            }
+          />
+        </div>
+
+        {todayServices.length > 0 && (
+          <Select value={selectedService || "all"} onValueChange={setSelectedService}>
+            <SelectTrigger className="bg-transparent border-none shadow-none focus:ring-0 h-9 px-3 font-medium rounded-full hover:bg-primary/5 transition-colors w-[150px]">
+              <SelectValue placeholder="Service" />
+            </SelectTrigger>
+            <SelectContent className="mb-2" side="top">
+              <SelectItem value="all">Tous les services</SelectItem>
+              {todayServices.map((s: any, i: number) => (
+                <SelectItem key={i} value={`${s.open}-${s.close}`}>
+                  {`Service ${i + 1} (${s.open})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all ml-1"
+          onClick={() => setSelectedDate(new Date())}
+          title="Revenir à aujourd'hui"
+        >
+          <Clock className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Move Table Dialog */}
