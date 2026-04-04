@@ -20,6 +20,8 @@ export const getUpdateAccountSchema = () =>
     phone: z.string().refine(validateOptionalPhone, { message: "Numéro de téléphone invalide." }).optional(),
 
     email: z.string().email({ message: "Adresse e-mail invalide." }),
+
+    notificationSound: z.boolean().optional(),
   });
 
 export const getUpdatePasswordSchema = (hasPassword = true) =>

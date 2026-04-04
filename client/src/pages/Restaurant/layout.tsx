@@ -16,6 +16,7 @@ import { Loading } from "@/components/customs/loading";
 import { ConfigurationAlert } from "@/components/business/ConfigurationAlert";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/authContext";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -29,6 +30,7 @@ export const RestaurantLayout = () => {
   const [isLocked, setIsLocked] = useState(false);
 
   const { socket } = useSocketContext();
+  const { user } = useAuth();
 
   const fetchRestaurant = async () => {
     try {
@@ -39,7 +41,9 @@ export const RestaurantLayout = () => {
       setLoading(false);
     } catch (err: any) {
       if (err.response?.status === 403) {
-        toast.error("Accès refusé : Vous n'êtes pas collaborateur de ce restaurant.");
+        toast.error(
+          "Accès refusé : Vous n'êtes pas collaborateur de ce restaurant."
+        );
         navigate("/", { replace: true });
         return;
       } else {
@@ -61,9 +65,18 @@ export const RestaurantLayout = () => {
       socket.emit("joinRestaurant", id);
 
       const handleNewBooking = (newBooking: BookingInterface) => {
-        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-        audio.play().catch((e) => console.error("Audio play failed", e));
         toast.info("Nouvelle réservation reçue !");
+
+        if (location.pathname.includes("/bookings")) {
+          return;
+        }
+
+        if (user?.notificationSound) {
+          const audio = new Audio(
+            "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
+          );
+          audio.play().catch((e) => console.error("Audio play failed", e));
+        }
       };
 
       socket.on("newBooking", handleNewBooking);
@@ -72,7 +85,7 @@ export const RestaurantLayout = () => {
         socket.off("newBooking", handleNewBooking);
       };
     }
-  }, [socket, id]);
+  }, [socket, id, user, location.pathname]);
 
   // Route Protection Interceptor
   useEffect(() => {
@@ -102,8 +115,13 @@ export const RestaurantLayout = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <h1 className="text-2xl font-bold">Restaurant non trouvé</h1>
-        <p className="text-muted-foreground">Ce restaurant n'existe pas ou a été supprimé.</p>
-        <button onClick={() => navigate("/account/restaurants")} className="text-primary hover:underline">
+        <p className="text-muted-foreground">
+          Ce restaurant n'existe pas ou a été supprimé.
+        </p>
+        <button
+          onClick={() => navigate("/account/restaurants")}
+          className="text-primary hover:underline"
+        >
           Retour à mes restaurants
         </button>
       </div>
@@ -113,7 +131,11 @@ export const RestaurantLayout = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <RestaurantSidebar restaurant={restaurant || undefined} userRole={userRole} availablePages={availablePages} />
+        <RestaurantSidebar
+          restaurant={restaurant || undefined}
+          userRole={userRole}
+          availablePages={availablePages}
+        />
         <main className="flex-1 overflow-auto">
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
             <div className="flex items-center gap-2 justify-between w-full">
@@ -134,14 +156,28 @@ export const RestaurantLayout = () => {
                 <div className="bg-muted w-24 h-24 flex items-center justify-center rounded-full mb-6">
                   <Lock className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Fonctionnalité Verrouillée</h2>
+                <h2 className="text-2xl font-bold mb-2">
+                  Fonctionnalité Verrouillée
+                </h2>
                 <p className="text-muted-foreground max-w-md mb-6">
-                  Le forfait de ce restaurant n'inclut pas l'accès à cette fonctionnalité.
+                  Le forfait de ce restaurant n'inclut pas l'accès à cette
+                  fonctionnalité.
                 </p>
-                {userRole === "admin" && <Button onClick={() => navigate(`/restaurant/${id}/plan`)}>Voir les abonnements</Button>}
+                {userRole === "admin" && (
+                  <Button onClick={() => navigate(`/restaurant/${id}/plan`)}>
+                    Voir les abonnements
+                  </Button>
+                )}
               </div>
             ) : (
-              <Outlet context={{ restaurant, userRole, availablePages, refreshRestaurant: fetchRestaurant }} />
+              <Outlet
+                context={{
+                  restaurant,
+                  userRole,
+                  availablePages,
+                  refreshRestaurant: fetchRestaurant,
+                }}
+              />
             )}
           </div>
         </main>

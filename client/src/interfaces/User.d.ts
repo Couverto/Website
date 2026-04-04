@@ -15,4 +15,5 @@ export interface UserInterface {
   avatar: string;
   hasPassword?: boolean;
   auth_type: string;
+  notificationSound: boolean;
 }
