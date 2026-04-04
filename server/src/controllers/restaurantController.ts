@@ -1243,25 +1243,27 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
     const queryDate = new Date(date as string);
 
-    // Check exceptional closures
+    // Base day checking for exceptional closures (if full day is closed)
+    let isFullDayClosed = false;
     if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
-      const isExceptionallyClosed = restaurant.exceptionalClosures.some((closure: any) => {
+      isFullDayClosed = restaurant.exceptionalClosures.some((closure: any) => {
         const start = new Date(closure.startDate);
         const end = new Date(closure.endDate);
-
-        // Normalize logic: check if queryDate is within closure range
-        // We use string comparison of YYYY-MM-DD to be safe regarding timezones/hours
         const qStr = queryDate.toISOString().split("T")[0];
         const sStr = start.toISOString().split("T")[0];
         const eStr = end.toISOString().split("T")[0];
-
-        return qStr >= sStr && qStr <= eStr;
+        
+        // Check if closure covers the WHOLE day (at least from 00:00 to 23:59)
+        const isFullDay = sStr === qStr && eStr === qStr && 
+                         start.getUTCHours() === 0 && start.getUTCMinutes() === 0 &&
+                         end.getUTCHours() >= 23 && end.getUTCMinutes() >= 59;
+        return isFullDay;
       });
+    }
 
-      if (isExceptionallyClosed) {
-        res.status(200).json({ slots: [] }); // Or we could send a specific reason/flag
-        return;
-      }
+    if (isFullDayClosed) {
+      res.status(200).json({ slots: [] });
+      return;
     }
 
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -1315,7 +1317,8 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       const [slotHour, slotMinute] = slot.split(":").map(Number);
       const slotTime = slotHour * 60 + slotMinute;
 
-      return daySchedule.periods.some((period: any) => {
+      // 1. Check opening hours
+      const isOpenInOpeningHours = daySchedule.periods.some((period: any) => {
         const [openHour, openMinute] = period.open.split(":").map(Number);
         const [closeHour, closeMinute] = period.close.split(":").map(Number);
 
@@ -1324,6 +1327,27 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
         return slotTime >= openTime && slotTime <= closeTime;
       });
+
+      if (!isOpenInOpeningHours) return false;
+
+      // 2. Check exceptional closures for this specific slot
+      if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+        // Construct slot date to compare with closure ranges
+        // baseDateStr is YYYY-MM-DD
+        const slotDate = new Date(baseDateStr + "T00:00:00.000Z");
+        slotDate.setUTCHours(slotHour, slotMinute, 0, 0);
+        const slotTimeMs = slotDate.getTime();
+
+        const isExceptionallyClosedSlot = restaurant.exceptionalClosures.some((closure: any) => {
+          const start = new Date(closure.startDate).getTime();
+          const end = new Date(closure.endDate).getTime();
+          return slotTimeMs >= start && slotTimeMs <= end;
+        });
+
+        if (isExceptionallyClosedSlot) return false;
+      }
+
+      return true;
     });
 
     // Check availability for each valid slot
@@ -2325,10 +2349,11 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
 
 /**
  * @function toggleTodayClosure
- * @description Toggles an exceptional closure for the current day.
+ * @description Toggles an exceptional closure for a specific period or the full day.
  */
 export const toggleTodayClosure = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
+  const { startTime, endTime } = req.body;
   try {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
@@ -2340,12 +2365,26 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
     // Normalise to UTC date string YYYY-MM-DD
     const todayStr = today.toISOString().split("T")[0];
 
-    // Find if today is already exceptionally closed
-    // We check if todayStr is within any existing closure range
+    // Define the target range
+    let targetStart: Date;
+    let targetEnd: Date;
+
+    if (startTime && endTime) {
+      targetStart = new Date(todayStr + "T" + startTime + ":00.000Z");
+      targetEnd = new Date(todayStr + "T" + endTime + ":00.999Z");
+    } else {
+      targetStart = new Date(todayStr + "T00:00:00.000Z");
+      targetEnd = new Date(todayStr + "T23:59:59.999Z");
+    }
+
+    const targetStartMs = targetStart.getTime();
+    const targetEndMs = targetEnd.getTime();
+
+    // Find if this exact range is already exceptionally closed
     const existingIndex = restaurant.exceptionalClosures.findIndex((closure: any) => {
-      const sStr = new Date(closure.startDate).toISOString().split("T")[0];
-      const eStr = new Date(closure.endDate).toISOString().split("T")[0];
-      return todayStr >= sStr && todayStr <= eStr;
+      const s = new Date(closure.startDate).getTime();
+      const e = new Date(closure.endDate).getTime();
+      return Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000; // 2s tolerance for floating point/seconds
     });
 
     if (existingIndex > -1) {
@@ -2353,25 +2392,19 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
       restaurant.exceptionalClosures.splice(existingIndex, 1);
       await restaurant.save();
       res.status(200).json({ 
-        message: "Restaurant réouvert pour aujourd'hui", 
-        isClosedToday: false, 
+        message: "Service réouvert", 
         exceptionalClosures: restaurant.exceptionalClosures 
       });
     } else {
-      // Close: Add a new closure for today
-      // Use UTC to be consistent with how slots are calculated (toISOString)
-      const startDate = new Date(todayStr + "T00:00:00.000Z");
-      const endDate = new Date(todayStr + "T23:59:59.999Z");
-
+      // Close: Add a new closure
       restaurant.exceptionalClosures.push({
-        startDate,
-        endDate,
+        startDate: targetStart,
+        endDate: targetEnd,
         reason: "Fermeture rapide",
       });
       await restaurant.save();
       res.status(200).json({ 
-        message: "Restaurant fermé pour aujourd'hui", 
-        isClosedToday: true, 
+        message: "Service fermé", 
         exceptionalClosures: restaurant.exceptionalClosures 
       });
     }
