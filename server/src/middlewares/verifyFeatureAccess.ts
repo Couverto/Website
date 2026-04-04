@@ -12,9 +12,9 @@ import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 export const verifyFeatureAccess = (requiredPage: string | string[]) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      // System Admins bypass the exact restaurant fetch in verifyCollaborator.
+      // System Admins and Restaurant Admins bypass feature checks.
       // We grant them full access to all features to allow support and troubleshooting.
-      if (!req.restaurant && (req as any).restaurantRole === restaurantRoles.ADMIN) {
+      if ((req as any).restaurantRole === restaurantRoles.ADMIN) {
         next();
         return;
       }
@@ -39,14 +39,12 @@ export const verifyFeatureAccess = (requiredPage: string | string[]) => {
         }
       }
 
-      // 2. Extra features directly attached to the restaurant (e.g., by sponsor codes)
-      if (restaurant.features && restaurant.features.length > 0) {
-        restaurant.features.forEach((fId: any) => featureIds.add(fId.toString()));
-      }
+      // 2. Extra features directly attached to the restaurant (names as strings)
+      const extraFeatureNames = restaurant.features || [];
 
-      // Fetch the actual activated features
+      // Fetch the actual activated features (by ID from plan OR by name from extra features)
       const activeFeatures = await Feature.find({
-        _id: { $in: Array.from(featureIds) },
+        $or: [{ _id: { $in: Array.from(featureIds) } }, { name: { $in: extraFeatureNames } }],
         active: true,
       });
 

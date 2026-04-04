@@ -17,6 +17,7 @@ import {
   MessageSquare,
   MoveHorizontal,
   Phone,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -62,6 +63,33 @@ export const RestaurantDashboard = () => {
   );
 
   const hasTablePlan = context?.availablePages?.includes("tablePlan");
+
+  const isClosedToday = useMemo(() => {
+    if (!context?.restaurant?.exceptionalClosures) return false;
+    const todayStr = new Date().toISOString().split("T")[0];
+    return context.restaurant.exceptionalClosures.some((closure: any) => {
+      const sStr = new Date(closure.startDate).toISOString().split("T")[0];
+      const eStr = new Date(closure.endDate).toISOString().split("T")[0];
+      return todayStr >= sStr && todayStr <= eStr;
+    });
+  }, [context?.restaurant?.exceptionalClosures]);
+
+  const [isTogglingClosure, setIsTogglingClosure] = useState(false);
+
+  const toggleTodayClosure = async () => {
+    try {
+      setIsTogglingClosure(true);
+      const response = await api.patch(`/restaurants/${id}/toggle-today-closure`);
+      toast.success(response.data.message);
+      if (context?.refreshRestaurant) {
+        await context.refreshRestaurant();
+      }
+    } catch (error) {
+      toast.error("Erreur lors de la modification de la fermeture");
+    } finally {
+      setIsTogglingClosure(false);
+    }
+  };
 
   const fetchStats = useCallback(async () => {
     try {
@@ -185,12 +213,35 @@ export const RestaurantDashboard = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {context?.restaurant && (
-            <Button variant="outline" asChild>
-              <Link to={`/restaurants/infos/${context.restaurant._id}`} target="_blank">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                {"Voir la page publique"}
-              </Link>
-            </Button>
+            <>
+              <Button
+                variant={isClosedToday ? "default" : "outline"}
+                className={cn(
+                  "font-bold transition-all",
+                  isClosedToday
+                    ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
+                    : "text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700",
+                )}
+                onClick={toggleTodayClosure}
+                disabled={isTogglingClosure}
+              >
+                {isTogglingClosure ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : isClosedToday ? (
+                  <Clock className="h-4 w-4 mr-2" />
+                ) : (
+                  <X className="h-4 w-4 mr-2" />
+                )}
+                {isClosedToday ? "Réouvrir aujourd'hui" : "Fermer aujourd'hui"}
+              </Button>
+
+              <Button variant="outline" asChild>
+                <Link to={`/restaurants/infos/${context.restaurant._id}`} target="_blank">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  {"Voir la page publique"}
+                </Link>
+              </Button>
+            </>
           )}
           <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
             <DialogTrigger asChild>

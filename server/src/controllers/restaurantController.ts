@@ -2322,3 +2322,60 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ error: err.message });
   }
 };
+
+/**
+ * @function toggleTodayClosure
+ * @description Toggles an exceptional closure for the current day.
+ */
+export const toggleTodayClosure = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    const today = new Date();
+    // Normalise to UTC date string YYYY-MM-DD
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Find if today is already exceptionally closed
+    // We check if todayStr is within any existing closure range
+    const existingIndex = restaurant.exceptionalClosures.findIndex((closure: any) => {
+      const sStr = new Date(closure.startDate).toISOString().split("T")[0];
+      const eStr = new Date(closure.endDate).toISOString().split("T")[0];
+      return todayStr >= sStr && todayStr <= eStr;
+    });
+
+    if (existingIndex > -1) {
+      // Reopen: Remove the closure
+      restaurant.exceptionalClosures.splice(existingIndex, 1);
+      await restaurant.save();
+      res.status(200).json({ 
+        message: "Restaurant réouvert pour aujourd'hui", 
+        isClosedToday: false, 
+        exceptionalClosures: restaurant.exceptionalClosures 
+      });
+    } else {
+      // Close: Add a new closure for today
+      // Use UTC to be consistent with how slots are calculated (toISOString)
+      const startDate = new Date(todayStr + "T00:00:00.000Z");
+      const endDate = new Date(todayStr + "T23:59:59.999Z");
+
+      restaurant.exceptionalClosures.push({
+        startDate,
+        endDate,
+        reason: "Fermeture rapide",
+      });
+      await restaurant.save();
+      res.status(200).json({ 
+        message: "Restaurant fermé pour aujourd'hui", 
+        isClosedToday: true, 
+        exceptionalClosures: restaurant.exceptionalClosures 
+      });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
