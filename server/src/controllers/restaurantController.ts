@@ -373,8 +373,11 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
         console.log(`[createRestaurant] Creating Stripe checkout session with metadata:`, stripeMetadata);
 
+        // Create Stripe Customer first to avoid "Accounts V2" error (requires customer ID in test mode)
+        const stripeCustomer = await stripeService.createCustomer(creator.email, creator.fullname);
+
         const stripeSession = await stripeService.createCheckoutSession(
-          { email: creator.email },
+          { id: stripeCustomer.id },
           plan.stripePriceId,
           `${process.env.CORS_ORIGIN}/account/payment-success?session_id={CHECKOUT_SESSION_ID}`,
           `${process.env.CORS_ORIGIN}/account/payment-cancel`,
@@ -1240,25 +1243,27 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
     const queryDate = new Date(date as string);
 
-    // Check exceptional closures
+    // Base day checking for exceptional closures (if full day is closed)
+    let isFullDayClosed = false;
     if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
-      const isExceptionallyClosed = restaurant.exceptionalClosures.some((closure: any) => {
+      isFullDayClosed = restaurant.exceptionalClosures.some((closure: any) => {
         const start = new Date(closure.startDate);
         const end = new Date(closure.endDate);
-
-        // Normalize logic: check if queryDate is within closure range
-        // We use string comparison of YYYY-MM-DD to be safe regarding timezones/hours
         const qStr = queryDate.toISOString().split("T")[0];
         const sStr = start.toISOString().split("T")[0];
         const eStr = end.toISOString().split("T")[0];
-
-        return qStr >= sStr && qStr <= eStr;
+        
+        // Check if closure covers the WHOLE day (at least from 00:00 to 23:59)
+        const isFullDay = sStr === qStr && eStr === qStr && 
+                         start.getUTCHours() === 0 && start.getUTCMinutes() === 0 &&
+                         end.getUTCHours() >= 23 && end.getUTCMinutes() >= 59;
+        return isFullDay;
       });
+    }
 
-      if (isExceptionallyClosed) {
-        res.status(200).json({ slots: [] }); // Or we could send a specific reason/flag
-        return;
-      }
+    if (isFullDayClosed) {
+      res.status(200).json({ slots: [] });
+      return;
     }
 
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -1312,7 +1317,8 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       const [slotHour, slotMinute] = slot.split(":").map(Number);
       const slotTime = slotHour * 60 + slotMinute;
 
-      return daySchedule.periods.some((period: any) => {
+      // 1. Check opening hours
+      const isOpenInOpeningHours = daySchedule.periods.some((period: any) => {
         const [openHour, openMinute] = period.open.split(":").map(Number);
         const [closeHour, closeMinute] = period.close.split(":").map(Number);
 
@@ -1321,6 +1327,27 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
         return slotTime >= openTime && slotTime <= closeTime;
       });
+
+      if (!isOpenInOpeningHours) return false;
+
+      // 2. Check exceptional closures for this specific slot
+      if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+        // Construct slot date to compare with closure ranges
+        // baseDateStr is YYYY-MM-DD
+        const slotDate = new Date(baseDateStr + "T00:00:00.000Z");
+        slotDate.setUTCHours(slotHour, slotMinute, 0, 0);
+        const slotTimeMs = slotDate.getTime();
+
+        const isExceptionallyClosedSlot = restaurant.exceptionalClosures.some((closure: any) => {
+          const start = new Date(closure.startDate).getTime();
+          const end = new Date(closure.endDate).getTime();
+          return slotTimeMs >= start && slotTimeMs <= end;
+        });
+
+        if (isExceptionallyClosedSlot) return false;
+      }
+
+      return true;
     });
 
     // Check availability for each valid slot
@@ -1520,23 +1547,30 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
  */
 export const getRestaurantStats = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
+  const { date } = req.query; // Optional date for the dashboard agenda
   const { Booking } = await import("../models/bookingModel.js");
   const { bookingStatus } = await import("../utils/enums/bookingStatus.js");
+  const { Restaurant } = await import("../models/restaurantModel.js");
 
   try {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endOfToday = new Date(startOfToday);
-    endOfToday.setDate(endOfToday.getDate() + 1); // Next day 00:00 marks end of today
+    const referenceDate = date ? new Date(date as string) : new Date();
+    
+    // YYYY-MM-DD normalization
+    const refStr = referenceDate.toISOString().split("T")[0];
+    const startOfToday = new Date(refStr + "T00:00:00.000Z");
+    const endOfToday = new Date(refStr + "T23:59:59.999Z");
+
+    const isToday = refStr === new Date().toISOString().split("T")[0];
+    const now = isToday ? new Date() : startOfToday;
 
     const startOfWeek = new Date(startOfToday);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    startOfWeek.setUTCDate(startOfToday.getUTCDate() - startOfToday.getUTCDay());
+    const startOfMonth = new Date(startOfToday.getUTCFullYear(), startOfToday.getUTCMonth(), 1);
 
     const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
     const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(startOfToday);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setUTCDate(startOfToday.getUTCDate() - 7);
 
     // Execute all independent database queries concurrently
     const [
@@ -1557,10 +1591,11 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       cancelledBookingsAllTime,
       averageGuestsResult,
       leadTimeResult,
-      busyDays
+      busyDays,
+      rawDayBookings
     ] = await Promise.all([
       Booking.countDocuments({ restaurant: id, bookingDate: { $gte: startOfToday, $lt: endOfToday }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }),
-      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: startOfToday }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } } }, { $group: { _id: null, total: { $sum: "$guests" } } }]),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: startOfToday, $lt: endOfToday }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } } }, { $group: { _id: null, total: { $sum: "$guests" } } }]),
       Booking.countDocuments({ restaurant: id, bookingDate: { $gte: startOfWeek }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }),
       Booking.countDocuments({ restaurant: id, bookingDate: { $gte: startOfMonth }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }),
       Booking.find({ restaurant: id, bookingDate: { $gte: now }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] }, isDismissedByRestaurant: { $ne: true } }).sort({ bookingDate: 1 }).populate("user", "name forename avatar"),
@@ -1568,7 +1603,7 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       Booking.find({ restaurant: id, isDismissedByRestaurant: { $ne: true } }).sort({ createdAt: -1 }).limit(10).populate("user", "name forename avatar"),
       Booking.find({ restaurant: id, bookingDate: { $gte: twoHoursAgo, $lte: twoHoursFromNow }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] }, isDismissedByRestaurant: { $ne: true } }).populate("user", "name forename avatar"),
       Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: sevenDaysAgo } } }, { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
-      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000) } } }, { $group: { _id: { $hour: "$bookingDate" }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), bookingDate: { $gte: startOfToday, $lt: endOfToday } } }, { $group: { _id: { $hour: "$bookingDate" }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
       Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
       Booking.distinct("customer.phone", { restaurant: id }),
       Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id) } }, { $project: { range: { $switch: { branches: [{ case: { $lte: ["$guests", 2] }, then: "1-2" }, { case: { $lte: ["$guests", 4] }, then: "3-4" }, { case: { $lte: ["$guests", 6] }, then: "5-6" }], default: "7+" } } } }, { $group: { _id: "$range", count: { $sum: 1 } } }]),
@@ -1576,13 +1611,10 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       Booking.countDocuments({ restaurant: id, status: bookingStatus.CANCELLED }),
       Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $group: { _id: null, avg: { $avg: "$guests" } } }]),
       Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $project: { leadTime: { $subtract: ["$bookingDate", "$createdAt"] } } }, { $group: { _id: null, avgLeadTime: { $avg: "$leadTime" } } }]),
-      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $group: { _id: { $dayOfWeek: "$bookingDate" }, count: { $sum: 1 } } }, { $sort: { count: -1 } }])
+      Booking.aggregate([{ $match: { restaurant: new (await import("mongoose")).Types.ObjectId(id), status: bookingStatus.CONFIRMED } }, { $group: { _id: { $dayOfWeek: "$bookingDate" }, count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
+      Booking.find({ restaurant: id, bookingDate: { $gte: startOfToday, $lt: endOfToday }, status: { $in: [bookingStatus.PENDING, bookingStatus.CONFIRMED] } }).sort({ bookingDate: 1 }).populate("user", "name forename avatar")
     ]);
 
-    const todayGuests = todayGuestsAgg;
-    const guestDistribution = guestDistributionAgg.reduce((acc: any, curr: any) => ({ ...acc, [curr._id]: curr.count }), {});
-    
-    // Post-process table labels
     const resolveTableInfo = (b: any) => {
       const bObj = b.toObject();
       if (bObj.tableId && restaurantDoc?.zones) {
@@ -1597,11 +1629,14 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       }
       return bObj;
     };
-    
+
+    const dayBookings = rawDayBookings.map(resolveTableInfo);
     const recentBookings = rawRecentBookings.map(resolveTableInfo);
     const upcomingBookings = rawUpcomingBookings.map(resolveTableInfo);
     const activeBookings = rawActiveBookings.map(resolveTableInfo);
     
+    const todayGuests = todayGuestsAgg;
+    const guestDistribution = guestDistributionAgg.reduce((acc: any, curr: any) => ({ ...acc, [curr._id]: curr.count }), {});
     const cancellationRate = totalBookingsAllTime > 0 ? (cancelledBookingsAllTime / totalBookingsAllTime) * 100 : 0;
     const averageGuests = averageGuestsResult[0]?.avg || 0;
     const averageLeadTime = leadTimeResult[0]?.avgLeadTime ? leadTimeResult[0].avgLeadTime / (1000 * 60 * 60 * 24) : 0;
@@ -1612,18 +1647,13 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
           bookings: todayBookings,
           guests: todayGuests[0]?.total || 0,
         },
-        week: {
-          bookings: weekBookings,
-        },
-        month: {
-          bookings: monthBookings,
-        },
+        week: { bookings: weekBookings },
+        month: { bookings: monthBookings },
         totalClients: uniqueClients.length,
         dailyStats: dailyStats.map((d) => ({ date: d._id, count: d.count })),
         hourlyStats: hourlyStats.map((h) => ({ hour: h._id, count: h.count })),
         statusBreakdown: statusBreakdown.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
         guestDistribution,
-
         cancellationRate: parseFloat(cancellationRate.toFixed(1)),
         averageGuests: parseFloat(averageGuests.toFixed(1)),
         averageLeadTime: parseFloat(averageLeadTime.toFixed(1)),
@@ -1634,6 +1664,7 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       upcomingBookings,
       recentBookings,
       activeBookings,
+      dayBookings,
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -2315,6 +2346,72 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
     });
 
     res.status(200).json({ message: "Clé API révoquée" });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function toggleTodayClosure
+ * @description Toggles an exceptional closure for a specific period or the full day.
+ */
+export const toggleTodayClosure = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { startTime, endTime } = req.body;
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    const today = new Date();
+    // Normalise to UTC date string YYYY-MM-DD
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Define the target range
+    let targetStart: Date;
+    let targetEnd: Date;
+
+    if (startTime && endTime) {
+      targetStart = new Date(todayStr + "T" + startTime + ":00.000Z");
+      targetEnd = new Date(todayStr + "T" + endTime + ":00.999Z");
+    } else {
+      targetStart = new Date(todayStr + "T00:00:00.000Z");
+      targetEnd = new Date(todayStr + "T23:59:59.999Z");
+    }
+
+    const targetStartMs = targetStart.getTime();
+    const targetEndMs = targetEnd.getTime();
+
+    // Find if this exact range is already exceptionally closed
+    const existingIndex = restaurant.exceptionalClosures.findIndex((closure: any) => {
+      const s = new Date(closure.startDate).getTime();
+      const e = new Date(closure.endDate).getTime();
+      return Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000; // 2s tolerance for floating point/seconds
+    });
+
+    if (existingIndex > -1) {
+      // Reopen: Remove the closure
+      restaurant.exceptionalClosures.splice(existingIndex, 1);
+      await restaurant.save();
+      res.status(200).json({ 
+        message: "Service réouvert", 
+        exceptionalClosures: restaurant.exceptionalClosures 
+      });
+    } else {
+      // Close: Add a new closure
+      restaurant.exceptionalClosures.push({
+        startDate: targetStart,
+        endDate: targetEnd,
+        reason: "Fermeture rapide",
+      });
+      await restaurant.save();
+      res.status(200).json({ 
+        message: "Service fermé", 
+        exceptionalClosures: restaurant.exceptionalClosures 
+      });
+    }
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

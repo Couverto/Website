@@ -9,6 +9,7 @@ interface RestaurantBookingNotificationProps {
   guests: number;
   notes?: string;
   restaurantName: string;
+  restaurantId: string;
 }
 
 export const restaurantBookingNotificationTemplate = ({
@@ -20,6 +21,7 @@ export const restaurantBookingNotificationTemplate = ({
   guests,
   notes,
   restaurantName,
+  restaurantId,
 }: RestaurantBookingNotificationProps): string => {
   const content = `
     <h2>Nouvelle Réservation ! 🎉</h2>
@@ -65,7 +67,7 @@ export const restaurantBookingNotificationTemplate = ({
     </div>
 
     <div class="text-center my-6">
-      <a href="${process.env.CORS_ORIGIN || "#"}/dashboard/bookings" class="button">
+      <a href="${process.env.CORS_ORIGIN || "#"}/restaurant/${restaurantId}/bookings" class="button">
         Gérer mes réservations
       </a>
     </div>

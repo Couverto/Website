@@ -256,14 +256,35 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
               <span>Fermetures exceptionnelles à venir :</span>
             </div>
             <div className="space-y-1">
-              {restaurant.exceptionalClosures.map((closure, idx) => (
-                <div key={idx} className="text-xs text-orange-700/80 ml-6 flex flex-col sm:flex-row sm:gap-1">
-                  <span className="font-semibold">
-                    Du {format(new Date(closure.startDate), "dd/MM/yyyy")} au {format(new Date(closure.endDate), "dd/MM/yyyy")} :
-                  </span>
-                  <span>{closure.reason}</span>
-                </div>
-              ))}
+              {restaurant.exceptionalClosures.map((closure, idx) => {
+                const start = new Date(closure.startDate);
+                const end = new Date(closure.endDate);
+                const isSameDay = format(start, "yyyy-MM-dd") === format(end, "yyyy-MM-dd");
+                const isFullDay = start.getUTCHours() === 0 && end.getUTCHours() >= 23;
+
+                return (
+                  <div key={idx} className="text-xs text-orange-700/80 ml-6 flex flex-col sm:flex-row sm:gap-1">
+                    <span className="font-semibold">
+                      {isSameDay ? (
+                        <>Le {format(start, "dd/MM/yyyy")}</>
+                      ) : (
+                        <>
+                          Du {format(start, "dd/MM/yyyy")} au {format(end, "dd/MM/yyyy")}
+                        </>
+                      )}
+                      {!isFullDay && (
+                        <>
+                          {" "}
+                          ({start.getUTCHours().toString().padStart(2, "0")}:{start.getUTCMinutes().toString().padStart(2, "0")} -{" "}
+                          {end.getUTCHours().toString().padStart(2, "0")}:{end.getUTCMinutes().toString().padStart(2, "0")})
+                        </>
+                      )}
+                      :
+                    </span>
+                    <span>{closure.reason}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -300,9 +321,21 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                       if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
                         const dateStr = format(date, "yyyy-MM-dd");
                         const isClosed = restaurant.exceptionalClosures.some((closure) => {
-                          const start = format(new Date(closure.startDate), "yyyy-MM-dd");
-                          const end = format(new Date(closure.endDate), "yyyy-MM-dd");
-                          return dateStr >= start && dateStr <= end;
+                          const start = new Date(closure.startDate);
+                          const end = new Date(closure.endDate);
+                          const sStr = format(start, "yyyy-MM-dd");
+                          const eStr = format(end, "yyyy-MM-dd");
+
+                          if (dateStr >= sStr && dateStr <= eStr) {
+                            // If it's a middle day of a multi-day closure, it's fully closed
+                            if (dateStr > sStr && dateStr < eStr) return true;
+
+                            // If it's a boundary day, check if it's a full day closure
+                            const isFullDay = start.getUTCHours() === 0 && end.getUTCHours() >= 23;
+
+                            return isFullDay;
+                          }
+                          return false;
                         });
                         if (isClosed) return false;
                       }

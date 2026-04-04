@@ -44,6 +44,8 @@ services:
       # Stripe Configuration
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      # Discord webhooks
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
     volumes:
       - server_uploads:/app/uploads
     depends_on:

@@ -21,6 +21,7 @@ import {
   verifyRestaurantVerificationCode,
   generateApiKey,
   revokeApiKey,
+  toggleTodayClosure,
 } from "../controllers/restaurantController.js";
 import { createConnectAccountLink } from "../controllers/stripeConnectController.js";
 import {
@@ -86,6 +87,12 @@ restaurantRouter.patch(
   verifyToken(),
   verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
   toggleRestaurantClosed,
+);
+restaurantRouter.patch(
+  "/:id/toggle-today-closure",
+  verifyToken(),
+  verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]),
+  toggleTodayClosure,
 );
 restaurantRouter.post("/:id/stripe-connect", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), createConnectAccountLink);
 

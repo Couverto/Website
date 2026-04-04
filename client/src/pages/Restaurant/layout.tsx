@@ -93,7 +93,9 @@ export const RestaurantLayout = () => {
       const pageKey = location.pathname.split("/").pop(); // e.g. "stats", "gallery"
       const corePages = ["plan"]; // Allow users to upgrade their plan. "dashboard" is now a feature page.
 
-      if (pageKey && !corePages.includes(pageKey)) {
+      if (userRole === "admin") {
+        setIsLocked(false);
+      } else if (pageKey && !corePages.includes(pageKey)) {
         // Exception for table-plan
         const checkKey = pageKey === "table-plan" ? "tablePlan" : pageKey;
         if (!availablePages.includes(checkKey)) {
