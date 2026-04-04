@@ -2,7 +2,7 @@ import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import { ItemTypes } from "./ItemTypes";
 import { useState, useEffect } from "react";
-import { Maximize2, Settings, Copy, Trash2, Edit2 } from "lucide-react";
+import { Maximize2, Edit2, Copy, Trash2 } from "lucide-react";
 
 export interface TableProps {
   id: string;
@@ -13,9 +13,10 @@ export interface TableProps {
   width: number;
   height: number;
   shape: "rect" | "circle";
+  status: "available" | "reserved";
   isOverlay?: boolean;
   isSelected?: boolean;
-  onSelect?: () => void;
+  onSelect?: (e: React.PointerEvent) => void;
   onEdit?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
@@ -32,6 +33,7 @@ export function DraggableTable({
   width,
   height,
   shape,
+  status,
   isOverlay,
   isSelected,
   onSelect,
@@ -46,13 +48,13 @@ export function DraggableTable({
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: ItemTypes.TABLE,
-      item: { type: ItemTypes.TABLE, id, label, seats, width, height, shape, x, y },
+      item: { type: ItemTypes.TABLE, id, label, seats, width, height, shape, x, y, status },
       collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
       }),
-      canDrag: !isResizing, // Disable drag while resizing
+      canDrag: !isResizing,
     }),
-    [id, x, y, width, height, shape, isResizing],
+    [id, x, y, width, height, shape, isResizing, status],
   );
 
   useEffect(() => {
@@ -60,7 +62,7 @@ export function DraggableTable({
   }, [preview]);
 
   const handleResizeStart = (e: React.PointerEvent) => {
-    e.stopPropagation(); // Prevent drag start
+    e.stopPropagation();
     e.preventDefault();
     setIsResizing(true);
 
@@ -72,10 +74,8 @@ export function DraggableTable({
     const handlePointerMove = (moveEvent: PointerEvent) => {
       const deltaX = (moveEvent.clientX - startX) / scale;
       const deltaY = (moveEvent.clientY - startY) / scale;
-
       const newWidth = Math.max(40, Math.round((startWidth + deltaX) / 10) * 10);
       const newHeight = Math.max(40, Math.round((startHeight + deltaY) / 10) * 10);
-
       onResize?.(id, newWidth, newHeight);
     };
 
@@ -92,10 +92,9 @@ export function DraggableTable({
   if (isOverlay) {
     return (
       <div
-        className={`
-        flex items-center justify-center border-2 border-primary bg-background shadow-sm
-        ${shape === "circle" ? "rounded-full" : "rounded-md"}
-      `}
+        className={`flex items-center justify-center border-2 border-primary bg-background shadow-sm ${
+          shape === "circle" ? "rounded-full" : "rounded-md"
+        }`}
         style={{ width, height }}
       >
         <div className="text-center">
@@ -121,27 +120,21 @@ export function DraggableTable({
     <div
       ref={drag as any}
       style={style}
-      onPointerDown={(e) => {
-        // We only trigger selection, drag is handled by ref
-        onSelect?.();
-      }}
+      onPointerDown={(e) => onSelect?.(e)}
       className={`
-        draggable-table
-        flex items-center justify-center border-2 bg-background shadow-sm hover:shadow-md transition-shadow relative group
+        draggable-table flex items-center justify-center border-2 shadow-sm hover:shadow-md transition-shadow relative group select-none
         ${shape === "circle" ? "rounded-full" : "rounded-md"}
-        ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-primary"}
-        select-none
+        ${status === "reserved" ? "bg-red-200/50 border-red-400 text-red-800" : "bg-background border-primary"}
+        ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}
       `}
     >
       <div className="text-center pointer-events-none">
         <div className="font-bold text-xs">{label}</div>
-        <div className="text-[10px] text-muted-foreground">{seats} pers.</div>
+        <div className={`text-[10px] ${status === "reserved" ? "text-red-800/80" : "text-muted-foreground"}`}>{seats} pers.</div>
       </div>
 
-      {/* Action Toolbar (Top Center or Dynamic) - Visible on hover only */}
       {!isOverlay && (
         <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-          {/* Edit */}
           <div
             className="w-7 h-7 bg-blue-500 text-white rounded-full shadow-md cursor-pointer flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto"
             title="Modifier"
@@ -152,8 +145,6 @@ export function DraggableTable({
           >
             <Edit2 className="w-3.5 h-3.5" />
           </div>
-
-          {/* Duplicate */}
           <div
             className="w-7 h-7 bg-slate-500 text-white rounded-full shadow-md cursor-pointer flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto"
             title="Dupliquer"
@@ -164,8 +155,6 @@ export function DraggableTable({
           >
             <Copy className="w-3.5 h-3.5" />
           </div>
-
-          {/* Delete */}
           <div
             className="w-7 h-7 bg-red-500 text-white rounded-full shadow-md cursor-pointer flex items-center justify-center hover:scale-110 transition-transform pointer-events-auto"
             title="Supprimer"
@@ -179,7 +168,6 @@ export function DraggableTable({
         </div>
       )}
 
-      {/* Resize Handle (Bottom Right) */}
       {isSelected && (
         <div
           className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary text-primary-foreground rounded-full cursor-nwse-resize flex items-center justify-center shadow z-50 hover:scale-110 transition-transform"
