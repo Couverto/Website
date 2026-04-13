@@ -51,5 +51,13 @@ export const convertOpeningHoursToObject = (openingHours: any) => {
  */
 export const getServicePeriod = (time: string, periods: { open: string; close: string }[]) => {
   if (!periods || periods.length === 0) return null;
-  return periods.find((p) => time >= p.open && time <= p.close);
+  return periods.find((p) => {
+    if (p.close > p.open) {
+      return time >= p.open && time <= p.close;
+    } else {
+      // Crossing midnight: e.g. 19:00 - 02:00
+      // Time is either 19:00 - 23:59 OR 00:00 - 02:00
+      return time >= p.open || time <= p.close;
+    }
+  });
 };

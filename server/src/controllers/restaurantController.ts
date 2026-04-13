@@ -19,6 +19,7 @@ import { ReferralCode } from "../models/referralCodeModel.js";
 import { Feature } from "../models/featureModel.js";
 import { VerificationCode } from "../models/verificationCodeModel.js";
 import { isRestaurantOpen, convertOpeningHoursToObject, getServicePeriod } from "../utils/restaurantUtils.js";
+import { formatBookingTime } from "../utils/dateFormatter.js";
 import { Review } from "../models/reviewModel.js";
 
 /**
@@ -1333,7 +1334,12 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
         const openTime = openHour * 60 + openMinute;
         const closeTime = closeHour * 60 + closeMinute;
 
-        return slotTime >= openTime && slotTime <= closeTime;
+        if (closeTime > openTime) {
+          return slotTime >= openTime && slotTime <= closeTime;
+        } else {
+          // Crossing midnight: e.g. 19:00 - 02:00
+          return slotTime >= openTime || slotTime <= closeTime;
+        }
       });
 
       if (!isOpenInOpeningHours) return false;
@@ -1368,12 +1374,18 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       if (!currentService) return { time: slot, available: 0 };
 
       // Construct service window timestamps (for closure checks)
-      const serviceStart = new Date(baseDateStr);
+      const serviceStart = new Date(baseDateStr + "T00:00:00.000Z");
       const [sh, sm] = currentService.open.split(":").map(Number);
-      serviceStart.setHours(sh, sm, 0, 0);
-      const serviceEnd = new Date(baseDateStr);
+      serviceStart.setUTCHours(sh, sm, 0, 0);
+      
+      const serviceEnd = new Date(baseDateStr + "T23:59:59.999Z");
       const [eh, em] = currentService.close.split(":").map(Number);
-      serviceEnd.setHours(eh, em, 59, 999);
+      serviceEnd.setUTCHours(eh, em, 59, 999);
+      
+      // Handle midnight crossing
+      if (currentService.close < currentService.open) {
+        serviceEnd.setUTCDate(serviceEnd.getUTCDate() + 1);
+      }
 
       const sStartMs = serviceStart.getTime();
       const sEndMs = serviceEnd.getTime();
@@ -1381,8 +1393,7 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       // 2. Identify occupied tables for THIS specific service
       const occupiedTableIds = new Set<string>();
       const unassignedGuestsInService = existingBookings.reduce((acc, b) => {
-        const bDate = new Date(b.bookingDate);
-        const bTime = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
+        const bTime = formatBookingTime(b.bookingDate);
         
         // Does this booking belong to the SAME service as the current slot?
         const bService = getServicePeriod(bTime, daySchedule.periods);

@@ -189,14 +189,31 @@ export const RestaurantDashboard = () => {
     }
   }, [id, selectedDate]);
 
+  const isTimeInService = (bookingTime: string, start: string, end: string) => {
+    if (end > start) {
+      return bookingTime >= start && bookingTime <= end;
+    } else {
+      // Crossing midnight
+      return bookingTime >= start || bookingTime <= end;
+    }
+  };
+
+  const getRestaurantTime = (date: Date | string) => {
+    return new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date(date));
+  };
+
   const filteredStats = useMemo(() => {
     if (!stats || !selectedService) return null;
 
     const [start, end] = selectedService!.split("-");
     const filtered = upcomingBookings.filter(b => {
-      const bDate = new Date(b.bookingDate);
-      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
-      return time >= start && time <= end;
+      const time = getRestaurantTime(b.bookingDate);
+      return isTimeInService(time, start, end);
     });
 
     return {
@@ -212,9 +229,8 @@ export const RestaurantDashboard = () => {
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
     return base.filter(b => {
-      const bDate = new Date(b.bookingDate);
-      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
-      return time >= start && time <= end;
+      const time = getRestaurantTime(b.bookingDate);
+      return isTimeInService(time, start, end);
     });
   }, [upcomingBookings, selectedService, selectedDate]);
 
@@ -225,9 +241,8 @@ export const RestaurantDashboard = () => {
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
     return base.filter(b => {
-      const bDate = new Date(b.bookingDate);
-      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
-      return time >= start && time <= end;
+      const time = getRestaurantTime(b.bookingDate);
+      return isTimeInService(time, start, end);
     });
   }, [recentBookings, selectedService, selectedDate]);
 
@@ -238,9 +253,8 @@ export const RestaurantDashboard = () => {
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
     return base.filter(b => {
-      const bDate = new Date(b.bookingDate);
-      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
-      return time >= start && time <= end;
+      const time = getRestaurantTime(b.bookingDate);
+      return isTimeInService(time, start, end);
     });
   }, [dayBookings, selectedService, selectedDate]);
 

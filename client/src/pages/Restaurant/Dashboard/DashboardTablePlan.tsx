@@ -173,32 +173,35 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
 
                 const tableClosuresForThisTable = restaurant.tableClosures?.filter((c: any) => c.tableId === tid) || [];
                 
-                const currentClosure = tableClosuresForThisTable.find((c: any) => {
-                  const s = new Date(c.startDate).getTime();
-                  const e = new Date(c.endDate).getTime();
-                  
-                  if (selectedService) {
-                    const [startStr, endStr] = selectedService.split("-");
-                    const [startH, startM] = startStr.split(":").map(Number);
-                    const [endH, endM] = endStr.split(":").map(Number);
+                  const currentClosure = tableClosuresForThisTable.find((c: any) => {
+                    const s = new Date(c.startDate).getTime();
+                    const e = new Date(c.endDate).getTime();
                     
-                    const serviceStart = new Date(selectedDate);
-                    serviceStart.setHours(startH, startM, 0, 0);
+                    if (selectedService) {
+                      const [startStr, endStr] = selectedService.split("-");
+                      const [startH, startM] = startStr.split(":").map(Number);
+                      const [endH, endM] = endStr.split(":").map(Number);
+                      
+                      const serviceStart = new Date(selectedDate);
+                      serviceStart.setHours(startH, startM, 0, 0);
+                      const serviceStartMs = serviceStart.getTime();
+                      
+                      const serviceEnd = new Date(selectedDate);
+                      serviceEnd.setHours(endH, endM, 59, 999);
+                      
+                      // Handle midnight crossing
+                      if (endH < startH) {
+                        serviceEnd.setDate(serviceEnd.getDate() + 1);
+                      }
+                      const serviceEndMs = serviceEnd.getTime();
+                      
+                      // Closure overlaps with service window
+                      return serviceStartMs < e && serviceEndMs > s;
+                    }
                     
-                    const serviceEnd = new Date(selectedDate);
-                    serviceEnd.setHours(endH, endM, 59, 999);
-                    
-                    const serviceStartMs = serviceStart.getTime();
-                    const serviceEndMs = serviceEnd.getTime();
-                    
-                    // Closure overlaps with service window
-                    return serviceStartMs < e && serviceEndMs > s;
-                  }
-                  
-                  // fallback to now
-                  const now = new Date();
-                  return now.getTime() >= s && now.getTime() <= e;
-                });
+                    const now = new Date();
+                    return now.getTime() >= s && now.getTime() <= e;
+                  });
                 
                 const isReserved = (table as any).status === "reserved" || !!currentClosure;
 

@@ -227,8 +227,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         ? restaurantExists.openingHours.get(dayName) 
         : (restaurantExists.openingHours as any)[dayName];
       
-      const timeStr = new Date(bookingDate).getHours().toString().padStart(2, "0") + ":" + 
-                      new Date(bookingDate).getMinutes().toString().padStart(2, "0");
+      const timeStr = formatBookingTime(bookingDate);
       
       const currentService = getServicePeriod(timeStr, daySchedule?.periods || []);
       const useServiceBound = !!currentService;
@@ -244,10 +243,16 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         const serviceStart = new Date(baseDateStr + "T00:00:00.000Z");
         const [sh, sm] = currentService.open.split(":").map(Number);
         serviceStart.setUTCHours(sh, sm, 0, 0);
+        
         const serviceEnd = new Date(baseDateStr + "T23:59:59.999Z");
         const [eh, em] = currentService.close.split(":").map(Number);
         serviceEnd.setUTCHours(eh, em, 59, 999);
         
+        // Handle midnight crossing
+        if (currentService.close < currentService.open) {
+          serviceEnd.setUTCDate(serviceEnd.getUTCDate() + 1);
+        }
+
         sStartMs = serviceStart.getTime();
         sEndMs = serviceEnd.getTime();
         queryStart = new Date(sStartMs - 2 * 60 * 60 * 1000); // 2h buffer
@@ -267,9 +272,8 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       let currentHeadCount = 0;
       const occupiedTableIds = new Set<string>();
       const unassignedGuestsInService = existingBookings.reduce((acc, b) => {
-        const bDate = new Date(b.bookingDate);
-        const bTime = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
-        const bStartMs = bDate.getTime();
+        const bTime = formatBookingTime(b.bookingDate);
+        const bStartMs = new Date(b.bookingDate).getTime();
         
         let isOverlapping = false;
         if (useServiceBound) {
