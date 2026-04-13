@@ -2443,7 +2443,7 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
  */
 export const toggleTableClosure = async (req: Request, res: Response): Promise<void> => {
   const { id, tableId } = req.params;
-  const { startTime, endTime } = req.body;
+  const { startTime, endTime, date } = req.body;
 
   try {
     const restaurant = await Restaurant.findById(id);
@@ -2452,12 +2452,17 @@ export const toggleTableClosure = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
+    const todayStr = date || new Date().toISOString().split("T")[0];
 
     // Target range (defaults to full day if not specified)
     const targetStart = startTime ? new Date(`${todayStr}T${startTime}:00.000Z`) : new Date(`${todayStr}T00:00:00.000Z`);
     const targetEnd = endTime ? new Date(`${todayStr}T${endTime}:00.999Z`) : new Date(`${todayStr}T23:59:59.999Z`);
+
+    // Handle midnight crossing
+    if (startTime && endTime && endTime < startTime) {
+      targetEnd.setUTCDate(targetEnd.getUTCDate() + 1);
+    }
+
     const targetStartMs = targetStart.getTime();
     const targetEndMs = targetEnd.getTime();
 

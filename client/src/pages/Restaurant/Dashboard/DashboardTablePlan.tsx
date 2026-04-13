@@ -24,7 +24,7 @@ interface DashboardTablePlanProps {
   selectedDate?: Date;
   selectedService?: string | null;
   onDismiss?: (bookingId: string) => void;
-  onToggleTableClosure?: (tableId: string, startTime?: string, endTime?: string) => void;
+  onToggleTableClosure?: (tableId: string, startTime?: string, endTime?: string, date?: Date) => void;
 }
 
 export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ 
@@ -289,7 +289,52 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                   );
                 }
 
-                // Wrap in DropdownMenu if not occupied
+                const toggleServiceClosure = (open: string, close: string) => {
+                  onToggleTableClosure?.(tid, open, close, selectedDate);
+                };
+
+                const isBlockedForService = (open: string, close: string) => {
+                  return tableClosuresForThisTable.some((c: any) => {
+                    const s = new Date(c.startDate).getTime();
+                    const e = new Date(c.endDate).getTime();
+                    
+                    const targetS = new Date(selectedDate);
+                    const [sh, sm] = open.split(":").map(Number);
+                    targetS.setHours(sh, sm, 0, 0);
+                    
+                    const targetE = new Date(selectedDate);
+                    const [eh, em] = close.split(":").map(Number);
+                    targetE.setHours(eh, em, 59, 999);
+                    
+                    if (eh < sh) targetE.setDate(targetE.getDate() + 1);
+                    
+                    const targetSMs = targetS.getTime();
+                    const targetEMs = targetE.getTime();
+                    
+                    return Math.abs(s - targetSMs) < 2000 && Math.abs(e - targetEMs) < 2000;
+                  });
+                };
+
+                const tableContentWithClick = (
+                  <div 
+                    onClick={(e) => {
+                      if (selectedService) {
+                        e.stopPropagation();
+                        const [open, close] = selectedService.split("-");
+                        toggleServiceClosure(open, close);
+                      }
+                    }}
+                  >
+                    {tableContent}
+                  </div>
+                );
+
+
+                if (selectedService) {
+                  return <div key={table.id}>{tableContentWithClick}</div>;
+                }
+
+                // Wrap in DropdownMenu if no specific service selected
                 return (
                   <DropdownMenu key={table.id}>
                     <DropdownMenuTrigger asChild>
@@ -300,18 +345,12 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                       <DropdownMenuSeparator />
                       
                       {todayServices.map((period: any, idx: number) => {
-                        const isThisPeriodBlocked = tableClosuresForThisTable.some((c: any) => {
-                          const s = new Date(c.startDate).getTime();
-                          const e = new Date(c.endDate).getTime();
-                          const targetS = new Date(`${new Date().toISOString().split("T")[0]}T${period.open}:00.000Z`).getTime();
-                          const targetE = new Date(`${new Date().toISOString().split("T")[0]}T${period.close}:00.999Z`).getTime();
-                          return Math.abs(s - targetS) < 2000 && Math.abs(e - targetE) < 2000;
-                        });
+                        const isThisPeriodBlocked = isBlockedForService(period.open, period.close);
 
                         return (
                           <DropdownMenuItem 
                             key={idx} 
-                            onClick={() => onToggleTableClosure?.(tid, period.open, period.close)}
+                            onClick={() => toggleServiceClosure(period.open, period.close)}
                             className="flex justify-between"
                           >
                             <span>Service {period.open}-{period.close}</span>
@@ -323,7 +362,7 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                       <DropdownMenuSeparator />
                       
                       <DropdownMenuItem 
-                        onClick={() => onToggleTableClosure?.(tid)}
+                        onClick={() => onToggleTableClosure?.(tid, undefined, undefined, selectedDate)}
                         className="font-semibold text-orange-600 focus:text-orange-600"
                       >
                         Toute la journée

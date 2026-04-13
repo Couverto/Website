@@ -334,11 +334,13 @@ export const RestaurantDashboard = () => {
     }
   };
 
-  const handleToggleTableClosure = async (tableId: string, startTime?: string, endTime?: string) => {
+  const handleToggleTableClosure = async (tableId: string, startTime?: string, endTime?: string, date?: Date) => {
     try {
+      const targetDate = date || selectedDate;
       await api.patch(`/restaurants/${id}/tables/${tableId}/toggle-closure`, {
         startTime,
         endTime,
+        date: format(targetDate, "yyyy-MM-dd"),
       });
       if (context?.refreshRestaurant) {
         await context.refreshRestaurant();
