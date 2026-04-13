@@ -1,5 +1,6 @@
 import { useParams, useOutletContext, Link } from "react-router-dom";
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { QuickBookingDialog } from "./components/QuickBookingDialog";
 import { axiosConfig as api } from "@/config/axiosConfig";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -72,6 +73,8 @@ export const RestaurantDashboard = () => {
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
   const [bookingToMove, setBookingToMove] = useState<BookingInterface | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [isQuickBookDialogOpen, setIsQuickBookDialogOpen] = useState(false);
+  const [quickBookData, setQuickBookData] = useState<{ tableId: string; tableName: string } | null>(null);
   const [cancellationReason, setCancellationReason] = useState(
     "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
@@ -248,7 +251,7 @@ export const RestaurantDashboard = () => {
 
   const filteredDayBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = dayBookings.filter(b => b.bookingDate.startsWith(dateStr));
+    let base = dayBookings.filter(b => b.bookingDate.startsWith(dateStr) && !b.isDismissedByRestaurant);
 
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
@@ -349,6 +352,11 @@ export const RestaurantDashboard = () => {
     } catch (error) {
       toast.error("Erreur lors de la modification du statut de la table");
     }
+  };
+
+  const handleQuickBook = (tableId: string, tableName: string) => {
+    setQuickBookData({ tableId, tableName });
+    setIsQuickBookDialogOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -461,15 +469,17 @@ export const RestaurantDashboard = () => {
 
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Occupation actuelle</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {selectedService ? "Occupation du service" : "Occupation actuelle"}
+            </CardTitle>
             <Armchair className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {stats?.activeBookings?.length || 0} / {context?.restaurant?.capacity || 0}
+              {selectedService ? (filteredStats?.guests || 0) : (stats?.activeBookings?.length || 0)} / {context?.restaurant?.capacity || 0}
             </div>
             <p className="text-xs text-muted-foreground font-medium">
-              Tables occupées en ce moment{" "}
+              {selectedService ? "Couvert(s) réservés pour ce créneau" : "Tables occupées en ce moment"}{" "}
               {(() => {
                 if (!context?.restaurant?.openingHours) return null;
                 const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -526,6 +536,7 @@ export const RestaurantDashboard = () => {
             selectedService={selectedService}
             onDismiss={handleDismissBooking} 
             onToggleTableClosure={handleToggleTableClosure}
+            onQuickBook={handleQuickBook}
           />
         )}
 
@@ -558,16 +569,16 @@ export const RestaurantDashboard = () => {
                   : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 p-4 min-h-[300px] content-start",
               )}
             >
-              {filteredRecentBookings.length === 0 ? (
+              {(selectedService ? filteredDayBookings : filteredRecentBookings).length === 0 ? (
                 <div className="text-center py-20 px-4">
                   <Info className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
                   <p className="text-muted-foreground font-medium">Aucune réservation</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {"Aucune réservation pour ce service"}
+                    {selectedService ? "Aucune réservation pour ce service" : "Aucune réservation récente"}
                   </p>
                 </div>
               ) : (
-                filteredRecentBookings.map((booking: any) => {
+                (selectedService ? filteredDayBookings : filteredRecentBookings).map((booking: any) => {
                   const isPending = booking.status === "PENDING";
                   const isConfirmed = booking.status === "CONFIRMED";
                   const isCancelled = booking.status === "CANCELLED";
@@ -767,8 +778,8 @@ export const RestaurantDashboard = () => {
                 }
                 onValueChange={(val) => {
                   if (bookingToMove) {
-                    const [tid, zid] = val.split("|");
-                    handleMoveTable(bookingToMove._id, tid, zid);
+                    const [tidVal, zid] = val.split("|");
+                    handleMoveTable(bookingToMove._id, tidVal, zid);
                   }
                 }}
               >
@@ -841,6 +852,19 @@ export const RestaurantDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Quick Booking Dialog */}
+      {quickBookData && selectedService && (
+        <QuickBookingDialog
+          open={isQuickBookDialogOpen}
+          onOpenChange={setIsQuickBookDialogOpen}
+          restaurantId={id || ""}
+          tableId={quickBookData.tableId}
+          tableName={quickBookData.tableName}
+          date={selectedDate}
+          service={selectedService}
+          onSuccess={fetchStats}
+        />
+      )}
     </div>
   );
 };

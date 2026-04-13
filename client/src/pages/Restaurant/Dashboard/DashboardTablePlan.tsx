@@ -25,6 +25,7 @@ interface DashboardTablePlanProps {
   selectedService?: string | null;
   onDismiss?: (bookingId: string) => void;
   onToggleTableClosure?: (tableId: string, startTime?: string, endTime?: string, date?: Date) => void;
+  onQuickBook?: (tableId: string, tableName: string) => void;
 }
 
 export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ 
@@ -33,7 +34,8 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
   selectedDate = new Date(),
   selectedService,
   onDismiss, 
-  onToggleTableClosure 
+  onToggleTableClosure,
+  onQuickBook
 }) => {
   const [activeZoneId, setActiveZoneId] = useState<string>(restaurant.zones[0]?.id || "");
 
@@ -167,8 +169,8 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
           </div>          <TooltipProvider delayDuration={200}>
             <div className="w-full h-full relative">
               {activeZone?.tables.map((table: any) => {
-                const tid = String(table.id || table._id || "");
-                const booking = currentBookings.find((b: BookingInterface) => b.tableId && String(b.tableId) === tid);
+                const tid = String(table.id || table._id || "").toLowerCase().trim();
+                const booking = currentBookings.find((b: BookingInterface) => b.tableId && String(b.tableId).toLowerCase().trim() === tid);
                 const isOccupied = !!booking;
 
                 const tableClosuresForThisTable = restaurant.tableClosures?.filter((c: any) => c.tableId === tid) || [];
@@ -320,8 +322,17 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                     onClick={(e) => {
                       if (selectedService) {
                         e.stopPropagation();
-                        const [open, close] = selectedService.split("-");
-                        toggleServiceClosure(open, close);
+                        
+                        const isBlocked = isBlockedForService(selectedService.split("-")[0], selectedService.split("-")[1]);
+                        
+                        if (isBlocked) {
+                          // If blocked, click unblocks
+                          const [open, close] = selectedService.split("-");
+                          toggleServiceClosure(open, close);
+                        } else {
+                          // If free, click opens Quick Booking
+                          onQuickBook?.(tid, table.label);
+                        }
                       }
                     }}
                   >

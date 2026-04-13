@@ -107,7 +107,7 @@ export const createSetupIntent = async (req: Request, res: Response): Promise<vo
  */
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { restaurant, bookingDate, guests, customer, notes, stripeSetupIntentId, bankImprintAmount, stripeCustomerId } = req.body;
+    const { restaurant, bookingDate, guests, customer, notes, stripeSetupIntentId, bankImprintAmount, stripeCustomerId, tableId, isManual } = req.body;
     const userId = req.userId; // Middleware should populate this if token present
 
     // Validate restaurant existence
@@ -121,7 +121,10 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     let finalBankImprintAmount = bankImprintAmount;
     let finalStripeCustomerId = stripeCustomerId;
 
-    if (restaurantExists.isBankImprintEnabled) {
+    const isCollaborator = userId && restaurantExists.collaborators.some(c => c.toString() === userId.toString());
+    const skipStripe = isManual && isCollaborator;
+
+    if (restaurantExists.isBankImprintEnabled && !skipStripe) {
       if (!stripeSetupIntentId) {
         res.status(400).json({ error: "Une empreinte bancaire est requise pour réserver dans cet établissement." });
         return;
@@ -398,10 +401,15 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             return a.seats - b.seats;
           });
 
-        if (availableFittingTables.length > 0) {
+        if (tableId && isCollaborator) {
+          bookingData.tableId = tableId;
+          // Find zoneId if possible
+          const zone = restaurantExists.zones.find(z => z.tables?.some(t => String(t.id) === String(tableId)));
+          if (zone) bookingData.zoneId = zone.id;
+        } else if (availableFittingTables.length > 0) {
           bookingData.tableId = availableFittingTables[0].id;
           bookingData.zoneId = availableFittingTables[0].zoneId;
-        } else {
+        } else if (!isManual) {
           // IF NO TABLE FITS, consider it COMPLETE for this group size/time even if seats are left
           res.status(400).json({
             error: availableSpots > 0 
