@@ -16,6 +16,7 @@ import { bookingSelfCancellationTemplate } from "../templates/bookingSelfCancell
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
 import { stripeService } from "../services/stripeService.js";
 import { formatBookingDate, formatBookingTime, formatShortDate } from "../utils/dateFormatter.js";
+import { getServicePeriod } from "../utils/restaurantUtils.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -128,23 +129,23 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
       try {
         const setupIntent = await stripeService.retrieveSetupIntent(stripeSetupIntentId);
-        if (setupIntent.status !== 'succeeded') {
+        if (setupIntent.status !== "succeeded") {
           res.status(400).json({ error: "L'empreinte bancaire n'est pas validée." });
           return;
         }
         if (setupIntent.metadata?.restaurantId !== restaurantExists._id.toString()) {
-           res.status(400).json({ error: "L'empreinte bancaire est invalide pour ce restaurant." });
-           return;
+          res.status(400).json({ error: "L'empreinte bancaire est invalide pour ce restaurant." });
+          return;
         }
 
         // Prevent SetupIntent reuse (preventing a user from booking out the restaurant with 1 SetupIntent)
-        const existingBooking = await Booking.findOne({ 
-          stripeSetupIntentId, 
-          status: { $ne: bookingStatus.CANCELLED } 
+        const existingBooking = await Booking.findOne({
+          stripeSetupIntentId,
+          status: { $ne: bookingStatus.CANCELLED },
         });
         if (existingBooking) {
-           res.status(400).json({ error: "Cette empreinte bancaire a déjà été utilisée." });
-           return;
+          res.status(400).json({ error: "Cette empreinte bancaire a déjà été utilisée." });
+          return;
         }
       } catch (err) {
         res.status(400).json({ error: "Erreur lors de la vérification de l'empreinte bancaire." });
@@ -218,50 +219,132 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     if (restaurantExists.capacity && restaurantExists.capacity > 0) {
       const bookingTime = new Date(bookingDate).getTime();
-      // Assume 2 hours meal duration for overlap check
-      // Check bookings that overlap with [bookingTime, bookingTime + 2h]
-      // Valid overlap: existing.start < new.end && existing.end > new.start
-      // For simplicity, we check bookings within +/- 2 hours range
+      
+      // 1. Identify Service Period FIRST
+      const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const dayName = dayNames[new Date(bookingDate).getDay()];
+      const daySchedule = restaurantExists.openingHours instanceof Map 
+        ? restaurantExists.openingHours.get(dayName) 
+        : (restaurantExists.openingHours as any)[dayName];
+      
+      const timeStr = new Date(bookingDate).getHours().toString().padStart(2, "0") + ":" + 
+                      new Date(bookingDate).getMinutes().toString().padStart(2, "0");
+      
+      const currentService = getServicePeriod(timeStr, daySchedule?.periods || []);
+      const useServiceBound = !!currentService;
 
-      const twoHours = 2 * 60 * 60 * 1000;
-      const startTime = new Date(bookingTime - twoHours);
-      const endTime = new Date(bookingTime + twoHours);
+      // Determine query range
+      let queryStart: Date;
+      let queryEnd: Date;
+      let sStartMs = 0;
+      let sEndMs = 0;
+
+      if (useServiceBound) {
+        const baseDateStr = new Date(bookingDate).toISOString().split("T")[0];
+        const serviceStart = new Date(baseDateStr + "T00:00:00.000Z");
+        const [sh, sm] = currentService.open.split(":").map(Number);
+        serviceStart.setUTCHours(sh, sm, 0, 0);
+        const serviceEnd = new Date(baseDateStr + "T23:59:59.999Z");
+        const [eh, em] = currentService.close.split(":").map(Number);
+        serviceEnd.setUTCHours(eh, em, 59, 999);
+        
+        sStartMs = serviceStart.getTime();
+        sEndMs = serviceEnd.getTime();
+        queryStart = new Date(sStartMs - 2 * 60 * 60 * 1000); // 2h buffer
+        queryEnd = new Date(sEndMs + 2 * 60 * 60 * 1000);
+      } else {
+        const twoHours = 2 * 60 * 60 * 1000;
+        queryStart = new Date(bookingTime - twoHours);
+        queryEnd = new Date(bookingTime + twoHours);
+      }
 
       const existingBookings = await Booking.find({
         restaurant: restaurant,
-        bookingDate: { $gte: startTime, $lte: endTime },
-        status: { $in: [bookingStatus.CONFIRMED, bookingStatus.PENDING] },
+        bookingDate: { $gte: queryStart, $lte: queryEnd },
+        status: { $ne: bookingStatus.CANCELLED },
       });
 
-      // Filter deeper if needed for precise overlap, but 2h window query is a decent approximation
-      // Let's do precise overlap check if we consider fixed 2h slots logic implicit
-      // New booking interval: [T, T+2h]
-      // Existing booking interval: [Tb, Tb+2h]
-      // Overlap if: Tb < T+2h && Tb+2h > T
-
-      const newStart = bookingTime;
-      const newEnd = bookingTime + twoHours;
-
       let currentHeadCount = 0;
-
-      for (const booking of existingBookings) {
-        const bStart = new Date(booking.bookingDate).getTime();
-        const bEnd = bStart + twoHours;
-
-        if (bStart < newEnd && bEnd > newStart) {
-          currentHeadCount += booking.guests;
+      const occupiedTableIds = new Set<string>();
+      const unassignedGuestsInService = existingBookings.reduce((acc, b) => {
+        const bDate = new Date(b.bookingDate);
+        const bTime = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
+        const bStartMs = bDate.getTime();
+        
+        let isOverlapping = false;
+        if (useServiceBound) {
+          const bService = getServicePeriod(bTime, daySchedule?.periods || []);
+          isOverlapping = bService && bService.open === currentService.open && bService.close === currentService.close;
+        } else {
+          const bEndMs = bStartMs + 2 * 60 * 60 * 1000;
+          isOverlapping = bookingTime < bEndMs && (bookingTime + 2 * 60 * 60 * 1000) > bStartMs;
         }
-      }
 
-      const availableSpots = restaurantExists.capacity - currentHeadCount;
+        if (isOverlapping) {
+          currentHeadCount += b.guests;
+          if (b.tableId) {
+            occupiedTableIds.add(String(b.tableId));
+          } else {
+            return acc + (b.guests || 0);
+          }
+        }
+        return acc;
+      }, 0);
 
-      // REJECT if not enough capacity
-      if (currentHeadCount + Number(guests) > restaurantExists.capacity) {
+      // 2. Identify all tables and their current status
+      const allTables: any[] = [];
+      restaurantExists.zones?.forEach((zone: any) => {
+        zone.tables?.forEach((table: any) => {
+          allTables.push({
+            id: table.id,
+            seats: table.seats,
+            status: table.status,
+          });
+        });
+      });
+
+      // 3. Track blocked tables (legacy or closures)
+      const blockedTableIds = new Set<string>();
+      restaurantExists.zones?.forEach((zone: any) => {
+        zone.tables?.forEach((table: any) => {
+          if (table.status === "reserved") blockedTableIds.add(String(table.id));
+        });
+      });
+
+      restaurantExists.tableClosures?.forEach((closure: any) => {
+        const cStart = new Date(closure.startDate).getTime();
+        const cEnd = new Date(closure.endDate).getTime();
+        if (useServiceBound) {
+          if (sStartMs < cEnd && sEndMs > cStart) {
+            blockedTableIds.add(String(closure.tableId));
+          }
+        } else {
+          const newStart = bookingTime;
+          const newEnd = bookingTime + 2 * 60 * 60 * 1000;
+          if (newStart < cEnd && newEnd > cStart) {
+            blockedTableIds.add(String(closure.tableId));
+          }
+        }
+      });
+
+      const usableTables = allTables.filter((t) => !blockedTableIds.has(String(t.id)));
+      const totalUsableCapacityAtServiceStart = usableTables.reduce((acc, t) => acc + (t.seats || 0), 0);
+
+      const availableTables = usableTables.filter((t) => !occupiedTableIds.has(String(t.id)));
+      const maxFittingGuests = availableTables.reduce((max, t) => Math.max(max, (t.seats || 0)), 0);
+      const totalAvailableSeatsPerService = availableTables.reduce((acc, t) => acc + (t.seats || 0), 0);
+      const remainingCapacity = Math.max(0, totalAvailableSeatsPerService - unassignedGuestsInService);
+
+      // Realistic availability for THIS specific group size
+      const availableSpots = Math.min(remainingCapacity, maxFittingGuests);
+
+      // REJECT if not enough capacity OR no table fits
+      if (currentHeadCount + Number(guests) > totalUsableCapacityAtServiceStart || availableSpots < Number(guests)) {
         res.status(400).json({
           error:
             availableSpots <= 0
-              ? "Ce créneau est complet. Veuillez choisir un autre horaire."
-              : `Il ne reste que ${availableSpots} place(s) disponible(s) pour ce créneau.`,
+              ? "Ce créneau est complet ou ne peut pas accueillir votre groupe."
+              : `Désolé, il ne reste que ${availableSpots} place(s) disponible(s) sur une table pour ce créneau.`,
           availableSpots,
           isFull: availableSpots <= 0,
         });
@@ -274,8 +357,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       // Extract available pages to check for tablePlan feature
       const availablePages = new Set<string>();
 
-      // Populate is not needed directly here if we just do a separate lookup, but restaurantExists isn't populated with plan.
-      // Let's do a quick lookup if there's a plan
+      // Populate is not needed directly here if we just do a separate lookup
       if (restaurantExists.plan) {
         const { Plan } = await import("../models/planModel.js");
         const plan = await Plan.findById(restaurantExists.plan).populate("features");
@@ -300,51 +382,31 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
       const hasTablePlanFeature = availablePages.has("tablePlan");
 
-      // Table Auto-Assignment Logic
       if (hasTablePlanFeature && restaurantExists.zones && restaurantExists.zones.length > 0) {
-        // Get all tables from all zones
-        const allTables: any[] = [];
-        restaurantExists.zones.forEach((zone: any, index: number) => {
-          if (zone.tables) {
-            zone.tables.forEach((table: any) => {
-              allTables.push({
-                id: table.id,
-                seats: table.seats,
-                label: table.label,
-                zoneId: zone.id,
-                zoneIndex: index,
-              });
-            });
-          }
-        });
-
-        // Find tables occupied by existingBookings within the overlap
-        const occupiedTableIds = new Set();
-        for (const booking of existingBookings) {
-          if (booking.tableId) {
-            const bStart = new Date(booking.bookingDate).getTime();
-            const bEnd = bStart + twoHours;
-            if (bStart < newEnd && bEnd > newStart) {
-              occupiedTableIds.add(booking.tableId);
-            }
-          }
-        }
-
-        // Find available tables that fit the guests
-        const availableFittingTables = allTables
-          .filter((table) => !occupiedTableIds.has(table.id) && table.seats >= Number(guests))
+        // Use the availableFittingTables calculated earlier or re-filter using the same logic
+        const availableFittingTables = availableTables
+          .filter((table) => table.seats >= Number(guests))
           .sort((a, b) => {
-            // Prioritize zones order (fill 1st room first)
-            if (a.zoneIndex !== b.zoneIndex) {
-              return a.zoneIndex - b.zoneIndex;
-            }
-            // Then capacity fit (smallest fitting first)
+            // Find zone index for sorting
+            const zoneA = restaurantExists.zones.findIndex(z => z.tables?.some(t => String(t.id) === String(a.id)));
+            const zoneB = restaurantExists.zones.findIndex(z => z.tables?.some(t => String(t.id) === String(b.id)));
+            if (zoneA !== zoneB) return zoneA - zoneB;
             return a.seats - b.seats;
           });
 
         if (availableFittingTables.length > 0) {
           bookingData.tableId = availableFittingTables[0].id;
           bookingData.zoneId = availableFittingTables[0].zoneId;
+        } else {
+          // IF NO TABLE FITS, consider it COMPLETE for this group size/time even if seats are left
+          res.status(400).json({
+            error: availableSpots > 0 
+              ? `Désolé, aucune table n'est disponible pour ${guests} personnes. (Max conseillé : ${availableSpots} sur une table)`
+              : "Aucune table disponible pour ce nombre de convives sur ce créneau.",
+            availableSpots,
+            isFull: true,
+          });
+          return;
         }
       }
     }
@@ -556,7 +618,6 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
       res.status(400).json({ error: "Impossible de modifier une réservation annulée" });
       return;
     }
-
     // Calculate if guests changed to update bank imprint
     if (guests && guests !== booking.guests && booking.bankImprintStatus === "secured") {
       const restaurantDoc = await Restaurant.findById(booking.restaurant);
@@ -565,22 +626,107 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
       }
     }
 
-    booking.bookingDate = bookingDate || booking.bookingDate;
-    booking.guests = guests || booking.guests;
-    booking.notes = notes !== undefined ? notes : booking.notes;
+    const oldBookingDate = new Date(booking.bookingDate).getTime();
+    const oldGuests = booking.guests;
+    const newBookingDate = bookingDate ? new Date(bookingDate).getTime() : oldBookingDate;
+    const newGuests = guests ? Number(guests) : oldGuests;
 
-    // Validate new time if date changed
-    // Validate new time if date changed
-    if (bookingDate) {
+    // Perform capacity check if date or guests changed
+    if (bookingDate || guests) {
       const restaurantDoc = await Restaurant.findById(booking.restaurant);
       if (restaurantDoc) {
-        const isValidTime = validateBookingTime(restaurantDoc, bookingDate);
+        // 1. Time validation
+        const isValidTime = validateBookingTime(restaurantDoc, new Date(newBookingDate).toISOString());
         if (!isValidTime) {
           res.status(400).json({ error: "Le restaurant est fermé à cette heure modification impossible" });
           return;
         }
+
+        // 2. Capacity Check
+        if (restaurantDoc.capacity && restaurantDoc.capacity > 0) {
+          const twoHours = 2 * 60 * 60 * 1000;
+          const startTime = new Date(newBookingDate - twoHours);
+          const endTime = new Date(newBookingDate + twoHours);
+
+          const existingBookings = await Booking.find({
+            restaurant: booking.restaurant,
+            _id: { $ne: booking._id }, // EXCLUDE current booking
+            bookingDate: { $gte: startTime, $lte: endTime },
+            status: { $in: [bookingStatus.CONFIRMED, bookingStatus.PENDING] },
+          });
+
+          const newStart = newBookingDate;
+          const newEnd = newBookingDate + twoHours;
+          let currentHeadCount = 0;
+          const occupiedTableIds = new Set();
+
+          for (const b of existingBookings) {
+            const bStart = new Date(b.bookingDate).getTime();
+            const bEnd = bStart + twoHours;
+            if (bStart < newEnd && bEnd > newStart) {
+              currentHeadCount += b.guests;
+              if (b.tableId) occupiedTableIds.add(String(b.tableId));
+            }
+          }
+
+          if (currentHeadCount + newGuests > restaurantDoc.capacity) {
+            res.status(400).json({ error: "Ce créneau est complet pour le nombre de convives demandés." });
+            return;
+          }
+
+          // 3. Table-Aware Check if zones exist
+          if (restaurantDoc.zones && restaurantDoc.zones.length > 0) {
+            const allTables: any[] = [];
+            restaurantDoc.zones.forEach((zone: any, index: number) => {
+              if (zone.tables) {
+                zone.tables.forEach((table: any) => {
+                  allTables.push({
+                    id: table.id,
+                    seats: table.seats,
+                    status: table.status,
+                    zoneId: zone.id,
+                  });
+                });
+              }
+            });
+
+            // Find available tables fitting newGuests
+            const availableFittingTables = allTables.filter((table) => {
+              // 1. Legacy status check
+              if (table.status === "reserved") return false;
+
+              // 2. Service-bound closure check
+              const isBlocked = restaurantDoc.tableClosures?.some((closure: any) => {
+                if (closure.tableId !== table.id) return false;
+                const start = new Date(closure.startDate).getTime();
+                const end = new Date(closure.endDate).getTime();
+                return newStart < end && newEnd > start;
+              });
+
+              return !isBlocked && !occupiedTableIds.has(table.id) && table.seats >= newGuests;
+            });
+
+            if (availableFittingTables.length <= 0) {
+              res.status(400).json({
+                error: "Aucune table disponible pour ce nombre de convives sur ce créneau.",
+              });
+              return;
+            }
+
+            // Assign new table if date changed or old table doesn't fit anymore
+            const currentTable = allTables.find((t) => t.id === booking.tableId);
+            if (!currentTable || currentTable.seats < newGuests || bookingDate) {
+              booking.tableId = availableFittingTables[0].id;
+              booking.zoneId = availableFittingTables[0].zoneId;
+            }
+          }
+        }
       }
     }
+
+    booking.bookingDate = bookingDate || booking.bookingDate;
+    booking.guests = guests || booking.guests;
+    booking.notes = notes !== undefined ? notes : booking.notes;
 
     await booking.save();
 
@@ -998,9 +1144,28 @@ export const createManualBooking = async (req: Request, res: Response): Promise<
         }
       }
 
-      // Find available tables that fit the guests
+      // Find available tables that fit the guests (excluding reserved ones)
       const availableFittingTables = allTables
-        .filter((table) => !occupiedTableIds.has(table.id) && table.seats >= Number(guests))
+        .filter((table) => {
+          // 1. Legacy status check
+          const zone = restaurantExists.zones.find((z: any) => z.id === table.zoneId);
+          const sourceTable = zone?.tables.find((t: any) => t.id === table.id);
+          if (sourceTable?.status === "reserved") return false;
+
+          // 2. Service-bound closure check
+          const isBlocked = restaurantExists.tableClosures?.some((closure: any) => {
+            if (closure.tableId !== table.id) return false;
+            const start = new Date(closure.startDate).getTime();
+            const end = new Date(closure.endDate).getTime();
+            return newStart < end && newEnd > start;
+          });
+
+          return (
+            !isBlocked &&
+            !occupiedTableIds.has(table.id) &&
+            table.seats >= Number(guests)
+          );
+        })
         .sort((a, b) => {
           if (a.zoneIndex !== b.zoneIndex) {
             return a.zoneIndex - b.zoneIndex;
@@ -1359,6 +1524,31 @@ export const updateBookingTable = async (req: Request, res: Response): Promise<v
 
     if (!booking) {
       res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    const restaurantDoc = await Restaurant.findById(id);
+    if (!restaurantDoc) {
+      res.status(404).json({ error: "Restaurant introuvable" });
+      return;
+    }
+
+    // Check if the target table is blocked (either legacy status or active closure)
+    const zone = restaurantDoc.zones?.find((z: any) => z.id === zoneId || z._id.toString() === zoneId);
+    const table = zone?.tables?.find((t: any) => t.id === tableId || t._id.toString() === tableId);
+
+    const isLegacyReserved = table && table.status === "reserved";
+    const hasActiveClosure = restaurantDoc.tableClosures?.some((closure: any) => {
+      if (closure.tableId !== tableId) return false;
+      const bStart = new Date(booking.bookingDate).getTime();
+      const bEnd = bStart + 2 * 60 * 60 * 1000; // Standard 2h duration
+      const cStart = new Date(closure.startDate).getTime();
+      const cEnd = new Date(closure.endDate).getTime();
+      return bStart < cEnd && bEnd > cStart;
+    });
+
+    if (isLegacyReserved || hasActiveClosure) {
+      res.status(400).json({ error: "Cette table est actuellement bloquée pour ce créneau et ne peut pas être assignée." });
       return;
     }
 

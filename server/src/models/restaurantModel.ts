@@ -4,10 +4,16 @@ import { IRestaurant } from "../interfaces/IRestaurant.js";
 const RestaurantSchema = new Schema<IRestaurant>(
   {
     name: { type: String, required: true, trim: true },
-    slug: { type: String, required: true },
+    slug: { type: String, required: true, trim: true },
     description: { type: String, required: false },
-    adress: { type: String, required: true },
-    city: { type: String, required: true, trim: true },
+    adress: {
+      type: String,
+      required: true,
+    },
+    city: {
+      type: String,
+      default: "",
+    },
     phone: { type: String, required: true },
     email: { type: String, required: true },
     tempEmail: { type: String },
@@ -53,7 +59,18 @@ const RestaurantSchema = new Schema<IRestaurant>(
         {
           startDate: { type: Date, required: true },
           endDate: { type: Date, required: true },
-          reason: { type: String, default: "" },
+          reason: { type: String, default: "Fermeture exceptionnelle" },
+        },
+      ],
+      default: [],
+    },
+    tableClosures: {
+      type: [
+        {
+          tableId: { type: String, required: true },
+          startDate: { type: Date, required: true },
+          endDate: { type: Date, required: true },
+          reason: { type: String, default: "Bloquée (téléphone)" },
         },
       ],
       default: [],
@@ -157,6 +174,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
               width: { type: Number, required: true },
               height: { type: Number, required: true },
               shape: { type: String, enum: ["rect", "circle"], default: "rect" },
+              status: { type: String, enum: ["available", "reserved"], default: "available" },
             },
           ],
         },
@@ -174,6 +192,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
           width: { type: Number, required: true },
           height: { type: Number, required: true },
           shape: { type: String, enum: ["rect", "circle"], default: "rect" },
+          status: { type: String, enum: ["available", "reserved"], default: "available" },
         },
       ],
       default: [],

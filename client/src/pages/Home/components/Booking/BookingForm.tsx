@@ -112,15 +112,20 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
     }
   }, [closedDays, form, initialData]);
 
-  // Fetch available slots when date changes
+  // Fetch available slots when date or guests change
   const bookingDate = form.watch("bookingDate");
+  const guestsCount = form.watch("guests");
+
   useEffect(() => {
     const fetchSlots = async () => {
       if (!bookingDate) return;
       setLoadingSlots(true);
       try {
         const response = await axiosConfig.get(`/restaurants/public/${restaurant._id}/slots`, {
-          params: { date: format(bookingDate, "yyyy-MM-dd") },
+          params: { 
+            date: format(bookingDate, "yyyy-MM-dd"),
+            guests: guestsCount
+          },
         });
 
         let slots = response.data.slots || [];
@@ -163,7 +168,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
       }
     };
     fetchSlots();
-  }, [bookingDate, restaurant._id, form]);
+  }, [bookingDate, guestsCount, restaurant._id, form]);
 
   const selectedTime = form.watch("time");
 

@@ -39,6 +39,12 @@ export interface RestaurantInterface {
     endDate: string | Date;
     reason?: string;
   }[];
+  tableClosures?: {
+    tableId: string;
+    startDate: string | Date;
+    endDate: string | Date;
+    reason?: string;
+  }[];
   cuisineType: string[];
   priceRange: string;
   rating: number;

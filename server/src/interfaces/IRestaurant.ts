@@ -1,5 +1,12 @@
 import mongoose, { Document } from "mongoose";
 
+export interface ITableClosure {
+  tableId: string;
+  startDate: Date;
+  endDate: Date;
+  reason?: string;
+}
+
 export interface IRestaurant extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -47,6 +54,7 @@ export interface IRestaurant extends Document {
     endDate: Date;
     reason?: string;
   }[];
+  tableClosures: ITableClosure[];
   collaborators: Array<mongoose.Types.ObjectId>;
   collaboratorRoles: Map<string, string>;
 
@@ -83,6 +91,7 @@ export interface IRestaurant extends Document {
       width: number;
       height: number;
       shape: "rect" | "circle";
+      status: "available" | "reserved";
     }[];
   }[];
 
@@ -96,6 +105,7 @@ export interface IRestaurant extends Document {
     width: number;
     height: number;
     shape: "rect" | "circle";
+    status: "available" | "reserved";
   }[];
 
   createdAt: Date;

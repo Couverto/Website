@@ -76,13 +76,13 @@ export const RestaurantDashboard = () => {
     "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedService, setSelectedService] = useState<string | null>("all");
+  const [selectedService, setSelectedService] = useState<string | null>(null);
 
   const hasTablePlan = context?.availablePages?.includes("tablePlan");
 
   const isFullDayClosed = useMemo(() => {
     if (!context?.restaurant?.exceptionalClosures) return false;
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = format(selectedDate, "yyyy-MM-dd");
     const sTarget = new Date(todayStr + "T00:00:00.000Z").getTime();
     const eTarget = new Date(todayStr + "T23:59:59.999Z").getTime();
 
@@ -91,7 +91,7 @@ export const RestaurantDashboard = () => {
       const e = new Date(closure.endDate).getTime();
       return Math.abs(s - sTarget) < 2000 && Math.abs(e - eTarget) < 2000;
     });
-  }, [context?.restaurant?.exceptionalClosures]);
+  }, [context?.restaurant?.exceptionalClosures, selectedDate]);
 
   const todayServices = useMemo(() => {
     if (!context?.restaurant?.openingHours) return [];
@@ -104,6 +104,38 @@ export const RestaurantDashboard = () => {
     if (!schedule || schedule.isClosed || !schedule.periods) return [];
     return schedule.periods;
   }, [context?.restaurant?.openingHours, selectedDate]);
+
+  const findClosestService = useCallback((periods: any[]) => {
+    if (periods.length === 0) return null;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // If it is today, find the closest one. If another day, find the first one.
+    const isToday = selectedDate.toDateString() === new Date().toDateString();
+    
+    if (!isToday) return `${periods[0].open}-${periods[0].close}`;
+
+    let closest = periods[0];
+    let minDiff = Infinity;
+
+    for (const p of periods) {
+      const [h, m] = p.open.split(":").map(Number);
+      const openMinutes = h * 60 + m;
+      const diff = Math.abs(openMinutes - currentMinutes);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = p;
+      }
+    }
+    return `${closest.open}-${closest.close}`;
+  }, [selectedDate]);
+
+  // Set default service
+  useEffect(() => {
+    if (todayServices.length > 0 && !selectedService) {
+      setSelectedService(findClosestService(todayServices));
+    }
+  }, [todayServices, findClosestService, selectedService]);
 
   const getServiceStatus = useCallback((period: { open: string; close: string }) => {
     if (!context?.restaurant?.exceptionalClosures) return "open";
@@ -126,7 +158,8 @@ export const RestaurantDashboard = () => {
       setIsTogglingClosure(true);
       const response = await api.patch(`/restaurants/${id}/toggle-today-closure`, {
         startTime,
-        endTime
+        endTime,
+        date: format(selectedDate, "yyyy-MM-dd")
       });
       toast.success(response.data.message);
       if (context?.refreshRestaurant) {
@@ -157,13 +190,12 @@ export const RestaurantDashboard = () => {
   }, [id, selectedDate]);
 
   const filteredStats = useMemo(() => {
-    if (!stats) return null;
-    if (selectedService === "all") return stats.today;
+    if (!stats || !selectedService) return null;
 
     const [start, end] = selectedService!.split("-");
     const filtered = upcomingBookings.filter(b => {
       const bDate = new Date(b.bookingDate);
-      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
       return time >= start && time <= end;
     });
 
@@ -177,11 +209,11 @@ export const RestaurantDashboard = () => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     let base = upcomingBookings.filter(b => b.bookingDate.startsWith(dateStr));
     
-    if (selectedService === "all") return base;
+    if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
     return base.filter(b => {
       const bDate = new Date(b.bookingDate);
-      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
       return time >= start && time <= end;
     });
   }, [upcomingBookings, selectedService, selectedDate]);
@@ -190,11 +222,11 @@ export const RestaurantDashboard = () => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     let base = recentBookings.filter(b => b.bookingDate.startsWith(dateStr));
 
-    if (selectedService === "all") return base;
+    if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
     return base.filter(b => {
       const bDate = new Date(b.bookingDate);
-      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
       return time >= start && time <= end;
     });
   }, [recentBookings, selectedService, selectedDate]);
@@ -203,11 +235,11 @@ export const RestaurantDashboard = () => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     let base = dayBookings.filter(b => b.bookingDate.startsWith(dateStr));
 
-    if (selectedService === "all") return base;
+    if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
     return base.filter(b => {
       const bDate = new Date(b.bookingDate);
-      const time = bDate.getUTCHours().toString().padStart(2, "0") + ":" + bDate.getUTCMinutes().toString().padStart(2, "0");
+      const time = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
       return time >= start && time <= end;
     });
   }, [dayBookings, selectedService, selectedDate]);
@@ -222,7 +254,7 @@ export const RestaurantDashboard = () => {
 
   // Reset selected service when date changes
   useEffect(() => {
-    setSelectedService("all");
+    setSelectedService(null);
   }, [selectedDate]);
 
   // Socket Logic
@@ -288,6 +320,21 @@ export const RestaurantDashboard = () => {
     }
   };
 
+  const handleToggleTableClosure = async (tableId: string, startTime?: string, endTime?: string) => {
+    try {
+      await api.patch(`/restaurants/${id}/tables/${tableId}/toggle-closure`, {
+        startTime,
+        endTime,
+      });
+      if (context?.refreshRestaurant) {
+        await context.refreshRestaurant();
+      }
+      fetchStats();
+    } catch (error) {
+      toast.error("Erreur lors de la modification du statut de la table");
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "CONFIRMED":
@@ -329,78 +376,26 @@ export const RestaurantDashboard = () => {
         <div className="flex flex-wrap items-center gap-2">
             {context?.restaurant && (
             <>
-              {todayServices.length > 1 ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant={isFullDayClosed ? "default" : "outline"}
-                      className={cn(
-                        "font-bold transition-all",
-                        isFullDayClosed
-                          ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
-                          : "text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700",
-                      )}
-                      disabled={isTogglingClosure}
-                    >
-                      {isTogglingClosure ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : isFullDayClosed ? (
-                        <Clock className="h-4 w-4 mr-2" />
-                      ) : (
-                        <X className="h-4 w-4 mr-2" />
-                      )}
-                      {"Fermeture rapide"}
-                      <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>{"Choisir le service à fermer"}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => toggleTodayClosure()}
-                      className={cn(isFullDayClosed && "bg-red-50 text-red-700 focus:bg-red-100 focus:text-red-800")}
-                    >
-                      {isFullDayClosed ? <Check className="h-4 w-4 mr-2" /> : <X className="h-4 w-4 mr-2" />}
-                      {"Toute la journée"}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {todayServices.map((service: any, idx: number) => {
-                      const status = getServiceStatus(service);
-                      return (
-                        <DropdownMenuItem
-                          key={idx}
-                          onClick={() => toggleTodayClosure(service.open, service.close)}
-                          className={cn(status === "closed" && "bg-red-50 text-red-700 focus:bg-red-100 focus:text-red-800")}
-                        >
-                          {status === "closed" ? <Check className="h-4 w-4 mr-2" /> : <X className="h-4 w-4 mr-2" />}
-                          {`Service ${idx + 1} (${service.open} - ${service.close})`}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button
-                  variant={isFullDayClosed ? "default" : "outline"}
-                  className={cn(
-                    "font-bold transition-all",
-                    isFullDayClosed
-                      ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
-                      : "text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700",
-                  )}
-                  onClick={() => toggleTodayClosure()}
-                  disabled={isTogglingClosure}
-                >
-                  {isTogglingClosure ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : isFullDayClosed ? (
-                    <Clock className="h-4 w-4 mr-2" />
-                  ) : (
-                    <X className="h-4 w-4 mr-2" />
-                  )}
-                  {isFullDayClosed ? "Réouvrir aujourd'hui" : "Fermer aujourd'hui"}
-                </Button>
-              )}
+              <Button
+                variant={isFullDayClosed ? "default" : "outline"}
+                className={cn(
+                  "font-bold transition-all",
+                  isFullDayClosed
+                    ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
+                    : "text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700",
+                )}
+                onClick={() => toggleTodayClosure()}
+                disabled={isTogglingClosure}
+              >
+                {isTogglingClosure ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : isFullDayClosed ? (
+                  <Clock className="h-4 w-4 mr-2" />
+                ) : (
+                  <X className="h-4 w-4 mr-2" />
+                )}
+                {isFullDayClosed ? `Réouvrir le ${format(selectedDate, "dd/MM")}` : `Fermer le ${format(selectedDate, "dd/MM")}`}
+              </Button>
 
               <Button variant="outline" asChild>
                 <Link to={`/restaurants/infos/${context.restaurant._id}`} target="_blank">
@@ -510,8 +505,11 @@ export const RestaurantDashboard = () => {
         {hasTablePlan && context?.restaurant && (
           <DashboardTablePlan 
             restaurant={context.restaurant} 
-            bookings={selectedService !== "all" || selectedDate.toDateString() !== new Date().toDateString() ? filteredDayBookings : stats?.activeBookings || []} 
+            bookings={filteredDayBookings} 
+            selectedDate={selectedDate}
+            selectedService={selectedService}
             onDismiss={handleDismissBooking} 
+            onToggleTableClosure={handleToggleTableClosure}
           />
         )}
 
@@ -521,10 +519,10 @@ export const RestaurantDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-bold">
-                  {selectedService !== "all" ? "Réservations du service" : "Dernières réservations"}
+                  {"Réservations du service"}
                 </CardTitle>
                 <CardDescription className="text-[10px] uppercase tracking-wider font-semibold opacity-70">
-                  {selectedService !== "all" ? "Pour le service sélectionné" : "Les 10 dernières"}
+                  {"Pour le service sélectionné"}
                 </CardDescription>
               </div>
               <Button variant="ghost" size="sm" asChild className="h-8 px-2 hover:bg-primary/5 hover:text-primary">
@@ -549,9 +547,7 @@ export const RestaurantDashboard = () => {
                   <Info className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-20" />
                   <p className="text-muted-foreground font-medium">Aucune réservation</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {selectedService !== "all" 
-                      ? "Aucune réservation pour ce service" 
-                      : "Les nouvelles réservations apparaîtront ici"}
+                    {"Aucune réservation pour ce service"}
                   </p>
                 </div>
               ) : (
@@ -700,12 +696,11 @@ export const RestaurantDashboard = () => {
         </div>
 
         {todayServices.length > 0 && (
-          <Select value={selectedService || "all"} onValueChange={setSelectedService}>
+          <Select value={selectedService || ""} onValueChange={setSelectedService}>
             <SelectTrigger className="bg-transparent border-none shadow-none focus:ring-0 h-9 px-3 font-medium rounded-full hover:bg-primary/5 transition-colors w-[150px]">
               <SelectValue placeholder="Service" />
             </SelectTrigger>
             <SelectContent className="mb-2" side="top">
-              <SelectItem value="all">Tous les services</SelectItem>
               {todayServices.map((s: any, i: number) => (
                 <SelectItem key={i} value={`${s.open}-${s.close}`}>
                   {`Service ${i + 1} (${s.open})`}

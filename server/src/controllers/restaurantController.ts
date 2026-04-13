@@ -7,6 +7,7 @@ import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
+import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { collaboratorEmailTemplate } from "../templates/collaboratorEmail.js";
@@ -17,7 +18,7 @@ import { PendingTransaction } from "../models/pendingTransactionModel.js";
 import { ReferralCode } from "../models/referralCodeModel.js";
 import { Feature } from "../models/featureModel.js";
 import { VerificationCode } from "../models/verificationCodeModel.js";
-import { isRestaurantOpen, convertOpeningHoursToObject } from "../utils/restaurantUtils.js";
+import { isRestaurantOpen, convertOpeningHoursToObject, getServicePeriod } from "../utils/restaurantUtils.js";
 import { Review } from "../models/reviewModel.js";
 
 /**
@@ -723,7 +724,10 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
     if (req.body.zones && Array.isArray(req.body.zones)) {
       const totalCapacity = req.body.zones.reduce((acc: number, zone: any) => {
         const zoneTables = zone.tables || [];
-        return acc + zoneTables.reduce((tAcc: number, table: any) => tAcc + (table.seats || 0), 0);
+        return acc + zoneTables.reduce((tAcc: number, table: any) => {
+          if (table.status === "reserved") return tAcc;
+          return tAcc + (table.seats || 0);
+        }, 0);
       }, 0);
       req.body.capacity = totalCapacity;
     }
@@ -1227,7 +1231,10 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
 
 export const getRestaurantSlots = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { date } = req.query;
+  const { date, guests } = req.query;
+  const guestsNum = parseInt(guests as string) || 0;
+  
+  console.log(`Checking slots for restaurant ${id}, date ${date}, guests ${guestsNum}`);
 
   if (!date) {
     res.status(400).json({ error: "Date parameter is required" });
@@ -1294,17 +1301,18 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
     // Fetch all confirmed/pending bookings for this day (full day range to cover overlaps)
     // We cover from 00:00 to 23:59 of the requested date, plus potential overlaps from previous day?
     // For simplicity, let's look at the day matching the query date.
-    const startOfDay = new Date(baseDateStr);
-    const endOfDay = new Date(baseDateStr);
-    endOfDay.setDate(endOfDay.getDate() + 1);
-
-    // Import Booking model if not already imported (assuming it is available in scope or needs import)
-    // Note: Assuming Booking is imported at top level.
+    const startOfDay = new Date(baseDateStr + "T00:00:00.000Z");
+    const endOfDay = new Date(baseDateStr + "T23:59:59.999Z");
+    
+    // Expand range by 2 hours each side to capture cross-day overlaps
+    const twoHoursMs = 2 * 60 * 60 * 1000;
+    const queryStart = new Date(startOfDay.getTime() - twoHoursMs);
+    const queryEnd = new Date(endOfDay.getTime() + twoHoursMs);
 
     const existingBookings = await Booking.find({
       restaurant: id,
-      bookingDate: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ["CONFIRMED", "PENDING"] },
+      bookingDate: { $gte: queryStart, $lte: queryEnd },
+      status: { $ne: bookingStatus.CANCELLED },
     });
 
     const allSlots = Array.from({ length: 48 }, (_, i) => {
@@ -1354,30 +1362,102 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
     const slotsWithAvailability = validSlots.map((slot) => {
       // If capacity is 0 or less (no tables/manual set to 0), no availability
       if (capacity <= 0) return { time: slot, available: 0 };
+      
+      // 1. Identify which service period this slot belongs to
+      const currentService = getServicePeriod(slot, daySchedule.periods);
+      if (!currentService) return { time: slot, available: 0 };
 
-      // Slot timestamp
-      const [h, m] = slot.split(":").map(Number);
-      const slotDate = new Date(baseDateStr);
-      slotDate.setHours(h, m, 0, 0);
-      const slotTimeMs = slotDate.getTime();
-      const slotEndMs = slotTimeMs + 2 * 60 * 60 * 1000; // Assume 2h duration
+      // Construct service window timestamps (for closure checks)
+      const serviceStart = new Date(baseDateStr);
+      const [sh, sm] = currentService.open.split(":").map(Number);
+      serviceStart.setHours(sh, sm, 0, 0);
+      const serviceEnd = new Date(baseDateStr);
+      const [eh, em] = currentService.close.split(":").map(Number);
+      serviceEnd.setHours(eh, em, 59, 999);
 
-      // Count overlap
-      let currentHeadCount = 0;
-      for (const booking of existingBookings) {
-        const bStart = new Date(booking.bookingDate).getTime();
-        // Assuming booking duration 2h as standard
-        const bEnd = bStart + 2 * 60 * 60 * 1000;
+      const sStartMs = serviceStart.getTime();
+      const sEndMs = serviceEnd.getTime();
 
-        // Overlap logic: StartA < EndB && EndA > StartB
-        if (slotTimeMs < bEnd && slotEndMs > bStart) {
-          currentHeadCount += booking.guests;
+      // 2. Identify occupied tables for THIS specific service
+      const occupiedTableIds = new Set<string>();
+      const unassignedGuestsInService = existingBookings.reduce((acc, b) => {
+        const bDate = new Date(b.bookingDate);
+        const bTime = bDate.getHours().toString().padStart(2, "0") + ":" + bDate.getMinutes().toString().padStart(2, "0");
+        
+        // Does this booking belong to the SAME service as the current slot?
+        const bService = getServicePeriod(bTime, daySchedule.periods);
+        if (bService && bService.open === currentService.open && bService.close === currentService.close) {
+          if (b.tableId) {
+            occupiedTableIds.add(String(b.tableId));
+          } else {
+            return acc + (b.guests || 0);
+          }
         }
+        return acc;
+      }, 0);
+
+      if (restaurant.zones && restaurant.zones.length > 0) {
+        // Collect all tables
+        const allTables: any[] = [];
+        restaurant.zones.forEach((zone: any) => {
+          zone.tables?.forEach((table: any) => {
+            allTables.push({
+              id: table.id,
+              seats: table.seats,
+              status: table.status,
+            });
+          });
+        });
+
+        // 3. Identify blocked tables for THIS specific service (legacy or closures)
+        const blockedTableIds = new Set<string>();
+        restaurant.zones.forEach((zone: any) => {
+          zone.tables?.forEach((table: any) => {
+            if (table.status === "reserved") blockedTableIds.add(String(table.id));
+          });
+        });
+
+        restaurant.tableClosures?.forEach((closure: any) => {
+          const cStart = new Date(closure.startDate).getTime();
+          const cEnd = new Date(closure.endDate).getTime();
+          // Closure overlaps with THIS service window
+          if (sStartMs < cEnd && sEndMs > cStart) {
+            blockedTableIds.add(String(closure.tableId));
+          }
+        });
+
+        const usableTables = allTables.filter((t) => !blockedTableIds.has(String(t.id)));
+        const totalUsableCapacity = usableTables.reduce((acc, t) => acc + (t.seats || 0), 0);
+
+        const availableTables = usableTables.filter(
+          (t) => !occupiedTableIds.has(String(t.id)),
+        );
+
+        if (availableTables.length === 0) {
+          return { time: slot, available: 0 };
+        }
+
+        // If guests parameter provided, check if at least one table fits
+        if (guestsNum > 0) {
+          const hasFittingTable = availableTables.some((t) => t.seats >= guestsNum);
+          if (!hasFittingTable) {
+            return { time: slot, available: 0 };
+          }
+        }
+
+        const maxFittingGuests = availableTables.reduce((max, t) => Math.max(max, t.seats), 0);
+        const totalAvailableSeatsPerService = availableTables.reduce((acc, t) => acc + (t.seats || 0), 0);
+        const remainingCapacity = Math.max(0, totalAvailableSeatsPerService - unassignedGuestsInService);
+
+        return {
+          time: slot,
+          available: Math.min(remainingCapacity, maxFittingGuests),
+        };
       }
 
       return {
         time: slot,
-        available: Math.max(0, capacity - currentHeadCount),
+        available: Math.max(0, capacity - unassignedGuestsInService),
       };
     });
 
@@ -1992,7 +2072,10 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
     if (req.body.zones && Array.isArray(req.body.zones)) {
       const totalCapacity = req.body.zones.reduce((acc: number, zone: any) => {
         const zoneTables = zone.tables || [];
-        return acc + zoneTables.reduce((tAcc: number, table: any) => tAcc + (table.seats || 0), 0);
+        return acc + zoneTables.reduce((tAcc: number, table: any) => {
+          if (table.status === "reserved") return tAcc;
+          return tAcc + (table.seats || 0);
+        }, 0);
       }, 0);
       req.body.capacity = totalCapacity;
     }
@@ -2357,7 +2440,7 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
  */
 export const toggleTodayClosure = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { startTime, endTime } = req.body;
+  const { date } = req.body;
   try {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
@@ -2365,42 +2448,37 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const today = new Date();
-    // Normalise to UTC date string YYYY-MM-DD
-    const todayStr = today.toISOString().split("T")[0];
+    const todayStr = date || new Date().toISOString().split("T")[0];
 
-    // Define the target range
-    let targetStart: Date;
-    let targetEnd: Date;
-
-    if (startTime && endTime) {
-      targetStart = new Date(todayStr + "T" + startTime + ":00.000Z");
-      targetEnd = new Date(todayStr + "T" + endTime + ":00.999Z");
-    } else {
-      targetStart = new Date(todayStr + "T00:00:00.000Z");
-      targetEnd = new Date(todayStr + "T23:59:59.999Z");
-    }
-
+    // Always target the full day
+    const targetStart = new Date(todayStr + "T00:00:00.000Z");
+    const targetEnd = new Date(todayStr + "T23:59:59.999Z");
     const targetStartMs = targetStart.getTime();
     const targetEndMs = targetEnd.getTime();
 
-    // Find if this exact range is already exceptionally closed
+    // Check if there's any closure overlapping with today
+    // We want to "reopen" if we find a full-day closure OR any closure for today
     const existingIndex = restaurant.exceptionalClosures.findIndex((closure: any) => {
       const s = new Date(closure.startDate).getTime();
       const e = new Date(closure.endDate).getTime();
-      return Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000; // 2s tolerance for floating point/seconds
+      // If it's a full day closure or any closure starting today
+      return (Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000) || 
+             (s >= targetStartMs && s <= targetEndMs);
     });
 
     if (existingIndex > -1) {
-      // Reopen: Remove the closure
-      restaurant.exceptionalClosures.splice(existingIndex, 1);
+      // Reopen: Remove ALL closures that start/end today to be thorough
+      restaurant.exceptionalClosures = restaurant.exceptionalClosures.filter((closure: any) => {
+        const s = new Date(closure.startDate).getTime();
+        return !(s >= targetStartMs && s <= targetEndMs);
+      });
       await restaurant.save();
       res.status(200).json({ 
-        message: "Service réouvert", 
+        message: `Restaurant réouvert pour le ${todayStr}`, 
         exceptionalClosures: restaurant.exceptionalClosures 
       });
     } else {
-      // Close: Add a new closure
+      // Close: Add a new full-day closure
       restaurant.exceptionalClosures.push({
         startDate: targetStart,
         endDate: targetEnd,
@@ -2408,8 +2486,68 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
       });
       await restaurant.save();
       res.status(200).json({ 
-        message: "Service fermé", 
+        message: `Restaurant fermé pour le ${todayStr}`, 
         exceptionalClosures: restaurant.exceptionalClosures 
+      });
+    }
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * @function toggleTableClosure
+ * @description Toggles a table's closure for a specific time range.
+ */
+export const toggleTableClosure = async (req: Request, res: Response): Promise<void> => {
+  const { id, tableId } = req.params;
+  const { startTime, endTime } = req.body;
+
+  try {
+    const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+      res.status(404).json({ error: "Restaurant non trouvé" });
+      return;
+    }
+
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Target range (defaults to full day if not specified)
+    const targetStart = startTime ? new Date(`${todayStr}T${startTime}:00.000Z`) : new Date(`${todayStr}T00:00:00.000Z`);
+    const targetEnd = endTime ? new Date(`${todayStr}T${endTime}:00.999Z`) : new Date(`${todayStr}T23:59:59.999Z`);
+    const targetStartMs = targetStart.getTime();
+    const targetEndMs = targetEnd.getTime();
+
+    // Check if this exact closure already exists
+    const existingIndex = restaurant.tableClosures?.findIndex((closure: any) => {
+      if (closure.tableId !== tableId) return false;
+      const s = new Date(closure.startDate).getTime();
+      const e = new Date(closure.endDate).getTime();
+      return Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000;
+    });
+
+    if (existingIndex !== undefined && existingIndex > -1) {
+      // Re-open: Remove the closure
+      restaurant.tableClosures.splice(existingIndex, 1);
+      await restaurant.save();
+      res.status(200).json({ 
+        message: "Table réouverte pour ce service", 
+        tableClosures: restaurant.tableClosures 
+      });
+    } else {
+      // Block: Add new closure
+      if (!restaurant.tableClosures) restaurant.tableClosures = [];
+      restaurant.tableClosures.push({
+        tableId,
+        startDate: targetStart,
+        endDate: targetEnd,
+        reason: "Bloquée (téléphone)",
+      });
+      await restaurant.save();
+      res.status(200).json({ 
+        message: "Table bloquée pour ce service", 
+        tableClosures: restaurant.tableClosures 
       });
     }
   } catch (err: any) {

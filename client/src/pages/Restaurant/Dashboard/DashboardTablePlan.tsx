@@ -9,14 +9,41 @@ import { BookingInterface } from "@/interfaces/Booking";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 interface DashboardTablePlanProps {
   restaurant: RestaurantInterface;
   bookings: BookingInterface[];
+  selectedDate?: Date;
+  selectedService?: string | null;
   onDismiss?: (bookingId: string) => void;
+  onToggleTableClosure?: (tableId: string, startTime?: string, endTime?: string) => void;
 }
 
-export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaurant, bookings, onDismiss }) => {
+export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ 
+  restaurant, 
+  bookings, 
+  selectedDate = new Date(),
+  selectedService,
+  onDismiss, 
+  onToggleTableClosure 
+}) => {
   const [activeZoneId, setActiveZoneId] = useState<string>(restaurant.zones[0]?.id || "");
+
+  const todayServices = useMemo(() => {
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dayName = days[new Date().getDay()];
+    const hours = restaurant.openingHours?.[dayName];
+    if (!hours || hours.isClosed) return [];
+    return hours.periods || [];
+  }, [restaurant.openingHours]);
 
   const activeZone = useMemo(
     () => restaurant.zones?.find((z: any) => z.id === activeZoneId) || restaurant.zones?.[0],
@@ -133,14 +160,47 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
               <div className="w-2.5 h-2.5 rounded-full bg-primary border-2 border-primary/30" />
               <span>Occupé</span>
             </div>
-          </div>
-
-          <TooltipProvider delayDuration={200}>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-tight">
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-500 border-2 border-orange-500/30" />
+              <span>Bloqué</span>
+            </div>
+          </div>          <TooltipProvider delayDuration={200}>
             <div className="w-full h-full relative">
               {activeZone?.tables.map((table: any) => {
                 const tid = String(table.id || table._id || "");
                 const booking = currentBookings.find((b: BookingInterface) => b.tableId && String(b.tableId) === tid);
                 const isOccupied = !!booking;
+
+                const tableClosuresForThisTable = restaurant.tableClosures?.filter((c: any) => c.tableId === tid) || [];
+                
+                const currentClosure = tableClosuresForThisTable.find((c: any) => {
+                  const s = new Date(c.startDate).getTime();
+                  const e = new Date(c.endDate).getTime();
+                  
+                  if (selectedService) {
+                    const [startStr, endStr] = selectedService.split("-");
+                    const [startH, startM] = startStr.split(":").map(Number);
+                    const [endH, endM] = endStr.split(":").map(Number);
+                    
+                    const serviceStart = new Date(selectedDate);
+                    serviceStart.setHours(startH, startM, 0, 0);
+                    
+                    const serviceEnd = new Date(selectedDate);
+                    serviceEnd.setHours(endH, endM, 59, 999);
+                    
+                    const serviceStartMs = serviceStart.getTime();
+                    const serviceEndMs = serviceEnd.getTime();
+                    
+                    // Closure overlaps with service window
+                    return serviceStartMs < e && serviceEndMs > s;
+                  }
+                  
+                  // fallback to now
+                  const now = new Date();
+                  return now.getTime() >= s && now.getTime() <= e;
+                });
+                
+                const isReserved = (table as any).status === "reserved" || !!currentClosure;
 
                 // Calculate percentage-based positions relative to bounding box
                 const left = ((table.x - layout.minX) / layout.contentWidth) * 100;
@@ -150,13 +210,16 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
 
                 const tableContent = (
                   <div
-                    key={table.id}
                     className={cn(
-                      "absolute transition-all duration-500 border-2 shadow-sm flex flex-col items-center justify-center text-center p-0.5 overflow-hidden group",
+                      "absolute transition-all duration-300 border-2 shadow-sm flex flex-col items-center justify-center text-center p-0.5 overflow-hidden group",
+                      !isOccupied && "cursor-pointer active:scale-95",
                       isOccupied
                         ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 z-20"
-                        : "bg-background text-muted-foreground border-muted-foreground/20 hover:border-primary/50 z-10",
+                        : isReserved
+                          ? "bg-orange-500 text-white border-orange-600 z-10 shadow-sm"
+                          : "bg-background text-muted-foreground border-muted-foreground/20 hover:border-primary/50 z-10",
                     )}
+                    title={isOccupied ? "Occupée" : isReserved ? "Cliquer pour gérer le blocage" : "Cliquer pour bloquer (téléphone)"}
                     style={{
                       left: `${left}%`,
                       top: `${top}%`,
@@ -165,7 +228,7 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
                       borderRadius: table.shape === "circle" ? "9999px" : "12%",
                     }}
                   >
-                    <div className="flex flex-col items-center justify-center w-full h-full p-1 sm:p-2 relative">
+                    <div className="flex flex-col items-center justify-center w-full h-full p-1 sm:p-2 relative pointer-events-none">
                       <span
                         className={cn(
                           "font-black leading-tight truncate w-full",
@@ -178,7 +241,8 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
                       <div
                         className={cn(
                           "flex items-center gap-0.5 mt-0.5 px-1 py-0.5 rounded-full transition-all",
-                          isOccupied ? "bg-white/20 text-white group-hover:hidden" : "bg-muted text-muted-foreground",
+                          isOccupied ? "bg-white/20 text-white group-hover:hidden" : 
+                          isReserved ? "bg-white/20 text-white" : "bg-muted text-muted-foreground",
                         )}
                       >
                         {isOccupied ? (
@@ -222,7 +286,48 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({ restaura
                   );
                 }
 
-                return tableContent;
+                // Wrap in DropdownMenu if not occupied
+                return (
+                  <DropdownMenu key={table.id}>
+                    <DropdownMenuTrigger asChild>
+                      {tableContent}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="w-56">
+                      <DropdownMenuLabel>Bloquer la table {table.label}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      {todayServices.map((period: any, idx: number) => {
+                        const isThisPeriodBlocked = tableClosuresForThisTable.some((c: any) => {
+                          const s = new Date(c.startDate).getTime();
+                          const e = new Date(c.endDate).getTime();
+                          const targetS = new Date(`${new Date().toISOString().split("T")[0]}T${period.open}:00.000Z`).getTime();
+                          const targetE = new Date(`${new Date().toISOString().split("T")[0]}T${period.close}:00.999Z`).getTime();
+                          return Math.abs(s - targetS) < 2000 && Math.abs(e - targetE) < 2000;
+                        });
+
+                        return (
+                          <DropdownMenuItem 
+                            key={idx} 
+                            onClick={() => onToggleTableClosure?.(tid, period.open, period.close)}
+                            className="flex justify-between"
+                          >
+                            <span>Service {period.open}-{period.close}</span>
+                            {isThisPeriodBlocked && <Badge variant="destructive" className="text-[10px] h-4">Bloqué</Badge>}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                      
+                      <DropdownMenuSeparator />
+                      
+                      <DropdownMenuItem 
+                        onClick={() => onToggleTableClosure?.(tid)}
+                        className="font-semibold text-orange-600 focus:text-orange-600"
+                      >
+                        Toute la journée
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
               })}
             </div>
           </TooltipProvider>

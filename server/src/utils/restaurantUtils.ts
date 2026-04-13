@@ -45,3 +45,11 @@ export const convertOpeningHoursToObject = (openingHours: any) => {
   }
   return openingHours;
 };
+/**
+ * @function getServicePeriod
+ * @description Finds the service period (opening hours period) that a given time (HH:mm) belongs to.
+ */
+export const getServicePeriod = (time: string, periods: { open: string; close: string }[]) => {
+  if (!periods || periods.length === 0) return null;
+  return periods.find((p) => time >= p.open && time <= p.close);
+};
