@@ -1813,29 +1813,6 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // Check availability of new phone if changed
-    if (req.body.phone && req.body.phone !== restaurant.phone) {
-      const existingPhoneConflict = await Restaurant.findOne({
-        phone: req.body.phone,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingPhoneConflict) {
-        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
-    // Check availability of new address if changed
-    if (req.body.adress && req.body.adress !== restaurant.adress) {
-      const existingAddressConflict = await Restaurant.findOne({
-        adress: req.body.adress,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingAddressConflict) {
-        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
 
     const isAlreadyCollaborator = restaurant.collaborators.some((collab) => collab.toString() === userId);
 
@@ -1893,29 +1870,6 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Check availability of new phone if changed
-    if (req.body.phone && req.body.phone !== restaurant.phone) {
-      const existingPhoneConflict = await Restaurant.findOne({
-        phone: req.body.phone,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingPhoneConflict) {
-        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
-    // Check availability of new address if changed
-    if (req.body.adress && req.body.adress !== restaurant.adress) {
-      const existingAddressConflict = await Restaurant.findOne({
-        adress: req.body.adress,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingAddressConflict) {
-        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
 
     // Cannot remove the last collaborator
     if (restaurant.collaborators.length <= 1) {
@@ -2165,29 +2119,6 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
       return;
     }
 
-    // Check availability of new phone if changed
-    if (req.body.phone && req.body.phone !== restaurant.phone) {
-      const existingPhoneConflict = await Restaurant.findOne({
-        phone: req.body.phone,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingPhoneConflict) {
-        res.status(409).json({ error: "Ce numéro de téléphone est déjà associé à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
-
-    // Check availability of new address if changed
-    if (req.body.adress && req.body.adress !== restaurant.adress) {
-      const existingAddressConflict = await Restaurant.findOne({
-        adress: req.body.adress,
-        collaborators: { $ne: req.userId },
-      });
-      if (existingAddressConflict) {
-        res.status(409).json({ error: "Cette adresse est déjà associée à un autre restaurant dont vous n'êtes pas propriétaire" });
-        return;
-      }
-    }
 
     const isCollaborator = restaurant.collaborators.some((collab) => collab.toString() === collaboratorId);
     if (!isCollaborator) {
