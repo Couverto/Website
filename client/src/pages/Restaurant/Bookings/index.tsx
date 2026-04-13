@@ -9,7 +9,7 @@ import { RestaurantContext } from "@/interfaces/Components";
 import { DataTable } from "@/components/customs/dataTable";
 import { getColumns } from "./columns";
 import { useOutletContext } from "react-router-dom";
-import { useAuth } from "@/contexts/authContext";
+import { useAuthContext } from "@/contexts/authContext";
 
 import {
   AlertDialog,
@@ -26,7 +26,7 @@ export const RestaurantBookings = () => {
   const { id } = useParams();
   const { availablePages } = useOutletContext<RestaurantContext>();
   const { socket } = useSocketContext();
-  const { user } = useAuth();
+  const { authUser } = useAuthContext();
   const [bookings, setBookings] = useState<BookingInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -54,7 +54,7 @@ export const RestaurantBookings = () => {
         setLoading(false);
       }
     },
-    [id, statusFilter, search]
+    [id, statusFilter, search],
   );
 
   const fetchWithState = useCallback(
@@ -62,7 +62,7 @@ export const RestaurantBookings = () => {
       setPageSize(s);
       fetchBookings(p, s);
     },
-    [fetchBookings]
+    [fetchBookings],
   );
 
   const onSearchChange = useCallback((q: string) => {
@@ -82,10 +82,8 @@ export const RestaurantBookings = () => {
       socket.emit("joinRestaurant", id);
 
       const handleNewBooking = (newBooking: BookingInterface) => {
-        if (user?.notificationSound) {
-          const audio = new Audio(
-            "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"
-          );
+        if (authUser?.notificationSound) {
+          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
           audio.play().catch((e) => console.error("Audio play failed", e));
         }
 
@@ -105,7 +103,7 @@ export const RestaurantBookings = () => {
         socket.off("newBooking", handleNewBooking);
       };
     }
-  }, [socket, id, user]);
+  }, [socket, id, authUser]);
 
   const updateStatus = useCallback(
     async (bookingId: string, newStatus: string, reason?: string) => {
@@ -114,13 +112,7 @@ export const RestaurantBookings = () => {
           status: newStatus,
           reason,
         });
-        setBookings((prev) =>
-          prev.map((b) =>
-            b._id === bookingId
-              ? { ...b, status: newStatus as BookingStatus }
-              : b
-          )
-        );
+        setBookings((prev) => prev.map((b) => (b._id === bookingId ? { ...b, status: newStatus as BookingStatus } : b)));
 
         // Remove "new" indicator if action taken
         setNewBookingIds((prev) => {
@@ -135,29 +127,20 @@ export const RestaurantBookings = () => {
         toast.error("Erreur lors de la mise à jour");
       }
     },
-    [id]
+    [id],
   );
 
   /* Dialogs State */
-  const [selectedBooking, setSelectedBooking] =
-    useState<BookingInterface | null>(null);
-  const [actionType, setActionType] = useState<
-    "CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT" | null
-  >(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingInterface | null>(null);
+  const [actionType, setActionType] = useState<"CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT" | null>(null);
   const [cancellationReason, setCancellationReason] = useState(
-    "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner."
+    "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
   );
 
-  const handleAction = useCallback(
-    (
-      action: "CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT",
-      booking: BookingInterface
-    ) => {
-      setSelectedBooking(booking);
-      setActionType(action);
-    },
-    []
-  );
+  const handleAction = useCallback((action: "CONFIRM" | "CANCEL" | "CAPTURE_IMPRINT" | "RELEASE_IMPRINT", booking: BookingInterface) => {
+    setSelectedBooking(booking);
+    setActionType(action);
+  }, []);
 
   const handleConfirmAction = async () => {
     if (!selectedBooking) return;
@@ -176,7 +159,7 @@ export const RestaurantBookings = () => {
     } finally {
       // Reset reason
       setCancellationReason(
-        "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner."
+        "Bonjour, nous sommes sincèrement désolés de vous informer que votre réservation a dû être annulée par l’établissement en raison d’un imprévu indépendant de notre volonté. Nous comprenons la gêne que cela peut occasionner et vous présentons toutes nos excuses. N’hésitez pas à reprendre contact avec nous pour toute question ou pour effectuer une nouvelle réservation, nous restons à votre disposition pour vous accompagner.",
       );
       setSelectedBooking(null);
       setActionType(null);
@@ -186,17 +169,9 @@ export const RestaurantBookings = () => {
   const handleCaptureImprint = async () => {
     if (!selectedBooking) return;
     try {
-      await api.post(
-        `/bookings/restaurant/${id}/${selectedBooking._id}/capture-imprint`
-      );
+      await api.post(`/bookings/restaurant/${id}/${selectedBooking._id}/capture-imprint`);
       toast.success("Empreinte encaissée avec succès");
-      setBookings((prev) =>
-        prev.map((b) =>
-          b._id === selectedBooking._id
-            ? { ...b, bankImprintStatus: "captured" }
-            : b
-        )
-      );
+      setBookings((prev) => prev.map((b) => (b._id === selectedBooking._id ? { ...b, bankImprintStatus: "captured" } : b)));
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Erreur lors de l'encaissement");
     } finally {
@@ -208,17 +183,9 @@ export const RestaurantBookings = () => {
   const handleReleaseImprint = async () => {
     if (!selectedBooking) return;
     try {
-      await api.post(
-        `/bookings/restaurant/${id}/${selectedBooking._id}/release-imprint`
-      );
+      await api.post(`/bookings/restaurant/${id}/${selectedBooking._id}/release-imprint`);
       toast.success("Empreinte libérée");
-      setBookings((prev) =>
-        prev.map((b) =>
-          b._id === selectedBooking._id
-            ? { ...b, bankImprintStatus: "released" }
-            : b
-        )
-      );
+      setBookings((prev) => prev.map((b) => (b._id === selectedBooking._id ? { ...b, bankImprintStatus: "released" } : b)));
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Erreur lors de la libération");
     } finally {
@@ -227,18 +194,13 @@ export const RestaurantBookings = () => {
     }
   };
 
-  const columns = useMemo(
-    () => getColumns(handleAction, hasTablePlan),
-    [handleAction, hasTablePlan]
-  );
+  const columns = useMemo(() => getColumns(handleAction, hasTablePlan), [handleAction, hasTablePlan]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">{"Réservations"}</h1>
-        <p className="text-muted-foreground">
-          {"Gérez toutes les réservations de votre restaurant"}
-        </p>
+        <p className="text-muted-foreground">{"Gérez toutes les réservations de votre restaurant"}</p>
       </div>
 
       <div className="bg-card rounded-md border p-4">
@@ -255,24 +217,17 @@ export const RestaurantBookings = () => {
       </div>
 
       {/* Global Confirmation Dialog */}
-      <AlertDialog
-        open={actionType === "CONFIRM" && !!selectedBooking}
-        onOpenChange={(open) => !open && setActionType(null)}
-      >
+      <AlertDialog open={actionType === "CONFIRM" && !!selectedBooking} onOpenChange={(open) => !open && setActionType(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer la réservation ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action changera le statut de la réservation à "Confirmée" et
-              informera le client.
+              Cette action changera le statut de la réservation à "Confirmée" et informera le client.
               {hasTablePlan && selectedBooking?.tableLabel && (
                 <div className="mt-2 p-2 bg-primary/5 border border-primary/10 rounded-md">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                    Table assignée:
-                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-primary">Table assignée:</span>
                   <p className="font-bold text-lg">
-                    {selectedBooking.tableLabel} (
-                    {selectedBooking.zoneName || "Salle"})
+                    {selectedBooking.tableLabel} ({selectedBooking.zoneName || "Salle"})
                   </p>
                 </div>
               )}
@@ -295,22 +250,15 @@ export const RestaurantBookings = () => {
       </AlertDialog>
 
       {/* Global Cancellation Dialog */}
-      <AlertDialog
-        open={actionType === "CANCEL" && !!selectedBooking}
-        onOpenChange={(open) => !open && setActionType(null)}
-      >
+      <AlertDialog open={actionType === "CANCEL" && !!selectedBooking} onOpenChange={(open) => !open && setActionType(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Annuler la réservation ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est
-              irréversible.
+              Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.
             </AlertDialogDescription>
             <div className="space-y-2 py-4">
-              <label
-                htmlFor="reason"
-                className="text-sm font-medium text-foreground"
-              >
+              <label htmlFor="reason" className="text-sm font-medium text-foreground">
                 Motif de l'annulation (optionnel)
               </label>
               <textarea
@@ -339,24 +287,19 @@ export const RestaurantBookings = () => {
       </AlertDialog>
 
       {/* Capture Imprint Dialog */}
-      <AlertDialog
-        open={actionType === "CAPTURE_IMPRINT"}
-        onOpenChange={(open) => !open && setActionType(null)}
-      >
+      <AlertDialog open={actionType === "CAPTURE_IMPRINT"} onOpenChange={(open) => !open && setActionType(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Encaisser l'empreinte bancaire ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Vous êtes sur le point d'encaisser l'empreinte de{" "}
-              <strong>{selectedBooking?.bankImprintAmount}€</strong> pour la
-              réservation de{" "}
+              Vous êtes sur le point d'encaisser l'empreinte de <strong>{selectedBooking?.bankImprintAmount}€</strong> pour la réservation
+              de{" "}
               <strong>
                 {selectedBooking?.user
                   ? `${selectedBooking?.user.forename} ${selectedBooking?.user.name}`
                   : selectedBooking?.customer?.name}
               </strong>
-              . Cette action est irréversible et doit être justifiée (ex:
-              No-Show).
+              . Cette action est irréversible et doit être justifiée (ex: No-Show).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -376,17 +319,13 @@ export const RestaurantBookings = () => {
       </AlertDialog>
 
       {/* Release Imprint Dialog */}
-      <AlertDialog
-        open={actionType === "RELEASE_IMPRINT"}
-        onOpenChange={(open) => !open && setActionType(null)}
-      >
+      <AlertDialog open={actionType === "RELEASE_IMPRINT"} onOpenChange={(open) => !open && setActionType(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Libérer l'empreinte bancaire ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Vous êtes sur le point d'annuler et libérer l'empreinte de{" "}
-              <strong>{selectedBooking?.bankImprintAmount}€</strong>. Le client ne
-              sera pas débité.
+              Vous êtes sur le point d'annuler et libérer l'empreinte de <strong>{selectedBooking?.bankImprintAmount}€</strong>. Le client
+              ne sera pas débité.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
