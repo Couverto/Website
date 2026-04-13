@@ -46,7 +46,6 @@ export const AccountProfile = () => {
       username: authUser?.username,
       email: authUser?.email,
       phone: authUser?.phone,
-      notificationSound: authUser?.notificationSound,
     },
   });
 
@@ -259,23 +258,6 @@ export const AccountProfile = () => {
               />
             </div>
 
-            <FormField
-              control={updateForm.control}
-              name="notificationSound"
-              render={({ field }) => (
-                <FormItem className="pt-4">
-                  <div className="flex flex-col w-full gap-3 p-4 rounded-2xl border border-dashed border-input bg-muted/20">
-                    <FormLabel className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">{"Son de notification"}</FormLabel>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                      <FormControl className="flex-1">
-                        <p className="text-sm text-muted-foreground">{"Activer ou désactiver le son pour les nouvelles réservations."}</p>
-                      </FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </div>
-                  </div>
-                </FormItem>
-              )}
-            />
 
             {(authUser?.hasPassword || authUser?.auth_type !== "google") && (
               <FormItem className="pt-4">

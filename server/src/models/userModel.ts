@@ -19,7 +19,7 @@ const UserSchema = new Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     verificationToken: String,
     verificationTokenExpire: Date,
-    notificationSound: { type: Boolean, default: true },
+    notificationSound: { type: String, default: "default" },
   },
   { timestamps: true },
 );

@@ -21,7 +21,7 @@ export const getUpdateAccountSchema = () =>
 
     email: z.string().email({ message: "Adresse e-mail invalide." }),
 
-    notificationSound: z.boolean().optional(),
+    notificationSound: z.string().optional(),
   });
 
 export const getUpdatePasswordSchema = (hasPassword = true) =>

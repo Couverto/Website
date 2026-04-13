@@ -17,6 +17,7 @@ import { ConfigurationAlert } from "@/components/business/ConfigurationAlert";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/authContext";
+import { NOTIFICATION_SOUNDS } from "@/constants/sounds";
 
 export const RestaurantLayout = () => {
   const { id } = useParams();
@@ -69,9 +70,12 @@ export const RestaurantLayout = () => {
           return;
         }
 
-        if (authUser?.notificationSound) {
-          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
-          audio.play().catch((e) => console.error("Audio play failed", e));
+        if (authUser?.notificationSound && authUser.notificationSound !== "none") {
+          const sound = NOTIFICATION_SOUNDS.find((s) => s.id === authUser.notificationSound) || NOTIFICATION_SOUNDS.find((s) => s.id === "default");
+          if (sound?.url) {
+            const audio = new Audio(sound.url);
+            audio.play().catch((e) => console.error("Audio play failed", e));
+          }
         }
       };
 
