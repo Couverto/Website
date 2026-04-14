@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   actions?: string[];
   onSearch?: (query: string) => void;
   initialSorting?: SortingState;
+  getRowClassName?: (row: TData) => string;
 }
 
 export function DataTable<TData, TValue>({
@@ -51,6 +52,7 @@ export function DataTable<TData, TValue>({
   actions = [],
   onSearch,
   initialSorting = [],
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const [openModal, setOpenModal] = useState(false);
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
@@ -208,7 +210,11 @@ export function DataTable<TData, TValue>({
               ))
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"} className="hover:bg-muted/50">
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className={cn("hover:bg-muted/50 transition-colors", getRowClassName?.(row.original))}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}

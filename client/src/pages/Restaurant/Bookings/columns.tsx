@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldBan,
+  MessageSquare,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +29,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { BookingInterface } from "@/interfaces/Booking";
 
@@ -238,6 +248,47 @@ export const getColumns = (
       );
     },
     meta: { label: "Statut" },
+  },
+  {
+    accessorKey: "notes",
+    header: "Notes",
+    cell: ({ row }) => {
+      const notes = row.original.notes;
+      if (!notes) return <span className="text-muted-foreground/40 italic text-xs">{"Aucune note"}</span>;
+
+      const isLong = notes.length > 50;
+      const displayNote = isLong ? `${notes.substring(0, 50)}...` : notes;
+
+      return (
+        <div className="flex items-center gap-2 group">
+          <span className="text-xs text-muted-foreground/80 max-w-[200px] truncate">{displayNote}</span>
+          {isLong && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 transition-opacity">
+                  <Info className="h-3.5 w-3.5 text-primary" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    Note du client
+                  </DialogTitle>
+                  <DialogDescription>
+                    {"Message laissé par le client lors de sa réservation."}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4 p-4 rounded-lg bg-muted/50 border text-sm whitespace-pre-wrap italic">
+                  "{notes}"
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      );
+    },
+    meta: { label: "Notes" },
   },
   {
     id: "actions",

@@ -213,6 +213,10 @@ export const RestaurantBookings = () => {
           callback={() => {}}
           searchElement="name"
           onSearch={onSearchChange}
+          getRowClassName={(row) => {
+            const isPast = new Date(row.bookingDate) < new Date();
+            return isPast ? "opacity-40 grayscale-[0.5] bg-muted/20" : "";
+          }}
         />
       </div>
 
