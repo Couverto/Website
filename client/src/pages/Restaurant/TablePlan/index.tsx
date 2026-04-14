@@ -335,7 +335,7 @@ function TablePlanContent() {
       <div className="flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Plan de salle</h2>
-          <p className="text-muted-foreground">Gérez vos zones et tables. Cliquez sur une table pour la marquer comme réservée.</p>
+          <p className="text-muted-foreground">Gérez vos zones et tables pour organiser votre salle.</p>
         </div>
         <Button onClick={savePlan} disabled={saving}>
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
@@ -426,14 +426,6 @@ function TablePlanContent() {
               </div>
             </Card>
 
-            {selectedTable && (
-              <Card className="p-5 bg-card border-slate-200/60 shadow-sm">
-                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">TABLE SÉLECTIONNÉE</h3>
-                <Button variant="outline" className="w-full" onClick={() => handleToggleTableStatus(selectedTable.id)}>
-                  {selectedTable.status === "available" ? "Marquer comme réservée" : "Marquer comme disponible"}
-                </Button>
-              </Card>
-            )}
           </div>
 
           <div
