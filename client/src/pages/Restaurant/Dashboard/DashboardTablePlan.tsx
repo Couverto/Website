@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Armchair, Users, Info, Map as MapIcon, Clock, LogOut } from "lucide-react";
+import { Armchair, Users, Info, Map as MapIcon, Clock, LogOut, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { BookingInterface } from "@/interfaces/Booking";
@@ -24,6 +24,7 @@ interface DashboardTablePlanProps {
   selectedDate?: Date;
   selectedService?: string | null;
   onDismiss?: (bookingId: string) => void;
+  onCancelBooking?: (bookingId: string) => void;
   onToggleTableClosure?: (tableId: string, startTime?: string, endTime?: string, date?: Date) => void;
   onQuickBook?: (tableId: string, tableName: string) => void;
 }
@@ -33,7 +34,8 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
   bookings, 
   selectedDate = new Date(),
   selectedService,
-  onDismiss, 
+  onDismiss,
+  onCancelBooking,
   onToggleTableClosure,
   onQuickBook
 }) => {
@@ -246,12 +248,15 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                       <div
                         className={cn(
                           "flex items-center gap-0.5 mt-0.5 px-1 py-0.5 rounded-full transition-all",
-                          isOccupied ? "bg-white/20 text-white group-hover:hidden" : 
+                          isOccupied ? "bg-white/20 text-white" : 
                           isReserved ? "bg-white/20 text-white" : "bg-muted text-muted-foreground",
                         )}
                       >
                         {isOccupied ? (
                           <>
+                            <Users className="h-[clamp(6px,1.2cqi,9px)] w-[clamp(6px,1.2cqi,9px)]" />
+                            <span className="text-[clamp(6px,1.2cqi,9px)] font-bold">{booking.guests}</span>
+                            <span className="text-[clamp(5px,1cqi,8px)] opacity-70 mx-0.5">·</span>
                             <Clock className="h-[clamp(6px,1.2cqi,9px)] w-[clamp(6px,1.2cqi,9px)]" />
                             <span className="text-[clamp(6px,1.2cqi,9px)] font-bold">{format(new Date(booking.bookingDate), "HH:mm")}</span>
                           </>
@@ -276,15 +281,26 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                           <p className="text-white">
                             {booking.guests} couvert(s) • Arrivée {format(new Date(booking.bookingDate), "HH:mm")}
                           </p>
-                          {onDismiss && (
-                            <button
-                              onClick={() => onDismiss(booking._id)}
-                              className="flex items-center gap-1 text-[10px] font-bold text-orange-500 hover:text-orange-600 mt-1 cursor-pointer"
-                            >
-                              <LogOut className="h-3 w-3" />
-                              Marquer comme parti
-                            </button>
-                          )}
+                          <div className="flex flex-col gap-0.5 mt-1">
+                            {onDismiss && (
+                              <button
+                                onClick={() => onDismiss(booking._id)}
+                                className="flex items-center gap-1 text-[10px] font-bold text-orange-500 hover:text-orange-600 cursor-pointer"
+                              >
+                                <LogOut className="h-3 w-3" />
+                                Marquer comme parti
+                              </button>
+                            )}
+                            {onCancelBooking && (
+                              <button
+                                onClick={() => onCancelBooking(booking._id)}
+                                className="flex items-center gap-1 text-[10px] font-bold text-red-400 hover:text-red-300 cursor-pointer"
+                              >
+                                <XCircle className="h-3 w-3" />
+                                Annuler la réservation
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </TooltipContent>
                     </Tooltip>

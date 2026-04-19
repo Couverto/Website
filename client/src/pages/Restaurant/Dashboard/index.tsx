@@ -534,7 +534,8 @@ export const RestaurantDashboard = () => {
             bookings={filteredDayBookings} 
             selectedDate={selectedDate}
             selectedService={selectedService}
-            onDismiss={handleDismissBooking} 
+            onDismiss={handleDismissBooking}
+            onCancelBooking={setBookingToCancel}
             onToggleTableClosure={handleToggleTableClosure}
             onQuickBook={handleQuickBook}
           />
