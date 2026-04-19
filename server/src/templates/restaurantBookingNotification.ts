@@ -72,5 +72,5 @@ export const restaurantBookingNotificationTemplate = ({
       </a>
     </div>
   `;
-  return baseEmailLayout(content, `Nouvelle réservation - ${customerName}`);
+  return baseEmailLayout(content, `Nouvelle réservation ${date} à ${time} - ${customerName}`);
 };
