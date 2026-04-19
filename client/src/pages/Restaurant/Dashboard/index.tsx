@@ -469,48 +469,43 @@ export const RestaurantDashboard = () => {
 
         <Card className="bg-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              {selectedService ? "Occupation du service" : "Occupation actuelle"}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Couverts disponibles</CardTitle>
             <Armchair className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {selectedService ? (filteredStats?.guests || 0) : (stats?.activeBookings?.length || 0)} / {context?.restaurant?.capacity || 0}
-            </div>
-            <p className="text-xs text-muted-foreground font-medium">
-              {selectedService ? "Couvert(s) réservés pour ce créneau" : "Tables occupées en ce moment"}{" "}
-              {(() => {
-                if (!context?.restaurant?.openingHours) return null;
-                const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-                const now = new Date();
-                const today = days[now.getDay()];
-                const schedule = (context.restaurant.openingHours as any)[today];
-
-                if (!schedule || schedule.isClosed || !schedule.periods?.length)
-                  return <span className="text-muted-foreground/60">(Fermé)</span>;
-
-                const currentMinutes = now.getHours() * 60 + now.getMinutes();
-                const currentPeriod = schedule.periods.find((p: any) => {
-                  const [startH, startM] = p.open.split(":").map(Number);
-                  const [endH, endM] = p.close.split(":").map(Number);
-                  const start = startH * 60 + startM;
-                  const end = endH * 60 + endM;
-                  // Handle overnight? Assuming simple day hours for now as per typical restaurant logic
-                  return currentMinutes >= start && currentMinutes < end;
-                });
-
-                if (currentPeriod) {
-                  return (
-                    <span>
-                      ({currentPeriod.open} - {currentPeriod.close})
-                    </span>
-                  );
-                }
-
-                return <span className="text-muted-foreground/60">(Fermé)</span>;
-              })()}
-            </p>
+            {(() => {
+              const capacity = context?.restaurant?.capacity || 0;
+              const reserved = selectedService ? (filteredStats?.guests || 0) : (stats?.activeBookings?.length || 0);
+              const available = Math.max(0, capacity - reserved);
+              const isFull = available === 0 && capacity > 0;
+              return (
+                <>
+                  <div className={cn("text-2xl font-bold", isFull ? "text-red-500" : "text-primary")}>
+                    {available} <span className="text-sm font-medium text-muted-foreground">/ {capacity}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                    {reserved} réservé(s)
+                    {selectedService
+                      ? " pour ce service"
+                      : (() => {
+                          if (!context?.restaurant?.openingHours) return "";
+                          const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                          const now = new Date();
+                          const today = days[now.getDay()];
+                          const schedule = (context.restaurant.openingHours as any)[today];
+                          if (!schedule || schedule.isClosed || !schedule.periods?.length) return " (Fermé)";
+                          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                          const currentPeriod = schedule.periods.find((p: any) => {
+                            const [startH, startM] = p.open.split(":").map(Number);
+                            const [endH, endM] = p.close.split(":").map(Number);
+                            return currentMinutes >= startH * 60 + startM && currentMinutes < endH * 60 + endM;
+                          });
+                          return currentPeriod ? ` (${currentPeriod.open} - ${currentPeriod.close})` : " (Fermé)";
+                        })()}
+                  </p>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
 

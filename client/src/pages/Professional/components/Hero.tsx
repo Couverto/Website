@@ -23,7 +23,7 @@ export const Hero = () => {
         <div className="absolute top-40 right-20 h-96 w-96 rounded-full bg-accent/5 blur-3xl opacity-50" />
       </div>
 
-      <div className="container mx-auto max-w-8xl px-3 md:px-4 py-20">
+      <div className="container mx-auto max-w-8xl px-6 md:px-10 py-20">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           {/* Left Column - Text Content */}
           <div className="flex flex-col gap-6">

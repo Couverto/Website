@@ -26,7 +26,7 @@ export const Reassurance = () => {
 
   return (
     <section className="py-20 md:py-28 bg-background">
-      <div className="container mx-auto max-w-8xl px-3 md:px-4">
+      <div className="container mx-auto max-w-8xl px-6 md:px-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-4">{"Un partenaire de confiance"}</h2>
