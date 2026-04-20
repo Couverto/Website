@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
-import { AlertTriangle, CreditCard, Settings } from "lucide-react";
+import { AlertTriangle, CreditCard, Settings, CalendarOff } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ConfigurationAlertProps {
@@ -25,6 +25,8 @@ export const ConfigurationAlert = ({ restaurant }: ConfigurationAlertProps) => {
     );
   if (!hasOpeningHours) settingsMissing.push("Horaires");
 
+  const isFullyClosed = restaurant.isClosed === true;
+
   const coverImageMissing = !restaurant.coverImage;
   const imagesMissing = !restaurant.images || restaurant.images.length === 0;
   const menuMissing = !restaurant.menu || restaurant.menu.length === 0;
@@ -35,12 +37,26 @@ export const ConfigurationAlert = ({ restaurant }: ConfigurationAlertProps) => {
   const isSubscriptionActive = restaurant.subscriptionStatus === "active";
   const isConfigured = settingsMissing.length === 0 && !galleryMissing && !tablePlanMissing;
 
-  if (isSubscriptionActive && isConfigured) {
+  if (isSubscriptionActive && isConfigured && !isFullyClosed) {
     return null;
   }
 
   return (
     <div className="space-y-4 mb-6">
+      {isFullyClosed && (
+        <Alert className="bg-orange-50 border-orange-300 text-orange-900 dark:bg-orange-950/30 dark:border-orange-700 dark:text-orange-300">
+          <CalendarOff className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+          <AlertTitle>Restaurant fermé</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-4 flex-wrap">
+            <span>
+              Votre restaurant est considéré comme fermé. Les clients ne peuvent pas effectuer de réservations.
+            </span>
+            <Button variant="outline" size="sm" className="bg-white border-orange-300 hover:bg-orange-100 text-orange-900 shrink-0" asChild>
+              <Link to={`/restaurant/${restaurant._id}/settings?tab=advanced`}>Ouvrir le restaurant</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       {!isSubscriptionActive && (
         <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-900">
           <CreditCard className="h-4 w-4" />
