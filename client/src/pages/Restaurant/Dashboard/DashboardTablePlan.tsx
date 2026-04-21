@@ -1,22 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Armchair, Users, Info, Map as MapIcon, Clock, LogOut, XCircle } from "lucide-react";
+import { Users, Info, Map as MapIcon, Clock, LogOut, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RestaurantInterface } from "@/interfaces/Restaurant";
 import { BookingInterface } from "@/interfaces/Booking";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TableActionDialog } from "./components/TableActionDialog";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface DashboardTablePlanProps {
   restaurant: RestaurantInterface;
@@ -40,14 +32,8 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
   onQuickBook
 }) => {
   const [activeZoneId, setActiveZoneId] = useState<string>(restaurant.zones[0]?.id || "");
+  const [actionDialog, setActionDialog] = useState<{ tableId: string; tableLabel: string; isBlocked: boolean } | null>(null);
 
-  const todayServices = useMemo(() => {
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const dayName = days[new Date().getDay()];
-    const hours = restaurant.openingHours?.[dayName];
-    if (!hours || hours.isClosed) return [];
-    return hours.periods || [];
-  }, [restaurant.openingHours]);
 
   const activeZone = useMemo(
     () => restaurant.zones?.find((z: any) => z.id === activeZoneId) || restaurant.zones?.[0],
@@ -307,101 +293,52 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
                   );
                 }
 
-                const toggleServiceClosure = (open: string, close: string) => {
-                  onToggleTableClosure?.(tid, open, close, selectedDate);
-                };
-
-                const isBlockedForService = (open: string, close: string) => {
-                  return tableClosuresForThisTable.some((c: any) => {
-                    const s = new Date(c.startDate).getTime();
-                    const e = new Date(c.endDate).getTime();
-                    
-                    const targetS = new Date(selectedDate);
-                    const [sh, sm] = open.split(":").map(Number);
-                    targetS.setHours(sh, sm, 0, 0);
-                    
-                    const targetE = new Date(selectedDate);
-                    const [eh, em] = close.split(":").map(Number);
-                    targetE.setHours(eh, em, 59, 999);
-                    
-                    if (eh < sh) targetE.setDate(targetE.getDate() + 1);
-                    
-                    const targetSMs = targetS.getTime();
-                    const targetEMs = targetE.getTime();
-                    
-                    return Math.abs(s - targetSMs) < 2000 && Math.abs(e - targetEMs) < 2000;
-                  });
-                };
-
-                const tableContentWithClick = (
-                  <div 
-                    onClick={(e) => {
-                      if (selectedService) {
-                        e.stopPropagation();
-                        
-                        const isBlocked = isBlockedForService(selectedService.split("-")[0], selectedService.split("-")[1]);
-                        
-                        if (isBlocked) {
-                          // If blocked, click unblocks
-                          const [open, close] = selectedService.split("-");
-                          toggleServiceClosure(open, close);
-                        } else {
-                          // If free, click opens Quick Booking
-                          onQuickBook?.(tid, table.label);
-                        }
-                      }
-                    }}
+                // Free or blocked table → open action dialog
+                return (
+                  <div
+                    key={table.id}
+                    onClick={() => setActionDialog({ tableId: tid, tableLabel: table.label, isBlocked: !!currentClosure })}
                   >
                     {tableContent}
                   </div>
-                );
-
-
-                if (selectedService) {
-                  return <div key={table.id}>{tableContentWithClick}</div>;
-                }
-
-                // Wrap in DropdownMenu if no specific service selected
-                return (
-                  <DropdownMenu key={table.id}>
-                    <DropdownMenuTrigger asChild>
-                      {tableContent}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="w-56">
-                      <DropdownMenuLabel>Bloquer la table {table.label}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      
-                      {todayServices.map((period: any, idx: number) => {
-                        const isThisPeriodBlocked = isBlockedForService(period.open, period.close);
-
-                        return (
-                          <DropdownMenuItem 
-                            key={idx} 
-                            onClick={() => toggleServiceClosure(period.open, period.close)}
-                            className="flex justify-between"
-                          >
-                            <span>Service {period.open}-{period.close}</span>
-                            {isThisPeriodBlocked && <Badge variant="destructive" className="text-[10px] h-4">Bloqué</Badge>}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                      
-                      <DropdownMenuSeparator />
-                      
-                      <DropdownMenuItem 
-                        onClick={() => onToggleTableClosure?.(tid, undefined, undefined, selectedDate)}
-                        className="font-semibold text-orange-600 focus:text-orange-600"
-                      >
-                        Toute la journée
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 );
               })}
             </div>
           </TooltipProvider>
         </div>
       </CardContent>
+
+      {/* Table Action Dialog */}
+      {actionDialog && (
+        <TableActionDialog
+          open={!!actionDialog}
+          onOpenChange={(o) => { if (!o) setActionDialog(null); }}
+          tableLabel={actionDialog.tableLabel}
+          isBlocked={actionDialog.isBlocked}
+          onBlock={() => {
+            if (selectedService) {
+              const [open, close] = selectedService.split("-");
+              onToggleTableClosure?.(actionDialog.tableId, open, close, selectedDate);
+            } else {
+              onToggleTableClosure?.(actionDialog.tableId, undefined, undefined, selectedDate);
+            }
+            setActionDialog(null);
+          }}
+          onUnblock={() => {
+            if (selectedService) {
+              const [open, close] = selectedService.split("-");
+              onToggleTableClosure?.(actionDialog.tableId, open, close, selectedDate);
+            } else {
+              onToggleTableClosure?.(actionDialog.tableId, undefined, undefined, selectedDate);
+            }
+            setActionDialog(null);
+          }}
+          onCreateBooking={() => {
+            onQuickBook?.(actionDialog.tableId, actionDialog.tableLabel);
+            setActionDialog(null);
+          }}
+        />
+      )}
     </Card>
   );
 };

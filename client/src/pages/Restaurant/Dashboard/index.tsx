@@ -101,37 +101,41 @@ export const RestaurantDashboard = () => {
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const dayName = dayNames[selectedDate.getDay()];
     // @ts-ignore - handle potential map or object
-    const schedule = context.restaurant.openingHours instanceof Map 
-      ? context.restaurant.openingHours.get(dayName)
-      : (context.restaurant.openingHours as any)[dayName];
+    const schedule =
+      context.restaurant.openingHours instanceof Map
+        ? context.restaurant.openingHours.get(dayName)
+        : (context.restaurant.openingHours as any)[dayName];
     if (!schedule || schedule.isClosed || !schedule.periods) return [];
     return schedule.periods;
   }, [context?.restaurant?.openingHours, selectedDate]);
 
-  const findClosestService = useCallback((periods: any[]) => {
-    if (periods.length === 0) return null;
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    
-    // If it is today, find the closest one. If another day, find the first one.
-    const isToday = selectedDate.toDateString() === new Date().toDateString();
-    
-    if (!isToday) return `${periods[0].open}-${periods[0].close}`;
+  const findClosestService = useCallback(
+    (periods: any[]) => {
+      if (periods.length === 0) return null;
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    let closest = periods[0];
-    let minDiff = Infinity;
+      // If it is today, find the closest one. If another day, find the first one.
+      const isToday = selectedDate.toDateString() === new Date().toDateString();
 
-    for (const p of periods) {
-      const [h, m] = p.open.split(":").map(Number);
-      const openMinutes = h * 60 + m;
-      const diff = Math.abs(openMinutes - currentMinutes);
-      if (diff < minDiff) {
-        minDiff = diff;
-        closest = p;
+      if (!isToday) return `${periods[0].open}-${periods[0].close}`;
+
+      let closest = periods[0];
+      let minDiff = Infinity;
+
+      for (const p of periods) {
+        const [h, m] = p.open.split(":").map(Number);
+        const openMinutes = h * 60 + m;
+        const diff = Math.abs(openMinutes - currentMinutes);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = p;
+        }
       }
-    }
-    return `${closest.open}-${closest.close}`;
-  }, [selectedDate]);
+      return `${closest.open}-${closest.close}`;
+    },
+    [selectedDate],
+  );
 
   // Set default service
   useEffect(() => {
@@ -140,19 +144,22 @@ export const RestaurantDashboard = () => {
     }
   }, [todayServices, findClosestService, selectedService]);
 
-  const getServiceStatus = useCallback((period: { open: string; close: string }) => {
-    if (!context?.restaurant?.exceptionalClosures) return "open";
-    const todayStr = new Date().toISOString().split("T")[0];
-    const sTarget = new Date(todayStr + "T" + period.open + ":00.000Z").getTime();
-    const eTarget = new Date(todayStr + "T" + period.close + ":00.999Z").getTime();
+  const getServiceStatus = useCallback(
+    (period: { open: string; close: string }) => {
+      if (!context?.restaurant?.exceptionalClosures) return "open";
+      const todayStr = new Date().toISOString().split("T")[0];
+      const sTarget = new Date(todayStr + "T" + period.open + ":00.000Z").getTime();
+      const eTarget = new Date(todayStr + "T" + period.close + ":00.999Z").getTime();
 
-    const isClosed = context.restaurant.exceptionalClosures.some((closure: any) => {
-      const s = new Date(closure.startDate).getTime();
-      const e = new Date(closure.endDate).getTime();
-      return Math.abs(s - sTarget) < 2000 && Math.abs(e - eTarget) < 2000;
-    });
-    return isClosed ? "closed" : "open";
-  }, [context?.restaurant?.exceptionalClosures]);
+      const isClosed = context.restaurant.exceptionalClosures.some((closure: any) => {
+        const s = new Date(closure.startDate).getTime();
+        const e = new Date(closure.endDate).getTime();
+        return Math.abs(s - sTarget) < 2000 && Math.abs(e - eTarget) < 2000;
+      });
+      return isClosed ? "closed" : "open";
+    },
+    [context?.restaurant?.exceptionalClosures],
+  );
 
   const [isTogglingClosure, setIsTogglingClosure] = useState(false);
 
@@ -162,7 +169,7 @@ export const RestaurantDashboard = () => {
       const response = await api.patch(`/restaurants/${id}/toggle-today-closure`, {
         startTime,
         endTime,
-        date: format(selectedDate, "yyyy-MM-dd")
+        date: format(selectedDate, "yyyy-MM-dd"),
       });
       toast.success(response.data.message);
       if (context?.refreshRestaurant) {
@@ -179,7 +186,7 @@ export const RestaurantDashboard = () => {
     try {
       setLoading(true);
       const response = await api.get(`/restaurants/${id}/stats`, {
-        params: { date: format(selectedDate, "yyyy-MM-dd") }
+        params: { date: format(selectedDate, "yyyy-MM-dd") },
       });
       setStats(response.data.stats);
       setUpcomingBookings(response.data.upcomingBookings);
@@ -214,7 +221,7 @@ export const RestaurantDashboard = () => {
     if (!stats || !selectedService) return null;
 
     const [start, end] = selectedService!.split("-");
-    const filtered = upcomingBookings.filter(b => {
+    const filtered = upcomingBookings.filter((b) => {
       const time = getRestaurantTime(b.bookingDate);
       return isTimeInService(time, start, end);
     });
@@ -227,11 +234,11 @@ export const RestaurantDashboard = () => {
 
   const filteredUpcomingBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = upcomingBookings.filter(b => b.bookingDate.startsWith(dateStr));
-    
+    let base = upcomingBookings.filter((b) => b.bookingDate.startsWith(dateStr));
+
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
-    return base.filter(b => {
+    return base.filter((b) => {
       const time = getRestaurantTime(b.bookingDate);
       return isTimeInService(time, start, end);
     });
@@ -239,11 +246,11 @@ export const RestaurantDashboard = () => {
 
   const filteredRecentBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = recentBookings.filter(b => b.bookingDate.startsWith(dateStr));
+    let base = recentBookings.filter((b) => b.bookingDate.startsWith(dateStr));
 
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
-    return base.filter(b => {
+    return base.filter((b) => {
       const time = getRestaurantTime(b.bookingDate);
       return isTimeInService(time, start, end);
     });
@@ -251,15 +258,49 @@ export const RestaurantDashboard = () => {
 
   const filteredDayBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = dayBookings.filter(b => b.bookingDate.startsWith(dateStr) && !b.isDismissedByRestaurant);
+    let base = dayBookings.filter((b) => b.bookingDate.startsWith(dateStr) && !b.isDismissedByRestaurant);
 
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
-    return base.filter(b => {
+    return base.filter((b) => {
       const time = getRestaurantTime(b.bookingDate);
       return isTimeInService(time, start, end);
     });
   }, [dayBookings, selectedService, selectedDate]);
+
+  const isTableAvailable = useCallback(
+    (tableId: string) => {
+      if (!bookingToMove) return true;
+
+      const tid = String(tableId).toLowerCase().trim();
+      const bTime = new Date(bookingToMove.bookingDate).getTime();
+
+      // 1. Check if blocked by closure
+      const closures = context?.restaurant?.tableClosures?.filter((c: any) => String(c.tableId).toLowerCase().trim() === tid) || [];
+      const isBlocked = closures.some((c: any) => {
+        const s = new Date(c.startDate).getTime();
+        const e = new Date(c.endDate).getTime();
+        return bTime >= s && bTime <= e;
+      });
+
+      if (isBlocked) return false;
+
+      // 2. Check if occupied by another booking at the same time
+      const isOccupied = dayBookings.some((b) => {
+        if (b._id === bookingToMove._id) return false;
+        if (b.status !== "CONFIRMED" && b.status !== "PENDING") return false;
+        if (String(b.tableId).toLowerCase().trim() !== tid) return false;
+
+        // Check for overlap: another booking within 2 hours
+        const otherBTime = new Date(b.bookingDate).getTime();
+        const twoHoursInMs = 2 * 60 * 60 * 1000;
+        return Math.abs(otherBTime - bTime) < twoHoursInMs;
+      });
+
+      return !isOccupied;
+    },
+    [bookingToMove, context?.restaurant?.tableClosures, dayBookings],
+  );
 
   // Refresh Logic
   useEffect(() => {
@@ -321,7 +362,7 @@ export const RestaurantDashboard = () => {
       setBookingToMove(null);
       fetchStats();
     } catch (error) {
-      toast.error("Erreur lors de la mise à jour de la table");
+      toast.error("La table selectionnée n'est pas disponible");
     } finally {
       setIsMoving(false);
     }
@@ -392,13 +433,13 @@ export const RestaurantDashboard = () => {
         <div className="flex flex-col">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">{"Tableau de Bord"}</h2>
           <p className="text-muted-foreground">
-            {selectedDate.toDateString() === new Date().toDateString() 
-              ? "Aperçu de votre activité pour aujourd'hui." 
+            {selectedDate.toDateString() === new Date().toDateString()
+              ? "Aperçu de votre activité pour aujourd'hui."
               : `Aperçu de votre activité pour le ${format(selectedDate, "dd MMMM yyyy", { locale: fr })}.`}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-            {context?.restaurant && (
+          {context?.restaurant && (
             <>
               <Button
                 variant={isFullDayClosed ? "default" : "outline"}
@@ -475,7 +516,7 @@ export const RestaurantDashboard = () => {
           <CardContent>
             {(() => {
               const capacity = context?.restaurant?.capacity || 0;
-              const reserved = selectedService ? (filteredStats?.guests || 0) : (stats?.activeBookings?.length || 0);
+              const reserved = selectedService ? filteredStats?.guests || 0 : stats?.activeBookings?.length || 0;
               const available = Math.max(0, capacity - reserved);
               const isFull = available === 0 && capacity > 0;
               return (
@@ -524,9 +565,9 @@ export const RestaurantDashboard = () => {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Left Column: Table Plan Map */}
         {hasTablePlan && context?.restaurant && (
-          <DashboardTablePlan 
-            restaurant={context.restaurant} 
-            bookings={filteredDayBookings} 
+          <DashboardTablePlan
+            restaurant={context.restaurant}
+            bookings={filteredDayBookings}
             selectedDate={selectedDate}
             selectedService={selectedService}
             onDismiss={handleDismissBooking}
@@ -541,9 +582,7 @@ export const RestaurantDashboard = () => {
           <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold">
-                  {"Réservations du service"}
-                </CardTitle>
+                <CardTitle className="text-lg font-bold">{"Réservations du service"}</CardTitle>
                 <CardDescription className="text-[10px] uppercase tracking-wider font-semibold opacity-70">
                   {"Pour le service sélectionné"}
                 </CardDescription>
@@ -733,9 +772,9 @@ export const RestaurantDashboard = () => {
           </Select>
         )}
 
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all ml-1"
           onClick={() => setSelectedDate(new Date())}
           title="Revenir à aujourd'hui"
@@ -788,11 +827,14 @@ export const RestaurantDashboard = () => {
                       <div className="px-2 py-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground bg-muted/30">
                         {zone.name}
                       </div>
-                      {zone.tables.map((table) => (
-                        <SelectItem key={table.id} value={`${table.id}|${zone.id}`}>
-                          Table {table.label} ({table.seats} places)
-                        </SelectItem>
-                      ))}
+                      {zone.tables.map((table) => {
+                        const available = isTableAvailable(table.id);
+                        return (
+                          <SelectItem key={table.id} value={`${table.id}|${zone.id}`} disabled={!available}>
+                            Table {table.label} ({table.seats} places) {!available && "- Indisponible"}
+                          </SelectItem>
+                        );
+                      })}
                     </div>
                   ))}
                 </SelectContent>
@@ -849,18 +891,25 @@ export const RestaurantDashboard = () => {
         </AlertDialogContent>
       </AlertDialog>
       {/* Quick Booking Dialog */}
-      {quickBookData && selectedService && (
-        <QuickBookingDialog
-          open={isQuickBookDialogOpen}
-          onOpenChange={setIsQuickBookDialogOpen}
-          restaurantId={id || ""}
-          tableId={quickBookData.tableId}
-          tableName={quickBookData.tableName}
-          date={selectedDate}
-          service={selectedService}
-          onSuccess={fetchStats}
-        />
-      )}
+      {quickBookData &&
+        (() => {
+          const effectiveServices = selectedService
+            ? [{ open: selectedService.split("-")[0], close: selectedService.split("-")[1] }]
+            : todayServices;
+          if (!effectiveServices.length) return null;
+          return (
+            <QuickBookingDialog
+              open={isQuickBookDialogOpen}
+              onOpenChange={setIsQuickBookDialogOpen}
+              restaurantId={id || ""}
+              tableId={quickBookData.tableId}
+              tableName={quickBookData.tableName}
+              date={selectedDate}
+              services={effectiveServices}
+              onSuccess={fetchStats}
+            />
+          );
+        })()}
     </div>
   );
 };

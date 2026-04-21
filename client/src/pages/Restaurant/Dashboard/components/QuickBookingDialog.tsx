@@ -29,7 +29,7 @@ interface QuickBookingDialogProps {
   tableId: string;
   tableName: string;
   date: Date;
-  service: string; // "19:00-22:00"
+  services: { open: string; close: string }[]; // all service periods to offer slots for
   onSuccess: () => void;
 }
 
@@ -40,39 +40,30 @@ export const QuickBookingDialog: React.FC<QuickBookingDialogProps> = ({
   tableId,
   tableName,
   date,
-  service,
+  services,
   onSuccess
 }) => {
   const [loading, setLoading] = React.useState(false);
 
   const timeSlots = React.useMemo(() => {
-    const [start, end] = service.split("-");
-    const [sh, sm] = start.split(":").map(Number);
-    const [eh, em] = end.split(":").map(Number);
-    
-    const slots = [];
-    let currH = sh;
-    let currM = sm;
-    
-    // Simple loop for slots every 15 mins
-    const maxLoops = 48; // max 12 hours
-    let count = 0;
-    
-    while (count < maxLoops) {
-      const time = `${String(currH).padStart(2, '0')}:${String(currM).padStart(2, '0')}`;
-      slots.push(time);
-      
-      if (currH === eh && currM === em) break;
-      
-      currM += 15;
-      if (currM >= 60) {
-        currM = 0;
-        currH = (currH + 1) % 24;
+    const slots: string[] = [];
+    for (const { open, close } of services) {
+      const [sh, sm] = open.split(":").map(Number);
+      const [eh, em] = close.split(":").map(Number);
+      let currH = sh, currM = sm;
+      const maxLoops = 96;
+      let count = 0;
+      while (count < maxLoops) {
+        const time = `${String(currH).padStart(2, "0")}:${String(currM).padStart(2, "0")}`;
+        slots.push(time);
+        if (currH === eh && currM === em) break;
+        currM += 15;
+        if (currM >= 60) { currM = 0; currH = (currH + 1) % 24; }
+        count++;
       }
-      count++;
     }
     return slots;
-  }, [service]);
+  }, [services]);
 
   const form = useForm<QuickBookingValues>({
     resolver: zodResolver(quickBookingSchema),
@@ -81,7 +72,7 @@ export const QuickBookingDialog: React.FC<QuickBookingDialogProps> = ({
       guests: 2,
       phone: "",
       notes: "",
-      time: service.split("-")[0],
+      time: services[0]?.open ?? "12:00",
     },
   });
 
@@ -123,7 +114,9 @@ export const QuickBookingDialog: React.FC<QuickBookingDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Réservation Rapide - Table {tableName}</DialogTitle>
           <DialogDescription>
-            Occupez cette table immédiatement pour le service {service}.
+            {services.length === 1
+              ? `Occupez cette table pour le service ${services[0].open}–${services[0].close}.`
+              : "Occupez cette table sur l'un des services du jour."}
           </DialogDescription>
         </DialogHeader>
 
