@@ -39,6 +39,12 @@ export interface RestaurantInterface {
     endDate: string | Date;
     reason?: string;
   }[];
+  exceptionalOpenings?: {
+    startDate: string | Date;
+    endDate: string | Date;
+    reason?: string;
+    periods: { open: string; close: string }[];
+  }[];
   tableClosures?: {
     tableId: string;
     startDate: string | Date;

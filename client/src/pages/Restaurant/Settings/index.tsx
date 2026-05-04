@@ -28,6 +28,7 @@ import {
   Share2,
   Wifi,
   Umbrella,
+  Sun,
   Accessibility,
   Beer,
   Wind,
@@ -70,6 +71,7 @@ import { CuisineSelector } from "@/components/CuisineSelector";
 import { AddressAutocomplete } from "@/components/customs/AddressAutocomplete";
 import { PhoneInput } from "@/components/customs/phoneInput";
 import { ExceptionalClosuresEditor } from "@/components/ExceptionalClosuresEditor";
+import { ExceptionalOpeningsEditor } from "@/components/ExceptionalOpeningsEditor";
 import { Switch } from "@/components/ui/switch";
 import { EmailVerificationSection } from "@/components/business/EmailVerificationSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -783,6 +785,28 @@ export const RestaurantSettings = () => {
                   control={control}
                   name="exceptionalClosures"
                   render={({ field }) => <ExceptionalClosuresEditor value={field.value} onChange={field.onChange} />}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Exceptional Openings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sun className="h-5 w-5" />
+                  {"Ouvertures Exceptionnelles"}
+                </CardTitle>
+                <CardDescription>
+                  {
+                    "Définissez les jours où votre restaurant sera ouvert exceptionnellement (jours fériés, événements spéciaux, etc.). Ces dates seront accessibles à la réservation même si le restaurant est normalement fermé."
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Controller
+                  control={control}
+                  name="exceptionalOpenings"
+                  render={({ field }) => <ExceptionalOpeningsEditor value={field.value} onChange={field.onChange} />}
                 />
               </CardContent>
             </Card>
