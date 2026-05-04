@@ -54,6 +54,12 @@ export interface IRestaurant extends Document {
     endDate: Date;
     reason?: string;
   }[];
+  exceptionalOpenings: {
+    startDate: Date;
+    endDate: Date;
+    reason?: string;
+    periods: { open: string; close: string }[];
+  }[];
   tableClosures: ITableClosure[];
   collaborators: Array<mongoose.Types.ObjectId>;
   collaboratorRoles: Map<string, string>;

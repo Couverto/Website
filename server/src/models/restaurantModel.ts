@@ -64,6 +64,22 @@ const RestaurantSchema = new Schema<IRestaurant>(
       ],
       default: [],
     },
+    exceptionalOpenings: {
+      type: [
+        {
+          startDate: { type: Date, required: true },
+          endDate: { type: Date, required: true },
+          reason: { type: String, default: "Ouverture exceptionnelle" },
+          periods: [
+            {
+              open: { type: String, required: true },
+              close: { type: String, required: true },
+            },
+          ],
+        },
+      ],
+      default: [],
+    },
     tableClosures: {
       type: [
         {

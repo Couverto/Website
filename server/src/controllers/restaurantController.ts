@@ -37,7 +37,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
       .populate("collaborators", "name forename email avatar")
       .populate("plan", "name price")
       .populate("referralCodeUsed", "code type discountPercentage")
-      .select("-menu -zones -exceptionalClosures -apiKey -stripeAccountId -stripeConnectEnabled -collaboratorRoles")
+      .select("-menu -zones -exceptionalClosures -exceptionalOpenings -apiKey -stripeAccountId -stripeConnectEnabled -collaboratorRoles")
       .sort({ createdAt: -1 })
       .skip(page * size)
       .limit(size);
@@ -1251,15 +1251,41 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
     const queryDate = new Date(date as string);
 
-    // Base day checking for exceptional closures (if full day is closed)
+    // Helper to get YYYY-MM-DD in a specific timezone (defaults to Europe/Paris)
+    const toDateString = (d: Date) => {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Paris",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(d);
+    };
+
+    const qStr = toDateString(queryDate);
+    // console.log(`[getRestaurantSlots] Query date: ${date} -> qStr: ${qStr}`);
+
+    // 1. Check for exceptional openings FIRST (they override everything)
+    let exceptionalOpeningSchedule: any = null;
+    if (restaurant.exceptionalOpenings && restaurant.exceptionalOpenings.length > 0) {
+      const matchingOpening = restaurant.exceptionalOpenings.find((opening: any) => {
+        const sStr = toDateString(new Date(opening.startDate));
+        const eStr = toDateString(new Date(opening.endDate));
+        return qStr >= sStr && qStr <= eStr;
+      });
+      if (matchingOpening && matchingOpening.periods && matchingOpening.periods.length > 0) {
+        // console.log(`[getRestaurantSlots] Found matching exceptional opening for ${qStr}`);
+        exceptionalOpeningSchedule = { isClosed: false, periods: matchingOpening.periods };
+      }
+    }
+
+    // 2. Check for exceptional closures (if full day is closed)
     let isFullDayClosed = false;
     if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
       isFullDayClosed = restaurant.exceptionalClosures.some((closure: any) => {
         const start = new Date(closure.startDate);
         const end = new Date(closure.endDate);
-        const qStr = queryDate.toISOString().split("T")[0];
-        const sStr = start.toISOString().split("T")[0];
-        const eStr = end.toISOString().split("T")[0];
+        const sStr = toDateString(start);
+        const eStr = toDateString(end);
         
         // Check if closure covers the WHOLE day (at least from 00:00 to 23:59)
         const isFullDay = sStr === qStr && eStr === qStr && 
@@ -1269,7 +1295,9 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       });
     }
 
-    if (isFullDayClosed) {
+    // A full day closure only blocks slots IF there is no exceptional opening overriding it
+    if (isFullDayClosed && !exceptionalOpeningSchedule) {
+      // console.log(`[getRestaurantSlots] Day ${qStr} is fully closed and has no exceptional opening override.`);
       res.status(200).json({ slots: [] });
       return;
     }
@@ -1282,22 +1310,37 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       !restaurant.openingHours ||
       (restaurant.openingHours instanceof Map ? restaurant.openingHours.size === 0 : Object.keys(restaurant.openingHours).length === 0)
     ) {
-      res.status(200).json({ slots: [] });
-      return;
+      // Even without openingHours, an exceptional opening can provide slots
+      if (!exceptionalOpeningSchedule) {
+        res.status(200).json({ slots: [] });
+        return;
+      }
     }
 
     // Access the day schedule (handle Mongoose Map)
-    const daySchedule: any =
-      restaurant.openingHours instanceof Map ? restaurant.openingHours.get(dayName) : (restaurant.openingHours as any)[dayName];
+    let daySchedule: any =
+      restaurant.openingHours instanceof Map ? restaurant.openingHours.get(dayName) : (restaurant.openingHours as any)?.[dayName];
 
-    if (!daySchedule || daySchedule.isClosed || !daySchedule.periods || daySchedule.periods.length === 0) {
+    // Combine normal periods with exceptional opening periods
+    let combinedPeriods = [...(daySchedule?.periods || [])];
+    if (exceptionalOpeningSchedule) {
+      combinedPeriods = [...combinedPeriods, ...exceptionalOpeningSchedule.periods];
+    }
+
+    if (combinedPeriods.length === 0) {
       res.status(200).json({ slots: [] });
       return;
     }
 
+    // Update daySchedule to use the combined periods
+    daySchedule = { 
+      isClosed: false, 
+      periods: combinedPeriods.sort((a: any, b: any) => a.open.localeCompare(b.open)) 
+    };
+
     // Prepare for capacity check
     const capacity = restaurant.capacity || 0;
-    const baseDateStr = new Date(date as string).toISOString().split("T")[0]; // YYYY-MM-DD
+    const baseDateStr = toDateString(queryDate); // YYYY-MM-DD in local time
 
     // Fetch all confirmed/pending bookings for this day (full day range to cover overlaps)
     // We cover from 00:00 to 23:59 of the requested date, plus potential overlaps from previous day?
@@ -1580,22 +1623,51 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
       });
     }
 
-    // NON-BLOCKING CLEANUP: Remove expired exceptional closures
-    if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+    // NON-BLOCKING CLEANUP: Remove expired exceptional closures & openings
+    if ((restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) || (restaurant.exceptionalOpenings && restaurant.exceptionalOpenings.length > 0)) {
       Promise.resolve().then(async () => {
         const todayStr = new Date().toISOString().split("T")[0];
-        const initialCount = restaurant.exceptionalClosures.length;
-        const activeClosures = restaurant.exceptionalClosures.filter((closure: any) => {
-          const endStr = new Date(closure.endDate).toISOString().split("T")[0];
-          return endStr >= todayStr;
-        });
+        let needsSave = false;
 
-        if (activeClosures.length !== initialCount) {
+        // Cleanup closures
+        if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
+          const initialCount = restaurant.exceptionalClosures.length;
+          const activeClosures = restaurant.exceptionalClosures.filter((closure: any) => {
+            const endStr = new Date(closure.endDate).toISOString().split("T")[0];
+            return endStr >= todayStr;
+          });
+          if (activeClosures.length !== initialCount) {
+            needsSave = true;
+          }
+        }
+
+        // Cleanup openings
+        if (restaurant.exceptionalOpenings && restaurant.exceptionalOpenings.length > 0) {
+          const initialOpeningsCount = restaurant.exceptionalOpenings.length;
+          const activeOpenings = restaurant.exceptionalOpenings.filter((opening: any) => {
+            const endStr = new Date(opening.endDate).toISOString().split("T")[0];
+            return endStr >= todayStr;
+          });
+          if (activeOpenings.length !== initialOpeningsCount) {
+            needsSave = true;
+          }
+        }
+
+        if (needsSave) {
           const freshResto = await Restaurant.findById(restaurant._id);
           if (freshResto) {
+            const activeClosures = freshResto.exceptionalClosures.filter((closure: any) => {
+              const endStr = new Date(closure.endDate).toISOString().split("T")[0];
+              return endStr >= todayStr;
+            });
+            const activeOpenings = freshResto.exceptionalOpenings.filter((opening: any) => {
+              const endStr = new Date(opening.endDate).toISOString().split("T")[0];
+              return endStr >= todayStr;
+            });
             freshResto.exceptionalClosures = activeClosures;
+            freshResto.exceptionalOpenings = activeOpenings;
             await freshResto.save();
-            console.log(`[Cleanup] Removed ${initialCount - activeClosures.length} expired closures for ${restaurant.name}`);
+            console.log(`[Cleanup] Cleaned expired closures/openings for ${restaurant.name}`);
           }
         }
       }).catch(console.error);
@@ -2068,6 +2140,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(req.body.socials && { socials: req.body.socials }),
         ...(req.body.capacity !== undefined && { capacity: req.body.capacity }),
         ...(req.body.exceptionalClosures && { exceptionalClosures: req.body.exceptionalClosures }),
+        ...(req.body.exceptionalOpenings && { exceptionalOpenings: req.body.exceptionalOpenings }),
         ...(req.body.isBankImprintEnabled !== undefined && { isBankImprintEnabled: req.body.isBankImprintEnabled }),
         ...(req.body.bankImprintAmount !== undefined && { bankImprintAmount: req.body.bankImprintAmount }),
       },

@@ -89,25 +89,52 @@ export const RestaurantDashboard = () => {
     const sTarget = new Date(todayStr + "T00:00:00.000Z").getTime();
     const eTarget = new Date(todayStr + "T23:59:59.999Z").getTime();
 
-    return context.restaurant.exceptionalClosures.some((closure: any) => {
+    const hasClosure = context.restaurant.exceptionalClosures.some((closure: any) => {
       const s = new Date(closure.startDate).getTime();
       const e = new Date(closure.endDate).getTime();
       return Math.abs(s - sTarget) < 2000 && Math.abs(e - eTarget) < 2000;
     });
-  }, [context?.restaurant?.exceptionalClosures, selectedDate]);
+
+    // If there's an exceptional opening for this day, the day is not "closed"
+    if (hasClosure) {
+      const hasOpening = context.restaurant.exceptionalOpenings?.some((opening: any) => {
+        const sStr = format(new Date(opening.startDate), "yyyy-MM-dd");
+        const eStr = format(new Date(opening.endDate), "yyyy-MM-dd");
+        return todayStr >= sStr && todayStr <= eStr;
+      });
+      if (hasOpening) return false;
+    }
+
+    return hasClosure;
+  }, [context?.restaurant?.exceptionalClosures, context?.restaurant?.exceptionalOpenings, selectedDate]);
 
   const todayServices = useMemo(() => {
-    if (!context?.restaurant?.openingHours) return [];
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
     const dayName = dayNames[selectedDate.getDay()];
     // @ts-ignore - handle potential map or object
     const schedule =
       context.restaurant.openingHours instanceof Map
         ? context.restaurant.openingHours.get(dayName)
-        : (context.restaurant.openingHours as any)[dayName];
-    if (!schedule || schedule.isClosed || !schedule.periods) return [];
-    return schedule.periods;
-  }, [context?.restaurant?.openingHours, selectedDate]);
+        : (context.restaurant.openingHours as any)?.[dayName];
+    
+    let periods = [...(schedule?.periods || [])];
+
+    // Add Exceptional Openings
+    if (context?.restaurant?.exceptionalOpenings) {
+      const todayStr = format(selectedDate, "yyyy-MM-dd");
+      const matchingOpening = context.restaurant.exceptionalOpenings.find((opening: any) => {
+        const sStr = format(new Date(opening.startDate), "yyyy-MM-dd");
+        const eStr = format(new Date(opening.endDate), "yyyy-MM-dd");
+        return todayStr >= sStr && todayStr <= eStr;
+      });
+      if (matchingOpening?.periods) {
+        periods = [...periods, ...matchingOpening.periods];
+      }
+    }
+
+    // Sort and return
+    return periods.sort((a: any, b: any) => a.open.localeCompare(b.open));
+  }, [context?.restaurant?.openingHours, context?.restaurant?.exceptionalOpenings, selectedDate]);
 
   const findClosestService = useCallback(
     (periods: any[]) => {

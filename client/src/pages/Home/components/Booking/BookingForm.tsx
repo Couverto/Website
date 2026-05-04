@@ -294,6 +294,39 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
           </div>
         )}
 
+        {/* Exceptional Openings Banner */}
+        {restaurant.exceptionalOpenings && restaurant.exceptionalOpenings.filter((o) => o.reason?.trim()).length > 0 && (
+          <div className="bg-green-50/50 border border-green-200 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 text-green-800 font-medium text-sm">
+              <CalendarIcon className="h-4 w-4" />
+              <span>Ouvertures exceptionnelles à venir :</span>
+            </div>
+            <div className="space-y-1">
+              {restaurant.exceptionalOpenings.filter((o) => o.reason?.trim()).map((opening, idx) => {
+                const start = new Date(opening.startDate);
+                const end = new Date(opening.endDate);
+                const isSameDay = format(start, "yyyy-MM-dd") === format(end, "yyyy-MM-dd");
+
+                return (
+                  <div key={idx} className="text-xs text-green-700/80 ml-6 flex flex-col sm:flex-row sm:gap-1">
+                    <span className="font-semibold">
+                      {isSameDay ? (
+                        <>Le {format(start, "dd/MM/yyyy")}</>
+                      ) : (
+                        <>
+                          Du {format(start, "dd/MM/yyyy")} au {format(end, "dd/MM/yyyy")}
+                        </>
+                      )}
+                      {" "}({opening.periods.map((p) => `${p.open}-${p.close}`).join(", ")}) :
+                    </span>
+                    <span>{opening.reason}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -320,11 +353,20 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                     minDate={new Date()}
                     filterDate={(date) => {
                       const day = date.getDay();
-                      if (closedDays.includes(day)) return false;
+                      const dateStr = format(date, "yyyy-MM-dd");
+
+                      // Check exceptional openings first — these override closedDays
+                      const hasExceptionalOpening = restaurant.exceptionalOpenings?.some((opening) => {
+                        const sStr = format(new Date(opening.startDate), "yyyy-MM-dd");
+                        const eStr = format(new Date(opening.endDate), "yyyy-MM-dd");
+                        return dateStr >= sStr && dateStr <= eStr;
+                      });
+
+                      // If normally closed but has an exceptional opening, allow it
+                      if (closedDays.includes(day) && !hasExceptionalOpening) return false;
 
                       // Check exceptional closures
                       if (restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0) {
-                        const dateStr = format(date, "yyyy-MM-dd");
                         const isClosed = restaurant.exceptionalClosures.some((closure) => {
                           const start = new Date(closure.startDate);
                           const end = new Date(closure.endDate);

@@ -49,8 +49,9 @@ export const ExceptionalClosuresEditor = ({ value = [], onChange }: ExceptionalC
     }
 
     const closureToAdd = {
-      startDate: start,
-      endDate: end,
+      // Normalize to UTC noon to avoid timezone offset issues (local midnight can shift YYYY-MM-DD in UTC)
+      startDate: new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate(), 12, 0, 0, 0)),
+      endDate: new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate(), 12, 0, 0, 0)),
       reason: newClosure.reason,
     };
 

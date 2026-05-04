@@ -27,5 +27,20 @@ export const getRestaurantSettingsSchema = () =>
           }),
         )
         .optional(),
+      exceptionalOpenings: z
+        .array(
+          z.object({
+            startDate: z.union([z.string(), z.date()]),
+            endDate: z.union([z.string(), z.date()]),
+            reason: z.string().optional(),
+            periods: z.array(
+              z.object({
+                open: z.string(),
+                close: z.string(),
+              }),
+            ).min(1),
+          }),
+        )
+        .optional(),
     })
     .passthrough(); // Allow additional properties from RestaurantInterface

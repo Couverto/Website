@@ -209,16 +209,26 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       finalStripeCustomerId = undefined;
     }
 
+    // Helper to get YYYY-MM-DD in local timezone
+    const toDateString = (d: Date) => {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Paris",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(d);
+    };
+
     // Check exceptional closures
     if (restaurantExists.exceptionalClosures && restaurantExists.exceptionalClosures.length > 0) {
+      const bDate = new Date(bookingDate);
+      const bStr = toDateString(bDate);
+      
       const isExceptionallyClosed = restaurantExists.exceptionalClosures.some((closure: any) => {
         const start = new Date(closure.startDate);
         const end = new Date(closure.endDate);
-
-        const bDate = new Date(bookingDate);
-        const bStr = bDate.toISOString().split("T")[0];
-        const sStr = start.toISOString().split("T")[0];
-        const eStr = end.toISOString().split("T")[0];
+        const sStr = toDateString(start);
+        const eStr = toDateString(end);
 
         return bStr >= sStr && bStr <= eStr;
       });
@@ -229,11 +239,56 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       }
     }
 
-    // Validate opening hours
-    const isValidTime = validateBookingTime(restaurantExists, bookingDate);
-    if (!isValidTime) {
-      res.status(400).json({ error: "Le restaurant est fermé à cet horaire." });
-      return;
+    // Check for exceptional openings (day may be normally closed but exceptionally open)
+    let isExceptionallyOpen = false;
+    if (restaurantExists.exceptionalOpenings && restaurantExists.exceptionalOpenings.length > 0) {
+      const bDate = new Date(bookingDate);
+      const bStr = toDateString(bDate);
+      const matchingOpening = restaurantExists.exceptionalOpenings.find((opening: any) => {
+        const sStr = toDateString(new Date(opening.startDate));
+        const eStr = toDateString(new Date(opening.endDate));
+        return bStr >= sStr && bStr <= eStr;
+      });
+      if (matchingOpening && matchingOpening.periods && matchingOpening.periods.length > 0) {
+        isExceptionallyOpen = true;
+        // Validate booking time against the exceptional opening's periods
+        const formatter = new Intl.DateTimeFormat("en-US", {
+          timeZone: "Europe/Paris",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: false,
+        });
+        const parts = formatter.formatToParts(bDate);
+        const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+        const hour = parseInt(partMap.hour);
+        const minute = parseInt(partMap.minute);
+        const timeMinutes = hour * 60 + minute;
+
+        const isInOpeningPeriod = matchingOpening.periods.some((period: any) => {
+          const [openH, openM] = period.open.split(":").map(Number);
+          const [closeH, closeM] = period.close.split(":").map(Number);
+          const openMinutes = openH * 60 + openM;
+          const closeMinutes = closeH * 60 + closeM;
+          if (closeMinutes > openMinutes) {
+            return timeMinutes >= openMinutes && timeMinutes <= closeMinutes;
+          } else {
+            return timeMinutes >= openMinutes || timeMinutes <= closeMinutes;
+          }
+        });
+
+        if (isInOpeningPeriod) {
+          isExceptionallyOpen = true;
+        }
+      }
+    }
+
+    // Validate opening hours (skip only if already confirmed valid via exceptional opening)
+    if (!isExceptionallyOpen) {
+      const isValidTime = validateBookingTime(restaurantExists, bookingDate);
+      if (!isValidTime) {
+        res.status(400).json({ error: "Le restaurant est fermé à cet horaire." });
+        return;
+      }
     }
 
     // Prepare booking data
