@@ -3,15 +3,9 @@ import express, { Application } from "express";
 import "dotenv/config";
 import cors from "cors";
 import { corsOptions } from "./configuration/corsOptions.js";
-import { router } from "./routes/router.js";
-
-import { handleStripeWebhook } from "./controllers/stripeWebhookController.js";
 
 // Create the Express application instance
 export const app: Application = express();
-
-// Stripe Webhook route - MUST be before express.json()
-app.post("/api/webhooks/stripe", express.raw({ type: "application/json" }), handleStripeWebhook);
 
 // Global middleware
 app.use(express.json()); // Parse incoming JSON payloads
@@ -27,7 +21,7 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 
 // Register main application routes
-app.use(router);
+// app.use(router);
 
 app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
