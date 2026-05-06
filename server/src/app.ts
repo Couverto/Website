@@ -1,8 +1,8 @@
-import express, { Application } from "express";
-
 import "dotenv/config";
+import express, { Application } from "express";
 import cors from "cors";
 import { corsOptions } from "./configuration/corsOptions.js";
+import { router } from "./routes/router.js";
 
 // Create the Express application instance
 export const app: Application = express();
@@ -21,8 +21,9 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 
 // Register main application routes
-// app.use(router);
+app.use(router);
 
+// Secure the app while stil allowing the popups
 app.use((req, res, next) => {
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   next();
