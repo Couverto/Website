@@ -1,6 +1,7 @@
 import { createServer } from "http";
 import { app } from "./app.js";
 import { connectToDatabase } from "./database/connectToDB.js";
+import { initDatabaseBackupScheduler } from "./cron/databaseDump.js";
 
 /**
  * Initializes the HTTP server, connects to the database, and sets up WebSockets.
@@ -16,8 +17,7 @@ export function initServer() {
   // initSockets(httpServer);
 
   // Initialize Cron Jobs
-  // initReviewScheduler();
-  // initCleanupUnverifiedUsers();
+  initDatabaseBackupScheduler();
 
   // Ensure the PORT environment variable is defined
   if (!process.env.PORT) {
