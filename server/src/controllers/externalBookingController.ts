@@ -117,11 +117,21 @@ export const createExternalBooking = async (req: Request, res: Response): Promis
         const end = new Date(closure.endDate);
         const sStr = toDateString(start);
         const eStr = toDateString(end);
-        return bStr >= sStr && bStr <= eStr;
+
+        if (bStr >= sStr && bStr <= eStr) {
+          const isFullDay = start.getUTCHours() === 0 && start.getUTCMinutes() === 0 &&
+                            end.getUTCHours() >= 23 && end.getUTCMinutes() >= 59;
+          if (isFullDay) return true;
+
+          // Non-full-day closure: check if booking time overlaps
+          const bTimeMs = bDate.getTime();
+          return bTimeMs >= start.getTime() && bTimeMs <= end.getTime();
+        }
+        return false;
       });
 
       if (isExceptionallyClosed) {
-        res.status(400).json({ error: "Le restaurant est exceptionnellement fermé ce jour-là" });
+        res.status(400).json({ error: "Le restaurant est exceptionnellement fermé à cet horaire" });
         return;
       }
     }

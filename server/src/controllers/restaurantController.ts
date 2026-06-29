@@ -2455,7 +2455,7 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
  */
 export const toggleTodayClosure = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { date } = req.body;
+  const { date, startTime, endTime, reason } = req.body;
   try {
     const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
@@ -2465,44 +2465,70 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
 
     const todayStr = date || new Date().toISOString().split("T")[0];
 
-    // Always target the full day
-    const targetStart = new Date(todayStr + "T00:00:00.000Z");
-    const targetEnd = new Date(todayStr + "T23:59:59.999Z");
+    let targetStart: Date;
+    let targetEnd: Date;
+    if (startTime && endTime) {
+      targetStart = new Date(todayStr + "T" + startTime + ":00.000Z");
+      targetEnd = new Date(todayStr + "T" + endTime + ":00.999Z");
+      if (endTime < startTime) {
+        targetEnd.setUTCDate(targetEnd.getUTCDate() + 1);
+      }
+    } else {
+      targetStart = new Date(todayStr + "T00:00:00.000Z");
+      targetEnd = new Date(todayStr + "T23:59:59.999Z");
+    }
+
     const targetStartMs = targetStart.getTime();
     const targetEndMs = targetEnd.getTime();
 
-    // Check if there's any closure overlapping with today
-    // We want to "reopen" if we find a full-day closure OR any closure for today
+    // Check if there's any closure overlapping with today target range
     const existingIndex = restaurant.exceptionalClosures.findIndex((closure: any) => {
       const s = new Date(closure.startDate).getTime();
       const e = new Date(closure.endDate).getTime();
-      // If it's a full day closure or any closure starting today
-      return (Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000) || 
-             (s >= targetStartMs && s <= targetEndMs);
+      return Math.abs(s - targetStartMs) < 2000 && Math.abs(e - targetEndMs) < 2000;
     });
 
     if (existingIndex > -1) {
-      // Reopen: Remove ALL closures that start/end today to be thorough
-      restaurant.exceptionalClosures = restaurant.exceptionalClosures.filter((closure: any) => {
-        const s = new Date(closure.startDate).getTime();
-        return !(s >= targetStartMs && s <= targetEndMs);
-      });
-      await restaurant.save();
-      res.status(200).json({ 
-        message: `Restaurant réouvert pour le ${todayStr}`, 
-        exceptionalClosures: restaurant.exceptionalClosures 
-      });
+      const existingClosure = restaurant.exceptionalClosures[existingIndex];
+      const targetReason = reason || "Fermeture rapide";
+      if (existingClosure.reason !== targetReason) {
+        // Update the reason
+        existingClosure.reason = targetReason;
+        await restaurant.save();
+        res.status(200).json({
+          message: targetReason === "Complet" ? "Marqué comme complet" : "Fermé pour ce créneau",
+          exceptionalClosures: restaurant.exceptionalClosures
+        });
+      } else {
+        // Reopen: Remove the closure
+        if (!startTime || !endTime) {
+          // Full day reopen: remove all closures starting/ending today
+          restaurant.exceptionalClosures = restaurant.exceptionalClosures.filter((closure: any) => {
+            const s = new Date(closure.startDate).getTime();
+            return !(s >= targetStartMs && s <= targetEndMs);
+          });
+        } else {
+          // Service reopen: remove just this closure
+          restaurant.exceptionalClosures.splice(existingIndex, 1);
+        }
+        await restaurant.save();
+        res.status(200).json({
+          message: `Réouvert`,
+          exceptionalClosures: restaurant.exceptionalClosures
+        });
+      }
     } else {
-      // Close: Add a new full-day closure
+      // Close: Add a new closure
+      const targetReason = reason || "Fermeture rapide";
       restaurant.exceptionalClosures.push({
         startDate: targetStart,
         endDate: targetEnd,
-        reason: "Fermeture rapide",
+        reason: targetReason,
       });
       await restaurant.save();
-      res.status(200).json({ 
-        message: `Restaurant fermé pour le ${todayStr}`, 
-        exceptionalClosures: restaurant.exceptionalClosures 
+      res.status(200).json({
+        message: targetReason === "Complet" ? "Marqué comme complet" : "Fermé pour ce créneau",
+        exceptionalClosures: restaurant.exceptionalClosures
       });
     }
   } catch (err: any) {

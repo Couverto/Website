@@ -112,6 +112,14 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
     }
   }, [closedDays, form, initialData]);
 
+  const standardClosures = useMemo(() => {
+    return (restaurant.exceptionalClosures || []).filter(c => c.reason !== "Complet");
+  }, [restaurant.exceptionalClosures]);
+
+  const completClosures = useMemo(() => {
+    return (restaurant.exceptionalClosures || []).filter(c => c.reason === "Complet");
+  }, [restaurant.exceptionalClosures]);
+
   // Fetch available slots when date or guests change
   const bookingDate = form.watch("bookingDate");
   const guestsCount = form.watch("guests");
@@ -254,14 +262,14 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Exceptional Closures Banner */}
-        {restaurant.exceptionalClosures && restaurant.exceptionalClosures.length > 0 && (
+        {standardClosures.length > 0 && (
           <div className="bg-orange-50/50 border border-orange-200 rounded-xl p-4 space-y-2">
             <div className="flex items-center gap-2 text-orange-800 font-medium text-sm">
               <CalendarIcon className="h-4 w-4" />
               <span>Fermetures exceptionnelles à venir :</span>
             </div>
             <div className="space-y-1">
-              {restaurant.exceptionalClosures.map((closure, idx) => {
+              {standardClosures.map((closure, idx) => {
                 const start = new Date(closure.startDate);
                 const end = new Date(closure.endDate);
                 const isSameDay = format(start, "yyyy-MM-dd") === format(end, "yyyy-MM-dd");
@@ -287,6 +295,47 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                       :
                     </span>
                     <span>{closure.reason}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Complet / Fully Booked Banner */}
+        {completClosures.length > 0 && (
+          <div className="bg-amber-50/50 border border-amber-200 rounded-xl p-4 space-y-2">
+            <div className="flex items-center gap-2 text-amber-800 font-medium text-sm">
+              <Users className="h-4 w-4 text-amber-600" />
+              <span>Établissement complet sur ces créneaux :</span>
+            </div>
+            <div className="space-y-1">
+              {completClosures.map((closure, idx) => {
+                const start = new Date(closure.startDate);
+                const end = new Date(closure.endDate);
+                const isSameDay = format(start, "yyyy-MM-dd") === format(end, "yyyy-MM-dd");
+                const isFullDay = start.getUTCHours() === 0 && end.getUTCHours() >= 23;
+
+                return (
+                  <div key={idx} className="text-xs text-amber-700/80 ml-6 flex flex-col sm:flex-row sm:gap-1">
+                    <span className="font-semibold">
+                      {isSameDay ? (
+                        <>Le {format(start, "dd/MM/yyyy")}</>
+                      ) : (
+                        <>
+                          Du {format(start, "dd/MM/yyyy")} au {format(end, "dd/MM/yyyy")}
+                        </>
+                      )}
+                      {!isFullDay && (
+                        <>
+                          {" "}
+                          ({start.getUTCHours().toString().padStart(2, "0")}:{start.getUTCMinutes().toString().padStart(2, "0")} -{" "}
+                          {end.getUTCHours().toString().padStart(2, "0")}:{end.getUTCMinutes().toString().padStart(2, "0")})
+                        </>
+                      )}
+                      :
+                    </span>
+                    <span>{"Complet"}</span>
                   </div>
                 );
               })}

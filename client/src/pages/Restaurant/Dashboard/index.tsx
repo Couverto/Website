@@ -83,30 +83,56 @@ export const RestaurantDashboard = () => {
 
   const hasTablePlan = context?.availablePages?.includes("tablePlan");
 
-  const isFullDayClosed = useMemo(() => {
-    if (!context?.restaurant?.exceptionalClosures) return false;
+  const [serviceStart, serviceEnd] = useMemo(() => {
+    if (!selectedService) return [undefined, undefined];
+    return selectedService.split("-");
+  }, [selectedService]);
+
+  const serviceClosure = useMemo(() => {
+    if (!context?.restaurant?.exceptionalClosures || !selectedService) return null;
+    const [open, close] = selectedService.split("-");
+    const todayStr = format(selectedDate, "yyyy-MM-dd");
+    const sTarget = new Date(todayStr + "T" + open + ":00.000Z").getTime();
+    const eTarget = new Date(todayStr + "T" + close + ":00.999Z").getTime();
+
+    return context.restaurant.exceptionalClosures.find((closure: any) => {
+      const s = new Date(closure.startDate).getTime();
+      const e = new Date(closure.endDate).getTime();
+      return Math.abs(s - sTarget) < 2000 && Math.abs(e - eTarget) < 2000;
+    });
+  }, [context?.restaurant?.exceptionalClosures, selectedDate, selectedService]);
+
+  const isServiceClosed = serviceClosure?.reason !== "Complet" && !!serviceClosure;
+  const isServiceComplet = serviceClosure?.reason === "Complet";
+
+  const fullDayClosure = useMemo(() => {
+    if (!context?.restaurant?.exceptionalClosures) return null;
     const todayStr = format(selectedDate, "yyyy-MM-dd");
     const sTarget = new Date(todayStr + "T00:00:00.000Z").getTime();
     const eTarget = new Date(todayStr + "T23:59:59.999Z").getTime();
 
-    const hasClosure = context.restaurant.exceptionalClosures.some((closure: any) => {
+    const closure = context.restaurant.exceptionalClosures.find((closure: any) => {
       const s = new Date(closure.startDate).getTime();
       const e = new Date(closure.endDate).getTime();
       return Math.abs(s - sTarget) < 2000 && Math.abs(e - eTarget) < 2000;
     });
 
     // If there's an exceptional opening for this day, the day is not "closed"
-    if (hasClosure) {
+    if (closure) {
       const hasOpening = context.restaurant.exceptionalOpenings?.some((opening: any) => {
         const sStr = format(new Date(opening.startDate), "yyyy-MM-dd");
         const eStr = format(new Date(opening.endDate), "yyyy-MM-dd");
         return todayStr >= sStr && todayStr <= eStr;
       });
-      if (hasOpening) return false;
+      if (hasOpening) return null;
     }
 
-    return hasClosure;
+    return closure || null;
   }, [context?.restaurant?.exceptionalClosures, context?.restaurant?.exceptionalOpenings, selectedDate]);
+
+  const isFullDayClosed = !!fullDayClosure;
+  const isFullDayClosedOnly = fullDayClosure?.reason !== "Complet" && !!fullDayClosure;
+  const isFullDayComplet = fullDayClosure?.reason === "Complet";
 
   const todayServices = useMemo(() => {
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -190,12 +216,13 @@ export const RestaurantDashboard = () => {
 
   const [isTogglingClosure, setIsTogglingClosure] = useState(false);
 
-  const toggleTodayClosure = async (startTime?: string, endTime?: string) => {
+  const toggleTodayClosure = async (startTime?: string, endTime?: string, reason?: string) => {
     try {
       setIsTogglingClosure(true);
       const response = await api.patch(`/restaurants/${id}/toggle-today-closure`, {
         startTime,
         endTime,
+        reason,
         date: format(selectedDate, "yyyy-MM-dd"),
       });
       toast.success(response.data.message);
@@ -468,25 +495,94 @@ export const RestaurantDashboard = () => {
         <div className="flex flex-wrap items-center gap-2">
           {context?.restaurant && (
             <>
+              {/* Service Closures */}
+              {selectedService && (
+                <>
+                  <Button
+                    variant={isServiceClosed ? "default" : "outline"}
+                    className={cn(
+                      "font-bold transition-all",
+                      isServiceClosed
+                        ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
+                        : "text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700",
+                    )}
+                    onClick={() => toggleTodayClosure(serviceStart, serviceEnd, "Fermeture rapide")}
+                    disabled={isTogglingClosure || isFullDayClosed}
+                  >
+                    {isTogglingClosure ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : isServiceClosed ? (
+                      <Clock className="h-4 w-4 mr-2" />
+                    ) : (
+                      <X className="h-4 w-4 mr-2" />
+                    )}
+                    {isServiceClosed ? "Réouvrir le service" : "Fermer le service"}
+                  </Button>
+
+                  <Button
+                    variant={isServiceComplet ? "default" : "outline"}
+                    className={cn(
+                      "font-bold transition-all",
+                      isServiceComplet
+                        ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
+                        : "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700",
+                    )}
+                    onClick={() => toggleTodayClosure(serviceStart, serviceEnd, "Complet")}
+                    disabled={isTogglingClosure || isFullDayClosed}
+                  >
+                    {isTogglingClosure ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : isServiceComplet ? (
+                      <Users className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-2" />
+                    )}
+                    {isServiceComplet ? "Service complet !" : "Marquer complet"}
+                  </Button>
+                </>
+              )}
+
+              {/* Full Day Closures */}
               <Button
-                variant={isFullDayClosed ? "default" : "outline"}
+                variant={isFullDayClosedOnly ? "default" : "outline"}
                 className={cn(
                   "font-bold transition-all",
-                  isFullDayClosed
+                  isFullDayClosedOnly
                     ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
                     : "text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700",
                 )}
-                onClick={() => toggleTodayClosure()}
+                onClick={() => toggleTodayClosure(undefined, undefined, "Fermeture rapide")}
                 disabled={isTogglingClosure}
               >
                 {isTogglingClosure ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : isFullDayClosed ? (
+                ) : isFullDayClosedOnly ? (
                   <Clock className="h-4 w-4 mr-2" />
                 ) : (
                   <X className="h-4 w-4 mr-2" />
                 )}
-                {isFullDayClosed ? `Réouvrir le ${format(selectedDate, "dd/MM")}` : `Fermer le ${format(selectedDate, "dd/MM")}`}
+                {isFullDayClosedOnly ? `Réouvrir la journée` : `Fermer la journée`}
+              </Button>
+
+              <Button
+                variant={isFullDayComplet ? "default" : "outline"}
+                className={cn(
+                  "font-bold transition-all",
+                  isFullDayComplet
+                    ? "bg-red-600 hover:bg-red-700 text-white border-red-700"
+                    : "text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700",
+                )}
+                onClick={() => toggleTodayClosure(undefined, undefined, "Complet")}
+                disabled={isTogglingClosure}
+              >
+                {isTogglingClosure ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : isFullDayComplet ? (
+                  <Users className="h-4 w-4 mr-2" />
+                ) : (
+                  <Check className="h-4 w-4 mr-2" />
+                )}
+                {isFullDayComplet ? `Journée complète !` : `Journée complète`}
               </Button>
 
               <Button variant="outline" asChild>
