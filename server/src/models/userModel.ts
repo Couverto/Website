@@ -62,6 +62,12 @@ const UserSchema = new Schema<IUser>(
   },
 );
 
+UserSchema.pre("save", async function (this: IUser) {
+  if (this.isModified("forename") && this.forename) {
+    this.forename = this.forename.charAt(0).toUpperCase() + this.forename.slice(1).toLowerCase();
+  }
+});
+
 UserSchema.virtual("fullname").get(function (this: IUser) {
   return `${this.name} ${this.forename}`;
 });
