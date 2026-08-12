@@ -25,6 +25,7 @@ export const restaurantBookingNotificationTemplate = ({
   restaurantName,
   restaurantId,
 }: RestaurantBookingNotificationProps): string => {
+  const guestsLabel = guests === 1 ? "convive" : "convives";
   const serviceGuestsLabel = serviceGuests === 1 ? "couvert" : "couverts";
   const serviceGuestsRow =
     typeof serviceGuests === "number"
@@ -35,12 +36,21 @@ export const restaurantBookingNotificationTemplate = ({
       </div>
       `
       : "";
+  const serviceGuestsSummary =
+    typeof serviceGuests === "number"
+      ? `<p style="margin: 6px 0 0 0; font-size: 15px; color: #4b5563;">🍽️ <strong>${serviceGuests} ${serviceGuestsLabel}</strong> sur le service</p>`
+      : "";
 
   const content = `
     <h2>Nouvelle Réservation ! 🎉</h2>
-    
+
+    <div class="highlight-box" style="text-align: center;">
+      <p style="margin: 0; font-size: 22px; font-weight: 700; color: #173B15;">👥 ${guests} ${guestsLabel}</p>
+      ${serviceGuestsSummary}
+    </div>
+
     <p>Vous avez reçu une nouvelle demande de réservation pour <strong>${restaurantName}</strong>.</p>
-    
+
     <div class="info-box">
       <h3>Détails du client</h3>
       <div class="info-row">
@@ -65,7 +75,7 @@ export const restaurantBookingNotificationTemplate = ({
       </div>
       <div class="info-row">
         <span class="info-label">👥 Personnes :</span>
-        <span class="info-value"><strong>${guests} ${guests > 1 ? "convives" : "convive"}</strong></span>
+        <span class="info-value"><strong>${guests} ${guestsLabel}</strong></span>
       </div>
       ${serviceGuestsRow}
       ${
