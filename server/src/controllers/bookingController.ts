@@ -522,7 +522,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
         await sendEmail({
           email: restaurantExists.email,
-          subject: `Nouvelle réservation - ${customer.name}`,
+          subject: `Nouvelle réservation (${guests} pers. / service ${serviceGuests}) - ${customer.name}`,
           message: restaurantBookingNotificationTemplate({
             customerName: customer.name,
             customerEmail: customer.email,
@@ -830,7 +830,7 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
           const serviceGuests = await getServiceGuestsTotal(restaurantDoc, booking.bookingDate);
           await sendEmail({
             email: restaurantDoc.email,
-            subject: `[MODIFICATION] Réservation - ${booking.customer.name}`,
+            subject: `[MODIFICATION] Réservation (${booking.guests} pers. / service ${serviceGuests}) - ${booking.customer.name}`,
             message: `
                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                  <h2 style="color: #333;">Modification de réservation</h2>
@@ -933,7 +933,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
           const serviceGuests = await getServiceGuestsTotal(restaurantDoc, booking.bookingDate);
           await sendEmail({
             email: restaurantDoc.email,
-            subject: `[ANNULATION] Réservation - ${booking.customer.name}`,
+            subject: `[ANNULATION] Réservation (${booking.guests} pers. / service restant ${serviceGuests}) - ${booking.customer.name}`,
             message: `
                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                  <h2 style="color: #666;">Réservation Annulée par le client</h2>
@@ -1040,7 +1040,7 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
           const serviceGuests = await getServiceGuestsTotal(restaurantDoc, booking.bookingDate);
           await sendEmail({
             email: restaurantDoc.email,
-            subject: `[ANNULATION] Réservation - ${booking.customer.name}`,
+            subject: `[ANNULATION] Réservation (${booking.guests} pers. / service restant ${serviceGuests}) - ${booking.customer.name}`,
             message: `
                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                  <h2 style="color: #d32f2f;">Réservation Annulée</h2>
