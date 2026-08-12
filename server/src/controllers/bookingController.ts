@@ -56,6 +56,52 @@ function validateBookingTime(restaurant: any, bookingDate: string): boolean {
 }
 
 /**
+ * @function getServiceGuestsTotal
+ * @description Sums the guests across all active bookings within the same service (lunch/dinner period, based on opening hours) as the given booking date.
+ */
+async function getServiceGuestsTotal(restaurantDoc: any, bookingDate: Date | string): Promise<number> {
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const dayName = dayNames[new Date(bookingDate).getDay()];
+  const daySchedule = restaurantDoc.openingHours instanceof Map
+    ? restaurantDoc.openingHours.get(dayName)
+    : (restaurantDoc.openingHours as any)?.[dayName];
+
+  const timeStr = formatBookingTime(bookingDate);
+  const period = getServicePeriod(timeStr, daySchedule?.periods || []);
+
+  let queryStart: Date;
+  let queryEnd: Date;
+
+  if (period) {
+    const baseDateStr = new Date(bookingDate).toISOString().split("T")[0];
+    queryStart = new Date(baseDateStr + "T00:00:00.000Z");
+    const [sh, sm] = period.open.split(":").map(Number);
+    queryStart.setUTCHours(sh, sm, 0, 0);
+
+    queryEnd = new Date(baseDateStr + "T23:59:59.999Z");
+    const [eh, em] = period.close.split(":").map(Number);
+    queryEnd.setUTCHours(eh, em, 59, 999);
+
+    if (period.close < period.open) {
+      queryEnd.setUTCDate(queryEnd.getUTCDate() + 1);
+    }
+  } else {
+    const bookingTime = new Date(bookingDate).getTime();
+    const twoHours = 2 * 60 * 60 * 1000;
+    queryStart = new Date(bookingTime - twoHours);
+    queryEnd = new Date(bookingTime + twoHours);
+  }
+
+  const bookings = await Booking.find({
+    restaurant: restaurantDoc._id,
+    bookingDate: { $gte: queryStart, $lte: queryEnd },
+    status: { $ne: bookingStatus.CANCELLED },
+  }).select("guests");
+
+  return bookings.reduce((acc, b) => acc + (b.guests || 0), 0);
+}
+
+/**
  * @function createSetupIntent
  * @description Creates a Stripe SetupIntent for bank imprints before finalizing the booking.
  */
@@ -472,6 +518,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       try {
         const dateStr = formatBookingDate(bookingDate);
         const timeStr = formatBookingTime(bookingDate);
+        const serviceGuests = await getServiceGuestsTotal(restaurantExists, bookingDate);
 
         await sendEmail({
           email: restaurantExists.email,
@@ -483,6 +530,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             date: dateStr,
             time: timeStr,
             guests: guests,
+            serviceGuests,
             notes: notes,
             restaurantName: restaurantExists.name,
             restaurantId: restaurantExists._id.toString(),
@@ -779,6 +827,7 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
 
         // Notify Restaurant (if email exists and setting is enabled)
         if (restaurantDoc.email && restaurantDoc.sendBookingEmail) {
+          const serviceGuests = await getServiceGuestsTotal(restaurantDoc, booking.bookingDate);
           await sendEmail({
             email: restaurantDoc.email,
             subject: `[MODIFICATION] Réservation - ${booking.customer.name}`,
@@ -789,6 +838,7 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                    <p style="margin: 5px 0;"><strong>Nouvelle date :</strong> ${dateStr} à ${timeStr}</p>
                    <p style="margin: 5px 0;"><strong>Couverts :</strong> ${booking.guests} personnes</p>
+                   <p style="margin: 5px 0;"><strong>Total du service :</strong> ${serviceGuests} personnes</p>
                    ${notes ? `<p style="margin: 5px 0;"><strong>Note :</strong> ${notes}</p>` : ""}
                  </div>
                  <p style="color: #666; font-size: 14px;">Connectez-vous à votre tableau de bord pour plus de détails.</p>
@@ -880,6 +930,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
 
         // Notify Restaurant
         if (restaurantDoc.email && restaurantDoc.sendBookingEmail) {
+          const serviceGuests = await getServiceGuestsTotal(restaurantDoc, booking.bookingDate);
           await sendEmail({
             email: restaurantDoc.email,
             subject: `[ANNULATION] Réservation - ${booking.customer.name}`,
@@ -890,6 +941,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                    <p style="margin: 5px 0;"><strong>Date :</strong> ${dateStr} à ${timeStr}</p>
                    <p style="margin: 5px 0;"><strong>Nombre de personnes :</strong> ${booking.guests}</p>
+                   <p style="margin: 5px 0;"><strong>Total du service (restant) :</strong> ${serviceGuests} personnes</p>
                  </div>
                </div>
              `,
@@ -985,6 +1037,7 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
 
         // Notify Restaurant (if email exists and setting is enabled)
         if (restaurantDoc.email && restaurantDoc.sendBookingEmail) {
+          const serviceGuests = await getServiceGuestsTotal(restaurantDoc, booking.bookingDate);
           await sendEmail({
             email: restaurantDoc.email,
             subject: `[ANNULATION] Réservation - ${booking.customer.name}`,
@@ -995,6 +1048,7 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                    <p style="margin: 5px 0;"><strong>Date :</strong> ${dateStr} à ${timeStr}</p>
                    <p style="margin: 5px 0;"><strong>Nombre de personnes :</strong> ${booking.guests}</p>
+                   <p style="margin: 5px 0;"><strong>Total du service (restant) :</strong> ${serviceGuests} personnes</p>
                  </div>
                  <p style="color: #666; font-size: 14px;">Cette table est désormais de nouveau disponible.</p>
                </div>
