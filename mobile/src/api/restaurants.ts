@@ -11,6 +11,9 @@ export interface UpdateRestaurantSettingsPayload {
   priceRange?: string;
   openingHours?: Record<string, DaySchedule>;
   exceptionalClosures?: { startDate: string; endDate: string; reason?: string }[];
+  coverImage?: string;
+  images?: string[];
+  menu?: string[];
 }
 
 export const getMyRestaurants = async (): Promise<Restaurant[]> => {

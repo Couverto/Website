@@ -74,6 +74,7 @@ export interface Restaurant {
   website?: string;
   coverImage?: string;
   images: string[];
+  menu: string[];
   capacity: number;
   openingHours: Record<string, DaySchedule>;
   cuisineType: string[];
@@ -186,4 +187,79 @@ export interface DashboardStatsResponse {
   recentBookings: Booking[];
   activeBookings: Booking[];
   dayBookings: Booking[];
+}
+
+export interface Collaborator {
+  _id: string;
+  name: string;
+  forename: string;
+  email: string;
+  username: string;
+  avatar?: string;
+  createdAt: string;
+  restaurantRole: RestaurantRole;
+}
+
+export interface Invitation {
+  _id: string;
+  token: string;
+  restaurant: string;
+  createdBy: { _id: string; name: string; forename: string };
+  expiresAt: string;
+  used: boolean;
+  createdAt: string;
+}
+
+export interface Plan {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  features: { _id: string; name: string }[];
+  active: boolean;
+  isPopular: boolean;
+}
+
+export interface Payment {
+  _id: string;
+  planName: string;
+  amount: number;
+  status: "pending" | "completed" | "failed" | "refunded";
+  paymentMethod: string;
+  createdAt: string;
+}
+
+export interface SubscriptionInfo {
+  plan: Plan | null;
+  subscriptionStatus: "active" | "cancelled" | "expired" | "none" | "pending_payment";
+  autoRenew: boolean;
+  subscriptionEndDate?: string;
+  referralCodeUsed: { code: string; type: string; discountPercentage: number } | null;
+}
+
+export interface ReferredRestaurant {
+  _id: string;
+  name: string;
+  coverImage?: string;
+  city: string;
+  createdAt: string;
+  subscriptionStatus: string;
+  discountGained: number;
+  discountAmountGained: number;
+  cumulativeDiscount: number;
+}
+
+export interface ReferralInfo {
+  referralCode: { _id: string; code: string; isActive: boolean; discountPercentage: number; createdAt: string };
+  referrals: ReferredRestaurant[];
+  referredBy: { name: string; coverImage?: string; city: string } | null;
+  pricing: {
+    planName: string;
+    planPrice: number;
+    discountPerReferral: number;
+    totalDiscountPercentage: number;
+    discountAmount: number;
+    priceAfterDiscount: number;
+  };
+  stats: { totalReferrals: number; discountPercentage: number };
 }

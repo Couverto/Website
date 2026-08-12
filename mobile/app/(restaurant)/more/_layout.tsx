@@ -13,6 +13,10 @@ export default function MoreStackLayout() {
       <Stack.Screen name="table-plan" options={{ title: "Plan de salle" }} />
       <Stack.Screen name="stats" options={{ title: "Statistiques" }} />
       <Stack.Screen name="settings" options={{ title: "Paramètres" }} />
+      <Stack.Screen name="collaborators" options={{ title: "Collaborateurs" }} />
+      <Stack.Screen name="gallery" options={{ title: "Galerie" }} />
+      <Stack.Screen name="subscription" options={{ title: "Abonnement" }} />
+      <Stack.Screen name="referral" options={{ title: "Parrainage" }} />
     </Stack>
   );
 }

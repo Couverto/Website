@@ -18,10 +18,16 @@ const MANAGEMENT_ITEMS: ManagementItem[] = [
   { icon: "grid", label: "Plan de salle", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER], href: "/more/table-plan", requiresAnyFeature: ["tablePlan"] },
   { icon: "bar-chart-2", label: "Statistiques", roles: [RestaurantRole.ADMIN], href: "/more/stats", requiresAnyFeature: ["stats", "dashboard"] },
   { icon: "settings", label: "Paramètres", roles: [RestaurantRole.ADMIN], href: "/more/settings", requiresAnyFeature: ["settings"] },
-  { icon: "user-plus", label: "Collaborateurs", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER] },
-  { icon: "image", label: "Galerie", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER] },
-  { icon: "credit-card", label: "Abonnement", roles: [RestaurantRole.ADMIN] },
-  { icon: "gift", label: "Parrainage", roles: [RestaurantRole.ADMIN] },
+  {
+    icon: "user-plus",
+    label: "Collaborateurs",
+    roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER],
+    href: "/more/collaborators",
+    requiresAnyFeature: ["collaborators"],
+  },
+  { icon: "image", label: "Galerie", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER], href: "/more/gallery" },
+  { icon: "credit-card", label: "Abonnement", roles: [RestaurantRole.ADMIN], href: "/more/subscription" },
+  { icon: "gift", label: "Parrainage", roles: [RestaurantRole.ADMIN], href: "/more/referral" },
 ];
 
 export default function MoreScreen() {
@@ -105,7 +111,7 @@ export default function MoreScreen() {
                   <Feather name="chevron-right" size={16} color="#9ca3af" />
                 ) : (
                   <View className="bg-gray-100 rounded-full px-2.5 py-1">
-                    <Text className="text-[10px] font-bold text-gray-500">Bientôt disponible</Text>
+                    <Text className="text-[10px] font-bold text-gray-500">Non inclus dans votre plan</Text>
                   </View>
                 )}
               </Pressable>
