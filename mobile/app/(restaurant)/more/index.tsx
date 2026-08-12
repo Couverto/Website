@@ -1,32 +1,37 @@
 import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "../../../src/contexts/AuthContext";
 import { useRestaurant } from "../../../src/contexts/RestaurantContext";
 import { RestaurantRole } from "../../../src/types";
 import { ScreenContainer } from "../../../src/components/ScreenContainer";
 
-interface ComingSoonItem {
+interface ManagementItem {
   icon: React.ComponentProps<typeof Feather>["name"];
   label: string;
   roles: RestaurantRole[];
+  href?: Href;
+  requiresAnyFeature?: string[];
 }
 
-const COMING_SOON: ComingSoonItem[] = [
-  { icon: "grid", label: "Plan de salle", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER] },
+const MANAGEMENT_ITEMS: ManagementItem[] = [
+  { icon: "grid", label: "Plan de salle", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER], href: "/more/table-plan", requiresAnyFeature: ["tablePlan"] },
+  { icon: "bar-chart-2", label: "Statistiques", roles: [RestaurantRole.ADMIN], href: "/more/stats", requiresAnyFeature: ["stats", "dashboard"] },
+  { icon: "settings", label: "Paramètres", roles: [RestaurantRole.ADMIN], href: "/more/settings", requiresAnyFeature: ["settings"] },
   { icon: "user-plus", label: "Collaborateurs", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER] },
   { icon: "image", label: "Galerie", roles: [RestaurantRole.ADMIN, RestaurantRole.MANAGER] },
-  { icon: "bar-chart-2", label: "Statistiques", roles: [RestaurantRole.ADMIN] },
   { icon: "credit-card", label: "Abonnement", roles: [RestaurantRole.ADMIN] },
   { icon: "gift", label: "Parrainage", roles: [RestaurantRole.ADMIN] },
-  { icon: "settings", label: "Paramètres", roles: [RestaurantRole.ADMIN] },
 ];
 
 export default function MoreScreen() {
   const { user, signOut } = useAuth();
-  const { restaurant, userRole, exitRestaurant } = useRestaurant();
+  const { restaurant, userRole, availablePages, exitRestaurant } = useRestaurant();
 
-  const visibleComingSoon = COMING_SOON.filter((item) => !userRole || item.roles.includes(userRole));
+  const visibleItems = MANAGEMENT_ITEMS.filter((item) => !userRole || item.roles.includes(userRole));
+
+  const isItemAvailable = (item: ManagementItem) =>
+    !!item.href && (!item.requiresAnyFeature || item.requiresAnyFeature.some((key) => availablePages.includes(key)));
 
   const handleSwitchRestaurant = async () => {
     await exitRestaurant();
@@ -83,20 +88,29 @@ export default function MoreScreen() {
 
         <Text className="text-xs font-black uppercase tracking-widest text-muted mt-6 mb-2">Gestion du restaurant</Text>
         <View className="bg-white rounded-2xl border border-border overflow-hidden">
-          {visibleComingSoon.map((item, index) => (
-            <View
-              key={item.label}
-              className={`flex-row items-center gap-3 p-4 ${index < visibleComingSoon.length - 1 ? "border-b border-border/60" : ""}`}
-            >
-              <View className="w-9 h-9 rounded-lg bg-gray-100 items-center justify-center">
-                <Feather name={item.icon} size={16} color="#9ca3af" />
-              </View>
-              <Text className="flex-1 font-semibold text-gray-400">{item.label}</Text>
-              <View className="bg-gray-100 rounded-full px-2.5 py-1">
-                <Text className="text-[10px] font-bold text-gray-500">Bientôt disponible</Text>
-              </View>
-            </View>
-          ))}
+          {visibleItems.map((item, index) => {
+            const available = isItemAvailable(item);
+            return (
+              <Pressable
+                key={item.label}
+                disabled={!available}
+                onPress={() => available && item.href && router.push(item.href)}
+                className={`flex-row items-center gap-3 p-4 active:opacity-70 ${index < visibleItems.length - 1 ? "border-b border-border/60" : ""}`}
+              >
+                <View className={`w-9 h-9 rounded-lg items-center justify-center ${available ? "bg-primary/5" : "bg-gray-100"}`}>
+                  <Feather name={item.icon} size={16} color={available ? "#173B15" : "#9ca3af"} />
+                </View>
+                <Text className={`flex-1 font-semibold ${available ? "text-gray-900" : "text-gray-400"}`}>{item.label}</Text>
+                {available ? (
+                  <Feather name="chevron-right" size={16} color="#9ca3af" />
+                ) : (
+                  <View className="bg-gray-100 rounded-full px-2.5 py-1">
+                    <Text className="text-[10px] font-bold text-gray-500">Bientôt disponible</Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
 
         <Pressable

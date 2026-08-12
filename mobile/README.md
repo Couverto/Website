@@ -1,9 +1,10 @@
 # Couverto Pro (mobile)
 
-App mobile React Native (Expo) pour les restaurateurs Couverto. MVP : authentification,
-sélection du restaurant, Dashboard, Réservations, Clients, Avis, et un menu "Plus" qui liste
-les sections à venir (Plan de salle, Collaborateurs, Galerie, Statistiques, Abonnement,
-Parrainage, Paramètres).
+App mobile React Native (Expo) pour les restaurateurs Couverto. Phase 1 (MVP) : authentification,
+sélection du restaurant, Dashboard, Réservations, Clients, Avis. Phase 2 : Plan de salle
+(consultation + affectation de table), Statistiques, Paramètres (général + horaires/fermetures
+exceptionnelles), accessibles depuis l'onglet "Plus". Restent à venir : Collaborateurs, Galerie,
+Abonnement, Parrainage (listés en "Bientôt disponible" dans "Plus").
 
 Consomme la même API que le dashboard web (`../server`) — aucune route backend dédiée.
 

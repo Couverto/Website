@@ -1,34 +1,14 @@
 import { useMemo } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, Text, View } from "react-native";
 import { router } from "expo-router";
-import { Feather } from "@expo/vector-icons";
 import { useRestaurant } from "../../src/contexts/RestaurantContext";
 import { useDashboardStats, useUpdateBookingStatus } from "../../src/hooks/useBookingsQueries";
 import { ScreenContainer } from "../../src/components/ScreenContainer";
 import { BookingCard } from "../../src/components/BookingCard";
 import { EmptyState } from "../../src/components/EmptyState";
+import { StatCard } from "../../src/components/StatCard";
 import { useResponsive } from "../../src/hooks/useResponsive";
 import { BookingStatus } from "../../src/types";
-
-interface StatCardProps {
-  icon: React.ComponentProps<typeof Feather>["name"];
-  label: string;
-  value: string;
-  sublabel?: string;
-}
-
-function StatCard({ icon, label, value, sublabel }: Readonly<StatCardProps>) {
-  return (
-    <View className="flex-1 bg-white rounded-2xl border border-primary/10 p-4">
-      <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-xs font-bold text-muted uppercase tracking-wide">{label}</Text>
-        <Feather name={icon} size={16} color="#173B15" />
-      </View>
-      <Text className="text-2xl font-black text-primary">{value}</Text>
-      {sublabel ? <Text className="text-xs text-muted mt-0.5">{sublabel}</Text> : null}
-    </View>
-  );
-}
 
 export default function DashboardScreen() {
   const { activeRestaurantId, restaurant } = useRestaurant();

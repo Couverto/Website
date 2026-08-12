@@ -1,5 +1,17 @@
 import { apiClient } from "./client";
-import { Restaurant, RestaurantDetailsResponse, DashboardStatsResponse } from "../types";
+import { Restaurant, RestaurantDetailsResponse, DashboardStatsResponse, DaySchedule } from "../types";
+
+export interface UpdateRestaurantSettingsPayload {
+  name?: string;
+  description?: string;
+  phone?: string;
+  adress?: string;
+  city?: string;
+  website?: string;
+  priceRange?: string;
+  openingHours?: Record<string, DaySchedule>;
+  exceptionalClosures?: { startDate: string; endDate: string; reason?: string }[];
+}
 
 export const getMyRestaurants = async (): Promise<Restaurant[]> => {
   const { data } = await apiClient.get<{ restaurants: Restaurant[] }>("/restaurants/my");
@@ -16,4 +28,17 @@ export const getRestaurantStats = async (restaurantId: string, date?: string): P
     params: date ? { date } : undefined,
   });
   return data;
+};
+
+export const updateRestaurantSettings = async (
+  restaurantId: string,
+  payload: UpdateRestaurantSettingsPayload,
+): Promise<Restaurant> => {
+  const { data } = await apiClient.put<{ restaurant: Restaurant }>(`/restaurants/${restaurantId}/settings`, payload);
+  return data.restaurant;
+};
+
+export const toggleRestaurantClosed = async (restaurantId: string): Promise<Restaurant> => {
+  const { data } = await apiClient.patch<{ restaurant: Restaurant }>(`/restaurants/${restaurantId}/toggle-closed`);
+  return data.restaurant;
 };

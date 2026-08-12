@@ -143,9 +143,20 @@ export interface Review {
 }
 
 export interface RestaurantStats {
+  today: { bookings: number; guests: number };
+  week: { bookings: number };
+  month: { bookings: number };
   totalClients: number;
+  dailyStats: { date: string; count: number }[];
+  hourlyStats: { hour: number; count: number }[];
+  statusBreakdown: Partial<Record<BookingStatus, number>>;
+  guestDistribution: Record<string, number>;
+  cancellationRate: number;
+  averageGuests: number;
+  averageLeadTime: number;
+  busyDays: { day: number; count: number }[];
   activeBookings: Booking[];
-  [key: string]: unknown;
+  upcomingBookings: Booking[];
 }
 
 export interface PaginatedResponse<T> {
@@ -173,5 +184,6 @@ export interface DashboardStatsResponse {
   stats: RestaurantStats;
   upcomingBookings: Booking[];
   recentBookings: Booking[];
+  activeBookings: Booking[];
   dayBookings: Booking[];
 }
