@@ -7,6 +7,7 @@ interface RestaurantBookingNotificationProps {
   date: string;
   time: string;
   guests: number;
+  serviceGuests?: number;
   notes?: string;
   restaurantName: string;
   restaurantId: string;
@@ -19,10 +20,22 @@ export const restaurantBookingNotificationTemplate = ({
   date,
   time,
   guests,
+  serviceGuests,
   notes,
   restaurantName,
   restaurantId,
 }: RestaurantBookingNotificationProps): string => {
+  const serviceGuestsLabel = serviceGuests === 1 ? "couvert" : "couverts";
+  const serviceGuestsRow =
+    typeof serviceGuests === "number"
+      ? `
+      <div class="info-row">
+        <span class="info-label">🍽️ Total service :</span>
+        <span class="info-value"><strong>${serviceGuests} ${serviceGuestsLabel}</strong></span>
+      </div>
+      `
+      : "";
+
   const content = `
     <h2>Nouvelle Réservation ! 🎉</h2>
     
@@ -54,6 +67,7 @@ export const restaurantBookingNotificationTemplate = ({
         <span class="info-label">👥 Personnes :</span>
         <span class="info-value"><strong>${guests} ${guests > 1 ? "convives" : "convive"}</strong></span>
       </div>
+      ${serviceGuestsRow}
       ${
         notes
           ? `
