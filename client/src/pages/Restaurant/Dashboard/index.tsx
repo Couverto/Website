@@ -562,6 +562,54 @@ export const RestaurantDashboard = () => {
         </Card>
       </div>
 
+      {/* Agenda / Calendar toolbar */}
+      <div className="flex items-center gap-2 p-1.5 w-fit bg-background/60 backdrop-blur-xl border border-primary/20 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:bg-background/80 hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] group">
+        <div className="flex items-center gap-1 pl-2 pr-1 border-r border-primary/10">
+          <CalendarDays className="h-4 w-4 text-primary opacity-70" />
+          <span className="text-xs font-bold text-primary/80 uppercase tracking-wider px-1">Agenda</span>
+        </div>
+
+        <div className="px-2">
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date: Date | null) => date && setSelectedDate(date)}
+            dateFormat="dd MMM"
+            locale={fr}
+            popperPlacement="bottom"
+            customInput={
+              <button className="h-9 px-4 rounded-full font-semibold hover:bg-primary/10 hover:text-primary transition-colors text-sm">
+                {format(selectedDate, "dd MMM", { locale: fr })}
+              </button>
+            }
+          />
+        </div>
+
+        {todayServices.length > 0 && (
+          <Select value={selectedService || ""} onValueChange={setSelectedService}>
+            <SelectTrigger className="bg-transparent border-none shadow-none focus:ring-0 h-9 px-3 font-medium rounded-full hover:bg-primary/5 transition-colors w-[150px]">
+              <SelectValue placeholder="Service" />
+            </SelectTrigger>
+            <SelectContent side="bottom">
+              {todayServices.map((s: any, i: number) => (
+                <SelectItem key={i} value={`${s.open}-${s.close}`}>
+                  {`Service ${i + 1} (${s.open})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all ml-1"
+          onClick={() => setSelectedDate(new Date())}
+          title="Revenir à aujourd'hui"
+        >
+          <Clock className="h-4 w-4" />
+        </Button>
+      </div>
+
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Left Column: Table Plan Map */}
         {hasTablePlan && context?.restaurant && (
@@ -733,54 +781,6 @@ export const RestaurantDashboard = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Floating Agenda Menu */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-1.5 bg-background/60 backdrop-blur-xl border border-primary/20 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:bg-background/80 hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] group">
-        <div className="flex items-center gap-1 pl-2 pr-1 border-r border-primary/10">
-          <CalendarDays className="h-4 w-4 text-primary opacity-70" />
-          <span className="text-xs font-bold text-primary/80 uppercase tracking-wider px-1">Agenda</span>
-        </div>
-
-        <div className="px-2">
-          <DatePicker
-            selected={selectedDate}
-            onChange={(date: Date | null) => date && setSelectedDate(date)}
-            dateFormat="dd MMM"
-            locale={fr}
-            popperPlacement="top"
-            customInput={
-              <button className="h-9 px-4 rounded-full font-semibold hover:bg-primary/10 hover:text-primary transition-colors text-sm">
-                {format(selectedDate, "dd MMM", { locale: fr })}
-              </button>
-            }
-          />
-        </div>
-
-        {todayServices.length > 0 && (
-          <Select value={selectedService || ""} onValueChange={setSelectedService}>
-            <SelectTrigger className="bg-transparent border-none shadow-none focus:ring-0 h-9 px-3 font-medium rounded-full hover:bg-primary/5 transition-colors w-[150px]">
-              <SelectValue placeholder="Service" />
-            </SelectTrigger>
-            <SelectContent className="mb-2" side="top">
-              {todayServices.map((s: any, i: number) => (
-                <SelectItem key={i} value={`${s.open}-${s.close}`}>
-                  {`Service ${i + 1} (${s.open})`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all ml-1"
-          onClick={() => setSelectedDate(new Date())}
-          title="Revenir à aujourd'hui"
-        >
-          <Clock className="h-4 w-4" />
-        </Button>
       </div>
 
       {/* Move Table Dialog */}
