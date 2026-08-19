@@ -142,7 +142,7 @@ export const RestaurantDashboard = () => {
       context.restaurant.openingHours instanceof Map
         ? context.restaurant.openingHours.get(dayName)
         : (context.restaurant.openingHours as any)?.[dayName];
-    
+
     let periods = [...(schedule?.periods || [])];
 
     // Add Exceptional Openings
@@ -482,7 +482,7 @@ export const RestaurantDashboard = () => {
   }
 
   return (
-    <div className="flex flex-col h-full space-y-6">
+    <div className="flex flex-col h-full space-y-6 pb-24">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">{"Tableau de Bord"}</h2>
@@ -618,122 +618,75 @@ export const RestaurantDashboard = () => {
         </div>
       </div>
 
-      {/* Mini Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{"Réservations aujourd'hui"}</CardTitle>
-            <CalendarDays className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{filteredStats?.bookings || 0}</div>
-            <p className="text-xs text-muted-foreground">{filteredStats?.guests || 0} couvert(s) prévus</p>
-          </CardContent>
-        </Card>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-3 gap-6 min-h-0">
+        {/* Mini Stats Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 order-3 lg:order-1 lg:col-span-3">
+          <Card className="bg-primary/5 border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{"Réservations aujourd'hui"}</CardTitle>
+              <CalendarDays className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{filteredStats?.bookings || 0}</div>
+              <p className="text-xs text-muted-foreground">{filteredStats?.guests || 0} couvert(s) prévus</p>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Couverts disponibles</CardTitle>
-            <Armchair className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            {(() => {
-              const capacity = context?.restaurant?.capacity || 0;
-              const reserved = selectedService ? filteredStats?.guests || 0 : stats?.activeBookings?.length || 0;
-              const available = Math.max(0, capacity - reserved);
-              const isFull = available === 0 && capacity > 0;
-              return (
-                <>
-                  <div className={cn("text-2xl font-bold", isFull ? "text-red-500" : "text-primary")}>
-                    {available} <span className="text-sm font-medium text-muted-foreground">/ {capacity}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium mt-0.5">
-                    {reserved} réservé(s)
-                    {selectedService
-                      ? " pour ce service"
-                      : (() => {
-                          if (!context?.restaurant?.openingHours) return "";
-                          const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-                          const now = new Date();
-                          const today = days[now.getDay()];
-                          const schedule = (context.restaurant.openingHours as any)[today];
-                          if (!schedule || schedule.isClosed || !schedule.periods?.length) return " (Fermé)";
-                          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-                          const currentPeriod = schedule.periods.find((p: any) => {
-                            const [startH, startM] = p.open.split(":").map(Number);
-                            const [endH, endM] = p.close.split(":").map(Number);
-                            return currentMinutes >= startH * 60 + startM && currentMinutes < endH * 60 + endM;
-                          });
-                          return currentPeriod ? ` (${currentPeriod.open} - ${currentPeriod.close})` : " (Fermé)";
-                        })()}
-                  </p>
-                </>
-              );
-            })()}
-          </CardContent>
-        </Card>
+          <Card className="bg-primary/5 border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Couverts disponibles</CardTitle>
+              <Armchair className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const capacity = context?.restaurant?.capacity || 0;
+                const reserved = selectedService ? filteredStats?.guests || 0 : stats?.activeBookings?.length || 0;
+                const available = Math.max(0, capacity - reserved);
+                const isFull = available === 0 && capacity > 0;
+                return (
+                  <>
+                    <div className={cn("text-2xl font-bold", isFull ? "text-red-500" : "text-primary")}>
+                      {available} <span className="text-sm font-medium text-muted-foreground">/ {capacity}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                      {reserved} réservé(s)
+                      {selectedService
+                        ? " pour ce service"
+                        : (() => {
+                            if (!context?.restaurant?.openingHours) return "";
+                            const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                            const now = new Date();
+                            const today = days[now.getDay()];
+                            const schedule = (context.restaurant.openingHours as any)[today];
+                            if (!schedule || schedule.isClosed || !schedule.periods?.length) return " (Fermé)";
+                            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                            const currentPeriod = schedule.periods.find((p: any) => {
+                              const [startH, startM] = p.open.split(":").map(Number);
+                              const [endH, endM] = p.close.split(":").map(Number);
+                              return currentMinutes >= startH * 60 + startM && currentMinutes < endH * 60 + endM;
+                            });
+                            return currentPeriod ? ` (${currentPeriod.open} - ${currentPeriod.close})` : " (Fermé)";
+                          })()}
+                    </p>
+                  </>
+                );
+              })()}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Nouveaux clients</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalClients || 0}</div>
-            <p className="text-xs text-muted-foreground">Dans votre base de données</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Agenda / Calendar toolbar */}
-      <div className="flex items-center gap-2 p-1.5 w-fit bg-background/60 backdrop-blur-xl border border-primary/20 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all hover:bg-background/80 hover:shadow-[0_8px_40px_rgb(0,0,0,0.16)] group">
-        <div className="flex items-center gap-1 pl-2 pr-1 border-r border-primary/10">
-          <CalendarDays className="h-4 w-4 text-primary opacity-70" />
-          <span className="text-xs font-bold text-primary/80 uppercase tracking-wider px-1">Agenda</span>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Nouveaux clients</CardTitle>
+              <Plus className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.totalClients || 0}</div>
+              <p className="text-xs text-muted-foreground">Dans votre base de données</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="px-2">
-          <DatePicker
-            selected={selectedDate}
-            onChange={(date: Date | null) => date && setSelectedDate(date)}
-            dateFormat="dd MMM"
-            locale={fr}
-            popperPlacement="bottom"
-            customInput={
-              <button className="h-9 px-4 rounded-full font-semibold hover:bg-primary/10 hover:text-primary transition-colors text-sm">
-                {format(selectedDate, "dd MMM", { locale: fr })}
-              </button>
-            }
-          />
-        </div>
-
-        {todayServices.length > 0 && (
-          <Select value={selectedService || ""} onValueChange={setSelectedService}>
-            <SelectTrigger className="bg-transparent border-none shadow-none focus:ring-0 h-9 px-3 font-medium rounded-full hover:bg-primary/5 transition-colors w-[150px]">
-              <SelectValue placeholder="Service" />
-            </SelectTrigger>
-            <SelectContent side="bottom">
-              {todayServices.map((s: any, i: number) => (
-                <SelectItem key={i} value={`${s.open}-${s.close}`}>
-                  {`Service ${i + 1} (${s.open})`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all ml-1"
-          onClick={() => setSelectedDate(new Date())}
-          title="Revenir à aujourd'hui"
-        >
-          <Clock className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
         {/* Left Column: Table Plan Map */}
         {hasTablePlan && context?.restaurant && (
           <DashboardTablePlan
@@ -749,7 +702,7 @@ export const RestaurantDashboard = () => {
         )}
 
         {/* Right Column: Recent Bookings */}
-        <Card className={cn("border-primary/10 shadow-sm overflow-hidden flex flex-col", hasTablePlan ? "col-span-1" : "lg:col-span-3")}>
+        <Card className={cn("order-1 lg:order-3 border-primary/10 shadow-sm overflow-hidden flex flex-col", hasTablePlan ? "col-span-1" : "lg:col-span-3")}>
           <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
             <div className="flex items-center justify-between">
               <div>
@@ -904,6 +857,56 @@ export const RestaurantDashboard = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Agenda / Calendar toolbar - Floating fixed at the bottom */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex items-center gap-2 p-1.5 bg-background/80 backdrop-blur-xl border border-primary/20 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all hover:bg-background hover:shadow-[0_8px_40px_rgba(0,0,0,0.16)] group">
+          <div className="flex items-center gap-1 pl-2 pr-1 border-r border-primary/10">
+            <CalendarDays className="h-4 w-4 text-primary opacity-70" />
+            <span className="text-xs font-bold text-primary/80 uppercase tracking-wider px-1">Agenda</span>
+          </div>
+
+          <div className="px-2">
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date: Date | null) => date && setSelectedDate(date)}
+              dateFormat="dd MMM"
+              locale={fr}
+              popperPlacement="bottom"
+              customInput={
+                <button className="h-9 px-4 rounded-full font-semibold hover:bg-primary/10 hover:text-primary transition-colors text-sm">
+                  {format(selectedDate, "dd MMM", { locale: fr })}
+                </button>
+              }
+            />
+          </div>
+
+          {todayServices.length > 0 && (
+            <Select value={selectedService || ""} onValueChange={setSelectedService}>
+              <SelectTrigger className="bg-transparent border-none shadow-none focus:ring-0 h-9 px-3 font-medium rounded-full hover:bg-primary/5 transition-colors w-[150px]">
+                <SelectValue placeholder="Service" />
+              </SelectTrigger>
+              <SelectContent side="bottom">
+                {todayServices.map((s: any, i: number) => (
+                  <SelectItem key={i} value={`${s.open}-${s.close}`}>
+                    {`Service ${i + 1} (${s.open})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all ml-1"
+            onClick={() => setSelectedDate(new Date())}
+            title="Revenir à aujourd'hui"
+          >
+            <Clock className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Move Table Dialog */}

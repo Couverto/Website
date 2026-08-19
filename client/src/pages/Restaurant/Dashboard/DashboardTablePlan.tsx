@@ -99,7 +99,7 @@ export const DashboardTablePlan: React.FC<DashboardTablePlanProps> = ({
   }
 
   return (
-    <Card className="col-span-1 lg:col-span-2 overflow-hidden border-primary/10 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+    <Card className="col-span-1 lg:col-span-2 order-2 lg:order-2 overflow-hidden border-primary/10 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
       <CardHeader className="bg-muted/30 border-b py-4 shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">

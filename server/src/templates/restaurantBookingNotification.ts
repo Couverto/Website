@@ -7,7 +7,6 @@ interface RestaurantBookingNotificationProps {
   date: string;
   time: string;
   guests: number;
-  serviceGuests?: number;
   notes?: string;
   restaurantName: string;
   restaurantId: string;
@@ -20,33 +19,19 @@ export const restaurantBookingNotificationTemplate = ({
   date,
   time,
   guests,
-  serviceGuests,
   notes,
   restaurantName,
   restaurantId,
 }: RestaurantBookingNotificationProps): string => {
   const guestsLabel = guests === 1 ? "convive" : "convives";
-  const serviceGuestsLabel = serviceGuests === 1 ? "couvert" : "couverts";
-  const serviceGuestsRow =
-    typeof serviceGuests === "number"
-      ? `
-      <div class="info-row">
-        <span class="info-label">🍽️ Total service :</span>
-        <span class="info-value"><strong>${serviceGuests} ${serviceGuestsLabel}</strong></span>
-      </div>
-      `
-      : "";
-  const serviceGuestsSummary =
-    typeof serviceGuests === "number"
-      ? `<p style="margin: 6px 0 0 0; font-size: 15px; color: #4b5563;">🍽️ <strong>${serviceGuests} ${serviceGuestsLabel}</strong> sur le service</p>`
-      : "";
 
   const content = `
     <h2>Nouvelle Réservation ! 🎉</h2>
 
     <div class="highlight-box" style="text-align: center;">
-      <p style="margin: 0; font-size: 22px; font-weight: 700; color: #173B15;">👥 ${guests} ${guestsLabel}</p>
-      ${serviceGuestsSummary}
+      <p style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #173B15;">👥 ${guests} ${guestsLabel}</p>
+      <p style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #173B15;">👤 ${customerName}</p>
+      <p style="margin: 0; font-size: 16px; font-weight: 500; color: #173B15;">📅 ${date} à ${time}</p>
     </div>
 
     <p>Vous avez reçu une nouvelle demande de réservation pour <strong>${restaurantName}</strong>.</p>
@@ -77,7 +62,6 @@ export const restaurantBookingNotificationTemplate = ({
         <span class="info-label">👥 Personnes :</span>
         <span class="info-value"><strong>${guests} ${guestsLabel}</strong></span>
       </div>
-      ${serviceGuestsRow}
       ${
         notes
           ? `

@@ -582,11 +582,10 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       try {
         const dateStr = formatBookingDate(bookingDate);
         const timeStr = formatBookingTime(bookingDate);
-        const serviceGuests = await getServiceGuestsTotal(restaurantExists, bookingDate);
 
         await sendEmail({
           email: restaurantExists.email,
-          subject: `Nouvelle réservation (${guests} pers. / service ${serviceGuests}) - ${customer.name}`,
+          subject: `Nouvelle réservation (${guests} pers.) - ${customer.name}`,
           message: restaurantBookingNotificationTemplate({
             customerName: customer.name,
             customerEmail: customer.email,
@@ -594,7 +593,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             date: dateStr,
             time: timeStr,
             guests: guests,
-            serviceGuests,
             notes: notes,
             restaurantName: restaurantExists.name,
             restaurantId: restaurantExists._id.toString(),
