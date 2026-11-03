@@ -84,7 +84,7 @@ export const Register = () => {
             <h2 className="text-3xl font-bold mb-4">Rejoignez {"Couverto"}</h2>
 
             <p className="text-white/80 text-lg mb-8">
-              {"Des milliers de restaurateurs nous font confiance pour gérer leurs réservations au quotidien."}
+              {"Gérez vos réservations, votre salle et vos clients au même endroit."}
             </p>
 
             <div className="space-y-4">
@@ -98,17 +98,6 @@ export const Register = () => {
               ))}
             </div>
 
-            {/* Stats */}
-            <div className="mt-12 grid grid-cols-2 gap-6">
-              <div className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-                <div className="text-3xl font-bold">500+</div>
-                <div className="text-sm text-white/70">{"restaurants"}</div>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-                <div className="text-3xl font-bold">5k+</div>
-                <div className="text-sm text-white/70">{"réservations gérées"}</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

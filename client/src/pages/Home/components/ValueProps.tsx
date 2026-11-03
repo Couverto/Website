@@ -1,11 +1,10 @@
-import { Clock, ShieldCheck, Smartphone, Search, CalendarDays, PartyPopper, Users, Star } from "lucide-react";
+import { Clock, ShieldCheck, Smartphone, Search, CalendarDays, PartyPopper, Users } from "lucide-react";
 import { useConfigContext } from "@/contexts/configContext";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface FeatureCardProps {
   title: string;
@@ -167,32 +166,14 @@ export const ValueProps = () => {
             {/* Right Side Visual/Stats */}
             <div className="relative h-full min-h-[400px] rounded-3xl bg-white/5 border border-white/10 p-6 md:p-12 flex flex-col justify-between backdrop-blur-sm">
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-yellow-400">
-                  <Star className="fill-current h-5 w-5" />
-                  <Star className="fill-current h-5 w-5" />
-                  <Star className="fill-current h-5 w-5" />
-                  <Star className="fill-current h-5 w-5" />
-                  <Star className="fill-current h-5 w-5" />
-                </div>
-                <blockquote className="text-xl md:text-2xl font-medium leading-relaxed">
-                  "L'expérience de réservation la plus fluide que j'ai jamais eue. Simplement génial."
-                </blockquote>
-                <div className="pt-4 flex items-center gap-4">
-                  <Avatar className="h-10 w-10 border-2 border-white/20">
-                    <AvatarImage src="/images/reviews/sophie_martin.png" alt="Sophie Martin" className="object-cover" />
-                    <AvatarFallback>SM</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-bold">Sophie Martin</div>
-                    <div className="text-sm text-white/50">Food Blogger</div>
-                  </div>
-                </div>
+                <p className="text-xl md:text-2xl font-medium leading-relaxed">Votre table est confirmée en quelques secondes, sans appel ni attente.</p>
+                <p className="text-white/60 leading-relaxed">Réservez en ligne à toute heure, même quand le restaurant est fermé.</p>
               </div>
 
               <div className="mt-8 pt-8 border-t border-white/10 flex flex-col sm:flex-row gap-4 justify-between items-center text-center sm:text-left">
                 <div>
-                  <div className="text-3xl font-bold">98%</div>
-                  <div className="text-sm text-white/50">Satisfaction client</div>
+                  <div className="text-3xl font-bold">0 €</div>
+                  <div className="text-sm text-white/50">Frais de réservation</div>
                 </div>
                 <Button
                   className="w-full sm:w-auto rounded-full bg-white text-black hover:bg-white/90 font-bold px-8"

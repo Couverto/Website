@@ -100,7 +100,7 @@ export const About = () => {
                 <p>{`En unissant nos forces, Axel (Vision & Business) et Téo (Tech & Product) ont créé ${appName} avec une obsession : simplifier la vie.`}</p>
                 <p>
                   {
-                    "Aujourd'hui, nous sommes fiers d'aider des centaines de restaurateurs à se concentrer sur ce qu'ils font de mieux : cuisiner."
+                    "Notre mission : aider les restaurateurs à se concentrer sur ce qu'ils font de mieux : cuisiner."
                   }
                 </p>
               </div>

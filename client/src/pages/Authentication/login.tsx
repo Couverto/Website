@@ -102,21 +102,6 @@ export const Login = () => {
               ))}
             </div>
 
-            {/* Testimonial */}
-            <div className="mt-12 p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-              <p className="text-white/90 italic mb-4">
-                "{"Couverto"} a totalement transformé notre façon de travailler. C'est intuitif et nos clients apprécient la simplicité."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-accent/30 flex items-center justify-center">
-                  <span className="font-bold">MR</span>
-                </div>
-                <div>
-                  <div className="font-medium">{"Marie Rousseau"}</div>
-                  <div className="text-sm text-white/70">{"Restaurant Le Petit Bistrot, Paris"}</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
