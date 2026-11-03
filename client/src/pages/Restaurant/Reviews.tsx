@@ -39,7 +39,7 @@ export const RestaurantReviews = () => {
     setSubmitting(true);
 
     try {
-      await axiosConfig.post(`/reviews/${reviewId}/reply`, {
+      await axiosConfig.post(`/reviews/restaurant/${restaurantId}/${reviewId}/reply`, {
         text: replyText[reviewId],
       });
       toast.success("Réponse envoyée !");

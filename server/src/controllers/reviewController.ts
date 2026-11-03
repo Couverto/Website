@@ -32,9 +32,10 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    if (booking.status !== bookingStatus.CONFIRMED) {
-      // Ideally we check if date is past. For now, let's assume if they have the link/id and it's confirmed, it's ok.
-      // Or strictly check status.
+    // Only a confirmed booking that already took place can be reviewed
+    if (booking.status !== bookingStatus.CONFIRMED || new Date(booking.bookingDate) > new Date()) {
+      res.status(400).json({ error: "Vous pourrez laisser un avis après votre venue." });
+      return;
     }
 
     // 2. Check if review already exists
@@ -87,19 +88,23 @@ export const getRestaurantReviews = async (req: Request, res: Response): Promise
 // Reply to a review (Restaurant Owner)
 export const replyToReview = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { reviewId } = req.params;
+    const { restaurantId, reviewId } = req.params;
     const { text } = req.body;
-    // @ts-ignore
-    const userId = req.user._id;
 
-    const review = await Review.findById(reviewId).populate("restaurant");
+    if (typeof text !== "string" || !text.trim() || text.length > 1000) {
+      res.status(400).json({ error: "La réponse doit contenir entre 1 et 1000 caractères." });
+      return;
+    }
+
+    // The collaborator check is done on :restaurantId, so the review must belong to that restaurant
+    const review = await Review.findOne({ _id: reviewId, restaurant: restaurantId });
     if (!review) {
       res.status(404).json({ error: "Avis introuvable." });
       return;
     }
 
     review.reply = {
-      text,
+      text: text.trim(),
       createdAt: new Date(),
     };
 

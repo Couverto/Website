@@ -12,6 +12,6 @@ router.delete("/:reviewId", verifyToken(), deleteReview); // Delete own review
 
 // Restaurant Routes
 router.get("/restaurant/:restaurantId", getRestaurantReviews);
-router.post("/:reviewId/reply", verifyToken(), authorize(["admin", "manager"]), replyToReview); // Reply to review
+router.post("/restaurant/:restaurantId/:reviewId/reply", verifyToken(), authorize(["admin", "manager"]), replyToReview); // Reply to review
 
 export const reviewRoutes = router;
