@@ -229,11 +229,13 @@ export const RestaurantSettings = () => {
     }
 
     try {
-      await api.put(`/restaurants/${id}/settings`, data);
-      toast.success("Modifications enregistrées");
+      const response = await api.put(`/restaurants/${id}/settings`, data);
+      // The server explains when a new email still has to be confirmed through a link
+      toast.success(response.data.message || "Modifications enregistrées");
 
-      if (data.email !== originalEmail) {
-        setOriginalEmail(data.email!);
+      const savedEmail = response.data.restaurant?.email;
+      if (savedEmail && savedEmail !== originalEmail) {
+        setOriginalEmail(savedEmail);
       }
     } catch (error: any) {
       if (error.response?.status === 409) {

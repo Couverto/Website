@@ -757,45 +757,11 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
 
     // Handle Email Update with Verification
     if (req.body.email && req.body.email !== restaurant.email) {
-      const newEmail = req.body.email;
-
-      const existingConflict = await Restaurant.findOne({
-        email: newEmail,
-        collaborators: { $ne: req.userId },
-      });
-
-      if (existingConflict) {
-        res.status(409).json({ error: "Cette adresse email est déjà utilisée par un autre restaurant dont vous n'êtes pas propriétaire" });
+      const emailError = await requestRestaurantEmailChange(restaurant, req.body.email, req.userId);
+      if (emailError) {
+        res.status(409).json({ error: emailError });
         return;
       }
-
-      // Generate verification token
-      const rawToken = crypto.randomBytes(20).toString("hex");
-      const verificationToken = crypto.createHash("sha256").update(rawToken).digest("hex");
-      const verificationTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-      // Update with tempEmail and token
-      restaurant.tempEmail = newEmail;
-      restaurant.verificationToken = verificationToken;
-      restaurant.verificationTokenExpire = verificationTokenExpire;
-
-      // Send verification email
-      try {
-        const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
-        const verifyUrl = `${clientUrl}/verify-restaurant-email/${rawToken}`;
-        // Import dynamically
-        const { verifyRestaurantEmailTemplate } = await import("../templates/verifyRestaurantEmailTemplate.js");
-        const htmlContent = verifyRestaurantEmailTemplate({ url: verifyUrl, restaurantName: restaurant.name });
-
-        await sendEmail({
-          email: newEmail,
-          subject: "Vérification de votre nouvelle adresse email - Couverto",
-          message: htmlContent,
-        });
-      } catch (emailErr) {
-        console.error("Failed to send update verification email", emailErr);
-      }
-
       // Remove email from body to prevent immediate update
       delete req.body.email;
     }
@@ -2018,6 +1984,44 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
 };
 
 /**
+ * @function requestRestaurantEmailChange
+ * @description Starts a restaurant email change: stores the new address in tempEmail with a verification token
+ * and emails the link. The email only changes once the link is opened (verifyRestaurantEmail).
+ * The caller must persist tempEmail, verificationToken and verificationTokenExpire.
+ * @returns {Promise<string | null>} An error message when the email belongs to another restaurant, null otherwise.
+ */
+const requestRestaurantEmailChange = async (restaurant: any, newEmail: string, userId: any): Promise<string | null> => {
+  const existingConflict = await Restaurant.findOne({
+    email: newEmail,
+    collaborators: { $ne: userId },
+  });
+  if (existingConflict) {
+    return "Cette adresse email est déjà utilisée par un autre restaurant dont vous n'êtes pas propriétaire";
+  }
+
+  const rawToken = crypto.randomBytes(20).toString("hex");
+  restaurant.tempEmail = newEmail;
+  restaurant.verificationToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+  restaurant.verificationTokenExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  try {
+    const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+    const verifyUrl = `${clientUrl}/verify-restaurant-email/${rawToken}`;
+    const { verifyRestaurantEmailTemplate } = await import("../templates/verifyRestaurantEmailTemplate.js");
+    const htmlContent = verifyRestaurantEmailTemplate({ url: verifyUrl, restaurantName: restaurant.name });
+
+    await sendEmail({
+      email: newEmail,
+      subject: "Vérification de votre nouvelle adresse email - Couverto",
+      message: htmlContent,
+    });
+  } catch (emailErr) {
+    console.error("Failed to send update verification email", emailErr);
+  }
+  return null;
+};
+
+/**
  * @function updateRestaurantSettings
  * @description Updates restaurant settings (for collaborators).
  */
@@ -2056,6 +2060,35 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
           error: `Impossible de retirer ces informations car le restaurant est ouvert. Fermez-le d'abord. (Manquant : ${missingFields.join(", ")})`,
         });
         return;
+      }
+    }
+
+    // A new email is applied right away if it was verified with a code (settings screen), otherwise only once
+    // the link sent to it is opened
+    const isEmailChange = typeof email === "string" && email.trim() !== "" && email !== currentRestaurant.email;
+    let emailUpdate: Record<string, unknown> = {};
+    let isEmailPending = false;
+    if (isEmailChange) {
+      const verifiedCode = await VerificationCode.findOneAndDelete({ email: email.toLowerCase(), verified: true });
+      if (verifiedCode) {
+        const existingConflict = await Restaurant.findOne({ email, collaborators: { $ne: req.userId } });
+        if (existingConflict) {
+          res.status(409).json({ error: "Cette adresse email est déjà utilisée par un autre restaurant dont vous n'êtes pas propriétaire" });
+          return;
+        }
+        emailUpdate = { email, tempEmail: null };
+      } else {
+        const emailError = await requestRestaurantEmailChange(currentRestaurant, email, req.userId);
+        if (emailError) {
+          res.status(409).json({ error: emailError });
+          return;
+        }
+        emailUpdate = {
+          tempEmail: currentRestaurant.tempEmail,
+          verificationToken: currentRestaurant.verificationToken,
+          verificationTokenExpire: currentRestaurant.verificationTokenExpire,
+        };
+        isEmailPending = true;
       }
     }
 
@@ -2124,7 +2157,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(phone && { phone }),
-        ...(email && { email }),
+        ...emailUpdate,
         ...(adress && { adress }),
         ...(city && { city }),
         ...(website !== undefined && { website }),
@@ -2159,7 +2192,12 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ restaurant, message: "Paramètres mis à jour" });
+    res.status(200).json({
+      restaurant,
+      message: isEmailPending
+        ? `Paramètres mis à jour. Un lien de vérification a été envoyé à ${email} : l'adresse changera après validation.`
+        : "Paramètres mis à jour",
+    });
   } catch (err: any) {
     if (err.message === "La galerie ne peut contenir que 8 images maximum") {
       res.status(400).json({ error: err.message });

@@ -18,6 +18,9 @@ import { User } from "../src/models/userModel.js";
 import { Restaurant } from "../src/models/restaurantModel.js";
 import { Booking } from "../src/models/bookingModel.js";
 import { Review } from "../src/models/reviewModel.js";
+import { Plan } from "../src/models/planModel.js";
+import { Feature } from "../src/models/featureModel.js";
+import { VerificationCode } from "../src/models/verificationCodeModel.js";
 import { generateAccessToken } from "../src/utils/generateAccessToken.js";
 import { restaurantRoles } from "../src/utils/enums/restaurantRoles.js";
 import { getParisWeekday } from "../src/utils/dateFormatter.js";
@@ -72,6 +75,9 @@ beforeEach(async () => {
   await Restaurant.deleteMany({});
   await Booking.deleteMany({});
   await Review.deleteMany({});
+  await Plan.deleteMany({});
+  await Feature.deleteMany({});
+  await VerificationCode.deleteMany({});
 });
 
 describe("Restaurant email verification", () => {
@@ -92,6 +98,42 @@ describe("Restaurant email verification", () => {
 
     // The link only works once
     expect((await request(app).get(`/api/restaurants/verify-email/${rawToken}`)).status).toBe(400);
+  });
+});
+
+describe("Restaurant email change from the settings", () => {
+  const createSettingsRestaurant = async () => {
+    const { user, token } = await createUser(`owner-settings-${Math.random()}`.replace(".", ""));
+    const feature = await Feature.create({ name: "Paramètres", associatedPages: ["settings"] });
+    const plan = await Plan.create({ name: "Test", price: 0, features: [feature._id] });
+    const restaurant = await createRestaurant(user._id, { plan: plan._id, isClosed: true });
+    return { restaurant, token };
+  };
+
+  it("applies an email verified with a code right away", async () => {
+    const { restaurant, token } = await createSettingsRestaurant();
+    await VerificationCode.create({ email: "verifie@test.fr", code: "123456", verified: true });
+
+    const res = await request(app)
+      .put(`/api/restaurants/${restaurant._id}/settings`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ email: "verifie@test.fr" });
+    expect(res.status).toBe(200);
+    expect((await Restaurant.findById(restaurant._id))?.email).toBe("verifie@test.fr");
+  });
+
+  it("keeps the old email until an unverified address is confirmed", async () => {
+    const { restaurant, token } = await createSettingsRestaurant();
+
+    const res = await request(app)
+      .put(`/api/restaurants/${restaurant._id}/settings`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ email: "pirate@test.fr" });
+    expect(res.status).toBe(200);
+    expect(res.body.message).toContain("lien de vérification");
+    const updated = await Restaurant.findById(restaurant._id);
+    expect(updated?.email).toBe("resto@test.fr");
+    expect(updated?.tempEmail).toBe("pirate@test.fr");
   });
 });
 
