@@ -11,7 +11,7 @@ import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { getPaginationParams } from "../utils/pagination.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { collaboratorEmailTemplate } from "../templates/collaboratorEmail.js";
-import { deleteFile } from "../utils/fileUploadUtils.js";
+import { deleteRestaurantFile } from "../utils/fileUploadUtils.js";
 import { Plan } from "../models/planModel.js";
 import { stripeService } from "../services/stripeService.js";
 import { PendingTransaction } from "../models/pendingTransactionModel.js";
@@ -23,9 +23,12 @@ import {
   convertOpeningHoursToObject,
   getServicePeriod,
   omitProtectedRestaurantFields,
+  PUBLIC_RESTAURANT_PROJECTION,
 } from "../utils/restaurantUtils.js";
 import { formatBookingTime } from "../utils/dateFormatter.js";
 import { Review } from "../models/reviewModel.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function getRestaurants
@@ -36,7 +39,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
   const search = (req.query.search as string) || "";
 
   try {
-    const query = search ? { name: { $regex: search, $options: "i" } } : {};
+    const query = search ? { name: { $regex: escapeRegex(search), $options: "i" } } : {};
 
     const restaurants = await Restaurant.find(query)
       .populate("collaborators", "name forename email avatar")
@@ -51,7 +54,7 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ restaurants, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -396,34 +399,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 
         console.log(`[createRestaurant] Stripe session created: ${stripeSession.id}`);
 
-        // Apply cumulative discount to referrer if applicable
-        if (referrerRestaurant && validReferralCode) {
-          try {
-            if (referrerRestaurant.stripeCustomerId) {
-              // Count current referrals + 1 for the new one being created
-              const currentReferrals = await Restaurant.countDocuments({ referredBy: referrerRestaurant._id });
-              const totalReferrals = currentReferrals + 1;
-              const discountPerReferral = validReferralCode.discountPercentage || 10;
-              const totalDiscount = Math.min(totalReferrals * discountPerReferral, 100);
-
-              // Apply cumulative permanent discount
-              await stripeService.applyCumulativeReferralDiscount(
-                referrerRestaurant.stripeCustomerId,
-                totalDiscount,
-                referrerRestaurant._id.toString(),
-              );
-
-              createLog({
-                message: `Cumulative referral discount updated for '${referrerRestaurant.name}' (${totalDiscount}% off - ${totalReferrals} referrals)`,
-                userId: req.userId,
-                level: logLevels.INFO,
-              });
-            }
-          } catch (discountError) {
-            console.error("Failed to apply referrer discount:", discountError);
-            // Don't fail the restaurant creation if discount fails
-          }
-        }
+        // The referrer is rewarded only once this restaurant is paid and created (see rewardReferrer)
 
         // Update transaction with session ID for tracking
         pendingTransaction.stripeSessionId = stripeSession.id;
@@ -562,7 +538,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
         return;
       }
     }
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -691,7 +667,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
     // Handle Cover Image: Delete old if changed
     if (req.body.coverImage !== undefined && req.body.coverImage !== currentRestaurant.coverImage) {
       if (currentRestaurant.coverImage) {
-        await deleteFile(currentRestaurant.coverImage);
+        await deleteRestaurantFile(currentRestaurant.coverImage, id);
       }
     }
 
@@ -704,7 +680,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
         if (field === "images" && newImages.length > 8) {
           // CLEANUP ON ERROR: Delete the newly added images since we reject them
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
+          await Promise.all(newlyAdded.map((img) => deleteRestaurantFile(img, id)));
 
           throw new Error("La galerie ne peut contenir que 8 images maximum");
         }
@@ -712,7 +688,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
         if (field === "menu" && newImages.length > 8) {
           // CLEANUP ON ERROR
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
+          await Promise.all(newlyAdded.map((img) => deleteRestaurantFile(img, id)));
 
           throw new Error("Le menu ne peut contenir que 8 pages maximum");
         }
@@ -727,7 +703,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
           deletedImages,
         });
 
-        await Promise.all(deletedImages.map((img) => deleteFile(img)));
+        await Promise.all(deletedImages.map((img) => deleteRestaurantFile(img, id)));
       }
     };
 
@@ -857,7 +833,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       res.status(400).json({ error: err.message });
       return;
     }
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -909,13 +885,13 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
     // cleanup all files for this restaurant
     // Since we use shared folders, we must delete files individually
     if (restaurant.coverImage) {
-      await deleteFile(restaurant.coverImage);
+      await deleteRestaurantFile(restaurant.coverImage, id);
     }
     if (restaurant.images && restaurant.images.length > 0) {
-      await Promise.all(restaurant.images.map((img) => deleteFile(img)));
+      await Promise.all(restaurant.images.map((img) => deleteRestaurantFile(img, id)));
     }
     if (restaurant.menu && restaurant.menu.length > 0) {
-      await Promise.all(restaurant.menu.map((img) => deleteFile(img)));
+      await Promise.all(restaurant.menu.map((img) => deleteRestaurantFile(img, id)));
     }
 
     // Cleanup referral data
@@ -944,7 +920,7 @@ export const deleteRestaurant = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json({ message: "Restaurant supprimé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -974,6 +950,15 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
 
     // Check if Stripe is configured
     const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
+
+    // An expired subscription (unpaid after the grace period) must be renewed before reopening
+    if (restaurant.isClosed && restaurant.subscriptionStatus === "expired") {
+      res.status(400).json({
+        error: "Votre abonnement a expiré. Renouvelez-le depuis la page Abonnement pour rouvrir votre restaurant.",
+        requiresPlan: true,
+      });
+      return;
+    }
 
     // Prevent reopening if no active plan (only when Stripe is configured)
     // Sponsor restaurants (100% discount) have plan: null but subscriptionStatus: "active"
@@ -1065,7 +1050,7 @@ export const toggleRestaurantClosed = async (req: Request, res: Response): Promi
       message: restaurant.isClosed ? "server.restaurants.messages.closed" : "server.restaurants.messages.reopened",
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1108,7 +1093,7 @@ export const verifyRestaurantEmail = async (req: Request, res: Response): Promis
       data: { restaurantId: restaurant._id, name: restaurant.name },
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1132,22 +1117,22 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
     if (search) {
       conditions.push({
         $or: [
-          { name: { $regex: search, $options: "i" } },
-          { city: { $regex: search, $options: "i" } },
-          { adress: { $regex: search, $options: "i" } },
+          { name: { $regex: escapeRegex(search), $options: "i" } },
+          { city: { $regex: escapeRegex(search), $options: "i" } },
+          { adress: { $regex: escapeRegex(search), $options: "i" } },
         ],
       });
     }
 
     if (city) {
       conditions.push({
-        $or: [{ city: { $regex: city, $options: "i" } }, { adress: { $regex: city, $options: "i" } }],
+        $or: [{ city: { $regex: escapeRegex(city), $options: "i" } }, { adress: { $regex: escapeRegex(city), $options: "i" } }],
       });
     }
 
     if (adress) {
       conditions.push({
-        $or: [{ city: { $regex: adress, $options: "i" } }, { adress: { $regex: adress, $options: "i" } }],
+        $or: [{ city: { $regex: escapeRegex(adress), $options: "i" } }, { adress: { $regex: escapeRegex(adress), $options: "i" } }],
       });
     }
 
@@ -1155,7 +1140,7 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
       conditions.push({ priceRange });
     }
     if (cuisineType) {
-      conditions.push({ cuisineType: { $regex: cuisineType, $options: "i" } });
+      conditions.push({ cuisineType: { $regex: escapeRegex(cuisineType), $options: "i" } });
     }
     if (guests > 0) {
       conditions.push({ capacity: { $gte: guests } });
@@ -1177,7 +1162,7 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
     const query = conditions.length > 0 ? { $and: conditions } : {};
 
     const restaurants = await Restaurant.find(query)
-      .select("-collaborators -createdAt -updatedAt") // Exclude internal/private fields
+      .select(PUBLIC_RESTAURANT_PROJECTION) // Exclude internal/private fields
       .sort({ rating: -1, name: 1 }) // Sort by rating desc
       .skip(page * size)
       .limit(size);
@@ -1239,7 +1224,7 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
 
     res.status(200).json({ restaurants: result, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1542,7 +1527,7 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       }, {}),
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1554,7 +1539,7 @@ export const getPublicRestaurantById = async (req: Request, res: Response): Prom
   const { id } = req.params;
 
   try {
-    const restaurant = await Restaurant.findById(id).select("-collaborators -createdAt -updatedAt"); // Exclude internal/private fields
+    const restaurant = await Restaurant.findById(id).select(PUBLIC_RESTAURANT_PROJECTION); // Exclude internal/private fields
 
     if (!restaurant) {
       res.status(404).json({ error: "Ressource introuvable" });
@@ -1570,7 +1555,7 @@ export const getPublicRestaurantById = async (req: Request, res: Response): Prom
     res.status(200).json({ restaurant: restaurantWithStatus });
   } catch (err: any) {
     console.error(`[getPublicRestaurantById] Error:`, err);
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1581,7 +1566,7 @@ export const getPublicRestaurantById = async (req: Request, res: Response): Prom
 export const getMyRestaurants = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurants = await Restaurant.find({ collaborators: req.userId })
-      .select("-collaborators -createdAt -updatedAt")
+      .select("-collaborators -createdAt -updatedAt -apiKey -verificationToken -verificationTokenExpire")
       .sort({ name: 1 });
 
     const restaurantsWithStatus = restaurants.map((r) => {
@@ -1593,7 +1578,7 @@ export const getMyRestaurants = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json({ restaurants: restaurantsWithStatus });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1713,7 +1698,7 @@ export const getRestaurantById = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({ restaurant, userRole, availablePages: Array.from(availablePages) });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1843,7 +1828,7 @@ export const getRestaurantStats = async (req: Request, res: Response): Promise<v
       dayBookings,
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1873,7 +1858,7 @@ export const getCollaborators = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json({ collaborators: collaboratorsWithRoles });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1937,7 +1922,7 @@ export const addCollaborator = async (req: Request, res: Response): Promise<void
 
     res.status(200).json({ message: "Collaborateur ajouté" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2025,7 +2010,7 @@ export const removeCollaborator = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ message: "Collaborateur retiré" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2074,7 +2059,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
     // Handle Cover Image: Delete old if changed
     if (coverImage !== undefined && coverImage !== currentRestaurant.coverImage) {
       if (currentRestaurant.coverImage) {
-        await deleteFile(currentRestaurant.coverImage);
+        await deleteRestaurantFile(currentRestaurant.coverImage, id);
       }
     }
 
@@ -2088,7 +2073,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         if (field === "images" && newImages.length > 8) {
           // CLEANUP ON ERROR: Delete the newly added images since we reject them
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
+          await Promise.all(newlyAdded.map((img) => deleteRestaurantFile(img, id)));
 
           throw new Error("La galerie ne peut contenir que 8 images maximum");
         }
@@ -2097,7 +2082,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         if (field === "menu" && newImages.length > 8) {
           // CLEANUP ON ERROR
           const newlyAdded = newImages.filter((img) => !oldImages.includes(img));
-          await Promise.all(newlyAdded.map((img) => deleteFile(img)));
+          await Promise.all(newlyAdded.map((img) => deleteRestaurantFile(img, id)));
 
           throw new Error("Le menu ne peut contenir que 8 pages maximum");
         }
@@ -2111,7 +2096,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
           deletedCount: deletedImages.length,
         });
 
-        await Promise.all(deletedImages.map((img) => deleteFile(img)));
+        await Promise.all(deletedImages.map((img) => deleteRestaurantFile(img, id)));
       }
     };
 
@@ -2181,7 +2166,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
       res.status(400).json({ error: err.message });
       return;
     }
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2250,7 +2235,7 @@ export const updateCollaboratorRole = async (req: Request, res: Response): Promi
 
     res.status(200).json({ message: "Rôle mis à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 /**
@@ -2270,7 +2255,7 @@ export const checkRestaurantUniqueness = async (req: Request, res: Response): Pr
       // but it's good practice to avoid confusion.
       // However, the wizard appends Date.now(), so let's just check exact name match or minimal slug match if we want strictness.
       // For now, let's just check if a restaurant with this exact name exists, might be less confusing.
-      const nameExists = await Restaurant.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+      const nameExists = await Restaurant.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, "i") } });
       if (nameExists) {
         errors.name = "Ce nom de restaurant est déjà utilisé";
       }
@@ -2305,7 +2290,7 @@ export const checkRestaurantUniqueness = async (req: Request, res: Response): Pr
     // ... checkRestaurantUniqueness checks ...
     res.status(200).json({ unique: true });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2355,7 +2340,7 @@ export const sendRestaurantVerificationCode = async (req: Request, res: Response
 
     res.status(200).json({ message: "Code envoyé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2387,7 +2372,7 @@ export const verifyRestaurantVerificationCode = async (req: Request, res: Respon
 
     res.status(200).json({ message: "Code vérifié", verified: true });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2411,7 +2396,7 @@ export const generateApiKey = async (req: Request, res: Response): Promise<void>
 
     // Hash it with HMAC-SHA256 for storage
     const hashedKey = crypto
-      .createHmac("sha256", process.env.API_KEY_SECRET || "couverto-api-key-secret")
+      .createHmac("sha256", process.env.API_KEY_SECRET as string)
       .update(plainKey)
       .digest("hex");
 
@@ -2432,7 +2417,7 @@ export const generateApiKey = async (req: Request, res: Response): Promise<void>
       message: "Clé API générée. Conservez-la précieusement, elle ne sera plus affichée.",
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2465,7 +2450,7 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
 
     res.status(200).json({ message: "Clé API révoquée" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2552,7 +2537,7 @@ export const toggleTodayClosure = async (req: Request, res: Response): Promise<v
       });
     }
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -2617,6 +2602,6 @@ export const toggleTableClosure = async (req: Request, res: Response): Promise<v
       });
     }
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

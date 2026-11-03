@@ -92,3 +92,32 @@ export const deleteDirectory = (dirPath: string): void => {
     fs.rmSync(fullPath, { recursive: true, force: true });
   }
 };
+
+// Bucket folders restaurant users can upload to (see uploadRoutes)
+const RESTAURANT_UPLOAD_FOLDERS = ["restaurants/", "temp/"];
+
+/**
+ * Deletes a restaurant image (cover, gallery, menu) only if it is safe to do so.
+ * Image lists come from the client, so a URL may point to someone else's file (another restaurant's photo,
+ * a user avatar). The file is deleted only when it lives in a restaurant upload folder of our bucket and no
+ * other restaurant references it.
+ * @param fileUrl The URL of the file to delete.
+ * @param restaurantId The restaurant releasing the file.
+ */
+export const deleteRestaurantFile = async (fileUrl: string, restaurantId: string): Promise<void> => {
+  if (!fileUrl || typeof fileUrl !== "string") return;
+
+  const bucketPrefix = `https://storage.googleapis.com/${bucket.name}/`;
+  if (!fileUrl.startsWith(bucketPrefix)) return;
+  const storagePath = decodeURIComponent(fileUrl.slice(bucketPrefix.length));
+  if (storagePath.includes("..") || !RESTAURANT_UPLOAD_FOLDERS.some((folder) => storagePath.startsWith(folder))) return;
+
+  const { Restaurant } = await import("../models/restaurantModel.js");
+  const usedElsewhere = await Restaurant.exists({
+    _id: { $ne: restaurantId },
+    $or: [{ coverImage: fileUrl }, { images: fileUrl }, { menu: fileUrl }],
+  });
+  if (usedElsewhere) return;
+
+  await deleteFile(fileUrl);
+};

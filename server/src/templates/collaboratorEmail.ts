@@ -1,4 +1,5 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 interface CollaboratorEmailProps {
   name: string;
@@ -8,6 +9,10 @@ interface CollaboratorEmailProps {
 }
 
 export const collaboratorEmailTemplate = ({ name, restaurantName, role, action }: CollaboratorEmailProps): string => {
+  // User-provided values are escaped before being inserted into the HTML
+  name = escapeHtml(name);
+  restaurantName = escapeHtml(restaurantName);
+  role = escapeHtml(role);
   const content =
     action === "added"
       ? `

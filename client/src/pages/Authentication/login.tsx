@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { useAuthContext } from "@/contexts/authContext";
+import { safeRedirect } from "@/lib/utils";
 import { axiosConfig } from "@/config/axiosConfig";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -50,7 +51,7 @@ export const Login = () => {
 
       const params = new URLSearchParams(window.location.search);
       const redirect = params.get("redirect");
-      navigate(redirect || "/");
+      navigate(safeRedirect(redirect));
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Identifiants invalides");
     } finally {

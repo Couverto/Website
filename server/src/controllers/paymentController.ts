@@ -9,6 +9,7 @@ import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function getRestaurantPayments
@@ -22,7 +23,7 @@ export const getRestaurantPayments = async (req: Request, res: Response): Promis
 
     res.status(200).json({ payments });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -44,7 +45,7 @@ export const getPayments = async (req: Request, res: Response): Promise<void> =>
     const count = await Payment.countDocuments({});
     res.status(200).json({ payments, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -111,7 +112,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
             return;
           }
         } catch (stripeError: any) {
-          res.status(500).json({ error: "Erreur lors de la mise à jour Stripe: " + stripeError.message });
+          sendServerError(res, stripeError);
           return;
         }
       } else {
@@ -120,7 +121,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
           await stripeService.cancelSubscription(restaurant.stripeSubscriptionId);
           restaurant.stripeSubscriptionId = null as any;
         } catch (stripeError: any) {
-          res.status(500).json({ error: "Erreur lors de l'annulation Stripe: " + stripeError.message });
+          sendServerError(res, stripeError);
           return;
         }
       }
@@ -193,7 +194,7 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       message: "Paiement enregistré",
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -276,7 +277,7 @@ export const updateSubscription = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ restaurant, message: "Abonnement mis à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -304,7 +305,7 @@ export const getSubscription = async (req: Request, res: Response): Promise<void
       referralCodeUsed: restaurant.referralCodeUsed || null,
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -362,6 +363,6 @@ export const cancelSubscription = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ message: "Abonnement résilié. Le restaurant est maintenant fermé." });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

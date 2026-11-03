@@ -5,6 +5,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { User } from "../models/userModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function createInvitation
@@ -34,7 +35,7 @@ export const createInvitation = async (req: Request, res: Response): Promise<voi
       message: "Invitation créée",
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -56,7 +57,7 @@ export const getInvitations = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ invitations });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -86,7 +87,7 @@ export const deleteInvitation = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json({ message: "Invitation supprimée" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -119,7 +120,7 @@ export const getInvitationInfo = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({ invitation });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -187,6 +188,6 @@ export const acceptInvitation = async (req: Request, res: Response): Promise<voi
       },
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

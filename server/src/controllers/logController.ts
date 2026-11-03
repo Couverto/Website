@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Log } from "../models/logModel.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { getPaginationParams } from "../utils/pagination.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * Retrieves logs from the database.
@@ -23,7 +24,7 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ logs, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -75,7 +76,7 @@ export const deleteLog = async (req: Request, res: Response): Promise<void> => {
     }
     res.status(200).json({ message: "Log supprimé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -94,7 +95,7 @@ export const deleteAllLogs = async (req: Request, res: Response): Promise<void> 
     });
     res.status(200).json({ message: "Logs effacés" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 

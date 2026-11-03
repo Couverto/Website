@@ -19,4 +19,5 @@ export interface IUser extends Document {
   verificationToken?: string;
   verificationTokenExpire?: Date;
   notificationSound?: string;
+  tokenVersion?: number;
 }

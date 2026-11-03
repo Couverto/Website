@@ -38,6 +38,7 @@ import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 import { verifyFeatureAccess } from "../middlewares/verifyFeatureAccess.js";
+import { sendCodeLimiter, verifyCodeEmailLimiter, verifyCodeIpLimiter } from "../middlewares/rateLimiters.js";
 
 import { finalizePayment } from "../controllers/finalizePaymentController.js";
 
@@ -47,8 +48,14 @@ export const restaurantRouter = express.Router();
 restaurantRouter.get("/public", getPublicRestaurants);
 restaurantRouter.get("/public/stats", getPublicStats);
 restaurantRouter.get("/check-uniqueness", verifyToken(), checkRestaurantUniqueness);
-restaurantRouter.post("/send-verification-code", verifyToken(), sendRestaurantVerificationCode);
-restaurantRouter.post("/verify-verification-code", verifyToken(), verifyRestaurantVerificationCode);
+restaurantRouter.post("/send-verification-code", sendCodeLimiter, verifyToken(), sendRestaurantVerificationCode);
+restaurantRouter.post(
+  "/verify-verification-code",
+  verifyCodeIpLimiter,
+  verifyCodeEmailLimiter,
+  verifyToken(),
+  verifyRestaurantVerificationCode,
+);
 restaurantRouter.get("/public/:id", getPublicRestaurantById);
 restaurantRouter.get("/public/:id/slots", getRestaurantSlots);
 

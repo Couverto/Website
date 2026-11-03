@@ -1,4 +1,5 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 interface RestaurantBookingNotificationProps {
   customerName: string;
@@ -23,6 +24,12 @@ export const restaurantBookingNotificationTemplate = ({
   restaurantName,
   restaurantId,
 }: RestaurantBookingNotificationProps): string => {
+  // User-provided values are escaped before being inserted into the HTML
+  customerName = escapeHtml(customerName);
+  customerEmail = escapeHtml(customerEmail);
+  customerPhone = escapeHtml(customerPhone);
+  notes = escapeHtml(notes);
+  restaurantName = escapeHtml(restaurantName);
   const guestsLabel = guests === 1 ? "convive" : "convives";
 
   const content = `

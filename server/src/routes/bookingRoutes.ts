@@ -16,6 +16,7 @@ import {
   cancelBookingByToken,
 } from "../controllers/bookingController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { guestBookingLimiter } from "../middlewares/rateLimiters.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 
 export const bookingRouter = express.Router();
@@ -25,7 +26,7 @@ export const bookingRouter = express.Router();
  * @desc Create a SetupIntent for a Bank Imprint
  * @access Public
  */
-bookingRouter.post("/setup-intent", createSetupIntent);
+bookingRouter.post("/setup-intent", guestBookingLimiter, createSetupIntent);
 
 /**
  * @route POST /api/bookings
@@ -33,7 +34,7 @@ bookingRouter.post("/setup-intent", createSetupIntent);
  * @access Public
  */
 bookingRouter.post("/", verifyToken(), createBooking);
-bookingRouter.post("/guest", createBooking); // No middleware, controller handles null userId
+bookingRouter.post("/guest", guestBookingLimiter, createBooking); // No middleware, controller handles null userId
 
 /**
  * @route GET /api/bookings/my-bookings
@@ -68,7 +69,7 @@ bookingRouter.patch("/:id/cancel", verifyToken(), cancelBooking);
  * @desc Cancel a booking via public token (guest)
  * @access Public
  */
-bookingRouter.patch("/public/cancel/:token", cancelBookingByToken);
+bookingRouter.patch("/public/cancel/:token", guestBookingLimiter, cancelBookingByToken);
 
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 

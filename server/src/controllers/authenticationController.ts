@@ -15,6 +15,7 @@ import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
 import { sendDiscordNotification } from "../utils/discordUtils.js";
 import { firebaseAuth } from "../lib/firebase.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * Registers a new user.
@@ -119,7 +120,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
     return;
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
     return;
   }
 };
@@ -135,25 +136,22 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  if (typeof password !== "string" || (username && typeof username !== "string") || (email && typeof email !== "string")) {
+    res.status(400).json({ error: "Requête invalide" });
+    return;
+  }
+
+  // Same answer whatever the reason (unknown account, wrong password, Google-only account) to avoid account enumeration
+  const invalidCredentials = () =>
+    res.status(400).json({ error: "Identifiants invalides. Si vous vous êtes inscrit avec Google, utilisez le bouton Google." });
+
   try {
     const user = await User.findOne({
       $or: [...(username ? [{ username: username.toLowerCase() }] : []), ...(email ? [{ email: email.toLowerCase() }] : [])],
     }).select("+password");
 
-    if (!user) {
-      res.status(400).json({ error: "Utilisateur introuvable" });
-      return;
-    }
-
-    if (!user.isVerified) {
-      res.status(403).json({ error: "Veuillez vérifier votre email avant de vous connecter." });
-      return;
-    }
-
-    if (!user.password && user.auth_type === authTypes.GOOGLE) {
-      res.status(400).json({
-        error: "Cet email est associé à un compte Google. Aucun mot de passe n'a été défini pour ce compte.",
-      });
+    if (!user || !user.password) {
+      invalidCredentials();
       return;
     }
 
@@ -164,11 +162,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         userId: user._id,
         level: logLevels.ERROR,
       });
-      res.status(400).json({ error: "Identifiants invalides" });
+      invalidCredentials();
       return;
     }
 
-    const accessToken = generateAccessToken(user._id);
+    // Only revealed once the password is proven
+    if (!user.isVerified) {
+      res.status(403).json({ error: "Veuillez vérifier votre email avant de vous connecter." });
+      return;
+    }
+
+    const accessToken = generateAccessToken(user._id, user.tokenVersion);
 
     const { password: _password, ...userWithoutPassword } = user.toObject();
     const userWithHasPassword = { ...userWithoutPassword, hasPassword: !!user.password };
@@ -181,7 +185,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     res.status(201).json({ user: userWithHasPassword, message: "Connexion réussie", accessToken });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -216,7 +220,7 @@ export const getConnectedUser = async (req: Request, res: Response): Promise<voi
     const { password: _password, ...userWithoutPassword } = userObj;
     res.status(200).json({ ...userWithoutPassword, hasPassword: !!user.password });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -320,7 +324,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
       });
     }
 
-    const accessToken = generateAccessToken(user._id);
+    const accessToken = generateAccessToken(user._id, user.tokenVersion);
 
     createLog({
       message: `User ${user.username} logged in with Google`,
@@ -334,7 +338,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
 
     res.status(201).json({ user: userWithHasPassword, message: "Connexion réussie", accessToken });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 /**
@@ -343,10 +347,18 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   const { email } = req.body;
 
+  // Same answer whether or not the account exists (no account enumeration)
+  const genericAnswer = { success: true, message: "Si un compte existe pour cette adresse, un email de réinitialisation a été envoyé." };
+
+  if (!email || typeof email !== "string") {
+    res.status(422).json({ error: "Champs requis manquants" });
+    return;
+  }
+
   try {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      res.status(404).json({ error: "Email introuvable" });
+      res.status(200).json(genericAnswer);
       return;
     }
 
@@ -378,7 +390,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
         level: logLevels.INFO,
       });
 
-      res.status(200).json({ success: true, data: "Email sent" });
+      res.status(200).json(genericAnswer);
     } catch (err) {
       console.error("Forgot Password Email Error:", err);
       user.resetPasswordToken = undefined;
@@ -387,7 +399,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       res.status(500).json({ error: "Email could not be sent" });
     }
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -397,6 +409,13 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
   const { resetToken } = req.params;
   const { password, confirmPassword } = req.body;
+
+  if (typeof password !== "string" || !Constants.REGEX_PASSWORD.test(password)) {
+    res.status(400).json({
+      error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial",
+    });
+    return;
+  }
 
   if (password !== confirmPassword) {
     res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
@@ -420,6 +439,8 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     user.isVerified = true;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
+    // Sign out every existing session
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
 
     await user.save();
 
@@ -429,7 +450,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       level: logLevels.INFO,
     });
 
-    const accessToken = generateAccessToken(user._id);
+    const accessToken = generateAccessToken(user._id, user.tokenVersion);
 
     res.status(201).json({
       success: true,
@@ -446,7 +467,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -475,7 +496,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
     await user.save();
 
-    const accessToken = generateAccessToken(user._id);
+    const accessToken = generateAccessToken(user._id, user.tokenVersion);
 
     // Send Welcome Email now that they are verified
     try {
@@ -499,6 +520,6 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
       user: { ...userWithoutPassword, hasPassword: !!user.password },
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

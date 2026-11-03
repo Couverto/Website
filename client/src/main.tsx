@@ -8,6 +8,7 @@ import { ThemeProvider } from "./providers/theme-provider.js";
 import { SocketContextProvider } from "./contexts/socketContext.js";
 import { ConfigProvider } from "./contexts/configContext.js";
 import { AppInitializer } from "./initializer.js";
+import { ServerConfigError } from "./components/ServerConfigError.js";
 
 // if (!import.meta.env.VITE_API_URL) {
 //   throw new Error("VITE_API_URL is not defined in the environment file");
@@ -19,6 +20,7 @@ if (!rootElement) {
 } else {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
+      <ServerConfigError />
       <ConfigProvider>
         <AppInitializer>
           <AuthContextProvider>

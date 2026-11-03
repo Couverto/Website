@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import { User } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import { userRoles } from "../utils/enums/userRoles.js";
@@ -11,6 +12,8 @@ import { Constants } from "../constants/constants.js";
 import { getPaginationParams } from "../utils/pagination.js";
 import { deleteFile } from "../utils/fileUploadUtils.js";
 import { VerificationCode } from "../models/verificationCodeModel.js";
+import { generateAccessToken } from "../utils/generateAccessToken.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 // Fields a user can change on their own account (admins can additionally set role and password)
 const SELF_UPDATABLE_USER_FIELDS = ["name", "forename", "email", "username", "phone", "notificationSound"];
@@ -33,7 +36,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ users, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -95,7 +98,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(201).json({ user: userWithoutPassword, message: "Utilisateur créé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -183,6 +186,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
       if (password) {
         updates.password = await bcrypt.hash(password, 10);
+        updates.$inc = { tokenVersion: 1 }; // Sign out the user's existing sessions
       }
 
       createLog({
@@ -203,7 +207,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ user: userWithoutPassword, message: "Utilisateur mis à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -233,7 +237,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({ user, message: "Utilisateur supprimé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -296,7 +300,8 @@ export const updatePassword = async (req: Request, res: Response): Promise<void>
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await User.updateOne({ _id: id }, { password: hashedPassword });
+    // Bumping tokenVersion signs out every other session; this one gets a fresh token
+    const updatedUser = await User.findByIdAndUpdate(id, { password: hashedPassword, $inc: { tokenVersion: 1 } }, { new: true });
 
     createLog({
       message: `Password updated for user ${id}`,
@@ -304,9 +309,12 @@ export const updatePassword = async (req: Request, res: Response): Promise<void>
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ message: "Mot de passe mis à jour" });
+    res.status(200).json({
+      message: "Mot de passe mis à jour",
+      accessToken: generateAccessToken(updatedUser!._id, updatedUser!.tokenVersion),
+    });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -350,7 +358,7 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ message: "Utilisateur supprimé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -385,42 +393,36 @@ export const getAuthTypesStat = async (req: Request, res: Response): Promise<voi
 
     res.status(200).json(chartData);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
 /**
  * @function searchUsers
- * @description Searches users by name, forename, email or username.
- * @query q - Search query string
+ * @description Finds a user by exact email address (used to add a collaborator).
+ * @query q - Complete email address
  * @query exclude - Comma-separated user IDs to exclude
  * @returns {Object} JSON response with matching users.
  */
 export const searchUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const query = (req.query.q as string) || "";
-    const excludeIds = (req.query.exclude as string)?.split(",").filter(Boolean) || [];
+    // Exact email match only: any logged-in user can call this, so it must not allow browsing the user base
+    const email = typeof req.query.q === "string" ? req.query.q.trim().toLowerCase() : "";
+    const excludeIds = (typeof req.query.exclude === "string" ? req.query.exclude.split(",") : []).filter((id) =>
+      mongoose.Types.ObjectId.isValid(id),
+    );
 
-    if (query.length < 2) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       res.status(200).json({ users: [] });
       return;
     }
 
-    const searchRegex = new RegExp(query, "i");
-
-    const users = await User.find({
-      $and: [
-        { _id: { $nin: excludeIds } },
-        {
-          $or: [{ name: searchRegex }, { forename: searchRegex }, { email: searchRegex }, { username: searchRegex }],
-        },
-      ],
-    })
+    const users = await User.find({ email, _id: { $nin: excludeIds } })
       .select("_id name forename email username avatar")
-      .limit(10);
+      .limit(1);
 
     res.status(200).json({ users });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

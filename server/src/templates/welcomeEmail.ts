@@ -1,10 +1,13 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 interface WelcomeEmailProps {
   name: string;
 }
 
 export const welcomeEmailTemplate = ({ name }: WelcomeEmailProps): string => {
+  // User-provided values are escaped before being inserted into the HTML
+  name = escapeHtml(name);
   const content = `
     <h2>Bienvenue ${name} ! 🎉</h2>
     

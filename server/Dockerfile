@@ -35,8 +35,11 @@ RUN pnpm install --frozen-lockfile --prod
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
-# Create uploads directory
-RUN mkdir -p uploads
+# Create uploads directory, owned by the unprivileged runtime user
+RUN mkdir -p uploads && chown node:node uploads
+
+# Do not run the API as root
+USER node
 
 # Expose port
 EXPOSE 3001

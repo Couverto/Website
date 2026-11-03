@@ -30,9 +30,9 @@ export function initSockets(httpServer: http.Server): SocketIOServer {
       const token = socket.handshake.auth?.token;
       if (typeof token !== "string") return next(new Error("Unauthorized"));
 
-      const decoded = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN as string) as JwtPayload & { id: string };
-      const user = await User.findById(decoded.id).select("_id role");
-      if (!user) return next(new Error("Unauthorized"));
+      const decoded = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN as string) as JwtPayload & { id: string; v?: number };
+      const user = await User.findById(decoded.id).select("_id role tokenVersion");
+      if (!user || (decoded.v ?? 0) !== (user.tokenVersion ?? 0)) return next(new Error("Unauthorized"));
 
       socket.data.userId = user._id.toString();
       socket.data.isAdmin = user.role === userRoles.ADMIN;

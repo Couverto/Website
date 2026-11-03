@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "../contexts/authContext";
+import { safeRedirect } from "@/lib/utils";
 
 export const ProtectedRoute = ({ authRequired, role, children }: { authRequired: boolean; role?: String; children: ReactNode }) => {
   const { authUser } = useAuthContext();
@@ -17,7 +18,7 @@ export const ProtectedRoute = ({ authRequired, role, children }: { authRequired:
 
   if (!authRequired && authUser) {
     const params = new URLSearchParams(location.search);
-    const redirect = location.state?.redirect || params.get("redirect") || "/";
+    const redirect = safeRedirect(location.state?.redirect || params.get("redirect"));
     return <Navigate to={redirect} replace />;
   }
 

@@ -2,6 +2,7 @@ import { app } from "@/lib/firebase";
 import { Button } from "../ui/button";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { axiosConfig } from "@/config/axiosConfig";
+import { safeRedirect } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/authContext";
 import { toast } from "sonner";
@@ -34,7 +35,7 @@ export function OAuth({ message }: OauthProps) {
 
         const params = new URLSearchParams(window.location.search);
         const redirect = params.get("redirect");
-        navigate(redirect || "/");
+        navigate(safeRedirect(redirect));
       } catch (err: any) {
         toast.error(err?.response?.data?.error || "Erreur d'authentification");
       }

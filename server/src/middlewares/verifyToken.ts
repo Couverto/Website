@@ -5,9 +5,11 @@ import { createLog } from "../controllers/logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { userRoles } from "../utils/enums/userRoles.js";
 import mongoose from "mongoose";
+import { sendServerError } from "../utils/sendServerError.js";
 
 interface TokenPayload extends JwtPayload {
   id: string;
+  v?: number;
 }
 
 interface VerifyTokenOptions {
@@ -32,8 +34,9 @@ export const verifyToken = ({ role }: VerifyTokenOptions = {}) => {
       const decoded = jwt.verify(token, process.env.SECRET_ACCESS_TOKEN as string) as TokenPayload;
 
       const user = await User.findOne({ _id: decoded.id });
-      if (!user) {
-        res.status(400).json({ error: "Utilisateur introuvable" });
+      // Unknown user or revoked token (password changed since it was issued)
+      if (!user || (decoded.v ?? 0) !== (user.tokenVersion ?? 0)) {
+        res.status(401).json({ error: "Session expirée" });
         return;
       }
 
@@ -54,10 +57,10 @@ export const verifyToken = ({ role }: VerifyTokenOptions = {}) => {
       next();
     } catch (err: any) {
       if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
-        res.status(403).json({ error: "Jeton d'accès invalide" });
+        res.status(401).json({ error: "Session expirée" });
         return;
       }
-      res.status(500).json({ error: err.message });
+      sendServerError(res, err);
     }
   };
 };

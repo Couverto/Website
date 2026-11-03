@@ -3,6 +3,12 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { stripeService } from "../services/stripeService.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { rewardReferrer } from "../services/referralService.js";
+import { Constants } from "../constants/constants.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import { baseEmailLayout } from "../templates/baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
+import { formatShortDate } from "../utils/dateFormatter.js";
 
 export const handleStripeWebhook = async (req: Request, res: Response) => {
   const sig = req.headers["stripe-signature"] as string;
@@ -98,26 +104,8 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
           await restaurant.save();
           console.log(`[Stripe Webhook] Restaurant created from pending transaction: ${restaurant._id}`);
 
-          // Handle referral linking
-          const referredBy = pending.payload.referredBy;
-
-          if (referredBy) {
-            try {
-              // Add new restaurant to referrer's referrals list
-              await Restaurant.findByIdAndUpdate(referredBy, {
-                $push: { referrals: restaurant._id },
-              });
-              console.log(`[Stripe Webhook] Added restaurant ${restaurant.name} to referrer's referrals`);
-
-              createLog({
-                message: `Restaurant '${restaurant.name}' linked to referrer (ID: ${referredBy})`,
-                userId: pending.userId,
-                level: logLevels.INFO,
-              });
-            } catch (refError) {
-              console.error("[Stripe Webhook] Error handling referral linking:", refError);
-            }
-          }
+          // Link to the referrer and update its discount, now that the payment went through
+          await rewardReferrer(restaurant, pending.userId);
 
           // Generate referral code for the new restaurant
           try {
@@ -260,9 +248,13 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         // Update Restaurant Subscription Validity
         if (invoice.lines?.data?.[0]?.period?.end) {
           const newEndDate = new Date(invoice.lines.data[0].period.end * 1000);
+          // Reopen only a restaurant that was closed for non-payment (never one closed on purpose by its owner)
+          if (restaurant.subscriptionStatus === "expired") {
+            restaurant.isClosed = false;
+          }
           restaurant.subscriptionEndDate = newEndDate;
           restaurant.subscriptionStatus = "active";
-          restaurant.isClosed = false; // Ensure restaurant is open if paid
+          restaurant.paymentFailedAt = null;
 
           // Also update plan reference if changed via invoice
           if (planId && String(restaurant.plan) !== String(planId)) {
@@ -280,6 +272,75 @@ export const handleStripeWebhook = async (req: Request, res: Response) => {
         });
       } catch (error: any) {
         console.error("[Stripe Webhook] Error processing invoice payment:", error);
+      }
+      break;
+    }
+    case "invoice.payment_failed": {
+      // The restaurant stays open during the grace period; the owner is warned so they can update their card
+      const invoice = event.data.object as any;
+      try {
+        // Recent Stripe API versions moved the subscription id under invoice.parent
+        const subscriptionId = invoice.subscription ?? invoice.parent?.subscription_details?.subscription;
+        let restaurant = subscriptionId ? await Restaurant.findOne({ stripeSubscriptionId: subscriptionId }) : null;
+        if (!restaurant && invoice.customer) {
+          restaurant = await Restaurant.findOne({ stripeCustomerId: invoice.customer });
+        }
+        if (!restaurant) break;
+
+        const alreadyWarned = !!restaurant.paymentFailedAt;
+        restaurant.paymentFailedAt = new Date();
+        await restaurant.save();
+
+        createLog({
+          message: `Subscription payment failed for restaurant '${restaurant.name}'`,
+          userId: (restaurant.collaborators?.[0] as any) || restaurant._id,
+          level: logLevels.WARN,
+        });
+
+        if (!alreadyWarned && restaurant.email) {
+          const periodEnd = restaurant.subscriptionEndDate ? new Date(restaurant.subscriptionEndDate) : new Date();
+          const closingDate = new Date(periodEnd.getTime() + Constants.SUBSCRIPTION_GRACE_DAYS * 24 * 60 * 60 * 1000);
+          await sendEmail({
+            email: restaurant.email,
+            subject: `Échec du paiement de votre abonnement - ${restaurant.name}`,
+            message: baseEmailLayout(
+              `<h2>Le paiement de votre abonnement a échoué</h2>
+              <p>Nous n'avons pas pu prélever l'abonnement de <strong>${escapeHtml(restaurant.name)}</strong>.</p>
+              <p>Mettez à jour votre moyen de paiement avant le <strong>${formatShortDate(closingDate)}</strong>.
+              Passé cette date, votre restaurant sera fermé et n'acceptera plus de réservations.</p>`,
+              "Échec du paiement",
+            ),
+          }).catch((mailErr) => console.error("[Stripe Webhook] Payment failed email error:", mailErr));
+        }
+      } catch (error) {
+        console.error("[Stripe Webhook] Error processing failed invoice:", error);
+      }
+      break;
+    }
+    case "customer.subscription.deleted": {
+      // Subscription ended (cancelled or unpaid after Stripe retries). The restaurant is closed by the
+      // subscription expiry job once the grace period is over.
+      const subscription = event.data.object as any;
+      try {
+        const restaurant = await Restaurant.findOne({ stripeSubscriptionId: subscription.id });
+        if (!restaurant) break;
+
+        restaurant.subscriptionStatus = "cancelled";
+        restaurant.stripeSubscriptionId = null as any; // A new checkout is needed to resubscribe
+        // Recent Stripe API versions moved current_period_end to the subscription items
+        const periodEnd = subscription.current_period_end ?? subscription.items?.data?.[0]?.current_period_end;
+        if (periodEnd) {
+          restaurant.subscriptionEndDate = new Date(periodEnd * 1000);
+        }
+        await restaurant.save();
+
+        createLog({
+          message: `Stripe subscription ended for restaurant '${restaurant.name}'`,
+          userId: (restaurant.collaborators?.[0] as any) || restaurant._id,
+          level: logLevels.WARN,
+        });
+      } catch (error) {
+        console.error("[Stripe Webhook] Error processing deleted subscription:", error);
       }
       break;
     }

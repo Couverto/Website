@@ -9,6 +9,7 @@ import {
   deleteUnusedSponsorCode,
 } from "../controllers/referralController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
+import { referralLimiter } from "../middlewares/rateLimiters.js";
 import { verifyCollaborator } from "../middlewares/verifyCollaborator.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 import { userRoles } from "../utils/enums/userRoles.js";
@@ -16,7 +17,7 @@ import { userRoles } from "../utils/enums/userRoles.js";
 export const referralRouter = express.Router();
 
 // Public route - Validate a referral code (for wizard)
-referralRouter.post("/validate", validateReferralCode);
+referralRouter.post("/validate", referralLimiter, validateReferralCode);
 
 // Restaurant admin routes
 referralRouter.get("/restaurant/:id", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), getReferralInfo);

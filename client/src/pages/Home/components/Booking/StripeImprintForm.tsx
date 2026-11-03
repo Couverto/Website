@@ -54,6 +54,10 @@ export const StripeImprintForm = ({ amount, onSuccess, onCancel }: StripeImprint
           Afin de valider votre réservation, une empreinte bancaire de <strong>{amount}€</strong> est nécessaire. Aucun montant ne sera
           prélevé immédiatement. Cette somme sert de caution en cas de non-présentation (No-Show).
         </p>
+        <p className="text-sm text-muted-foreground">
+          Annulation possible en ligne jusqu'à <strong>24 h avant</strong> la réservation. Passé ce délai, contactez directement le
+          restaurant.
+        </p>
       </div>
 
       <div className="p-3 border border-border rounded-xl bg-background/50">

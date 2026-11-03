@@ -6,6 +6,7 @@ import { Log } from "../models/logModel.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { createLog } from "./logController.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 export const getAdminStats = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -131,7 +132,7 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res, error);
   }
 };
 
@@ -151,6 +152,6 @@ export const getPublicStats = async (req: Request, res: Response): Promise<void>
       cities: totalCities.length,
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res, error);
   }
 };

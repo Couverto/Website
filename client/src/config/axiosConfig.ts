@@ -20,3 +20,16 @@ axiosConfig.interceptors.request.use(
     return Promise.reject(error);
   },
 );
+
+// Fired when the API runs in configuration-error mode (see ServerConfigError)
+export const SERVER_MISCONFIGURED_EVENT = "server-misconfigured";
+
+axiosConfig.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 503 && error.response.data?.code === "SERVER_MISCONFIGURED") {
+      window.dispatchEvent(new CustomEvent(SERVER_MISCONFIGURED_EVENT, { detail: error.response.data }));
+    }
+    return Promise.reject(error);
+  },
+);
