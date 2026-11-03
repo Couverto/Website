@@ -28,6 +28,8 @@ import { DataTable } from "@/components/customs/dataTable";
 import { getColumns as getCollaboratorColumns } from "./columns";
 import { useAuthContext } from "@/contexts/authContext";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 interface Collaborator {
   _id: string;
   name: string;
@@ -162,14 +164,15 @@ export const RestaurantCollaborators = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSearch = useCallback(
     debounce(async (query: string, excludeIds: string[]) => {
-      if (query.length < 2) {
+      // The API only matches a complete email address (no user directory browsing)
+      if (!EMAIL_PATTERN.test(query.trim())) {
         setSearchResults([]);
         return;
       }
       setIsSearching(true);
       try {
         const response = await api.get(`/users/search`, {
-          params: { q: query, exclude: excludeIds.join(",") },
+          params: { q: query.trim(), exclude: excludeIds.join(",") },
         });
         setSearchResults(response.data.users);
       } catch (error) {
@@ -291,7 +294,7 @@ export const RestaurantCollaborators = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={"Rechercher par nom ou email..."}
+                    placeholder={"Adresse email du collaborateur"}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 h-11 text-base"
@@ -344,16 +347,16 @@ export const RestaurantCollaborators = () => {
                     ))}
                   </div>
                 )}
-                {!isSearching && searchQuery.length >= 2 && searchResults.length === 0 && (
+                {!isSearching && EMAIL_PATTERN.test(searchQuery.trim()) && searchResults.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                     <Users className="h-8 w-8 mb-2 opacity-20" />
-                    <p>{"Aucun utilisateur trouvé"}</p>
+                    <p>{"Aucun compte avec cette adresse email"}</p>
                   </div>
                 )}
-                {!isSearching && searchQuery.length < 2 && (
+                {!isSearching && !EMAIL_PATTERN.test(searchQuery.trim()) && (
                   <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground opacity-50">
                     <Search className="h-8 w-8 mb-2 opacity-20" />
-                    <p className="text-sm">Commencez à taper pour rechercher un utilisateur</p>
+                    <p className="text-sm">Saisissez l'adresse email complète du compte à ajouter</p>
                   </div>
                 )}
               </TabsContent>

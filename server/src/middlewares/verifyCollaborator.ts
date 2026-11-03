@@ -6,6 +6,7 @@ import { userRoles } from "../utils/enums/userRoles.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 import { createLog } from "../controllers/logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * Middleware to verify that the authenticated user is a collaborator of the restaurant and has the required role.
@@ -71,7 +72,7 @@ export const verifyCollaborator = (allowedRoles?: string[]) => {
 
       next();
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, err);
     }
   };
 };

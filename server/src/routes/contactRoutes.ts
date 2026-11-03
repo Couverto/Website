@@ -1,5 +1,6 @@
 import express from "express";
 import { sendContactMessage } from "../controllers/contactController.js";
+import { contactLimiter } from "../middlewares/rateLimiters.js";
 
 export const contactRouter = express.Router();
 
@@ -8,4 +9,4 @@ export const contactRouter = express.Router();
  * @description Send a contact message
  * @access Public
  */
-contactRouter.post("/", sendContactMessage);
+contactRouter.post("/", contactLimiter, sendContactMessage);

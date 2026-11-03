@@ -34,6 +34,10 @@ export const UpdatePasswordForm = ({ setOpen }: UpdatePasswordProps) => {
     try {
       setLoading(true);
       const response = await axiosConfig.put(`/users/${authUser?._id}/password`, values);
+      // Changing the password signs out every other session: keep this one with the new token
+      if (response.data.accessToken) {
+        localStorage.setItem("accessToken", response.data.accessToken);
+      }
       toast.success(response.data.message || "Mot de passe mis à jour");
       setOpen(false);
       updatePasswordForm.reset();

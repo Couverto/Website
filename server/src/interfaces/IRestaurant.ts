@@ -67,6 +67,7 @@ export interface IRestaurant extends Document {
   // Subscription fields
   plan?: mongoose.Types.ObjectId;
   subscriptionStatus: "active" | "cancelled" | "expired" | "none" | "pending_payment";
+  paymentFailedAt?: Date | null;
   autoRenew: boolean;
   subscriptionEndDate?: Date;
   stripeCustomerId?: string;

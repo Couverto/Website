@@ -3,6 +3,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { stripeService } from "../services/stripeService.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 export const createConnectAccountLink = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
@@ -53,6 +54,6 @@ export const createConnectAccountLink = async (req: Request, res: Response): Pro
     res.status(200).json({ url: accountLink.url });
   } catch (err: any) {
     console.error("Error creating Connect Account Link:", err);
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

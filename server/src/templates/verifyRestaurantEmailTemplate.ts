@@ -1,6 +1,9 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 export const verifyRestaurantEmailTemplate = ({ url, restaurantName }: { url: string; restaurantName: string }) => {
+  // User-provided values are escaped before being inserted into the HTML
+  restaurantName = escapeHtml(restaurantName);
   const content = `
     <h2>Bienvenue sur Couverto ! 🎉</h2>
     

@@ -201,7 +201,7 @@ export const AdminRestaurantStats = () => {
                   <XAxis dataKey="date" tickFormatter={(val) => format(new Date(val), "eee dd", { locale: fr })} />
                   <YAxis allowDecimals={false} />
                   <Tooltip
-                    labelFormatter={(val) => format(new Date(val), "PPPP", { locale: fr })}
+                    labelFormatter={(val) => format(new Date(val as string), "PPPP", { locale: fr })}
                     contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                   />
                   <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />

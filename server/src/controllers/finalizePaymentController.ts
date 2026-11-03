@@ -6,6 +6,8 @@ import { Plan } from "../models/planModel.js";
 import { stripeService } from "../services/stripeService.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { rewardReferrer } from "../services/referralService.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function finalizePayment
@@ -154,13 +156,8 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
     await restaurant.save();
     console.log(`[Finalize] Restaurant created and saved: ${restaurant._id}`);
 
-    // Handle referral linking if restaurant was referred
-    const referredBy = pending.payload.referredBy;
-    if (referredBy) {
-      console.log(`[Finalize] Restaurant referred by: ${referredBy}`);
-      // The referredBy is already saved in the restaurant via pending.payload
-      // We just need to log it for debugging
-    }
+    // Link to the referrer and update its discount, now that the payment went through
+    await rewardReferrer(restaurant, pending.userId);
 
     // Generate referral code for the new restaurant
     try {
@@ -221,6 +218,6 @@ export const finalizePayment = async (req: Request, res: Response): Promise<void
     });
   } catch (err: any) {
     console.error("[Finalize] Error:", err);
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

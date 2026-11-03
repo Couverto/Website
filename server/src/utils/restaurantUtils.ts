@@ -96,6 +96,7 @@ export const PROTECTED_RESTAURANT_FIELDS = [
   "subscriptionStartDelay",
   "apiKey",
   "apiKeyCreatedAt",
+  "paymentFailedAt",
 ] as const;
 
 /**
@@ -107,3 +108,13 @@ export const omitProtectedRestaurantFields = (body: Record<string, any> = {}) =>
   PROTECTED_RESTAURANT_FIELDS.forEach((field) => delete safeBody[field]);
   return safeBody;
 };
+
+/**
+ * Mongoose projection for restaurant data returned to anyone (public pages, customers' bookings):
+ * hides ownership, billing, verification and API key fields.
+ */
+export const PUBLIC_RESTAURANT_PROJECTION =
+  "-collaborators -collaboratorRoles -createdAt -updatedAt -tempEmail -verificationToken -verificationTokenExpire " +
+  "-plan -subscriptionStatus -subscriptionEndDate -subscriptionStartDelay -autoRenew " +
+  "-stripeCustomerId -stripeSubscriptionId -stripeAccountId -apiKey -apiKeyCreatedAt " +
+  "-referralCode -referredBy -referralCodeUsed -referrals -tableClosures -paymentFailedAt";

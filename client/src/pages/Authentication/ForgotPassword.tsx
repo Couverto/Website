@@ -30,9 +30,9 @@ export const ForgotPassword = () => {
   async function onSubmit(values: z.infer<typeof forgotPasswordSchema>) {
     try {
       setLoading(true);
-      await axiosConfig.post("/auth/forgot-password", values);
+      const response = await axiosConfig.post("/auth/forgot-password", values);
       setEmailSent(true);
-      toast.success("Lien de réinitialisation envoyé à votre adresse email");
+      toast.success(response.data.message || "Si un compte existe pour cette adresse, un email a été envoyé.");
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Une erreur est survenue.");
     } finally {
@@ -63,8 +63,8 @@ export const ForgotPassword = () => {
             </div>
             <h3 className="text-lg font-medium text-green-900">E-mail envoyé</h3>
             <p className="text-green-700 text-sm">
-              Consultez votre boîte de réception pour le lien de réinitialisation. Si vous ne le recevez pas dans quelques minutes, vérifiez
-              votre dossier de spam.
+              Si un compte existe pour cette adresse, vous allez recevoir un lien de réinitialisation. Si vous ne le recevez pas dans
+              quelques minutes, vérifiez votre dossier de spam et l'adresse saisie.
             </p>
             <Button variant="outline" className="w-full mt-4" onClick={() => setEmailSent(false)}>
               Essayer un autre e-mail

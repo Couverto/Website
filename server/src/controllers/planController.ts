@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { Plan } from "../models/planModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function getPlans
@@ -12,7 +14,7 @@ export const getPlans = async (req: Request, res: Response): Promise<void> => {
     const plans = await Plan.find({ active: true }).sort({ position: 1 }).populate("features");
     res.status(200).json({ plans });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -22,15 +24,15 @@ export const getAllPlans = async (req: Request, res: Response): Promise<void> =>
   const name = (req.query.name as string) || "";
 
   try {
-    const plans = await Plan.find({ name: { $regex: name, $options: "i" } })
+    const plans = await Plan.find({ name: { $regex: escapeRegex(name), $options: "i" } })
       .sort({ position: 1 })
       .skip(page * size)
       .limit(size)
       .populate("features");
-    const count = await Plan.countDocuments({ name: { $regex: name, $options: "i" } });
+    const count = await Plan.countDocuments({ name: { $regex: escapeRegex(name), $options: "i" } });
     res.status(200).json({ plans, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -51,7 +53,7 @@ export const createPlan = async (req: Request, res: Response): Promise<void> => 
     });
     res.status(201).json({ plan, message: "Plan créé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -77,7 +79,7 @@ export const updatePlan = async (req: Request, res: Response): Promise<void> => 
     });
     res.status(200).json({ plan, message: "Plan mis à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -100,6 +102,6 @@ export const deletePlan = async (req: Request, res: Response): Promise<void> => 
     });
     res.status(200).json({ message: "Plan supprimé" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

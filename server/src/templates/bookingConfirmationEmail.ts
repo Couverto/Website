@@ -1,4 +1,5 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 interface BookingConfirmationProps {
   customerName: string;
@@ -29,6 +30,12 @@ export const bookingConfirmationTemplate = ({
   restaurantId,
   cancellationCode,
 }: BookingConfirmationProps): string => {
+  // User-provided values are escaped before being inserted into the HTML
+  customerName = escapeHtml(customerName);
+  restaurantName = escapeHtml(restaurantName);
+  address = escapeHtml(address);
+  phone = escapeHtml(phone);
+  website = escapeHtml(website);
   const statusBadgeClass = isConfirmed ? "status-success" : "status-pending";
   const statusIcon = isConfirmed ? "✅" : "⏳";
 

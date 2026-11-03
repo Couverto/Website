@@ -4,6 +4,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { Plan } from "../models/planModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function validateReferralCode
@@ -113,7 +114,7 @@ export const getAllSponsorCodes = async (req: Request, res: Response): Promise<v
     const codes = await ReferralCode.find({ type: "sponsor" }).sort({ createdAt: -1 });
     res.status(200).json(codes);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    sendServerError(res, error);
   }
 };
 

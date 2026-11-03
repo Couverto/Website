@@ -1,4 +1,5 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 interface BookingCancellationProps {
   customerName: string;
@@ -21,6 +22,13 @@ export const bookingCancellationTemplate = ({
   phone,
   website,
 }: BookingCancellationProps): string => {
+  // User-provided values are escaped before being inserted into the HTML
+  customerName = escapeHtml(customerName);
+  restaurantName = escapeHtml(restaurantName);
+  reason = escapeHtml(reason);
+  address = escapeHtml(address);
+  phone = escapeHtml(phone);
+  website = escapeHtml(website);
   const content = `
     <h2>Annulation de réservation</h2>
     

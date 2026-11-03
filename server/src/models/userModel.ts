@@ -20,6 +20,8 @@ const UserSchema = new Schema<IUser>(
     verificationToken: String,
     verificationTokenExpire: Date,
     notificationSound: { type: String, default: "default" },
+    // Incremented to revoke every issued access token (e.g. on password change)
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

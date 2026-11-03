@@ -3,6 +3,7 @@ import { Restaurant } from "../models/restaurantModel.js";
 import { Feature } from "../models/featureModel.js";
 import { Plan } from "../models/planModel.js";
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * Middleware to verify if the restaurant has access to a specific dashboard page via its features.
@@ -67,7 +68,7 @@ export const verifyFeatureAccess = (requiredPage: string | string[]) => {
 
       next();
     } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      sendServerError(res, err);
     }
   };
 };

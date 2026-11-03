@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { Feature } from "../models/featureModel.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * @function getFeatures
@@ -12,7 +14,7 @@ export const getFeatures = async (req: Request, res: Response): Promise<void> =>
     const features = await Feature.find().sort({ position: 1 });
     res.status(200).json({ features });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -26,7 +28,7 @@ export const getAllFeatures = async (req: Request, res: Response): Promise<void>
   const name = (req.query.name as string) || "";
 
   try {
-    const query = { name: { $regex: name, $options: "i" } };
+    const query = { name: { $regex: escapeRegex(name), $options: "i" } };
     const features = await Feature.find(query)
       .sort({ position: 1 })
       .skip(page * size)
@@ -34,7 +36,7 @@ export const getAllFeatures = async (req: Request, res: Response): Promise<void>
     const count = await Feature.countDocuments(query);
     res.status(200).json({ features, count });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -71,7 +73,7 @@ export const createFeature = async (req: Request, res: Response): Promise<void> 
     });
     res.status(201).json({ feature, message: "Fonctionnalité créée" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -113,7 +115,7 @@ export const updateFeature = async (req: Request, res: Response): Promise<void> 
     });
     res.status(200).json({ feature, message: "Fonctionnalité mise à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -141,6 +143,6 @@ export const deleteFeature = async (req: Request, res: Response): Promise<void> 
     });
     res.status(200).json({ message: "Fonctionnalité supprimée" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

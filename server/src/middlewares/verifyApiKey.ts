@@ -52,7 +52,7 @@ export const verifyApiKey = async (req: Request, res: Response, next: NextFuncti
 
     // Hash the provided key and compare
     const hashedKey = crypto
-      .createHmac("sha256", process.env.API_KEY_SECRET || "couverto-api-key-secret")
+      .createHmac("sha256", process.env.API_KEY_SECRET as string)
       .update(apiKey)
       .digest("hex");
 

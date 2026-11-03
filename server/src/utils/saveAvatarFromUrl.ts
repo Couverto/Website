@@ -1,6 +1,7 @@
 import https from "https";
 import mongoose from "mongoose";
 import { uploadToFirebase } from "../controllers/uploadController.js";
+import { IMAGE_MIME_TYPES, UPLOAD_MAX_SIZE } from "../configuration/storageConfig.js";
 
 /**
  * Downloads an image from a given URL and saves it to the server's filesystem.
@@ -19,23 +20,35 @@ export const saveAvatarFromUrl = async (photoURL: string, userId: mongoose.Types
       return reject(new Error("Invalid URL"));
     }
 
-    https
-      .get(photoURL, (response) => {
+    const request = https
+      .get(photoURL, { timeout: 10000 }, (response) => {
         if (response.statusCode !== 200) {
+          response.resume();
           return reject(new Error(`Failed to get image, status code: ${response.statusCode}`));
         }
 
+        // Only store real images, never arbitrary content on our public bucket
+        const mimetype = (response.headers["content-type"] || "").split(";")[0].trim();
+        if (!IMAGE_MIME_TYPES.includes(mimetype)) {
+          response.resume();
+          return reject(new Error(`Unsupported avatar content type: ${mimetype}`));
+        }
+
         const chunks: Buffer[] = [];
+        let size = 0;
 
         response.on("data", (chunk) => {
+          size += chunk.length;
+          if (size > UPLOAD_MAX_SIZE) {
+            request.destroy();
+            return reject(new Error("Avatar too large"));
+          }
           chunks.push(chunk);
         });
 
         response.on("end", async () => {
           try {
             const buffer = Buffer.concat(chunks);
-
-            const mimetype = response.headers["content-type"] || `image/${extension}`;
 
             const publicUrl = await uploadToFirebase(
               {
@@ -51,6 +64,9 @@ export const saveAvatarFromUrl = async (photoURL: string, userId: mongoose.Types
             reject(err);
           }
         });
+      })
+      .on("timeout", () => {
+        request.destroy(new Error("Avatar download timed out"));
       })
       .on("error", (err) => {
         reject(err);

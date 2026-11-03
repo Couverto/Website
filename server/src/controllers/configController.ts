@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
 import { Config } from "../models/configModel.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * Gets configuration settings based on provided keys.
@@ -15,7 +16,7 @@ export const getConfig = async (req: Request, res: Response): Promise<void> => {
     const configItems = await Config.find({ key: { $in: keys } });
     res.status(200).json({ config: configItems });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -58,6 +59,6 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
 
     res.json({ message: "Configuration mise à jour avec succès" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

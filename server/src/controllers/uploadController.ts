@@ -3,6 +3,8 @@ import { Constants } from "../constants/constants.js";
 import { bucket } from "../lib/firebase.js";
 import { deleteFile } from "../utils/fileUploadUtils.js";
 import { userRoles } from "../utils/enums/userRoles.js";
+import { IMAGE_MIME_TYPES } from "../configuration/storageConfig.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 /**
  * Helper to upload a buffer to Firebase Storage and return the public URL.
@@ -48,8 +50,7 @@ export const updateUserAvatar = async (req, res) => {
       return res.status(400).json({ error: "Aucun fichier fourni" });
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"];
-    if (!allowedTypes.includes(req.file.mimetype)) {
+    if (!IMAGE_MIME_TYPES.includes(req.file.mimetype)) {
       return res.status(400).json({ error: "Type de fichier invalide" });
     }
 
@@ -94,8 +95,7 @@ export const uploadImage = async (req, res): Promise<void> => {
       return;
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"];
-    if (!allowedTypes.includes(req.file.mimetype)) {
+    if (!IMAGE_MIME_TYPES.includes(req.file.mimetype)) {
       res.status(400).json({ error: "Type de fichier invalide" });
       return;
     }
@@ -110,6 +110,6 @@ export const uploadImage = async (req, res): Promise<void> => {
     });
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };

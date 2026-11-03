@@ -1,6 +1,10 @@
 import { baseEmailLayout } from "./baseEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 export const reviewRequestEmail = (customerName: string, restaurantName: string, reviewUrl: string): string => {
+  // User-provided values are escaped before being inserted into the HTML
+  customerName = escapeHtml(customerName);
+  restaurantName = escapeHtml(restaurantName);
   const content = `
     <h2>Comment s'est passée votre expérience ? ⭐</h2>
     

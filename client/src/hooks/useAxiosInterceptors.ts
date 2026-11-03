@@ -14,6 +14,11 @@ export const useAxiosInterceptor = () => {
       (response) => response,
       (error) => {
         const path = window.location.pathname;
+
+        // Expired or revoked session: drop the stored token
+        if (error.response?.status === 401) {
+          localStorage.removeItem("accessToken");
+        }
         const requestUrl = error.config?.url;
 
         // Don't redirect if the 401 comes from the auth check itself

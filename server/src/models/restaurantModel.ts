@@ -138,6 +138,11 @@ const RestaurantSchema = new Schema<IRestaurant>(
       type: Boolean,
       default: false,
     },
+    // Last failed subscription payment (cleared when an invoice is paid)
+    paymentFailedAt: {
+      type: Date,
+      default: null,
+    },
 
     // Referral fields
     referralCode: {

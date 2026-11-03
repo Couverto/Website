@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { sendEmail } from "../utils/sendEmail.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
 
 // Validation schema for contact requests
 const contactAttemptSchema = z.object({
@@ -36,12 +37,12 @@ export const sendContactMessage = async (req: Request, res: Response): Promise<v
     // Construct the email HTML content
     const htmlMessage = `
       <h2>Nouveau message de contact via le site web Couverto</h2>
-      <p><strong>Nom :</strong> ${name}</p>
-      <p><strong>Email :</strong> ${email}</p>
-      <p><strong>Motif :</strong> ${reasonLabel}</p>
+      <p><strong>Nom :</strong> ${escapeHtml(name)}</p>
+      <p><strong>Email :</strong> ${escapeHtml(email)}</p>
+      <p><strong>Motif :</strong> ${escapeHtml(reasonLabel)}</p>
       <hr />
       <h3>Message :</h3>
-      <p style="white-space: pre-wrap;">${message}</p>
+      <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
     `;
 
     // Send the email to contact@couverto.fr using the sendEmail utility

@@ -16,7 +16,11 @@ import { bookingSelfCancellationTemplate } from "../templates/bookingSelfCancell
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
 import { stripeService } from "../services/stripeService.js";
 import { formatBookingDate, formatBookingTime, formatShortDate } from "../utils/dateFormatter.js";
-import { getServicePeriod } from "../utils/restaurantUtils.js";
+import { getServicePeriod, PUBLIC_RESTAURANT_PROJECTION } from "../utils/restaurantUtils.js";
+import { escapeHtml } from "../utils/escapeHtml.js";
+import { Constants } from "../constants/constants.js";
+import { escapeRegex } from "../utils/escapeRegex.js";
+import { sendServerError } from "../utils/sendServerError.js";
 
 // Validate that the booking date falls within the restaurant's opening hours
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
@@ -53,6 +57,23 @@ function validateBookingTime(restaurant: any, bookingDate: string): boolean {
     }
   }
   return false;
+}
+
+/**
+ * @function getCancellationError
+ * @description Returns why a customer can no longer cancel a booking online, or null if they can.
+ * Past bookings can't be cancelled (that would release a no-show's bank imprint), and bookings secured by a
+ * bank imprint can't be cancelled within BANK_IMPRINT_CANCELLATION_HOURS of the reservation.
+ */
+function getCancellationError(booking: any): string | null {
+  const msBeforeBooking = new Date(booking.bookingDate).getTime() - Date.now();
+  if (msBeforeBooking < 0) {
+    return "Impossible d'annuler une réservation passée";
+  }
+  if (booking.bankImprintStatus === "secured" && msBeforeBooking < Constants.BANK_IMPRINT_CANCELLATION_HOURS * 60 * 60 * 1000) {
+    return `Annulation impossible moins de ${Constants.BANK_IMPRINT_CANCELLATION_HOURS} h avant la réservation. Merci de contacter directement le restaurant.`;
+  }
+  return null;
 }
 
 /**
@@ -612,7 +633,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     res.status(201).json({ booking: newBooking, message: "Réservation créée" });
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -672,7 +693,7 @@ export const getMyBookings = async (req: Request, res: Response): Promise<void> 
       totalPages: Math.ceil(totalCount / size),
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -689,7 +710,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
     // @ts-ignore
     const userEmail = req.user?.email?.toLowerCase();
 
-    const booking = await Booking.findById(id).populate("restaurant");
+    const booking = await Booking.findById(id).populate("restaurant", PUBLIC_RESTAURANT_PROJECTION);
 
     if (!booking) {
       res.status(404).json({ error: "Ressource introuvable" });
@@ -708,7 +729,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json(booking);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -896,12 +917,12 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
             message: `
                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                  <h2 style="color: #333;">Modification de réservation</h2>
-                 <p>La réservation de <strong>${booking.customer.name}</strong> a été modifiée.</p>
+                 <p>La réservation de <strong>${escapeHtml(booking.customer.name)}</strong> a été modifiée.</p>
                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                    <p style="margin: 5px 0;"><strong>Nouvelle date :</strong> ${dateStr} à ${timeStr}</p>
                    <p style="margin: 5px 0;"><strong>Couverts :</strong> ${booking.guests} personnes</p>
                    <p style="margin: 5px 0;"><strong>Total du service :</strong> ${serviceGuests} personnes</p>
-                   ${notes ? `<p style="margin: 5px 0;"><strong>Note :</strong> ${notes}</p>` : ""}
+                   ${notes ? `<p style="margin: 5px 0;"><strong>Note :</strong> ${escapeHtml(notes)}</p>` : ""}
                  </div>
                  <p style="color: #666; font-size: 14px;">Connectez-vous à votre tableau de bord pour plus de détails.</p>
                </div>
@@ -921,7 +942,7 @@ export const updateBooking = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ booking, message: "Réservation mise à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -938,6 +959,17 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
 
     if (!booking) {
       res.status(404).json({ error: "Ressource introuvable" });
+      return;
+    }
+
+    if (booking.status === bookingStatus.CANCELLED) {
+      res.status(400).json({ error: "Cette réservation est déjà annulée" });
+      return;
+    }
+
+    const cancellationError = getCancellationError(booking);
+    if (cancellationError) {
+      res.status(400).json({ error: cancellationError });
       return;
     }
 
@@ -999,7 +1031,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
             message: `
                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                  <h2 style="color: #666;">Réservation Annulée par le client</h2>
-                 <p>La réservation de <strong>${booking.customer.name}</strong> a été annulée par le client via son compte.</p>
+                 <p>La réservation de <strong>${escapeHtml(booking.customer.name)}</strong> a été annulée par le client via son compte.</p>
                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                    <p style="margin: 5px 0;"><strong>Date :</strong> ${dateStr} à ${timeStr}</p>
                    <p style="margin: 5px 0;"><strong>Nombre de personnes :</strong> ${booking.guests}</p>
@@ -1022,7 +1054,7 @@ export const cancelBooking = async (req: Request, res: Response): Promise<void> 
 
     res.status(200).json({ message: "Réservation annulée" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1046,9 +1078,9 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
       return;
     }
 
-    // Optional: check if booking is in the past
-    if (new Date(booking.bookingDate) < new Date()) {
-      res.status(400).json({ error: "Impossible d'annuler une réservation passée" });
+    const cancellationError = getCancellationError(booking);
+    if (cancellationError) {
+      res.status(400).json({ error: cancellationError });
       return;
     }
 
@@ -1106,7 +1138,7 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
             message: `
                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                  <h2 style="color: #d32f2f;">Réservation Annulée</h2>
-                 <p>La réservation de <strong>${booking.customer.name}</strong> a été annulée par le client.</p>
+                 <p>La réservation de <strong>${escapeHtml(booking.customer.name)}</strong> a été annulée par le client.</p>
                  <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                    <p style="margin: 5px 0;"><strong>Date :</strong> ${dateStr} à ${timeStr}</p>
                    <p style="margin: 5px 0;"><strong>Nombre de personnes :</strong> ${booking.guests}</p>
@@ -1129,7 +1161,7 @@ export const cancelBookingByToken = async (req: Request, res: Response): Promise
 
     res.status(200).json({ message: "Réservation annulée avec succès" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1160,7 +1192,7 @@ export const dismissBooking = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ message: "Réservation masquée", booking });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1198,7 +1230,7 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
 
     // Search by customer name or phone
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
+      const searchRegex = new RegExp(escapeRegex(search.trim()), "i");
       query.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
     }
 
@@ -1259,7 +1291,7 @@ export const getRestaurantBookings = async (req: Request, res: Response): Promis
       totalPages: Math.ceil(count / size),
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1328,9 +1360,9 @@ export const getRestaurantClients = async (req: Request, res: Response): Promise
             {
               $match: {
                 $or: [
-                  { name: new RegExp(search.trim(), "i") },
-                  { phone: new RegExp(search.trim(), "i") },
-                  { email: new RegExp(search.trim(), "i") },
+                  { name: new RegExp(escapeRegex(search.trim()), "i") },
+                  { phone: new RegExp(escapeRegex(search.trim()), "i") },
+                  { email: new RegExp(escapeRegex(search.trim()), "i") },
                 ],
               },
             },
@@ -1360,7 +1392,7 @@ export const getRestaurantClients = async (req: Request, res: Response): Promise
     });
   } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1478,7 +1510,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
 
     res.status(200).json({ booking, message: "Réservation mise à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1542,7 +1574,7 @@ export const updateBookingTable = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ booking, message: "Table mise à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1563,7 +1595,7 @@ export const getAdminBookings = async (req: Request, res: Response): Promise<voi
     }
 
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
+      const searchRegex = new RegExp(escapeRegex(search.trim()), "i");
       query.$or = [{ "customer.name": searchRegex }, { "customer.phone": searchRegex }, { "customer.email": searchRegex }];
     }
 
@@ -1585,7 +1617,7 @@ export const getAdminBookings = async (req: Request, res: Response): Promise<voi
       totalPages: Math.ceil(count / size),
     });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1660,7 +1692,7 @@ export const deleteBookingAdmin = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ message: "Réservation supprimée définitivement" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1685,7 +1717,7 @@ export const updateBookingNoteAdmin = async (req: Request, res: Response): Promi
 
     res.status(200).json({ booking, message: "Note mise à jour" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1759,7 +1791,7 @@ export const sendBookingEmailAdmin = async (req: Request, res: Response): Promis
       res.status(400).json({ error: "Impossible d'envoyer l'email : adresse email client ou informations du restaurant manquantes." });
     }
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1843,7 +1875,7 @@ export const cancelBookingAdmin = async (req: Request, res: Response): Promise<v
 
     res.status(200).json({ booking, message: "Réservation annulée avec succès" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    sendServerError(res, err);
   }
 };
 
@@ -1901,7 +1933,7 @@ export const captureBankImprint = async (req: Request, res: Response): Promise<v
     res.status(200).json({ message: "Empreinte bancaire encaissée avec succès", booking });
   } catch (error: any) {
     console.error("Erreur lors de l'encaissement de l'empreinte:", error);
-    res.status(500).json({ error: error.message || "Erreur serveur" });
+    sendServerError(res, error);
   }
 };
 
@@ -1941,6 +1973,6 @@ export const releaseBankImprint = async (req: Request, res: Response): Promise<v
     res.status(200).json({ message: "Empreinte bancaire libérée avec succès", booking });
   } catch (error: any) {
     console.error("Erreur lors de la libération de l'empreinte:", error);
-    res.status(500).json({ error: error.message || "Erreur serveur" });
+    sendServerError(res, error);
   }
 };
