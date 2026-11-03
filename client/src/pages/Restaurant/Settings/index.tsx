@@ -148,7 +148,12 @@ export const RestaurantSettings = () => {
     const fetchRestaurant = async () => {
       try {
         const response = await api.get(`/restaurants/${id}/details`);
-        reset(response.data.restaurant);
+        const loaded = response.data.restaurant;
+        // Older restaurants store French numbers without country code, which the phone field rejects
+        if (typeof loaded.phone === "string" && /^0\d{9}$/.test(loaded.phone.replace(/\s/g, ""))) {
+          loaded.phone = "+33" + loaded.phone.replace(/\s/g, "").slice(1);
+        }
+        reset(loaded);
         setOriginalEmail(response.data.restaurant.email);
         setIsVerified(true);
         setIsClosed(response.data.restaurant.isClosed);
@@ -288,7 +293,10 @@ export const RestaurantSettings = () => {
         <p className="text-muted-foreground">{"Configurez les informations de votre restaurant"}</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={handleSubmit(onSubmit, () => toast.error("Certains champs sont invalides, vérifiez le formulaire (en rouge)."))}
+        className="space-y-8"
+      >
         <Tabs
           value={searchParams.get("tab") || "general"}
           onValueChange={(v) => setSearchParams({ tab: v }, { replace: true })}

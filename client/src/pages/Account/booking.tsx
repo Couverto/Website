@@ -557,7 +557,7 @@ export const AccountBooking = () => {
                 <Label>
                   Heure{" "}
                   {editTime && availability[editTime] !== undefined && (
-                    <span className="text-[10px] text-muted-foreground ml-1">({availability[editTime]} dispo)</span>
+                    <span className="text-[10px] text-muted-foreground ml-1">(jusqu'à {availability[editTime]} pers.)</span>
                   )}
                 </Label>
                 <Select value={editTime} onValueChange={setEditTime} disabled={loadingSlots || !editDate || timeSlots.length === 0}>

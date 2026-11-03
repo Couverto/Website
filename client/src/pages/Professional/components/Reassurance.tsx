@@ -15,7 +15,7 @@ export const Reassurance = () => {
     {
       icon: Lock,
       title: "Données sécurisées",
-      description: "Hébergement en France, sauvegardes quotidiennes, et chiffrement de bout en bout.",
+      description: "Hébergement en France, sauvegardes quotidiennes et connexions chiffrées (HTTPS).",
     },
     {
       icon: Store,

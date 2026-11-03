@@ -215,6 +215,19 @@ describe("Booking validation", () => {
     expect((await User.findById(user._id))?.phone).toBe("0611111111");
   });
 
+  it("does not attach a booking entered by the restaurant to the staff member's account", async () => {
+    const { user: owner, token } = await createUser("owner-staff");
+    const restaurant = await createRestaurant(owner._id);
+
+    const res = await request(app)
+      .post("/api/bookings")
+      .set("Authorization", `Bearer ${token}`)
+      .send(guestBooking(restaurant._id, { isManual: true, customer: { name: "Au téléphone", phone: "0612121212" } }));
+    expect(res.status).toBe(201);
+    expect(res.body.booking.user).toBeNull();
+    expect((await User.findById(owner._id))?.phone).toBe("");
+  });
+
   it("never overbooks when the last seats are booked simultaneously", async () => {
     const { user } = await createUser("owner-race");
     const restaurant = await createRestaurant(user._id, {

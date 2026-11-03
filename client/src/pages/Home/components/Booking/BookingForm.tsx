@@ -39,6 +39,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
   const { authUser: user } = useAuthContext();
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
   const [availability, setAvailability] = useState<Record<string, number>>({});
+  const [remainingSeats, setRemainingSeats] = useState<Record<string, number>>({});
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [closedDays, setClosedDays] = useState<number[]>([]); // 0 = Sunday, 6 = Saturday
 
@@ -156,6 +157,7 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
 
         setTimeSlots(slots);
         setAvailability(response.data.availability || {});
+        setRemainingSeats(response.data.remainingSeats || {});
 
         // Automatically select the first available slot if not already set or if previous slot is no longer available
         if (slots.length > 0) {
@@ -499,15 +501,16 @@ export const BookingForm = ({ restaurant, onSuccess, initialData }: BookingFormP
                 </FormControl>
                 <SelectContent className="max-h-[300px] rounded-xl border-input/50 backdrop-blur-xl">
                   {timeSlots.map((slot) => {
-                    const avail = availability[slot] || 0;
-                    const isLow = avail <= 4 && avail > 0;
+                    // "Only N left" is about seats left in the service, not the largest table
+                    const remaining = remainingSeats[slot] ?? availability[slot] ?? 0;
+                    const isLow = remaining <= 4 && remaining > 0;
                     return (
                       <SelectItem key={slot} value={slot} className="py-3 focus:bg-primary/5 rounded-lg cursor-pointer">
                         <div className="flex items-center justify-between w-full gap-4">
                           <span className="font-semibold text-base">{slot}</span>
                           {isLow && (
                             <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">
-                              {"Plus que " + avail}
+                              {`Plus que ${remaining} place${remaining > 1 ? "s" : ""}`}
                             </span>
                           )}
                         </div>

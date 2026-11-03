@@ -271,24 +271,32 @@ export const RestaurantDashboard = () => {
     }).format(new Date(date));
   };
 
+  // Day of a booking in the restaurant's timezone ("yyyy-MM-dd"); the raw ISO string is in UTC
+  const getRestaurantDay = (date: Date | string) => {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(
+      new Date(date),
+    );
+  };
+
   const filteredStats = useMemo(() => {
     if (!stats || !selectedService) return null;
 
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     const [start, end] = selectedService!.split("-");
     const filtered = upcomingBookings.filter((b) => {
       const time = getRestaurantTime(b.bookingDate);
-      return isTimeInService(time, start, end);
+      return getRestaurantDay(b.bookingDate) === dateStr && isTimeInService(time, start, end);
     });
 
     return {
       bookings: filtered.length,
       guests: filtered.reduce((acc, b) => acc + b.guests, 0),
     };
-  }, [stats, selectedService, upcomingBookings]);
+  }, [stats, selectedService, upcomingBookings, selectedDate]);
 
   const filteredUpcomingBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = upcomingBookings.filter((b) => b.bookingDate.startsWith(dateStr));
+    let base = upcomingBookings.filter((b) => getRestaurantDay(b.bookingDate) === dateStr);
 
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
@@ -300,7 +308,7 @@ export const RestaurantDashboard = () => {
 
   const filteredRecentBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = recentBookings.filter((b) => b.bookingDate.startsWith(dateStr));
+    let base = recentBookings.filter((b) => getRestaurantDay(b.bookingDate) === dateStr);
 
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");
@@ -312,7 +320,7 @@ export const RestaurantDashboard = () => {
 
   const filteredDayBookings = useMemo(() => {
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    let base = dayBookings.filter((b) => b.bookingDate.startsWith(dateStr) && !b.isDismissedByRestaurant);
+    let base = dayBookings.filter((b) => getRestaurantDay(b.bookingDate) === dateStr && !b.isDismissedByRestaurant);
 
     if (!selectedService) return base;
     const [start, end] = selectedService!.split("-");

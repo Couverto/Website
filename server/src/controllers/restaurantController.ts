@@ -1472,14 +1472,15 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
 
         return {
           time: slot,
+          // Largest group that can still be seated on one table
           available: Math.min(remainingCapacity, maxFittingGuests),
+          // Seats left in the whole service (what "only N left" should show)
+          remaining: remainingCapacity,
         };
       }
 
-      return {
-        time: slot,
-        available: Math.max(0, capacity - unassignedGuestsInService),
-      };
+      const remaining = Math.max(0, capacity - unassignedGuestsInService);
+      return { time: slot, available: remaining, remaining };
     });
 
     // Filter out full slots if desired, or let frontend handle it
@@ -1492,6 +1493,10 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
       slots: finalSlots,
       availability: slotsWithAvailability.reduce((acc: any, curr) => {
         acc[curr.time] = curr.available;
+        return acc;
+      }, {}),
+      remainingSeats: slotsWithAvailability.reduce((acc: any, curr) => {
+        acc[curr.time] = (curr as any).remaining ?? curr.available;
         return acc;
       }, {}),
     });

@@ -173,7 +173,9 @@ const createBookingUnlocked = async (req: Request, res: Response): Promise<void>
     let finalStripeCustomerId = stripeCustomerId;
 
     const isCollaborator = userId && restaurantExists.collaborators.some(c => c.toString() === userId.toString());
-    const skipStripe = isManual && isCollaborator;
+    // Booking entered by the restaurant staff for a customer (phone call, walk-in)
+    const isStaffEntry = isManual && isCollaborator;
+    const skipStripe = isStaffEntry;
 
     // Collaborators may record a booking for a closed restaurant or a time that just passed (walk-in), customers may not
     if (!isCollaborator) {
@@ -324,7 +326,8 @@ const createBookingUnlocked = async (req: Request, res: Response): Promise<void>
       guests,
       customer,
       notes,
-      user: userId || null,
+      // A booking entered by the restaurant for a customer must not be attached to the staff member's account
+      user: isStaffEntry ? null : userId || null,
       stripeSetupIntentId: finalStripeSetupIntentId || undefined,
       stripeCustomerId: finalStripeCustomerId || undefined,
       bankImprintAmount: finalBankImprintAmount || undefined,
@@ -335,7 +338,7 @@ const createBookingUnlocked = async (req: Request, res: Response): Promise<void>
     // If authenticated, we can optionally override customer info with user profile if not provided,
     // but the frontend usually sends the form data. We'll trust the body.
     // Fill the profile phone only when the user has none: a booking made for someone else must not overwrite it
-    if (userId && customer?.phone) {
+    if (userId && !isStaffEntry && customer?.phone) {
       try {
         await User.updateOne({ _id: userId, $or: [{ phone: { $exists: false } }, { phone: null }, { phone: "" }] }, { phone: customer.phone });
       } catch (userUpdateErr) {

@@ -268,7 +268,7 @@ export const RestaurantGallery = () => {
                     onUrlChange={(url) => setNewMenuUrl(url)}
                     onUrlSubmit={addMenu}
                     urlValue={newMenuUrl}
-                    placeholder="Menu (PDF/Image)"
+                    placeholder="Page du menu (image)"
                     endpoint="/uploads/restaurants/menu"
                   />
                 </div>
