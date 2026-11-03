@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { fr } from "date-fns/locale";
+import { format } from "date-fns";
 
 // Register locale
 registerLocale("fr", fr);
@@ -22,7 +23,7 @@ export const Hero = () => {
     const params = new URLSearchParams();
     if (location) params.append("adress", location);
     // Format date as YYYY-MM-DD for consistency
-    if (date) params.append("date", date.toISOString().split("T")[0]);
+    if (date) params.append("date", format(date, "yyyy-MM-dd"));
     if (guests) params.append("guests", guests);
 
     navigate(`/restaurants?${params.toString()}`);
@@ -46,7 +47,7 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
       </div>
 
-      <div className="container relative z-10 px-6 sm:px-8 md:px-6 pt-20 md:pt-0 flex flex-col items-center text-center space-y-8 md:space-y-10 animate-in fade-in zoom-in duration-700">
+      <div className="container relative z-10 px-6 sm:px-8 md:px-6 pt-20 md:pt-0 flex flex-col items-center text-center space-y-8 md:space-y-10 animate-in fade-in zoom-in-95 duration-500">
         <div className="space-y-4 max-w-4xl">
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl text-white drop-shadow-lg text-balance">
             {"Réservez une table simplement."}

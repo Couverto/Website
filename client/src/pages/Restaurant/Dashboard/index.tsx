@@ -200,7 +200,7 @@ export const RestaurantDashboard = () => {
   const getServiceStatus = useCallback(
     (period: { open: string; close: string }) => {
       if (!context?.restaurant?.exceptionalClosures) return "open";
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = format(new Date(), "yyyy-MM-dd");
       const sTarget = new Date(todayStr + "T" + period.open + ":00.000Z").getTime();
       const eTarget = new Date(todayStr + "T" + period.close + ":00.999Z").getTime();
 

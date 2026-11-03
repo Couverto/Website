@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://couverto.fr/sitemap.xml
+Sitemap: https://www.couverto.fr/sitemap.xml
 
 # Allow indexing of all public pages
 Allow: /restaurants

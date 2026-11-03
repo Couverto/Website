@@ -8,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { CuisineSelector } from "@/components/CuisineSelector";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { fr, enUS } from "date-fns/locale";
+import { format } from "date-fns";
 import { PriceIndicator } from "@/components/customs/PriceIndicator";
 
 // Register locales
@@ -119,7 +120,7 @@ export const PublicRestaurants = () => {
           <div className="md:col-span-2 relative">
             <DatePicker
               selected={filters.date ? new Date(filters.date) : undefined}
-              onChange={(date: Date | null) => handleCreateFilterUpdater("date")(date ? date.toISOString().split("T")[0] : "")}
+              onChange={(date: Date | null) => handleCreateFilterUpdater("date")(date ? format(date, "yyyy-MM-dd") : "")}
               locale="fr"
               dateFormat="dd/MM/yyyy"
               minDate={new Date()}

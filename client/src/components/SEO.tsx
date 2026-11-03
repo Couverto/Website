@@ -18,11 +18,14 @@ export const SEO = ({
   name = "Couverto",
   type = "website",
   url,
-  image = "/logos/logo.svg",
+  image = "/og-image.png",
   ...props
 }: SEOProps) => {
-  const siteUrl = "https://couverto.fr";
-  const fullUrl = url ? (url.startsWith("http") ? url : `${siteUrl}${url}`) : siteUrl;
+  // couverto.fr redirects to www: canonical and share URLs must point to the final address
+  const siteUrl = "https://www.couverto.fr";
+  const toAbsolute = (path: string) => (path.startsWith("http") ? path : `${siteUrl}${path}`);
+  const fullUrl = url ? toAbsolute(url) : siteUrl;
+  const imageUrl = toAbsolute(image);
 
   return (
     <Helmet>
@@ -36,7 +39,7 @@ export const SEO = ({
       <meta property="og:type" content={type} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
+      <meta property="og:image" content={imageUrl} />
       <meta property="og:url" content={fullUrl} />
 
       {/* Twitter tags */}
@@ -44,7 +47,7 @@ export const SEO = ({
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={imageUrl} />
 
       {/* Structured Data (JSON-LD) */}
       {props.jsonLd && <script type="application/ld+json">{JSON.stringify(props.jsonLd)}</script>}
