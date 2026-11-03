@@ -18,7 +18,12 @@ import { PendingTransaction } from "../models/pendingTransactionModel.js";
 import { ReferralCode } from "../models/referralCodeModel.js";
 import { Feature } from "../models/featureModel.js";
 import { VerificationCode } from "../models/verificationCodeModel.js";
-import { isRestaurantOpen, convertOpeningHoursToObject, getServicePeriod } from "../utils/restaurantUtils.js";
+import {
+  isRestaurantOpen,
+  convertOpeningHoursToObject,
+  getServicePeriod,
+  omitProtectedRestaurantFields,
+} from "../utils/restaurantUtils.js";
 import { formatBookingTime } from "../utils/dateFormatter.js";
 import { Review } from "../models/reviewModel.js";
 
@@ -56,7 +61,9 @@ export const getRestaurants = async (req: Request, res: Response): Promise<void>
  */
 export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, slug, address, city, phone, website, planId, referralCode: referralCodeInput, ...otherFields } = req.body;
+    const { name, slug, address, city, phone, website, planId, referralCode: referralCodeInput, ...rawOtherFields } = req.body;
+    // otherFields is spread into the new restaurant: drop billing/ownership/verification fields
+    const otherFields = omitProtectedRestaurantFields(rawOtherFields);
     const collaborators = [];
 
     console.log(`[createRestaurant] Starting creation for: ${name}, slug: ${slug}, planId: ${planId}`);
@@ -566,6 +573,12 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
 export const updateRestaurant = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
+  // Collaborators (checked by verifyCollaborator) cannot touch billing/ownership/verification fields.
+  // Only global admins (admin restaurant form) can.
+  if ((req as any).user?.role !== userRoles.ADMIN) {
+    req.body = omitProtectedRestaurantFields(req.body);
+  }
+
   try {
     const currentRestaurant = await Restaurant.findById(id);
 
@@ -834,7 +847,7 @@ export const updateRestaurant = async (req: Request, res: Response): Promise<voi
       level: logLevels.INFO,
     });
 
-    res.status(200).json({ restaurant, message: "Restaurant mis à jour avec succès" });
+    res.status(200).json({ restaurant: updatedRestaurant, message: "Restaurant mis à jour avec succès" });
   } catch (err: any) {
     if (err.message === "La galerie ne peut contenir que 8 images maximum") {
       res.status(400).json({ error: err.message });
@@ -2303,7 +2316,7 @@ export const checkRestaurantUniqueness = async (req: Request, res: Response): Pr
 export const sendRestaurantVerificationCode = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, context = "restaurant" } = req.body;
-    if (!email) {
+    if (!email || typeof email !== "string") {
       res.status(400).json({ error: "Email requis" });
       return;
     }
@@ -2323,7 +2336,7 @@ export const sendRestaurantVerificationCode = async (req: Request, res: Response
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store in DB (expires in 5m)
-    await VerificationCode.create({ email, code });
+    await VerificationCode.create({ email: email.toLowerCase(), code });
 
     // Send email
     try {
@@ -2354,16 +2367,23 @@ export const verifyRestaurantVerificationCode = async (req: Request, res: Respon
   try {
     const { email, code } = req.body;
 
+    // Strings only: an object like { $ne: null } would match any code
+    if (typeof email !== "string" || typeof code !== "string") {
+      res.status(400).json({ error: "Code invalide ou expiré" });
+      return;
+    }
+
     // Find the latest code for this email
-    const record = await VerificationCode.findOne({ email, code }).sort({ createdAt: -1 });
+    const record = await VerificationCode.findOne({ email: email.toLowerCase(), code, verified: false }).sort({ createdAt: -1 });
 
     if (!record) {
       res.status(400).json({ error: "Code invalide ou expiré" });
       return;
     }
 
-    // Optionally delete the code after use to prevent reuse (though TTL handles expiration)
-    await VerificationCode.deleteOne({ _id: record._id });
+    // Keep the record as proof of ownership until it is consumed (e.g. account email change) or expires (TTL)
+    record.verified = true;
+    await record.save();
 
     res.status(200).json({ message: "Code vérifié", verified: true });
   } catch (err: any) {

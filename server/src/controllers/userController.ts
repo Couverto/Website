@@ -10,6 +10,10 @@ import { logLevels } from "../utils/enums/logLevels.js";
 import { Constants } from "../constants/constants.js";
 import { getPaginationParams } from "../utils/pagination.js";
 import { deleteFile } from "../utils/fileUploadUtils.js";
+import { VerificationCode } from "../models/verificationCodeModel.js";
+
+// Fields a user can change on their own account (admins can additionally set role and password)
+const SELF_UPDATABLE_USER_FIELDS = ["name", "forename", "email", "username", "phone", "notificationSound"];
 
 /**
  * @function getUsers
@@ -103,16 +107,36 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = req.userId;
-  const { name, forename, email, username, password, role } = req.body;
+  const { email, username, password, role } = req.body;
 
   try {
+    const actionUser = await User.findById(userId);
+    const isAdmin = actionUser?.role === userRoles.ADMIN;
+
+    // Only admins may update someone else's account
+    if (!isAdmin && id !== userId.toString()) {
+      res.status(403).json({ error: "Accès interdit" });
+      return;
+    }
+
     const targetUser = await User.findById(id);
     if (!targetUser) {
       res.status(404).json({ error: "Utilisateur introuvable" });
       return;
     }
 
-    if (email && email.toLowerCase() !== targetUser.email) {
+    if (email !== undefined && typeof email !== "string") {
+      res.status(400).json({ error: "Email invalide" });
+      return;
+    }
+    if (username !== undefined && typeof username !== "string") {
+      res.status(400).json({ error: "Nom d'utilisateur invalide" });
+      return;
+    }
+
+    const emailChanged = !!email && email.toLowerCase() !== targetUser.email;
+
+    if (emailChanged) {
       if (targetUser.auth_type === authTypes.GOOGLE) {
         res.status(400).json({ error: "Impossible de modifier l'adresse email d'un compte lié à Google." });
         return;
@@ -122,6 +146,15 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       if (existingUserByEmail) {
         res.status(409).json({ error: "Cet email est déjà utilisé" });
         return;
+      }
+
+      // Users must prove they own the new address (code sent by /restaurants/send-verification-code)
+      if (!isAdmin) {
+        const verifiedCode = await VerificationCode.findOneAndDelete({ email: email.toLowerCase(), verified: true });
+        if (!verifiedCode) {
+          res.status(400).json({ error: "Veuillez vérifier votre nouvelle adresse email avant d'enregistrer." });
+          return;
+        }
       }
     }
 
@@ -133,17 +166,23 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    const actionUser = await User.findById(userId);
+    // Whitelist of updatable fields: never spread req.body (isVerified, auth_type, reset tokens...)
+    const allowedFields = isAdmin ? [...SELF_UPDATABLE_USER_FIELDS, "role"] : SELF_UPDATABLE_USER_FIELDS;
+    const updates: Record<string, unknown> = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    }
+    if (updates.email) updates.email = (updates.email as string).toLowerCase();
+    if (updates.username) updates.username = (updates.username as string).toLowerCase();
 
-    if (actionUser.role == userRoles.ADMIN) {
+    if (isAdmin) {
       if (role && !Object.values(userRoles).includes(role)) {
         res.status(400).json({ error: "Rôle invalide" });
         return;
       }
 
       if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        req.body.password = hashedPassword;
+        updates.password = await bcrypt.hash(password, 10);
       }
 
       createLog({
@@ -151,20 +190,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         userId: userId,
         level: logLevels.INFO,
       });
-    } else {
-      delete req.body.role;
-      delete req.body.password;
     }
 
-    const user = await User.findOneAndUpdate(
-      { _id: id },
-      {
-        ...req.body,
-        ...(req.body.email && { email: req.body.email.toLowerCase() }),
-        ...(req.body.username && { username: req.body.username.toLowerCase() }),
-      },
-      { new: true },
-    );
+    const user = await User.findOneAndUpdate({ _id: id }, updates, { new: true });
     if (!user) {
       res.status(404).json({ error: "Utilisateur introuvable" });
       return;
@@ -230,6 +258,12 @@ export const generateUserPassword = async (req: Request, res: Response): Promise
 export const updatePassword = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { currentPassword, newPassword, newPasswordConfirm } = req.body;
+
+  // A user can only change their own password (admins use updateUser)
+  if (id !== req.userId.toString()) {
+    res.status(403).json({ error: "Accès interdit" });
+    return;
+  }
 
   try {
     const user = await User.findById(id).select("+password");

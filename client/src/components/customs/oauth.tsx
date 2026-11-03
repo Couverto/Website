@@ -23,14 +23,11 @@ export function OAuth({ message }: OauthProps) {
     try {
       const googleRes = await signInWithPopup(auth, provider);
 
-      const userData = {
-        name: googleRes.user.displayName,
-        email: googleRes.user.email,
-        photoURL: googleRes.user.photoURL,
-      };
+      // The server derives the identity from this signed token only
+      const idToken = await googleRes.user.getIdToken();
 
       try {
-        const res = await axiosConfig.post("/auth/login/google", userData);
+        const res = await axiosConfig.post("/auth/login/google", { idToken });
         localStorage.setItem("accessToken", res.data.accessToken);
         toast.success(res.data.message || "Connexion réussie");
         setAuthUser(res.data.user);

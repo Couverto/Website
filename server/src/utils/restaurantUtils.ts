@@ -61,3 +61,49 @@ export const getServicePeriod = (time: string, periods: { open: string; close: s
     }
   });
 };
+
+/**
+ * Restaurant fields that only server-side flows (billing, verification, collaborator management,
+ * moderation) may write. They must never be taken from a request body sent by a restaurant user.
+ */
+export const PROTECTED_RESTAURANT_FIELDS = [
+  "_id",
+  "__v",
+  "createdAt",
+  "updatedAt",
+  "tempEmail",
+  "isVerified",
+  "verificationToken",
+  "verificationTokenExpire",
+  "reviews",
+  "rating",
+  "features",
+  "isClosed",
+  "collaborators",
+  "collaboratorRoles",
+  "plan",
+  "subscriptionStatus",
+  "autoRenew",
+  "subscriptionEndDate",
+  "stripeCustomerId",
+  "stripeSubscriptionId",
+  "stripeAccountId",
+  "stripeConnectEnabled",
+  "referralCode",
+  "referredBy",
+  "referralCodeUsed",
+  "referrals",
+  "subscriptionStartDelay",
+  "apiKey",
+  "apiKeyCreatedAt",
+] as const;
+
+/**
+ * @function omitProtectedRestaurantFields
+ * @description Returns a copy of a request body without the protected restaurant fields.
+ */
+export const omitProtectedRestaurantFields = (body: Record<string, any> = {}) => {
+  const safeBody = { ...body };
+  PROTECTED_RESTAURANT_FIELDS.forEach((field) => delete safeBody[field]);
+  return safeBody;
+};

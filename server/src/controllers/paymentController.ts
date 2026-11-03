@@ -7,6 +7,8 @@ import { bookingStatus } from "../utils/enums/bookingStatus.js";
 import { stripeService } from "../services/stripeService.js";
 import { createLog } from "./logController.js";
 import { logLevels } from "../utils/enums/logLevels.js";
+import { userRoles } from "../utils/enums/userRoles.js";
+import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 
 /**
  * @function getRestaurantPayments
@@ -51,12 +53,20 @@ export const getPayments = async (req: Request, res: Response): Promise<void> =>
  * @description Creates a new payment record for a restaurant.
  */
 export const createPayment = async (req: Request, res: Response): Promise<void> => {
-  const { restaurantId, planId, amount, paymentMethod } = req.body;
+  const { restaurantId, planId, paymentMethod } = req.body;
 
   try {
     const restaurant = await Restaurant.findById(restaurantId).populate("collaborators");
     if (!restaurant) {
       res.status(404).json({ error: "Restaurant introuvable" });
+      return;
+    }
+
+    // Only the restaurant's admins (or a global admin) can change its subscription
+    const isGlobalAdmin = (req as any).user?.role === userRoles.ADMIN;
+    const isRestaurantAdmin = restaurant.collaboratorRoles.get(req.userId.toString()) === restaurantRoles.ADMIN;
+    if (!isGlobalAdmin && !isRestaurantAdmin) {
+      res.status(403).json({ error: "Vous n'avez pas les permissions nécessaires pour effectuer cette action" });
       return;
     }
 
@@ -68,6 +78,14 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
 
     // Check if Stripe is configured
     const stripeConfigured = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET;
+
+    // A paid plan can only be obtained through Stripe: never activate it without a payment
+    if (plan.price > 0 && (!plan.stripePriceId || !stripeConfigured)) {
+      res.status(400).json({
+        error: "Ce plan n'est pas encore configuré pour le paiement Stripe. Veuillez contacter un administrateur.",
+      });
+      return;
+    }
 
     // If active Stripe subscription exists, UPDATE it instead of creating a new checkout session
     if (restaurant.stripeSubscriptionId && stripeConfigured) {
@@ -137,12 +155,17 @@ export const createPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Stripe not configured or free plan: proceed with direct activation (dev mode)
+    // Free plan only (paid plans were rejected above or redirected to Stripe): direct activation
+    if (plan.price > 0) {
+      res.status(400).json({ error: "Impossible d'activer ce plan sans paiement." });
+      return;
+    }
+
     const payment = await Payment.create({
       restaurant: restaurantId,
       plan: planId,
       planName: plan.name,
-      amount: amount || plan.price,
+      amount: plan.price,
       status: "completed",
       paymentMethod: paymentMethod || "card",
     });
@@ -196,20 +219,31 @@ export const updateSubscription = async (req: Request, res: Response): Promise<v
         return;
       }
 
-      // Update Stripe subscription with new price if applicable
-      if (restaurant.stripeSubscriptionId && plan.stripePriceId) {
+      // A paid plan requires an existing Stripe subscription that we can move to the new price.
+      // Otherwise the client must go through checkout (createPayment).
+      if (plan.price > 0) {
+        if (!restaurant.stripeSubscriptionId || !plan.stripePriceId) {
+          res.status(400).json({ error: "Un paiement est nécessaire pour passer à ce plan." });
+          return;
+        }
+
         try {
           // Retrieve current subscription to get the item ID
           const subscription = await stripeService.retrieveSubscription(restaurant.stripeSubscriptionId);
           const subscriptionItemId = (subscription as any).items?.data?.[0]?.id;
 
-          if (subscriptionItemId) {
-            // Update the subscription item with the new price
-            await stripeService.updateSubscriptionItem(subscriptionItemId, plan.stripePriceId);
-            console.log(`[Stripe] Subscription item ${subscriptionItemId} updated to price ${plan.stripePriceId}`);
+          if (!subscriptionItemId) {
+            res.status(400).json({ error: "Abonnement Stripe introuvable, veuillez repasser par le paiement." });
+            return;
           }
+
+          // Update the subscription item with the new price
+          await stripeService.updateSubscriptionItem(subscriptionItemId, plan.stripePriceId);
+          console.log(`[Stripe] Subscription item ${subscriptionItemId} updated to price ${plan.stripePriceId}`);
         } catch (stripeError: any) {
           console.error(`[Stripe] Failed to update subscription price:`, stripeError.message);
+          res.status(502).json({ error: "Erreur lors de la mise à jour de l'abonnement Stripe" });
+          return;
         }
       }
 

@@ -14,30 +14,30 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendEmail } from "../utils/sendEmail.js";
 import { sendDiscordNotification } from "../utils/discordUtils.js";
+import { firebaseAuth } from "../lib/firebase.js";
 
 /**
  * Registers a new user.
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { name, forename, email, username, photoURL, password, confirmPassword } = req.body;
+  // Google accounts are created through signInWithGoogle (verified ID token), never here
+  const { name, forename, email, username, password, confirmPassword } = req.body;
 
-  if (!username || !email || !name || !forename || (!photoURL && (!password || !confirmPassword))) {
+  if (!username || !email || !name || !forename || !password || !confirmPassword) {
     res.status(422).json({ error: "Champs requis manquants" });
     return;
   }
 
-  if (!photoURL) {
-    if (!Constants.REGEX_PASSWORD.test(password)) {
-      res.status(400).json({
-        error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial",
-      });
-      return;
-    }
+  if (typeof password !== "string" || !Constants.REGEX_PASSWORD.test(password)) {
+    res.status(400).json({
+      error: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial",
+    });
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
-      return;
-    }
+  if (password !== confirmPassword) {
+    res.status(400).json({ error: "Les mots de passe ne correspondent pas" });
+    return;
   }
 
   try {
@@ -53,7 +53,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generate verification token
     const verificationToken = crypto.randomBytes(20).toString("hex");
@@ -65,28 +65,16 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       password: hashedPassword,
       name,
       forename,
-      auth_type: photoURL ? authTypes.GOOGLE : authTypes.LOCAL,
-      verificationToken: photoURL ? undefined : verificationTokenHash,
-      verificationTokenExpire: photoURL ? undefined : new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      isVerified: photoURL ? true : false,
+      auth_type: authTypes.LOCAL,
+      verificationToken: verificationTokenHash,
+      verificationTokenExpire: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      isVerified: false,
     });
 
-    if (photoURL) {
-      try {
-        const avatarUrl = await saveAvatarFromUrl(photoURL, user._id);
-        if (avatarUrl) {
-          user.avatar = avatarUrl;
-          await user.save();
-        }
-      } catch (err: any) {
-        console.error("Failed to download avatar:", err.message);
-      }
-    } else {
-      // Generate random avatar and upload to Firebase
-      const avatarUrl = await generateRandomAvatar(user._id);
-      user.avatar = avatarUrl;
-      await user.save();
-    }
+    // Generate random avatar and upload to Firebase
+    const avatarUrl = await generateRandomAvatar(user._id);
+    user.avatar = avatarUrl;
+    await user.save();
 
     const userCount = await User.countDocuments();
     if (userCount === 1) {
@@ -106,7 +94,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     sendDiscordNotification(`🆕 **Nouvel utilisateur inscrit** : ${user.forename} ${user.name} (@${user.username}) - ${user.email}`);
 
-    // Send Verification Email if not verified (Google users are auto-verified)
+    // Send Verification Email if not verified
     try {
       if (user.email && !user.isVerified) {
         const clientUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
@@ -120,19 +108,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
           subject: "Vérifiez votre adresse email - Couverto",
           message: htmlContent,
         });
-      } else if (user.email && user.isVerified && user.auth_type === authTypes.GOOGLE) {
-        // Send Welcome Email directly for Google users since they are auto-verified
-        try {
-          const { welcomeEmailTemplate } = await import("../templates/welcomeEmail.js");
-          const htmlContent = welcomeEmailTemplate({ name: user.forename });
-          await sendEmail({
-            email: user.email,
-            subject: "Bienvenue sur Couverto !",
-            message: htmlContent,
-          });
-        } catch (emailErr) {
-          console.error("Welcome email failed for Google user", emailErr);
-        }
       }
     } catch (emailErr) {
       console.error("Email process failed", emailErr);
@@ -249,10 +224,28 @@ export const getConnectedUser = async (req: Request, res: Response): Promise<voi
  * Signs in a user using Google OAuth.
  */
 export const signInWithGoogle = async (req: Request, res: Response): Promise<void> => {
-  const { email, name, photoURL } = req.body;
+  const { idToken } = req.body;
 
-  if (!email) {
+  if (!idToken || typeof idToken !== "string") {
     res.status(422).json({ error: "Champs requis manquants" });
+    return;
+  }
+
+  // Identity comes only from the Firebase-verified ID token, never from the request body
+  let email: string;
+  let name: string | undefined;
+  let photoURL: string | undefined;
+  try {
+    const decoded = await firebaseAuth.verifyIdToken(idToken);
+    if (!decoded.email || !decoded.email_verified || decoded.firebase?.sign_in_provider !== "google.com") {
+      res.status(401).json({ error: "Compte Google invalide" });
+      return;
+    }
+    email = decoded.email;
+    name = decoded.name;
+    photoURL = decoded.picture;
+  } catch {
+    res.status(401).json({ error: "Jeton Google invalide ou expiré" });
     return;
   }
 
@@ -261,8 +254,7 @@ export const signInWithGoogle = async (req: Request, res: Response): Promise<voi
 
     if (!user) {
       if (!name) {
-        res.status(400).json({ error: "Le nom est requis pour la création automatique du compte" });
-        return;
+        name = email.split("@")[0];
       }
 
       const forename = name.split(" ")[0] || "";

@@ -2,6 +2,7 @@ import { User } from "../models/userModel.js";
 import { Constants } from "../constants/constants.js";
 import { bucket } from "../lib/firebase.js";
 import { deleteFile } from "../utils/fileUploadUtils.js";
+import { userRoles } from "../utils/enums/userRoles.js";
 
 /**
  * Helper to upload a buffer to Firebase Storage and return the public URL.
@@ -31,6 +32,12 @@ export const uploadToFirebase = async (
 export const updateUserAvatar = async (req, res) => {
   try {
     const userId = req.params.id;
+
+    // Only the account owner or an admin can change an avatar
+    if (userId !== req.userId.toString() && req.user?.role !== userRoles.ADMIN) {
+      return res.status(403).json({ error: "Accès interdit" });
+    }
+
     const user = await User.findById(userId);
 
     if (!user) {

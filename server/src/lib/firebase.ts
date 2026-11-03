@@ -1,5 +1,6 @@
 import admin from "firebase-admin";
 import { getStorage } from "firebase-admin/storage";
+import { getAuth } from "firebase-admin/auth";
 
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -11,3 +12,4 @@ admin.initializeApp({
 });
 
 export const bucket = getStorage().bucket();
+export const firebaseAuth = getAuth();
