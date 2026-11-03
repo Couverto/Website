@@ -23,6 +23,7 @@ import {
   revokeApiKey,
   toggleTodayClosure,
   toggleTableClosure,
+  verifyRestaurantEmail,
 } from "../controllers/restaurantController.js";
 import { createConnectAccountLink } from "../controllers/stripeConnectController.js";
 import {
@@ -56,6 +57,8 @@ restaurantRouter.post(
   verifyToken(),
   verifyRestaurantVerificationCode,
 );
+// Link sent by email when a restaurant email is set or changed (the token is the proof, no login required)
+restaurantRouter.get("/verify-email/:token", verifyCodeIpLimiter, verifyRestaurantEmail);
 restaurantRouter.get("/public/:id", getPublicRestaurantById);
 restaurantRouter.get("/public/:id/slots", getRestaurantSlots);
 
