@@ -46,9 +46,10 @@ export const createLog = async ({ message, userId, level }: CreateLogParams): Pr
     const log = await Log.create({ message, user: userId, level });
     const populatedLog = await log.populate("user");
 
-    import("../sockets/socket.js").then(({ getIO }) => {
+    import("../sockets/socket.js").then(({ getIO, ADMIN_ROOM }) => {
       try {
-        getIO().emit("newLog", populatedLog);
+        // Logs contain user data: admins only
+        getIO().to(ADMIN_ROOM).emit("newLog", populatedLog);
       } catch (e) {
         // io might not be initialized yet
       }

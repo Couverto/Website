@@ -59,7 +59,7 @@ restaurantRouter.post("/finalize-payment", verifyToken(), finalizePayment);
 // Admin routes
 restaurantRouter.get("/", verifyToken({ role: userRoles.ADMIN }), getRestaurants);
 restaurantRouter.post("/", verifyToken(), createRestaurant);
-restaurantRouter.put("/:id", verifyToken(), updateRestaurant);
+restaurantRouter.put("/:id", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN, restaurantRoles.MANAGER]), updateRestaurant);
 restaurantRouter.delete("/:id", verifyToken(), verifyCollaborator([restaurantRoles.ADMIN]), deleteRestaurant);
 
 // Collaborator routes (requires being a collaborator of the restaurant)

@@ -9,6 +9,11 @@ const verificationCodeSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // Set once the code has been checked, so the server can require proof before an email change
+  verified: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

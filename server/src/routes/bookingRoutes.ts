@@ -6,7 +6,6 @@ import {
   getBookingById,
   updateBooking,
   cancelBooking,
-  createManualBooking,
   getRestaurantBookings,
   getRestaurantClients,
   updateBookingStatus,
@@ -70,13 +69,6 @@ bookingRouter.patch("/:id/cancel", verifyToken(), cancelBooking);
  * @access Public
  */
 bookingRouter.patch("/public/cancel/:token", cancelBookingByToken);
-
-/**
- * @route POST /api/bookings/manual
- * @desc Create a manual booking (admin/staff)
- * @access Private (Admin/Pro)
- */
-bookingRouter.post("/manual", verifyToken(), createManualBooking);
 
 import { restaurantRoles } from "../utils/enums/restaurantRoles.js";
 
