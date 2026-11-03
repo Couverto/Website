@@ -15,48 +15,22 @@ import { bookingCancellationTemplate } from "../templates/bookingCancellationEma
 import { bookingSelfCancellationTemplate } from "../templates/bookingSelfCancellationEmail.js";
 import { restaurantBookingNotificationTemplate } from "../templates/restaurantBookingNotification.js";
 import { stripeService } from "../services/stripeService.js";
-import { formatBookingDate, formatBookingTime, formatShortDate } from "../utils/dateFormatter.js";
+import { formatBookingDate, formatBookingTime, formatShortDate, getParisWeekday } from "../utils/dateFormatter.js";
+import { withKeyedLock } from "../utils/keyedLock.js";
 import { getServicePeriod, PUBLIC_RESTAURANT_PROJECTION } from "../utils/restaurantUtils.js";
 import { escapeHtml } from "../utils/escapeHtml.js";
 import { Constants } from "../constants/constants.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { sendServerError } from "../utils/sendServerError.js";
 
-// Validate that the booking date falls within the restaurant's opening hours
+// Validate that the booking date falls within the restaurant's opening hours (Paris time)
 function validateBookingTime(restaurant: any, bookingDate: string): boolean {
-  const date = new Date(bookingDate);
-
-  // Use Intl.DateTimeFormat to get French local time parts
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Paris",
-    hour: "numeric",
-    minute: "numeric",
-    weekday: "long",
-    hour12: false,
-  });
-
-  const parts = formatter.formatToParts(date);
-  const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
-
-  const dayName = partMap.weekday.toLowerCase();
-  const hour = parseInt(partMap.hour);
-  const minute = parseInt(partMap.minute);
-
+  const dayName = getParisWeekday(bookingDate);
   const dayInfo = restaurant.openingHours?.get ? restaurant.openingHours.get(dayName) : restaurant.openingHours?.[dayName];
-  if (!dayInfo) return false;
-  if (dayInfo.isClosed) return false;
+  if (!dayInfo || dayInfo.isClosed) return false;
 
-  const timeMinutes = hour * 60 + minute;
-  for (const period of dayInfo.periods) {
-    const [openH, openM] = period.open.split(":").map(Number);
-    const [closeH, closeM] = period.close.split(":").map(Number);
-    const openMinutes = openH * 60 + openM;
-    const closeMinutes = closeH * 60 + closeM;
-    if (timeMinutes >= openMinutes && timeMinutes <= closeMinutes) {
-      return true;
-    }
-  }
-  return false;
+  // getServicePeriod also handles periods crossing midnight (e.g. 19:00-02:00)
+  return !!getServicePeriod(formatBookingTime(bookingDate), dayInfo.periods || []);
 }
 
 /**
@@ -81,45 +55,37 @@ function getCancellationError(booking: any): string | null {
  * @description Sums the guests across all active bookings within the same service (lunch/dinner period, based on opening hours) as the given booking date.
  */
 async function getServiceGuestsTotal(restaurantDoc: any, bookingDate: Date | string): Promise<number> {
-  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  const dayName = dayNames[new Date(bookingDate).getDay()];
+  const dayName = getParisWeekday(bookingDate);
   const daySchedule = restaurantDoc.openingHours instanceof Map
     ? restaurantDoc.openingHours.get(dayName)
     : (restaurantDoc.openingHours as any)?.[dayName];
+  const periods = daySchedule?.periods || [];
+  const period = getServicePeriod(formatBookingTime(bookingDate), periods);
 
-  const timeStr = formatBookingTime(bookingDate);
-  const period = getServicePeriod(timeStr, daySchedule?.periods || []);
-
-  let queryStart: Date;
-  let queryEnd: Date;
-
-  if (period) {
-    const baseDateStr = new Date(bookingDate).toISOString().split("T")[0];
-    queryStart = new Date(baseDateStr + "T00:00:00.000Z");
-    const [sh, sm] = period.open.split(":").map(Number);
-    queryStart.setUTCHours(sh, sm, 0, 0);
-
-    queryEnd = new Date(baseDateStr + "T23:59:59.999Z");
-    const [eh, em] = period.close.split(":").map(Number);
-    queryEnd.setUTCHours(eh, em, 59, 999);
-
-    if (period.close < period.open) {
-      queryEnd.setUTCDate(queryEnd.getUTCDate() + 1);
-    }
-  } else {
-    const bookingTime = new Date(bookingDate).getTime();
-    const twoHours = 2 * 60 * 60 * 1000;
-    queryStart = new Date(bookingTime - twoHours);
-    queryEnd = new Date(bookingTime + twoHours);
-  }
-
+  // Opening hours are Paris wall-clock times while bookingDate is a real instant: fetch a wide window,
+  // then keep the bookings whose Paris time falls in the same service
+  const bookingTime = new Date(bookingDate).getTime();
+  const windowMs = (period ? 14 : 2) * 60 * 60 * 1000;
   const bookings = await Booking.find({
     restaurant: restaurantDoc._id,
-    bookingDate: { $gte: queryStart, $lte: queryEnd },
+    bookingDate: { $gte: new Date(bookingTime - windowMs), $lte: new Date(bookingTime + windowMs) },
     status: { $ne: bookingStatus.CANCELLED },
-  }).select("guests");
+  }).select("guests bookingDate");
 
-  return bookings.reduce((acc, b) => acc + (b.guests || 0), 0);
+  // A service crossing midnight (e.g. 19:00-02:00) belongs to the day it started on
+  const getServiceDay = (date: Date | string) => {
+    const crossesMidnight = period && period.close < period.open;
+    const isAfterMidnight = crossesMidnight && formatBookingTime(date) < period.open;
+    return formatShortDate(new Date(new Date(date).getTime() - (isAfterMidnight ? 24 * 60 * 60 * 1000 : 0)));
+  };
+
+  return bookings
+    .filter((b) => {
+      if (!period) return true;
+      const bPeriod = getServicePeriod(formatBookingTime(b.bookingDate), periods);
+      return bPeriod?.open === period.open && bPeriod?.close === period.close && getServiceDay(b.bookingDate) === getServiceDay(bookingDate);
+    })
+    .reduce((acc, b) => acc + (b.guests || 0), 0);
 }
 
 /**
@@ -173,8 +139,26 @@ export const createSetupIntent = async (req: Request, res: Response): Promise<vo
  * Handles both authenticated and guest users.
  */
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
+  // Bookings of the same restaurant are processed one at a time, otherwise two customers booking the last seats
+  // simultaneously would both pass the capacity check
+  await withKeyedLock(`booking:${String(req.body?.restaurant)}`, () => createBookingUnlocked(req, res));
+};
+
+const MAX_GUESTS_PER_BOOKING = 100;
+
+const createBookingUnlocked = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { restaurant, bookingDate, guests, customer, notes, stripeSetupIntentId, bankImprintAmount, stripeCustomerId, tableId, isManual } = req.body;
+    const { restaurant, bookingDate, customer, notes, stripeSetupIntentId, bankImprintAmount, stripeCustomerId, tableId, isManual } = req.body;
+    const guests = Number(req.body.guests);
+
+    if (!Number.isInteger(guests) || guests < 1 || guests > MAX_GUESTS_PER_BOOKING) {
+      res.status(400).json({ error: `Le nombre de couverts doit être compris entre 1 et ${MAX_GUESTS_PER_BOOKING}.` });
+      return;
+    }
+    if (typeof bookingDate !== "string" || isNaN(new Date(bookingDate).getTime())) {
+      res.status(400).json({ error: "Date de réservation invalide." });
+      return;
+    }
     const userId = req.userId; // Middleware should populate this if token present
 
     // Validate restaurant existence
@@ -190,6 +174,18 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     const isCollaborator = userId && restaurantExists.collaborators.some(c => c.toString() === userId.toString());
     const skipStripe = isManual && isCollaborator;
+
+    // Collaborators may record a booking for a closed restaurant or a time that just passed (walk-in), customers may not
+    if (!isCollaborator) {
+      if (restaurantExists.isClosed) {
+        res.status(400).json({ error: "Ce restaurant n'accepte pas de réservations pour le moment." });
+        return;
+      }
+      if (new Date(bookingDate).getTime() < Date.now()) {
+        res.status(400).json({ error: "Impossible de réserver pour une date passée." });
+        return;
+      }
+    }
 
     if (restaurantExists.isBankImprintEnabled && !skipStripe) {
       if (!stripeSetupIntentId) {
@@ -338,9 +334,10 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     // If authenticated, we can optionally override customer info with user profile if not provided,
     // but the frontend usually sends the form data. We'll trust the body.
-    if (userId) {
+    // Fill the profile phone only when the user has none: a booking made for someone else must not overwrite it
+    if (userId && customer?.phone) {
       try {
-        await User.findByIdAndUpdate(userId, { phone: customer.phone });
+        await User.updateOne({ _id: userId, $or: [{ phone: { $exists: false } }, { phone: null }, { phone: "" }] }, { phone: customer.phone });
       } catch (userUpdateErr) {
         console.error("Failed to update user phone during booking", userUpdateErr);
       }
@@ -355,8 +352,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       const bookingTime = new Date(bookingDate).getTime();
       
       // 1. Identify Service Period FIRST
-      const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-      const dayName = dayNames[new Date(bookingDate).getDay()];
+      const dayName = getParisWeekday(bookingDate);
       const daySchedule = restaurantExists.openingHours instanceof Map 
         ? restaurantExists.openingHours.get(dayName) 
         : (restaurantExists.openingHours as any)[dayName];

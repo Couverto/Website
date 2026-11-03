@@ -23,9 +23,10 @@ import {
   convertOpeningHoursToObject,
   getServicePeriod,
   omitProtectedRestaurantFields,
+  mergeAmenities,
   PUBLIC_RESTAURANT_PROJECTION,
 } from "../utils/restaurantUtils.js";
-import { formatBookingTime } from "../utils/dateFormatter.js";
+import { formatBookingTime, getParisWeekday } from "../utils/dateFormatter.js";
 import { Review } from "../models/reviewModel.js";
 import { escapeRegex } from "../utils/escapeRegex.js";
 import { sendServerError } from "../utils/sendServerError.js";
@@ -67,6 +68,8 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
     const { name, slug, address, city, phone, website, planId, referralCode: referralCodeInput, ...rawOtherFields } = req.body;
     // otherFields is spread into the new restaurant: drop billing/ownership/verification fields
     const otherFields = omitProtectedRestaurantFields(rawOtherFields);
+    // Amenities picked in the creation wizard (paid features can't be requested this way)
+    if (rawOtherFields.features !== undefined) otherFields.features = mergeAmenities(rawOtherFields.features);
     const collaborators = [];
 
     console.log(`[createRestaurant] Starting creation for: ${name}, slug: ${slug}, planId: ${planId}`);
@@ -234,7 +237,6 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           autoRenew: true,
           subscriptionEndDate: null, // Forever
           isClosed: true,
-          features: featureIds,
           referredBy: null,
           referralCodeUsed: validReferralCode._id,
           subscriptionStartDelay: 0,
@@ -242,6 +244,7 @@ export const createRestaurant = async (req: Request, res: Response): Promise<voi
           verificationToken,
           verificationTokenExpire,
           ...otherFields,
+          features: [...featureIds.map(String), ...(otherFields.features || [])],
         });
 
         await restaurant.save();
@@ -1149,7 +1152,7 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
       const queryDate = new Date(date);
       if (!isNaN(queryDate.getTime())) {
         const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-        const dayName = dayNames[queryDate.getDay()];
+        const dayName = dayNames[queryDate.getUTCDay()]; // date is "YYYY-MM-DD", parsed as UTC midnight
 
         // Ensure the restaurant is open on this specific day
         const dayCondition: any = {};
@@ -1190,9 +1193,9 @@ export const getPublicRestaurants = async (req: Request, res: Response): Promise
       let opensLaterToday = false;
       if (!openNow) {
         const now = new Date();
-        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-        const todayName = dayNames[now.getDay()];
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const todayName = getParisWeekday(now);
+        const [currentHour, currentMinute] = formatBookingTime(now).split(":").map(Number);
+        const currentMinutes = currentHour * 60 + currentMinute;
         const todaySchedule = openingHoursObj[todayName];
 
         if (todaySchedule && !todaySchedule.isClosed && todaySchedule.periods?.length > 0) {
@@ -1301,7 +1304,7 @@ export const getRestaurantSlots = async (req: Request, res: Response): Promise<v
     }
 
     const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const dayName = dayNames[queryDate.getDay()];
+    const dayName = dayNames[queryDate.getUTCDay()]; // date is "YYYY-MM-DD", parsed as UTC midnight
 
     // Check if openingHours exists and is not empty
     if (
@@ -2133,7 +2136,7 @@ export const updateRestaurantSettings = async (req: Request, res: Response): Pro
         ...(priceRange && { priceRange }),
         ...(sendBookingEmail !== undefined && { sendBookingEmail }),
         ...(req.body.shortDescription !== undefined && { shortDescription: req.body.shortDescription }),
-        ...(req.body.features && { features: req.body.features }),
+        ...(req.body.features && { features: mergeAmenities(req.body.features, currentRestaurant.features) }),
         ...(req.body.paymentMethods && { paymentMethods: req.body.paymentMethods }),
         ...(req.body.socials && { socials: req.body.socials }),
         ...(req.body.capacity !== undefined && { capacity: req.body.capacity }),

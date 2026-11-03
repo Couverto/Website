@@ -41,3 +41,12 @@ export const formatShortDate = (date: Date | string): string => {
     timeZone: TIMEZONE,
   });
 };
+
+/**
+ * Returns the English weekday name (e.g. "tuesday") of a date in the French timezone,
+ * matching the keys of a restaurant's openingHours.
+ */
+export const getParisWeekday = (date: Date | string): string => {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString("en-US", { weekday: "long", timeZone: TIMEZONE }).toLowerCase();
+};

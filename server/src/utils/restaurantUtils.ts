@@ -1,3 +1,4 @@
+import { formatBookingTime, getParisWeekday } from "./dateFormatter.js";
 /**
  * @function isRestaurantOpen
  * @description Helper to determine if a restaurant is currently open based on opening hours.
@@ -5,29 +6,17 @@
 export const isRestaurantOpen = (openingHours: any) => {
   if (!openingHours) return false;
 
-  // Use Intl.DateTimeFormat to get French local time regardless of server timezone
-  const formatter = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    hour: "2-digit",
-    minute: "2-digit",
-    weekday: "long",
-    hour12: false,
-  });
-
-  const parts = formatter.formatToParts(new Date());
-  const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
-
-  const currentDay = partMap.weekday.toLowerCase();
-  const currentTime = `${partMap.hour}:${partMap.minute}`;
+  // Paris time regardless of the server timezone; openingHours keys are English weekday names
+  const now = new Date();
+  const currentDay = getParisWeekday(now);
+  const currentTime = formatBookingTime(now);
 
   // Handle Mongoose Map or plain object
   const daySchedule = openingHours.get ? openingHours.get(currentDay) : openingHours[currentDay];
 
   if (!daySchedule || daySchedule.isClosed || !daySchedule.periods || daySchedule.periods.length === 0) return false;
 
-  return daySchedule.periods.some((period: { open: string; close: string }) => {
-    return currentTime >= period.open && currentTime <= period.close;
-  });
+  return !!getServicePeriod(currentTime, daySchedule.periods);
 };
 
 /**
@@ -60,6 +49,24 @@ export const getServicePeriod = (time: string, periods: { open: string; close: s
       return time >= p.open || time <= p.close;
     }
   });
+};
+
+/**
+ * Amenities a restaurant can pick itself (same values as FEATURES_LIST on the client).
+ * They share the `features` array with the paid features an admin grants by name, so a restaurant
+ * must only ever be able to add or remove these values.
+ */
+export const RESTAURANT_AMENITIES = ["Terrasse", "Wifi", "Accès PMR", "Bar", "Climatisation", "Parking", "Animaux acceptés"];
+
+/**
+ * @function mergeAmenities
+ * @description Replaces the amenities of a `features` array with the requested ones, keeping every other entry
+ * (features granted by an admin) untouched. Unknown requested values are ignored.
+ */
+export const mergeAmenities = (requested: unknown, current: string[] = []): string[] => {
+  const requestedAmenities = Array.isArray(requested) ? requested.filter((f) => RESTAURANT_AMENITIES.includes(f)) : [];
+  const granted = current.filter((f) => !RESTAURANT_AMENITIES.includes(String(f)));
+  return [...new Set([...granted, ...requestedAmenities])];
 };
 
 /**
